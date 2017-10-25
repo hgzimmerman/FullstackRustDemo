@@ -27,7 +27,7 @@ impl StoredUser {
     fn new(name: String, password: String ) -> StoredUser {
         let hashed_pw = hash(password.as_str(), DEFAULT_COST).expect(format!("Hashing Password failed for user name: {}", name).as_str() );
         StoredUser {
-            name: name,
+            name,
             pw_hash: hashed_pw,
             id: Uuid::new_v4().hyphenated().to_string(),
             user_roles: vec![UserRole::Unprivileged]
@@ -91,10 +91,14 @@ fn get_user(user_id: String) -> Json<User> {
 }
 
 #[post("/", data = "<new_user>")]
-fn create_user(new_user: Json<LoginUser>) -> Json<StoredUser> { // TODO don't actually return the stored user
+fn create_user(new_user: Json<LoginUser>) -> Json<User> {
     info!("Creating new user with the following values: {:?}", new_user);
     let new_user: LoginUser = new_user.into_inner();
-    Json(StoredUser::from(new_user))
+    let stored_user: StoredUser = StoredUser::from(new_user);
+    // TODO Store the user in a DB
+
+    //Return the standard user
+    Json(User::from(stored_user))
 }
 
 #[put("/", data = "<user>")]
