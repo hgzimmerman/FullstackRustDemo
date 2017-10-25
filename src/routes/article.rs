@@ -1,6 +1,8 @@
 use rocket::Route;
 use rocket_contrib::Json;
 use uuid::Uuid;
+use rocket::Rocket;
+use super::Routable;
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -62,10 +64,13 @@ fn delete_article(article_id: String) -> Json<Article> {
     })
 }
 
-// Export the routes and their path
+// Export the ROUTES and their path
 pub fn article_routes() -> Vec<Route> {
     routes![create_article, update_article, get_article, delete_article]
 }
 
 
-pub const ARTICLE_PATH: &'static str = "/article/";
+impl Routable for Article {
+    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![create_article, update_article, get_article, delete_article];
+    const PATH: &'static str = "/article/";
+}

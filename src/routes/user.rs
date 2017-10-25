@@ -5,6 +5,8 @@ use auth::userpass::FromString;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hash;
 use bcrypt::{DEFAULT_COST, hash};
+use rocket::Rocket;
+use super::Routable;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum UserRole {
@@ -68,7 +70,7 @@ struct LoginUser {
 
 /// User to be sent over the wire
 #[derive(Serialize, Deserialize, Debug)]
-struct User {
+pub struct User {
     name: String,
     id: String,
 }
@@ -84,6 +86,7 @@ impl From<StoredUser> for User {
 #[get("/<user_id>")]
 fn get_user(user_id: String) -> Json<User> {
     info!("Getting user with ID: {}", user_id);
+    //TODO find the user in the DB using the id
     Json(User {
         name: String::from("test"),
         id: user_id,
@@ -95,7 +98,7 @@ fn create_user(new_user: Json<LoginUser>) -> Json<User> {
     info!("Creating new user with the following values: {:?}", new_user);
     let new_user: LoginUser = new_user.into_inner();
     let stored_user: StoredUser = StoredUser::from(new_user);
-    // TODO Store the user in a DB
+    // TODO Store the user in a DB, checking if id already exists.
 
     //Return the standard user
     Json(User::from(stored_user))
@@ -117,13 +120,11 @@ fn delete_user(user_id: String) -> Json<User> {
     })
 }
 
-// Export the routes and their path
-pub fn user_routes() -> Vec<Route> {
-    routes![create_user, update_user, get_user, delete_user]
+// Export the ROUTES and their path
+impl Routable for User {
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![create_user, update_user, get_user, delete_user];
+    const PATH: &'static str = "/user/";
 }
-
-pub const USER_PATH: &'static str = "/user/";
-
 
 
 #[cfg(test)]
@@ -131,12 +132,19 @@ mod test {
     use super::super::super::rocket; // initialize the webserver
     use rocket::local::Client;
     use rocket::http::Status;
+    use super::*;
 
     #[test]
     fn get_user() {
         let client = Client::new(rocket()).expect("valid rocket instance");
-        let response = client.get("/api/user/some_uuid_or_something").dispatch();
+        let mut response = client.get("/api/user/some_uuid_or_something").dispatch();
         assert_eq!(response.status(), Status::Ok);
-//        assert_eq!(response.body_string(), Some("Hello, world!".into()));
+//        assert_eq!(
+//            Json(json!(response.body_string().unwrap())),
+//            Json( User {
+//                name: String::from("test"),
+//                id: "some_uuid_or_something".to_string(),
+//            }).
+//        );
     }
 }

@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use auth::dummy::DummyAuthenticator;
 
 use super::user::StoredUser;
+use super::Routable;
 
 //#[derive(Debug)]
 //pub struct JoeAuthenticator {
@@ -62,3 +63,9 @@ pub fn login_routes() -> Vec<Route> {
     routes![admin, login, login_post]
 }
 
+
+pub struct Login {}
+impl Routable for Login {
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![admin, login, login_post];
+    const PATH: &'static str = "/login";
+}
