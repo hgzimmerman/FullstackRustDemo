@@ -1,47 +1,100 @@
 use rocket::Route;
 use rocket_contrib::Json;
 use uuid::Uuid;
-
+use auth::userpass::FromString;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::Hash;
+use bcrypt::{DEFAULT_COST, hash};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct User {
-    name: String,
-    password: String,
-    id: String // Uuid
+pub enum UserRole {
+    Unprivileged,
+    Admin
 }
 
-impl User {
-    fn new(name: String, password: String ) -> User {
-        User {
+/// User to be stored in db.
+/// This user will be used to check for auth.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StoredUser {
+    name: String,
+    pw_hash: String,
+    id: String, // Uuid
+    user_roles: Vec<UserRole>
+}
+
+
+impl StoredUser {
+    fn new(name: String, password: String ) -> StoredUser {
+        let hashed_pw = hash(password.as_str(), DEFAULT_COST).expect(format!("Hashing Password failed for user name: {}", name).as_str() );
+        StoredUser {
             name: name,
-            password: password,
-            id: Uuid::new_v4().hyphenated().to_string()
+            pw_hash: hashed_pw,
+            id: Uuid::new_v4().hyphenated().to_string(),
+            user_roles: vec![UserRole::Unprivileged]
         }
     }
 }
 
+impl FromString for StoredUser {
+    fn from_string(s: String) -> Self {
+        return StoredUser {
+            name: String::from(""),
+            pw_hash: String::from(""),
+            id: s,
+            user_roles: vec![]
+        }
+    }
+}
+
+impl From<LoginUser> for StoredUser {
+    fn from(new_user: LoginUser) -> StoredUser {
+        let hashed_pw = hash(new_user.password.as_str(), DEFAULT_COST).expect(format!("Hashing Password failed for user name: {}", new_user.name).as_str() );
+        StoredUser {
+            name: new_user.name,
+            pw_hash: hashed_pw,
+            id: Uuid::new_v4().hyphenated().to_string(),
+            user_roles: vec![UserRole::Unprivileged]
+        }
+    }
+}
+
+/// Used for logging in and creating accounts.
 #[derive(Serialize, Deserialize, Debug)]
-struct NewUser {
+struct LoginUser {
     name: String,
     password: String
 }
 
+
+/// User to be sent over the wire
+#[derive(Serialize, Deserialize, Debug)]
+struct User {
+    name: String,
+    id: String,
+}
+impl From<StoredUser> for User {
+    fn from(stored_user: StoredUser) -> User {
+        User {
+            name: stored_user.name,
+            id: stored_user.id
+        }
+    }
+}
 
 #[get("/<user_id>")]
 fn get_user(user_id: String) -> Json<User> {
     info!("Getting user with ID: {}", user_id);
     Json(User {
         name: String::from("test"),
-        password: String::from("password"),
         id: user_id,
     })
 }
 
 #[post("/", data = "<new_user>")]
-fn create_user(new_user: Json<NewUser>) -> Json<User> {
+fn create_user(new_user: Json<LoginUser>) -> Json<StoredUser> { // TODO don't actually return the stored user
     info!("Creating new user with the following values: {:?}", new_user);
-    let new_user: NewUser = new_user.into_inner();
-    Json(User::new(new_user.name, new_user.password))
+    let new_user: LoginUser = new_user.into_inner();
+    Json(StoredUser::from(new_user))
 }
 
 #[put("/", data = "<user>")]
@@ -56,7 +109,6 @@ fn delete_user(user_id: String) -> Json<User> {
     info!("Deleting user with ID: {}", user_id);
     Json(User {
         name: String::from("test"),
-        password: String::from("password"),
         id: user_id,
     })
 }

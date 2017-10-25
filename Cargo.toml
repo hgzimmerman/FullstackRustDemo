@@ -7,12 +7,14 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 rocket = "0.3.3"
 rocket_codegen = "0.3.3"
 rocket_contrib = "0.3.3"
+rocket-simpleauth = "0.3.0"
 
 serde = "1.0.14"
 serde_json = "1.0.3"
 serde_derive = "1.0.14"
 
 uuid = {version = "0.5", features = ["serde", "v4"] }
+bcrypt = "0.1"
 
 log = "0.3.8"
 simplelog = "^0.4.2"

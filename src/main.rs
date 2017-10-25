@@ -4,6 +4,7 @@
 
 extern crate rocket;
 extern crate rocket_contrib;
+extern crate rocket_simpleauth as auth;
 extern crate uuid;
 extern crate serde_json;
 #[macro_use]
@@ -13,12 +14,14 @@ extern crate serde;
 extern crate log;
 extern crate simplelog;
 
+extern crate bcrypt;
+
 use rocket::Rocket;
 use rocket_contrib::Json;
 use uuid::Uuid;
 
 mod routes;
-use routes::{article, static_file, user};
+use routes::*;
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 use std::fs::File;
@@ -43,6 +46,7 @@ pub fn rocket() -> Rocket {
         .mount("/", routes![static_file::files])
         .mount( &format_api(user::USER_PATH), user::user_routes() )
         .mount( &format_api(article::ARTICLE_PATH), article::article_routes() )
+        .mount( &format_api("/login"), login::login_routes() )
 }
 
 ///Path should be an &str that starts with a /
