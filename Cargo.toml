@@ -1,0 +1,18 @@
+[package]
+name = "weekend_at_joes_4_backend"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+rocket = "0.3.3"
+rocket_codegen = "0.3.3"
+rocket_contrib = "0.3.3"
+
+serde = "1.0.14"
+serde_json = "1.0.3"
+serde_derive = "1.0.14"
+
+uuid = {version = "0.5", features = ["serde", "v4"] }
+
+log = "0.3.8"
+simplelog = "^0.4.2"
