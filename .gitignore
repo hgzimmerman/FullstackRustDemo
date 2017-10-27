@@ -2,3 +2,4 @@
 **/*.rs.bk
 weekend.log
 .idea
+db.logfile
