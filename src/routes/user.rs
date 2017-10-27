@@ -129,14 +129,14 @@ impl Routable for User {
 
 #[cfg(test)]
 mod test {
-    use super::super::super::rocket; // initialize the webserver
+    use super::super::super::init_rocket; // initialize the webserver
     use rocket::local::Client;
     use rocket::http::Status;
     use super::*;
 
     #[test]
     fn get_user() {
-        let client = Client::new(rocket()).expect("valid rocket instance");
+        let client = Client::new(init_rocket()).expect("valid rocket instance");
         let mut response = client.get("/api/user/some_uuid_or_something").dispatch();
         assert_eq!(response.status(), Status::Ok);
 //        assert_eq!(

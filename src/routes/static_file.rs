@@ -6,5 +6,6 @@ use std::path::{Path, PathBuf};
 #[get("/<file..>", rank=10)]
 pub fn files(file: PathBuf) -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "www/build";
+    info!("Getting file: {}", file.to_str().unwrap());
     NamedFile::open(Path::new(WEB_DIRECTORY).join(file)).ok()
 }
