@@ -8,7 +8,8 @@ stdenv.mkDerivation rec {
     postgresql
   ];
   shellHook = ''
-    pg_ctl init -D pgsql
-    pg_ctl -D pgsql -l db.logfile start
+    export PGDATA='pgsql'
+    pg_ctl init
+    pg_ctl -l db.logfile start
   '';
 }
