@@ -1,1 +1,0 @@
-/nix/store/cdjn7gzg22knl5nm4r35jai6gzz8qyh0-postgresql-9.6.5/bin/postgres "-D" "pgsql"
