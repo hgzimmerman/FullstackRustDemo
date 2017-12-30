@@ -11,8 +11,22 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
 }
 
 #[get("/js/<file..>", rank=9)]
-pub fn wasm(file: PathBuf) -> Option<NamedFile> {
+pub fn js(file: PathBuf) -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "www/target/wasm32-unknown-unknown/release";
     info!("Getting file: {}", file.to_str().unwrap());
     NamedFile::open(Path::new(WEB_DIRECTORY).join(file)).ok()
+}
+
+#[get("/js/app.js", rank=8)]
+pub fn app() -> Option<NamedFile> {
+    const WEB_DIRECTORY: &'static str = "www/target/wasm32-unknown-unknown/release/weekend_at_joes_4_frontend.js";
+//    info!("Getting file: {}", file.to_str().unwrap());
+    NamedFile::open(Path::new(WEB_DIRECTORY)).ok()
+}
+
+#[get("/weekend_at_joes_4_frontend.wasm", rank=8)]
+pub fn wasm() -> Option<NamedFile> {
+    const WEB_DIRECTORY: &'static str = "www/target/wasm32-unknown-unknown/release/weekend_at_joes_4_frontend.wasm";
+    //    info!("Getting file: {}", file.to_str().unwrap());
+    NamedFile::open(Path::new(WEB_DIRECTORY)).ok()
 }
