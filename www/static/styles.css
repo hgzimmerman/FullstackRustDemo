@@ -1,0 +1,73 @@
+
+.HandContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.HandColumn {
+    flex: 0 0 auto;
+    flex-direction: column;
+    height: 100%;
+    width: 90%;
+}
+
+.HandQuestionDisplay {
+    font-size: Large;
+    text-align: left;
+    border: solid 2px;
+    height: 80%;
+    width: 100%;
+    padding: 5px;
+    margin: 5px;
+}
+
+
+
+.Container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 50px - 4px);
+}
+
+.Navbar {
+    height: 50px;
+    line-height: 50px;
+    background-color: #FFD1AA;
+    border-bottom: solid 4px;
+}
+
+.VerticalBoi {
+    flex: 0 0 33%;
+    flex-direction: column;
+    border-right: solid 3px;
+    height: 100%;
+    background-color: #7887AB;
+}
+
+.RightBorder {
+    border-right: solid 2px;
+}
+
+.SideNavWrapper {
+  /*border: solid 4px;*/
+  /*display:flex;*/
+  flex: 0 0 300px;
+  flex-direction: column;
+  /* background-color: aquamarine; */
+}
+
+.FullPage {
+    width: 100%;
+    height: 100%;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}

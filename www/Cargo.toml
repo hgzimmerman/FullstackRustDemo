@@ -1,0 +1,9 @@
+[package]
+name = "weekend_at_joes_4_frontend"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "6264594cfc3bd58653d9226fb176e9d75c7ea409" }
+strum = "0.8.0"
+strum_macros = "0.8.0"

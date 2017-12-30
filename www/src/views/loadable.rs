@@ -1,0 +1,44 @@
+use yew::html::Html;
+use views::Viewable;
+use msg::Msg;
+
+
+/// Encapsulates an entity that will be loaded after accessing the page.
+/// Its state will be displayed while it has not loaded.
+pub enum Loadable<T> {
+    Unloaded,
+    Loading,
+    Loaded(T)
+}
+
+impl <T> Viewable<Msg> for Loadable<T>
+    where T: Viewable<Msg> {
+
+    fn view(&self) -> Html<Msg> {
+
+        match *self {
+            Loadable::Unloaded => {
+                html!{
+                    <div>
+                        {"Content not loaded"}
+                    </div>
+                }
+            }
+            Loadable::Loading => {
+                html!{
+                    <div>
+                        {"Content loading..."}
+                    </div>
+                }
+            }
+            Loadable::Loaded(ref content) => {
+                html!{
+                    <div>
+                        {content.view()}
+                    </div>
+                }
+            }
+        }
+
+    }
+}
