@@ -22,9 +22,13 @@ extern crate r2d2;
 
 extern crate bcrypt;
 
+extern crate rand;
+
 use rocket::Rocket;
 use rocket_contrib::Json;
 use uuid::Uuid;
+use std::sync::Mutex;
+use std::collections::HashMap;
 
 mod routes;
 use routes::*;
@@ -50,12 +54,19 @@ fn main() {
 
 ///Initialize the webserver
 pub fn init_rocket() -> Rocket {
+
+    let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
+    bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
+
+    let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
     rocket::ignite()
 //        .manage(init_pool())
+        .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
         .mount( &format_api(Article::PATH), Article::ROUTES() )
         .mount( &format_api(Login::PATH), Login::ROUTES() )
+        .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
 }
 
 

@@ -23,3 +23,5 @@ bcrypt = "0.1"
 
 log = "0.3.8"
 simplelog = "^0.4.2"
+
+rand = "0.4.1"
