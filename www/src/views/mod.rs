@@ -5,7 +5,7 @@ pub mod bucket_questions;
 pub mod loadable;
 
 use yew::html::Html;
-use msg::Msg;
+use controller::Msg;
 use models::Model;
 
 

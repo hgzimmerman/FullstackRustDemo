@@ -8,8 +8,9 @@ use super::Routable;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Article {
     title: String,
-    body: String,
+    publish_date: String,
     author: String, // uuid of author
+    content: String,
     id: String // Uuid
 }
 
@@ -17,7 +18,8 @@ impl Article {
     fn new(title: String, body: String, author: String ) -> Article {
         Article {
             title: title,
-            body: body,
+            publish_date: "Today".to_string(),
+            content: body,
             author: author,
             id: Uuid::new_v4().hyphenated().to_string()
         }
@@ -32,11 +34,12 @@ struct NewArticle {
 }
 
 
-#[get("/<article_id>")]
+#[get("/<article_id>", rank=0)]
 fn get_article(article_id: String) -> Json<Article> {
     Json(Article {
         title: String::from("This is a title"),
-        body: String::from("This is the body"),
+        publish_date: String::from("Today"),
+        content: String::from("This is the body"),
         author: String::from("aoeu-aoeu-aoeu-aoeu-aoeu"),
         id: article_id,
     })
@@ -58,7 +61,8 @@ fn update_article(article: Json<Article>) -> Json<Article> {
 fn delete_article(article_id: String) -> Json<Article> {
     Json(Article {
         title: String::from("test"),
-        body: String::from("password"),
+        publish_date: String::from("Today"),
+        content: String::from("password"),
         author: String::from("aoeu-aoeu-aoeu-aoeu-aoeu"),
         id: article_id,
     })

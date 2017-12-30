@@ -1,6 +1,10 @@
 mod article;
 pub use self::article::Article;
 
+mod news;
+pub use self::news::NewsModel;
+
+
 use yew::html::Href;
 use views::loadable::Loadable;
 
@@ -22,11 +26,4 @@ impl<'a> Into<Href> for &'a Page {
     }
 }
 
-
-
-
-pub struct NewsModel {
-    pub link_id: String , // Needed???
-    pub article: Loadable<Article>
-}
 

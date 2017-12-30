@@ -2,9 +2,16 @@
 #![feature(vec_remove_item)]
 
 
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+
 extern crate strum;
 //#[macro_use]
 //extern crate strum_macros;
+
+
 
 #[macro_use]
 extern crate yew;
@@ -15,22 +22,15 @@ use yew::html::*;
 use views::*;
 
 mod views;
-mod msg;
+mod controller;
 mod models;
 
-use msg::Msg;
+use controller::{Msg, update};
 use models::{Model, Page, NewsModel, Article};
 use views::loadable::Loadable;
 
 
-fn update(_: &mut Context<Msg>, model: &mut Model, msg: Msg) {
-    use Msg::*;
-    match msg {
-        SetTopLevelPage(page) => {
-            model.page = page;
-        }
-    }
-}
+
 
 fn main() {
     let model = Model {

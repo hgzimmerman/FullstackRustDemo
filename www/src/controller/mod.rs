@@ -1,0 +1,44 @@
+use models::Page;
+use views::loadable::Loadable;
+use models::Article;
+use models::{Model, NewsModel};
+use yew::html::Context;
+
+
+mod news;
+pub use self::news::NewsMsg;
+
+pub enum Msg {
+    // Top level
+    /// Set the page
+    SetTopLevelPage(Page),
+    // Defer to sub-controllers
+    /// Defer to the NewsModel controller
+    News(NewsMsg),
+}
+
+pub fn update(context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
+    use Msg::*;
+    match msg {
+        SetTopLevelPage(page) => {
+            model.page = page;
+        }
+        News(news_msg) => {
+            if let Page::News(ref mut news_model) = model.page {
+                news_model.update(context, news_msg)
+            }
+        }
+
+    }
+}
+
+/// A trait used by sub-controllers.
+/// A sub-controller will be responsible for controlling the updating of a specific sub-models.
+pub trait Updatable<M> {
+    fn update(&mut self, context: &mut Context<Msg>, msg: M);
+}
+
+pub fn format_url<'a>(route: String) -> String {
+    let domain_and_port = "localhost:8001";
+    format!("{domain}/{route}", domain=domain_and_port, route=route)
+}

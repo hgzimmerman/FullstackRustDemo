@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-rocket = "0.3.3"
-rocket_codegen = "0.3.3"
-rocket_contrib = "0.3.3"
+rocket = "0.3.5"
+rocket_codegen = "0.3.5"
+rocket_contrib = "0.3.5"
 rocket-simpleauth = "0.3.0"
 
 diesel = { version = "*", features = ["sqlite"] }

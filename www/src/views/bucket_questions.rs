@@ -1,4 +1,4 @@
-use msg::Msg;
+use controller::Msg;
 use yew::html::Html;
 
 

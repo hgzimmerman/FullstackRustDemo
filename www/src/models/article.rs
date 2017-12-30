@@ -1,12 +1,15 @@
-use msg::Msg;
+use controller::Msg;
 use yew::html::Html;
 use views::Viewable;
+use serde::Deserialize;
 
+#[derive(Debug, Clone, Deserialize)]
 pub struct Article {
     pub title: String,
     pub publish_date: String, // todo change this boi.
     pub author: String, // This may point to a user in the future instead
-    pub content: String // TODO: Possibly make this HTML instead???
+    pub content: String, // TODO: Possibly make this HTML instead???
+    pub id: String
 }
 
 impl Article {
@@ -23,7 +26,8 @@ Sed diam sapien, malesuada ut semper id, posuere sed eros. Etiam viverra erat si
 
 Ut laoreet quam sit amet sapien posuere, at semper leo malesuada. Proin semper, dui in sagittis sagittis, augue nisi convallis lorem, ut feugiat libero augue et lorem. Duis varius at ex at fermentum. Integer ultricies lobortis erat, sed rhoncus mi posuere sed. Vestibulum at commodo elit. Sed imperdiet ornare justo ac hendrerit. Sed egestas diam eu nunc fringilla, a rutrum quam dictum. Duis laoreet turpis ut libero porta venenatis. Cras ac semper orci. Aenean laoreet, ante sit amet accumsan elementum, libero sapien aliquam felis, ut pretium est ligula vitae nisi. Quisque vel commodo neque, ac ullamcorper mauris.
 
-Fusce vel lacinia sapien, nec condimentum enim. Suspendisse fermentum neque quis quam tempor viverra. Cras commodo, felis nec sollicitudin mollis, eros metus imperdiet lacus, eget lobortis neque tellus in eros. Vestibulum vestibulum enim non ex tincidunt eleifend. Donec dictum efficitur risus, non aliquam felis lobortis a. In bibendum lorem sit amet tellus pretium, eget pulvinar eros vehicula. Maecenas pulvinar ligula sapien, sit amet egestas dui lacinia sit amet. Quisque purus ligula, malesuada nec ipsum in, tempor malesuada urna. Donec id vulputate ex, vitae interdum justo. Mauris dapibus quam tellus, vitae volutpat lorem porttitor cursus. Maecenas vitae sollicitudin est, id euismod nisi. Praesent cursus ultrices elementum. ".to_string()
+Fusce vel lacinia sapien, nec condimentum enim. Suspendisse fermentum neque quis quam tempor viverra. Cras commodo, felis nec sollicitudin mollis, eros metus imperdiet lacus, eget lobortis neque tellus in eros. Vestibulum vestibulum enim non ex tincidunt eleifend. Donec dictum efficitur risus, non aliquam felis lobortis a. In bibendum lorem sit amet tellus pretium, eget pulvinar eros vehicula. Maecenas pulvinar ligula sapien, sit amet egestas dui lacinia sit amet. Quisque purus ligula, malesuada nec ipsum in, tempor malesuada urna. Donec id vulputate ex, vitae interdum justo. Mauris dapibus quam tellus, vitae volutpat lorem porttitor cursus. Maecenas vitae sollicitudin est, id euismod nisi. Praesent cursus ultrices elementum. ".to_string(),
+            id: "hello".to_string(),
         }
     }
 }

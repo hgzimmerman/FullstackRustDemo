@@ -1,7 +1,8 @@
 use yew::html::Html;
 use views::Viewable;
-use msg::Msg;
+use controller::Msg;
 
+use yew::html::Context;
 
 /// Encapsulates an entity that will be loaded after accessing the page.
 /// Its state will be displayed while it has not loaded.
@@ -42,3 +43,4 @@ impl <T> Viewable<Msg> for Loadable<T>
 
     }
 }
+

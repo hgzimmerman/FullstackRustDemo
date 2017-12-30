@@ -52,7 +52,7 @@ fn main() {
 pub fn init_rocket() -> Rocket {
     rocket::ignite()
 //        .manage(init_pool())
-        .mount("/", routes![static_file::files])
+        .mount("/", routes![static_file::files, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
         .mount( &format_api(Article::PATH), Article::ROUTES() )
         .mount( &format_api(Login::PATH), Login::ROUTES() )
