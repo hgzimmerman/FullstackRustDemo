@@ -81,7 +81,7 @@ version = "0.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "www"
+name = "weekend_at_joes_4_frontend"
 version = "0.1.0"
 dependencies = [
  "strum 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",

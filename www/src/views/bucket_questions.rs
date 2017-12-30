@@ -1,6 +1,5 @@
 use msg::Msg;
 use yew::html::Html;
-use models::NewsModel;
 
 
 pub fn view() -> Html<Msg> {

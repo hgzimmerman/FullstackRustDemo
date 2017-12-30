@@ -2,7 +2,6 @@ use msg::Msg;
 use yew::html::Html;
 use models::Model;
 use models::Page;
-use news;
 use bucket_questions;
 use views::Viewable;
 

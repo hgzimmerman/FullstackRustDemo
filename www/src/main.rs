@@ -3,13 +3,13 @@
 
 
 extern crate strum;
-#[macro_use]
-extern crate strum_macros;
+//#[macro_use]
+//extern crate strum_macros;
 
 #[macro_use]
 extern crate yew;
 
-use strum::IntoEnumIterator;
+//use strum::IntoEnumIterator;
 use yew::html::*;
 
 use views::*;
@@ -23,8 +23,6 @@ use models::{Model, Page, NewsModel, Article};
 use views::loadable::Loadable;
 
 
-
-
 fn update(_: &mut Context<Msg>, model: &mut Model, msg: Msg) {
     use Msg::*;
     match msg {
@@ -34,22 +32,6 @@ fn update(_: &mut Context<Msg>, model: &mut Model, msg: Msg) {
     }
 }
 
-fn view(model: &Model) -> Html<Msg> {
-    html! {
-
-        <div>
-            { navbar::view() }
-            <div>
-                {content::view(model)}
-            </div>
-        </div>
-    }
-}
-
-
-
-
-
 fn main() {
     let model = Model {
         page: Page::News(NewsModel{
@@ -57,5 +39,5 @@ fn main() {
             article: Loadable::Loaded(Article::temp())
         })
     };
-    program(model, update, view);
+    program(model, update, views::view);
 }
