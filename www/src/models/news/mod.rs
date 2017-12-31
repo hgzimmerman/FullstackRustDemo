@@ -1,5 +1,8 @@
+
+mod article;
+pub use self::article::Article;
+
 use views::loadable::Loadable;
-use models::Article;
 
 pub struct NewsModel {
     pub link_id: String , // Needed???

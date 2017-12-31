@@ -1,8 +1,9 @@
-mod article;
-pub use self::article::Article;
 
 mod news;
-pub use self::news::NewsModel;
+pub use self::news::*;
+
+mod bucket;
+pub use self::bucket::*;
 
 
 use yew::html::Href;
@@ -14,14 +15,14 @@ pub struct Model {
 
 pub enum Page {
     News(NewsModel),
-    BucketQuestions,
+    BucketQuestions(BucketModel),
 }
 
 impl<'a> Into<Href> for &'a Page {
     fn into(self) -> Href {
         match *self {
             Page::News(_) => "#/news".into(),
-            Page::BucketQuestions => "#/bucket_questions".into(),
+            Page::BucketQuestions(_) => "#/bucket_questions".into(),
         }
     }
 }

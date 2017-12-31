@@ -9,7 +9,7 @@ pub fn view(model: &Model) -> Html<Msg> {
 
     let page_view = match model.page {
         Page::News(ref news_model) => news_model.view(),
-        Page::BucketQuestions => bucket_questions::view()
+        Page::BucketQuestions(ref bucket_model) => bucket_questions::view() // todo change this
     };
 
     html! {

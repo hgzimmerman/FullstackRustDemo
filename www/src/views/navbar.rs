@@ -2,7 +2,7 @@ use controller::Msg;
 use yew::html::Html;
 
 use views::loadable::Loadable;
-use models::{Page, NewsModel, Article};
+use models::{Page, NewsModel, Article, BucketModel};
 
 pub fn view() -> Html<Msg> {
     html! {
@@ -33,7 +33,7 @@ pub fn view() -> Html<Msg> {
                     <li class="nav-item",>
                         <a  class="nav-link",
                             href="#/bucket_questions",
-                            onclick = move |_| Msg::SetTopLevelPage(Page::BucketQuestions),
+                            onclick = move |_| Msg::SetTopLevelPage(Page::BucketQuestions(BucketModel::temp())),
                          >
                             {"Bucket Questions"}
                         </a>

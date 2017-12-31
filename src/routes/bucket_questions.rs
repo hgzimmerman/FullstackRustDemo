@@ -14,6 +14,7 @@ pub struct BucketSessions(pub HashMap<String, Bucket>);
 pub struct Bucket {
     active_question: Option<Question>,
     active_user: String, // Make user
+    connected_users: Vec<String>, // Todo, make this hold websocket instances??
     bucket: Vec<Question>,
     floor: Vec<Question>
 }
@@ -33,6 +34,7 @@ impl Bucket {
         Bucket {
             active_question: None,
             active_user: "Joe".to_string(),
+            connected_users: Vec::new(),
             bucket: Vec::new(),
             floor: Vec::new(),
         }

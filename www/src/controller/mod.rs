@@ -8,6 +8,9 @@ use yew::html::Context;
 mod news;
 pub use self::news::NewsMsg;
 
+mod bucket_questions;
+pub use self::bucket_questions::BucketMsg;
+
 pub enum Msg {
     // Top level
     /// Set the page
@@ -15,6 +18,7 @@ pub enum Msg {
     // Defer to sub-controllers
     /// Defer to the NewsModel controller
     News(NewsMsg),
+    BucketQuestion(BucketMsg)
 }
 
 pub fn update(context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
@@ -26,6 +30,11 @@ pub fn update(context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
         News(news_msg) => {
             if let Page::News(ref mut news_model) = model.page {
                 news_model.update(context, news_msg)
+            }
+        }
+        BucketQuestion(bucket_msg) => {
+            if let Page::BucketQuestions(ref mut bucket_model) = model.page {
+                bucket_model.update(context, bucket_msg)
             }
         }
 
