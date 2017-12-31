@@ -3,6 +3,7 @@ pub mod content;
 pub mod news;
 pub mod bucket_questions;
 pub mod loadable;
+pub mod article;
 
 use yew::html::Html;
 use controller::Msg;

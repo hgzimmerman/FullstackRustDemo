@@ -4,8 +4,10 @@ use controller::Msg;
 
 use yew::html::Context;
 
+//TODO: consider moving this into models/util
 /// Encapsulates an entity that will be loaded after accessing the page.
 /// Its state will be displayed while it has not loaded.
+#[derive(Clone, Debug)]
 pub enum Loadable<T> {
     Unloaded,
     Loading,

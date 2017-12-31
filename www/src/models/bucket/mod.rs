@@ -1,11 +1,12 @@
 mod question;
 pub use self::question::Question;
 
+#[derive(Debug, Clone)]
 pub struct BucketModel {
-    user_name: String,
-    active_question: Option<Question>,
-    new_question_input: String,
-    answer_input: String,
+    pub user_name: String,
+    pub active_question: Option<Question>,
+    pub new_question_input: String,
+    pub answer_input: String,
 }
 
 impl BucketModel {
