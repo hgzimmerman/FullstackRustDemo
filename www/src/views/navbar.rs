@@ -40,6 +40,26 @@ pub fn view() -> Html<Msg> {
                     </li>
                 </ul>
             </div>
+            // Right Side
+            <div>
+                <ul class=("navbar-nav"),>
+                    <li class=("nav-item", "dropdown"),>
+                        <a class=("nav-link", "dropdown-toggle"),
+                            id="navbarDropdown",
+                            href="#",
+                            data_toggle="dropdown", // TODO this should be 'data-toggle', YEW can't parse that for now.
+                            >
+                            { "JOE" }
+                        </a>
+                        <div class=("dropdown-menu"),>
+                            <a class=("dropdown-item"),> {"Settings"}</a>
+                        </div>
+
+
+                    </li>
+                </ul>
+            </div>
+
         </nav>
     }
 }

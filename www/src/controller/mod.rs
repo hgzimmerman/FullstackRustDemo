@@ -18,7 +18,8 @@ pub enum Msg {
     // Defer to sub-controllers
     /// Defer to the NewsModel controller
     News(NewsMsg),
-    BucketQuestion(BucketMsg)
+    BucketQuestion(BucketMsg),
+    NoOp
 }
 
 pub fn update(context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
@@ -36,6 +37,9 @@ pub fn update(context: &mut Context<Msg>, model: &mut Model, msg: Msg) {
             if let Page::BucketQuestions(ref mut bucket_model) = model.page {
                 bucket_model.update(context, bucket_msg)
             }
+        }
+        NoOp => {
+            // do nothing
         }
 
     }

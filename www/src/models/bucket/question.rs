@@ -1,8 +1,8 @@
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Question {
-    question: String,
-    answer: Option<String>,
-    author: String,
-    answered_by: Option<String>,
-    id: usize
+    pub question: String,
+    pub answer: Option<String>,
+    pub author: String,
+    pub answered_by: Option<String>,
+    pub id: usize
 }

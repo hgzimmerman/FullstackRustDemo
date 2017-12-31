@@ -108,13 +108,13 @@ dependencies = [
  "serde_json 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum_macros 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.1.0 (git+https://github.com/DenisKolodin/yew?rev=c1119f098c3de634d2893ece66fd57aefb6e5e72)",
+ "yew 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "yew"
 version = "0.1.0"
-source = "git+https://github.com/DenisKolodin/yew?rev=c1119f098c3de634d2893ece66fd57aefb6e5e72#c1119f098c3de634d2893ece66fd57aefb6e5e72"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "serde 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -136,4 +136,4 @@ dependencies = [
 "checksum syn 0.11.11 (registry+https://github.com/rust-lang/crates.io-index)" = "d3b891b9015c88c576343b9b3e41c2c11a51c219ef067b264bd9c8aa9b441dad"
 "checksum synom 0.11.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a393066ed9010ebaed60b9eafa373d4b1baac186dd7e008555b0f702b51945b6"
 "checksum unicode-xid 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f860d7d29cf02cb2f3f359fd35991af3d30bac52c57d265a3c461074cb4dc"
-"checksum yew 0.1.0 (git+https://github.com/DenisKolodin/yew?rev=c1119f098c3de634d2893ece66fd57aefb6e5e72)" = "<none>"
+"checksum yew 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "25da5ce11273a9202ecc933f00854b6d0cbadb8fe7ecde800b7c54528facc630"

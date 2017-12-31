@@ -9,9 +9,10 @@ use models::Question;
 
 
 pub enum BucketMsg {
-    AddQuestion(Question),
+    AddQuestion,
     BuildQuestion(String),
-    AnswerQuestion(Question),
+    SkipQuestion,
+    AnswerQuestion,
     BuildAnswer(String),
     DrawQuestion,
     SetActiveQuestion(Question)

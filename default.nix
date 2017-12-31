@@ -8,6 +8,8 @@ stdenv.mkDerivation rec {
     libmysql
     sqlite
     postgresql
+
+    emscripten
   ];
   shellHook = ''
     export PGDATA='pgsql'

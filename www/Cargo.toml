@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-yew = { git = "https://github.com/DenisKolodin/yew", rev = "c1119f098c3de634d2893ece66fd57aefb6e5e72" }
+#yew = { git = "https://github.com/DenisKolodin/yew", rev = "c1119f098c3de634d2893ece66fd57aefb6e5e72" }
+yew = "0.1.0"
 strum = "0.8.0"
 strum_macros = "0.8.0"
 
