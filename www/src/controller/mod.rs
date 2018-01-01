@@ -18,7 +18,9 @@ pub enum Msg {
     // Defer to sub-controllers
     /// Defer to the NewsModel controller
     News(NewsMsg),
+    /// Defer to the BucketQuestion controller
     BucketQuestion(BucketMsg),
+    /// Perform no action.
     NoOp
 }
 

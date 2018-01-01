@@ -13,7 +13,7 @@ pub fn active_question_view(model: &BucketModel) -> Html<Msg> {
         Some(ref q) => {
             html! {
                 <div>
-                    <h3>
+                    <h3> // This is some nonsense here
                         <h3>
                         {format!( "Q:  {}", q.question)}
                         </h3>

@@ -22,12 +22,10 @@ impl Updatable<NewsMsg> for NewsModel {
         match msg {
             FetchArticle { id } => {
                 self.article = Loadable::Loading;
-                context.fetch(Method::Get, "/api/article/test", Nothing, |Json(data)| {
+                let route = format!("/api/article/{}", id); // TODO possible use the std::path to validate this properly
+                context.fetch(Method::Get, route.as_str(), Nothing, |Json(data)| {
                     Msg::News(ArticleReady(data))
                 });
-//                context.fetch(Method::Get, format_url(format!("api/article/{id}", id=id)).as_str(), Nothing, |Json(data)| {
-//                    Msg::News(ArticleReady(data))
-//                });
             }
             ArticleReady(article) => {
                 match article {
