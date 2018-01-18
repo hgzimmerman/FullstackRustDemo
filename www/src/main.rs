@@ -25,10 +25,12 @@ mod views;
 mod controller;
 mod models;
 
-use controller::{Msg, update};
+use controller::{Msg, update, Context};
 use models::{Model, Page, NewsModel, Article};
 use views::loadable::Loadable;
+use yew::html::AppSender;
 
+use yew::services::fetch::FetchService;
 
 
 
@@ -39,5 +41,10 @@ fn main() {
             article: Loadable::Loaded(Article::temp())
         })
     };
-    program(model, update, views::view);
+    let mut app = App::new();
+    let mut context = Context {
+        fetch_service: FetchService::new(app.sender()),
+    };
+    app.mount(context, model, update, views::view);
+    yew::run_loop();
 }

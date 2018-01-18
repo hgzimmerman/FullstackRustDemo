@@ -1,8 +1,7 @@
 use yew::html::Html;
 use views::Viewable;
-use controller::Msg;
+use controller::{Msg, Context};
 
-use yew::html::Context;
 
 //TODO: consider moving this into models/util
 /// Encapsulates an entity that will be loaded after accessing the page.

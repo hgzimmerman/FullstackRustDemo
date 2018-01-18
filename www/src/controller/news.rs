@@ -1,12 +1,12 @@
 use views::loadable::Loadable;
 use controller::{Msg, Updatable};
-use yew::html::Context;
-use yew::services::format::{Nothing, Json};
+use yew::format::{Nothing, Json};
 use yew::services::fetch::{FetchService, Method};
 
 use models::Article;
 use models::NewsModel;
 use controller::format_url;
+use super::Context;
 
 pub enum NewsMsg {
     FetchArticle {
@@ -23,7 +23,7 @@ impl Updatable<NewsMsg> for NewsModel {
             FetchArticle { id } => {
                 self.article = Loadable::Loading;
                 let route = format!("/api/article/{}", id); // TODO possible use the std::path to validate this properly
-                context.fetch(Method::Get, route.as_str(), Nothing, |Json(data)| {
+                context.fetch_service.fetch(Method::Get, route.as_str(), Nothing, |Json(data)| {
                     Msg::News(ArticleReady(data))
                 });
             }

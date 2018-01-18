@@ -2,14 +2,15 @@ use models::Page;
 use views::loadable::Loadable;
 use models::Article;
 use models::{Model, NewsModel};
-use yew::html::Context;
-
+use yew::services::fetch::{FetchService};
 
 mod news;
 pub use self::news::NewsMsg;
 
 mod bucket_questions;
 pub use self::bucket_questions::BucketMsg;
+
+
 
 pub enum Msg {
     // Top level
@@ -56,4 +57,8 @@ pub trait Updatable<M> {
 pub fn format_url<'a>(route: String) -> String {
     let domain_and_port = "localhost:8001";
     format!("{domain}/{route}", domain=domain_and_port, route=route)
+}
+
+pub struct Context<MSG> {
+    pub fetch_service: FetchService<MSG>,
 }

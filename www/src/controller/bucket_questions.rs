@@ -1,14 +1,15 @@
 use views::loadable::Loadable;
 use controller::{Msg, Updatable};
-use yew::html::Context;
-use yew::services::format::{Nothing, Json};
+use yew::format::{Nothing, Json};
 use yew::services::fetch::{FetchService, Method};
 
-use yew::services::format::Storable;
+use yew::format::Storable;
 
 
 use models::BucketModel;
 use models::Question;
+
+use super::Context;
 
 
 pub enum BucketMsg {
@@ -51,7 +52,7 @@ impl Updatable<BucketMsg> for BucketModel {
 
 
 //                use controller::news::NewsMsg::ArticleReady;
-                context.fetch(Method::Post,
+                context.fetch_service.fetch(Method::Post,
                               route.as_str(),
 //                              Storable::from(Json(new_question)),
                               Nothing, // Todo, ^^^ can't do this for some reason
