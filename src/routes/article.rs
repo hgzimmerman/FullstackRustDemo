@@ -14,7 +14,7 @@ use diesel::PgConnection;
 use std::sync::Mutex;
 use db::DbConn;
 
-#[derive(Serialize, Deserialize, Queryable, Debug)]
+#[derive(Serialize, Deserialize, Clone, Queryable, Debug)]
 pub struct Article {
     pub id: i32,
     pub title: String,
@@ -38,23 +38,26 @@ struct NewArticle {
 
 
 #[get("/<article_id>", rank=0)]
-fn get_article(article_id: i32) -> Json<Article> {
-    Json(Article {
-        title: String::from("This is a title"),
-//        publish_date: String::from("Today"),
-        body: String::from("This is the body"),
-//        author: String::from("aoeu-aoeu-aoeu-aoeu-aoeu"),
-        id: article_id,
-        published: false
-    })
+fn get_article(article_id: i32, db_conn: State<DbConn>) -> Option<Json<Article>> {
+    use schema::articles;
+    use schema::articles::dsl::*;
+
+    let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
+    let returned_articles: Vec<Article> = articles
+        .filter(id.eq(article_id))
+        .limit(1)
+        .load::<Article>(&conn as &PgConnection)
+        .expect("db error");
+
+        match returned_articles.get(0) {
+            Some(a) => Some(Json(a.clone())),
+            None => None
+        }
 }
 
 #[post("/", data = "<new_article>")]
 fn create_article(new_article: Json<NewArticle>, db_conn: State<DbConn>) -> Json<Article> {
     use schema::articles;
-    use schema::articles::dsl::*;
-
-//    let connection: &PgConnection = &pool.
 
     let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
 
@@ -70,12 +73,15 @@ fn create_article(new_article: Json<NewArticle>, db_conn: State<DbConn>) -> Json
 
 #[put("/", data = "<article>")]
 fn update_article(article: Json<Article>) -> Json<Article> {
+    use schema::articles::dsl::*;
+
     let article: Article = article.into_inner();
     Json(article)
 }
 
 #[delete("/<article_id>")]
 fn delete_article(article_id: i32) -> Json<Article> {
+
     Json(Article {
         title: String::from("test"),
 //        publish_date: String::from("Today"),

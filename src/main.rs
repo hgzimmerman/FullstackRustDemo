@@ -76,7 +76,6 @@ pub fn init_rocket() -> Rocket {
 
     let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
-
     let db_conn: DbConn = Mutex::new(PgConnection::establish(&database_url).expect("Connection to db failed"));
     rocket::ignite()
         .manage(db_conn)
