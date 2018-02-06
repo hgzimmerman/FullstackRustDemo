@@ -9,10 +9,13 @@ rocket_codegen = "0.3.6"
 rocket_contrib = "0.3.6"
 rocket-simpleauth = "0.3.0"
 
-diesel = { version = "*", features = ["sqlite"] }
-diesel_codegen = { version = "*", features = ["sqlite"] }
-r2d2-diesel = "*"
+diesel = { version = "1.0", features = ["postgres"] }
+#diesel_codegen = { version = "1.0", features = ["postgresql"] }
+diesel_infer_schema = {version = "1.1.0", features = ["postgres"] }
+r2d2-diesel = "1.0.0"
 r2d2 = "*"
+
+lazy_static = "1.0"
 
 serde = "1.0.14"
 serde_json = "1.0.3"

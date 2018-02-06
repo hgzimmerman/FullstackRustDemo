@@ -1,52 +1,49 @@
 
 
-use diesel::sqlite::SqliteConnection;
+use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use r2d2;
+use r2d2::{PooledConnection,GetTimeout,Pool, Config};
 
 use std::ops::Deref;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
-
-// An alias to the type for a pool of Diesel SQLite connections.
-pub type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
-
-// The URL to the database, set via the `DATABASE_URL` environment variable.
-static DATABASE_URL: &'static str = env!("DATABASE_URL");
-
-/// Initializes a database pool.
-pub fn init_pool() -> Pool {
-    let config = r2d2::Config::default();
-    let manager = ConnectionManager::<SqliteConnection>::new(DATABASE_URL);
-    r2d2::Pool::new(config, manager).expect("db pool")
-}
+//use dotenv::dotenv;
+use std::env;
+use std::sync::Mutex;
 
 
+// pub fn create_db_pool() -> Pool<ConnectionManager<PgConnection>> {
+// //    dotenv().ok();
 
-// Connection request guard type: a wrapper around an r2d2 pooled connection.
-pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<SqliteConnection>>);
+//    let database_url = env::var("DATABASE_URL")
+//        .expect("DATABASE_URL must be set");
+//    let config = Config::default();
+//    let manager = ConnectionManager::<PgConnection>::new(database_url);
+//    Pool::new(config, manager).expect("Failed to create pool.")
+// }
 
-/// Attempts to retrieve a single connection from the managed database pool. If
-/// no pool is currently managed, fails with an `InternalServerError` status. If
-/// no connections are available, fails with a `ServiceUnavailable` status.
-impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
-    type Error = ();
+// lazy_static! {
+//    pub static ref DB_POOL: Pool<ConnectionManager<PgConnection>> = create_db_pool();
+// }
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<DbConn, ()> {
-        let pool = request.guard::<State<Pool>>()?;
-        match pool.get() {
-            Ok(conn) => Outcome::Success(DbConn(conn)),
-            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ()))
-        }
-    }
-}
+// pub struct DB(PooledConnection<ConnectionManager<PgConnection>>);
 
-// For the convenience of using an &DbConn as an &SqliteConnection.
-impl Deref for DbConn {
-    type Target = SqliteConnection;
+// impl D {
+//    pub fn conn(&self) -> &PgConnection {
+//        &*self.0
+//    }
+// }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+// impl<'a, 'r> FromRequest<'a, 'r> for DB {
+//    type Error = GetTimeout;
+//    fn from_request(_: &'a Request<'r>) -> Outcome<Self, Self::Error> {
+//        match DB_POOL.get() {
+//            Ok(conn) => Outcome::Success(DB(conn)),
+//            Err(e) => Outcome::Failure((Status::InternalServerError, e)),
+//        }
+//    }
+// }
+
+pub type DbConn = Mutex<PgConnection>;

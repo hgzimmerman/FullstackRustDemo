@@ -16,9 +16,12 @@ extern crate log;
 extern crate simplelog;
 
 #[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_codegen;
+//#[macro_use] extern crate diesel_codegen;
+#[macro_use] extern crate diesel_infer_schema;
 extern crate r2d2_diesel;
 extern crate r2d2;
+#[macro_use]
+extern crate lazy_static;
 
 extern crate bcrypt;
 
@@ -29,17 +32,26 @@ use rocket_contrib::Json;
 use uuid::Uuid;
 use std::sync::Mutex;
 use std::collections::HashMap;
+use db::DbConn;
 
 mod routes;
 use routes::*;
 mod db;
 
+use diesel_infer_schema::*;
+//use diesel_codegen::*;
+use diesel::*;
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 use std::fs::File;
 
 
+pub mod schema {
+    infer_schema!("dotenv:DATABASE_URL");
+}
+
 fn main() {
+
 
     const LOGFILE_NAME: &'static str = "weekend.log";
     CombinedLogger::init(
@@ -55,12 +67,19 @@ fn main() {
 ///Initialize the webserver
 pub fn init_rocket() -> Rocket {
 
+
     let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
     bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
+    use std::env;
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
 
     let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
+
+
+    let db_conn: DbConn = Mutex::new(PgConnection::establish(&database_url).expect("Connection to db failed"));
     rocket::ignite()
-//        .manage(init_pool())
+        .manage(db_conn)
         .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
@@ -68,8 +87,6 @@ pub fn init_rocket() -> Rocket {
         .mount( &format_api(Login::PATH), Login::ROUTES() )
         .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
 }
-
-
 
 
 ///Path should be an &str that starts with a /

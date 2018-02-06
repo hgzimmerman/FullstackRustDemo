@@ -13,7 +13,8 @@ stdenv.mkDerivation rec {
   ];
   shellHook = ''
     export PGDATA='pgsql'
-    export DATABASE_URL='http://localhost'
+    # to set the password, run `psql` and enter `\password` and set it to the password below
+    export DATABASE_URL='postgres://hzimmerman:password@localhost/weekend'
     pg_ctl init
     pg_ctl -l db.logfile start -o "-h localhost -i"
   '';
