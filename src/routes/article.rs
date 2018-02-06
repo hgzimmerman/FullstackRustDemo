@@ -14,7 +14,8 @@ use diesel::PgConnection;
 use std::sync::Mutex;
 use db::DbConn;
 
-#[derive(Serialize, Deserialize, Clone, Queryable, Debug)]
+#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Debug)]
+#[table_name="articles"]
 pub struct Article {
     pub id: i32,
     pub title: String,
@@ -71,25 +72,34 @@ fn create_article(new_article: Json<NewArticle>, db_conn: State<DbConn>) -> Json
     Json(inserted_article)
 }
 
-#[put("/", data = "<article>")]
-fn update_article(article: Json<Article>) -> Json<Article> {
+#[put("/", data = "<update_article>")]
+fn update_article(update_article: Json<Article>, db_conn: State<DbConn>) -> Json<Article> {
     use schema::articles::dsl::*;
+    use schema::articles;
 
-    let article: Article = article.into_inner();
-    Json(article)
+    let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
+
+    let article: Article = update_article.into_inner();
+
+    let updated_article: Article = diesel::update(articles::table)
+        .set(&article)
+        .get_result(&conn as &PgConnection)
+        .expect("Failed to insert");
+    
+    Json(updated_article)
 }
 
 #[delete("/<article_id>")]
-fn delete_article(article_id: i32) -> Json<Article> {
+fn delete_article(article_id: i32, db_conn: State<DbConn>) -> Json<Article> {
+    use schema::articles;
+    use schema::articles::dsl::*;
 
-    Json(Article {
-        title: String::from("test"),
-//        publish_date: String::from("Today"),
-        body: String::from("password"),
-//        author: String::from("aoeu-aoeu-aoeu-aoeu-aoeu"),
-        id: article_id,
-        published: false
-    })
+    let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
+
+    let deleted_article = diesel::delete(articles.filter(id.eq(article_id)))
+        .get_result(&conn as &PgConnection)
+        .expect("Failed to delete");
+    Json(deleted_article)
 }
 
 // Export the ROUTES and their path
