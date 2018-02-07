@@ -79,6 +79,7 @@ pub fn init_rocket() -> Rocket {
     let db_conn: DbConn = Mutex::new(PgConnection::establish(&database_url).expect("Connection to db failed"));
     rocket::ignite()
         .manage(db_conn)
+        .manage(db::init_pool())
         .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
