@@ -1,6 +1,5 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use uuid::Uuid;
 use rocket::Rocket;
 use super::Routable;
 use schema::articles;
@@ -8,16 +7,12 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
-use diesel::Uuid;
-use rocket::State;
 //use db::DB;
-use diesel::PgConnection;
-use std::sync::Mutex;
 use db::DbConn;
 use db::Conn;
 use db::Pool;
 
-#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Debug)]
+#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Debug)]
 #[table_name="articles"]
 pub struct Article {
     pub id: i32,

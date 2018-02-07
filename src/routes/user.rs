@@ -1,123 +1,145 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use uuid::Uuid;
 use auth::userpass::FromString;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::Hash;
-use bcrypt::{DEFAULT_COST, hash};
-use rocket::Rocket;
+use bcrypt::{DEFAULT_COST, hash, BcryptError};
 use super::Routable;
+use diesel;
+use diesel::RunQueryDsl;
+use diesel::ExpressionMethods;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum UserRole {
-    Unprivileged,
-    Admin
-}
+use db::Conn;
+
+use schema::users;
+
+// #[derive(Serialize, Deserialize, Debug)]
+// pub enum UserRole {
+//     Unprivileged,
+//     Admin
+// }
 
 /// User to be stored in db.
 /// This user will be used to check for auth.
+#[derive(Serialize, Deserialize, Debug, Identifiable, Queryable)]
+#[table_name="users"]
+pub struct User {
+    id: i32,
+    user_name: String,
+    display_name: String,
+    password_hash: String,
+    tombstone: bool
+}
+
+#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[table_name="users"]
+pub struct NewUser {
+    user_name: String,
+    display_name: String,
+    password_hash: String
+}
+
 #[derive(Serialize, Deserialize, Debug)]
-pub struct StoredUser {
-    name: String,
-    pw_hash: String,
-    id: String, // Uuid
-    user_roles: Vec<UserRole>
+pub struct NewUserRequest {
+    user_name: String,
+    display_name: String,
+    plaintext_password: String
 }
 
-
-impl StoredUser {
-    fn new(name: String, password: String ) -> StoredUser {
-        let hashed_pw = hash(password.as_str(), DEFAULT_COST).expect(format!("Hashing Password failed for user name: {}", name).as_str() );
-        StoredUser {
-            name,
-            pw_hash: hashed_pw,
-            id: Uuid::new_v4().hyphenated().to_string(),
-            user_roles: vec![UserRole::Unprivileged]
+impl From<NewUserRequest> for NewUser {
+    fn from(new_user_request: NewUserRequest) -> NewUser {
+        NewUser {
+            user_name: new_user_request.user_name,
+            display_name: new_user_request.display_name,
+            password_hash: hash_password(new_user_request.plaintext_password).expect("Couldn't hash password")
         }
     }
 }
 
-impl FromString for StoredUser {
-    fn from_string(s: String) -> Self {
-        return StoredUser {
-            name: String::from(""),
-            pw_hash: String::from(""),
-            id: s,
-            user_roles: vec![]
-        }
-    }
+
+
+
+fn hash_password(password: String) -> Result<String, BcryptError> {
+    hash(password.as_str(), DEFAULT_COST)
 }
 
-impl From<LoginUser> for StoredUser {
-    fn from(new_user: LoginUser) -> StoredUser {
-        let hashed_pw = hash(new_user.password.as_str(), DEFAULT_COST).expect(format!("Hashing Password failed for user name: {}", new_user.name).as_str() );
-        StoredUser {
-            name: new_user.name,
-            pw_hash: hashed_pw,
-            id: Uuid::new_v4().hyphenated().to_string(),
-            user_roles: vec![UserRole::Unprivileged]
-        }
-    }
-}
+
+// impl From<LoginUser> for User {
+//     fn from(new_user: LoginUser) -> StoredUser {
+//         let hashed_pw = hash_pw(new_user.password)
+//         User {
+//             name: new_user.name,
+//             pw_hash: hashed_pw,
+//             id: Uuid::new_v4().hyphenated().to_string(),
+//             user_roles: vec![UserRole::Unprivileged]
+//         }
+//     }
+// }
 
 /// Used for logging in and creating accounts.
 #[derive(Serialize, Deserialize, Debug)]
 struct LoginUser {
-    name: String,
-    password: String
+    user_name: String,
+    plaintext_password: String 
 }
 
 
 /// User to be sent over the wire
 #[derive(Serialize, Deserialize, Debug)]
-pub struct User {
-    name: String,
-    id: String,
+pub struct UserResponse {
+    user_name: String,
+    display_name: String,
+    id: i32,
 }
-impl From<StoredUser> for User {
-    fn from(stored_user: StoredUser) -> User {
-        User {
-            name: stored_user.name,
-            id: stored_user.id
+
+impl From<User> for UserResponse {
+    fn from(user: User) -> UserResponse {
+        UserResponse {
+            user_name: user.user_name,
+            display_name: user.display_name,
+            id: user.id
         }
     }
 }
 
 #[get("/<user_id>")]
-fn get_user(user_id: String) -> Json<User> {
+fn get_user(user_id: String) -> Json<UserResponse> {
     info!("Getting user with ID: {}", user_id);
     //TODO find the user in the DB using the id
-    Json(User {
-        name: String::from("test"),
-        id: user_id,
-    })
+    unimplemented!();
 }
 
 #[post("/", data = "<new_user>")]
-fn create_user(new_user: Json<LoginUser>) -> Json<User> {
-    info!("Creating new user with the following values: {:?}", new_user);
-    let new_user: LoginUser = new_user.into_inner();
-    let stored_user: StoredUser = StoredUser::from(new_user);
-    // TODO Store the user in a DB, checking if id already exists.
+fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Json<UserResponse> {
+    use schema::users;
 
-    //Return the standard user
-    Json(User::from(stored_user))
+    info!("Creating new user with the following values: {:?}", new_user);
+    let new_user: NewUser = new_user.into_inner().into();
+
+    let inserted_user: User = diesel::insert_into(users::table)
+        .values(&new_user)
+        .get_result(&*conn)
+        .expect("Couldn't create user");
+    
+    let user_response: UserResponse = inserted_user.into();
+    Json(user_response)
 }
 
 #[put("/", data = "<user>")]
-fn update_user(user: Json<User>) -> Json<User> {
+fn update_user(user: Json<User>) -> Json<UserResponse> {
     info!("Updating user with the following values: {:?}", user);
-    let user: User = user.into_inner();
-    Json(user)
+    // let user: User = user.into_inner();
+    // Json(user)
+    unimplemented!()
 }
 
 #[delete("/<user_id>")]
-fn delete_user(user_id: String) -> Json<User> {
+fn delete_user(user_id: String) -> Json<UserResponse> {
     info!("Deleting user with ID: {}", user_id);
-    Json(User {
-        name: String::from("test"),
-        id: user_id,
-    })
+    // Json(UserResponse {
+    //     display_name: String::from("test"),
+    //     id: user_id,
+    // })
+    unimplemented!();
+    // tombstone instead of delete please
 }
 
 // Export the ROUTES and their path

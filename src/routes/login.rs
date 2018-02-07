@@ -8,7 +8,7 @@ use auth::authenticator::Authenticator;
 use std::collections::HashMap;
 use auth::dummy::DummyAuthenticator;
 
-use super::user::StoredUser;
+use super::user::User;
 use super::Routable;
 
 //#[derive(Debug)]
@@ -32,7 +32,7 @@ use super::Routable;
 
 
 #[get("/admin")]
-fn admin(info: UserPass<String>) -> String{
+fn admin(info: UserPass<String>) -> String {
     info!("{:?}", info.user);
     // we use request guards to fall down to the login page if UserPass couldn't find a valid cookie
     format!("Restricted administration area, user logged in: {}", info.user)

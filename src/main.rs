@@ -20,16 +20,14 @@ extern crate simplelog;
 #[macro_use] extern crate diesel_infer_schema;
 extern crate r2d2_diesel;
 extern crate r2d2;
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 
 extern crate bcrypt;
 
 extern crate rand;
 
 use rocket::Rocket;
-use rocket_contrib::Json;
-use uuid::Uuid;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use db::DbConn;
