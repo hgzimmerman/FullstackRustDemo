@@ -12,6 +12,8 @@ rocket-simpleauth = "0.3.0"
 diesel = { version = "1.0", features = ["postgres", "uuid", "chrono", "serde_json"] }
 #diesel_codegen = { version = "1.0", features = ["postgresql"] }
 diesel_infer_schema = {version = "1.1.0", features = ["postgres"] }
+diesel-derive-enum = { version = "0.4", features = ["postgres"] }
+chrono = { version = "0.4", features = ["serde"] }
 r2d2-diesel = "1.0.0"
 r2d2 = "*"
 

@@ -8,35 +8,44 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
-
+//use diesel::pg::types::date_and_time::chrono::NaiveDateTime;
+use diesel::pg::types::date_and_time::PgDate;
+use chrono::{NaiveDateTime, Utc};
 use db::Conn;
 
 use schema::users;
 
-// #[derive(Serialize, Deserialize, Debug)]
-// pub enum UserRole {
+// #[derive(Serialize, Deserialize, Debug, DbEnum, Clone)]
+// #[PgType = "Userrole"]  
+// pub enum Userrole {
 //     Unprivileged,
+//     Moderator,
 //     Admin
 // }
 
 /// User to be stored in db.
 /// This user will be used to check for auth.
-#[derive(Serialize, Deserialize, Debug, Clone, Identifiable, Queryable)]
+#[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="users"]
 pub struct User {
     id: i32,
     user_name: String,
     display_name: String,
     password_hash: String,
-    tombstone: bool
+
+    token_key: Option<String>,
+    token_expire_date: Option<NaiveDateTime>,
+    roles: Vec<i32>
 }
+
 
 #[derive(Serialize, Deserialize, Insertable, Debug)]
 #[table_name="users"]
 pub struct NewUser {
     user_name: String,
     display_name: String,
-    password_hash: String
+    password_hash: String,
+    roles: Vec<i32>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -51,7 +60,8 @@ impl From<NewUserRequest> for NewUser {
         NewUser {
             user_name: new_user_request.user_name,
             display_name: new_user_request.display_name,
-            password_hash: hash_password(new_user_request.plaintext_password).expect("Couldn't hash password")
+            password_hash: hash_password(new_user_request.plaintext_password).expect("Couldn't hash password"),
+            roles: vec![1]
         }
     }
 }
@@ -168,28 +178,29 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -
     
 }
 
-#[delete("/<user_id>")]
-fn tombstone_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
-    use schema::users::dsl::*;
-    use schema::users;
-    info!("Tombstone the user id: {}.", user_id);
+// #[delete("/<user_id>")]
+// fn tombstone_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
+//     use schema::users::dsl::*;
+//     use schema::users;
+//     info!("Tombstone the user id: {}.", user_id);
 
-    let target = users.filter(id.eq(user_id));
+//     let target = users.filter(id.eq(user_id));
 
-    let updated_user: Result<User, Error> = diesel::update(target)
-        .set(tombstone.eq(true))
-        .get_result(&*conn);
+//     let updated_user: Result<User, Error> = diesel::update(target)
+//         .set(tombstone.eq(true))
+//         .get_result(&*conn);
 
-    match updated_user {
-        Ok(updated_user) => {
-            let user_response: UserResponse = updated_user.into();
-            Some(Json(user_response))
-        }
-        Err(_) => None
-    }
-}
+//     match updated_user {
+//         Ok(updated_user) => {
+//             let user_response: UserResponse = updated_user.into();
+//             Some(Json(user_response))
+//         }
+//         Err(_) => None
+//     }
+// }
 
 /// Currently, this is not exposed as an API, but is useful in testing
+#[delete("/<user_id>")]
 fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
     use schema::users::dsl::*;
     use schema::users;
@@ -228,7 +239,7 @@ fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserRespons
 }
 // Export the ROUTES and their path
 impl Routable for User {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![create_user, update_user_display_name, get_user, tombstone_user];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![create_user, update_user_display_name, get_user, delete_user];
     const PATH: &'static str = "/user/";
 }
 

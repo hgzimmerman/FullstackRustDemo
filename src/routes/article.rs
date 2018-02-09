@@ -16,7 +16,7 @@ use db::Pool;
 #[table_name="articles"]
 pub struct Article {
     pub id: i32,
-    author_id: i32,
+    pub author_id: i32,
     pub title: String,
 //    publish_date: String,
 //    author: Uuid, // uuid of author

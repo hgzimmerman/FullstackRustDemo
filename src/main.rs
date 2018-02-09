@@ -1,6 +1,7 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 #![feature(rand)]
+#![recursion_limit="128"]
 
 extern crate rocket;
 #[macro_use]
@@ -15,9 +16,12 @@ extern crate serde;
 extern crate log;
 extern crate simplelog;
 
+
 #[macro_use] extern crate diesel;
 //#[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate diesel_infer_schema;
+#[macro_use] extern crate diesel_derive_enum;
+extern crate chrono;
 extern crate r2d2_diesel;
 extern crate r2d2;
 // #[macro_use]

@@ -9,6 +9,12 @@ stdenv.mkDerivation rec {
     sqlite
     postgresql
 
+
+    # these two are optional, but they help with installing some rust Programs 
+    openssl 
+    pkgconfig
+    zlib
+
     emscripten
   ];
   shellHook = ''
