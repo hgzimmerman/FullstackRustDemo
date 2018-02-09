@@ -30,3 +30,4 @@ log = "0.3.8"
 simplelog = "^0.4.2"
 
 rand = "0.4.1"
+frank_jwt = "3.0.0"

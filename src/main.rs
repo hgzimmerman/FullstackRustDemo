@@ -16,6 +16,7 @@ extern crate serde;
 extern crate log;
 extern crate simplelog;
 
+extern crate frank_jwt;
 
 #[macro_use] extern crate diesel;
 //#[macro_use] extern crate diesel_codegen;

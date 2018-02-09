@@ -11,24 +11,30 @@ use auth::dummy::DummyAuthenticator;
 use super::user::User;
 use super::Routable;
 
-//#[derive(Debug)]
-//pub struct JoeAuthenticator {
-//    storedUser: StoredUser
-//}
-//
-//impl Authenticator for JoeAuthenticator {
-//    type User = StoredUser;
-//
-//    fn user(&self) -> StoredUser {
-//        self.storedUser
-//    }
-//
-//    fn check_credentials(username: String, password: String) -> Result<Self, Self>{
-//        if username
-//    }
-//}
+use frank_jwt::{Algorithm, encode, decode};
+use frank_jwt;
+use chrono::{NaiveDateTime, Utc};
+use rocket_contrib::Json;
 
 
+
+
+
+static format_string: &'static str = "%Y-%m-%d %H:%M:%S";
+
+
+fn generate_jwt(user_name: String, token_key; String, token_expire_date: NaiveDateTime, secret: String) -> String  {
+    let header = json!({});
+
+    let expired_date: String = user.token_expire_date.format(format_string).to_string();
+    let payload = json!({
+        "user_name": user_name,
+        "token_key": token_key,
+        "token_expire_date": expired_date
+    });
+    use std::ops::Deref;
+    encode(header, &secret, &payload, Algorithm::ES256).unwrap()
+}
 
 
 #[get("/admin")]
@@ -57,6 +63,18 @@ fn login_post(form: Form<LoginStatus<DummyAuthenticator>>, cookies: Cookies) -> 
     // the first parameter indicates the redirect URL when successful login,
     // the second a URL for a failed login
     form.into_inner().redirect("/api/login/admin", "/api/login/admin", cookies)
+}
+
+#[post("/admin", data = "<form>")]
+fn login(user_name: String, password: String) -> String {
+    // get user
+
+    // refresh token/ generate token
+
+    // update entry with new values
+
+    // return the token
+
 }
 
 pub fn login_routes() -> Vec<Route> {

@@ -8,8 +8,6 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
-//use diesel::pg::types::date_and_time::chrono::NaiveDateTime;
-use diesel::pg::types::date_and_time::PgDate;
 use chrono::{NaiveDateTime, Utc};
 use db::Conn;
 
