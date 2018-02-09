@@ -30,7 +30,6 @@ extern crate rand;
 use rocket::Rocket;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use db::DbConn;
 
 mod routes;
 use routes::*;
@@ -74,9 +73,7 @@ pub fn init_rocket() -> Rocket {
 
     let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
-    let db_conn: DbConn = Mutex::new(PgConnection::establish(&database_url).expect("Connection to db failed"));
     rocket::ignite()
-        .manage(db_conn)
         .manage(db::init_pool())
         .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])

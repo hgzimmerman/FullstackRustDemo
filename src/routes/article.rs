@@ -8,14 +8,15 @@ use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 //use db::DB;
-use db::DbConn;
 use db::Conn;
 use db::Pool;
 
-#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Debug)]
+#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
+#[belongs_to(User)]
 #[table_name="articles"]
 pub struct Article {
     pub id: i32,
+    author_id: i32,
     pub title: String,
 //    publish_date: String,
 //    author: Uuid, // uuid of author
@@ -47,10 +48,10 @@ fn get_article(article_id: i32, db_conn: Conn) -> Option<Json<Article>> {
         .load::<Article>(&*db_conn)
         .expect("db error");
 
-        match returned_articles.get(0) {
-            Some(a) => Some(Json(a.clone())),
-            None => None
-        }
+    match returned_articles.get(0) {
+        Some(a) => Some(Json(a.clone())),
+        None => None
+    }
 }
 
 #[post("/", data = "<new_article>")]
@@ -68,6 +69,8 @@ fn create_article(new_article: Json<NewArticle>, db_conn: Conn) -> Json<Article>
     Json(inserted_article)
 }
 
+/// Updates the article.
+// TODO: Consider not exposing this directly, and instead create update methods for publishing and editing.
 #[put("/", data = "<update_article>")]
 fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article> {
     use schema::articles::dsl::*;

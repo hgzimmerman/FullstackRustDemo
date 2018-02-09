@@ -46,7 +46,6 @@ use std::sync::Mutex;
 //    }
 // }
 
-pub type DbConn = Mutex<PgConnection>;
 
 
 
@@ -61,6 +60,12 @@ pub fn init_pool() -> Pool {
 }
 
 pub struct Conn(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
+
+impl Conn {
+    pub (crate) fn new( pooled_connection: r2d2::PooledConnection<ConnectionManager<PgConnection>> ) -> Conn {
+        Conn(pooled_connection)
+    }
+}
 
 impl Deref for Conn {
     type Target = PgConnection;
