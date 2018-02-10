@@ -20,6 +20,8 @@ use rocket::http::Status;
 use rocket::http::ContentType;
 use rocket::Request;
 use rocket::Response;
+use serde_json;
+
 
 #[derive(Debug)]
 pub enum LoginError {
@@ -55,18 +57,39 @@ pub fn verify_hash(plaintext: &str, expected_hash: &str) -> Result<bool, &'stati
     scrypt::scrypt_check(plaintext, expected_hash)
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Jwt {
+    pub user_name: String,
+    pub token_key: String,
+    pub token_expire_date: NaiveDateTime
+}
 
-fn generate_jwt(user_name: &str, token_key: &str, token_expire_date: NaiveDateTime, secret: &String) -> String  {
+fn generate_jwt_string(jwt: Jwt, secret: &String) -> String  {
     let header = json!({});
+    use rocket_contrib::Value;
 
-    let expired_date: String = token_expire_date.format(format_string).to_string();
-    let payload = json!({
-        "user_name": user_name,
-        "token_key": token_key,
-        "token_expire_date": expired_date
-    });
-    use std::ops::Deref;
+    let payload: Value = serde_json::to_value(jwt).unwrap();
     encode(header, secret, &payload, Algorithm::HS256).unwrap()
+}
+
+#[derive(Debug, Clone)]
+enum JwtError {
+    DecodeError,
+    EncodeError,
+    DeserializeError,
+    SerializeError,
+}
+
+fn decode_jwt_string(jwt_str: String, secret: String) -> Result<Jwt, JwtError> {
+    let (header, payload) = match decode(&jwt_str, &secret, Algorithm::HS256) {
+        Ok(x) => x,
+        Err(e) => return Err(JwtError::DecodeError)
+    };
+    let jwt: Jwt = match serde_json::from_value(payload) {
+        Ok(x) => x,
+        Err(e) => return Err(JwtError::DeserializeError)
+    };
+    Ok(jwt)
 }
 
 
@@ -123,7 +146,6 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     }
     
 
-
     // generate token
     info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(1);
@@ -138,14 +160,19 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         .collect::<String>();
     
     info!("Creating JWT");
-    let jwt: String = generate_jwt(&user.user_name, &new_key, new_expire_date, &secret);
-    info!("JWT created");
+    let jwt = Jwt {
+        user_name: user.user_name.clone(),
+        token_key: new_key.clone(),
+        token_expire_date: new_expire_date
+    };
+    let jwt_string: String = generate_jwt_string(jwt, &secret);
 
     // update entry with new values
     // and return the token
+    info!("updating user");
     return match User::update_user_jwt(user.user_name, new_key, new_expire_date, &conn) {
         Ok(_) => {
-            Ok(jwt)
+            Ok(jwt_string)
         }
         Err(_) => Err(LoginError::UpdateUserFailed)
     }
@@ -236,8 +263,29 @@ mod test {
     }
 
     #[test]
-    fn generate_jwt() {
-        super::generate_jwt("name", "aoeuaoeu", Utc::now().naive_utc(), &"secret".to_string());
+    fn jwt() {
+        use test_setup;
+        test_setup();
+        let secret = "secret".to_string();
+
+        let jwt = Jwt {
+            user_name: "name".to_string(),
+            token_key: "aoeuaoeu".to_string(),
+            token_expire_date: Utc::now().naive_utc()
+        };
+
+        let jwt_string: String = super::generate_jwt_string(jwt, &secret);
+        info!("{}", jwt_string);
+        let jwt: Jwt = match super::decode_jwt_string(jwt_string, secret) {
+            Ok(j) => j,
+            Err(e) => {
+                info!("{:?}", e);
+                panic!();
+            }
+        };
+        info!("{:?}", jwt);
+        assert_eq!(jwt.user_name, "name".to_string());
+        // assert_eq!(expected_jwt, jwt);
     }
 
 }
