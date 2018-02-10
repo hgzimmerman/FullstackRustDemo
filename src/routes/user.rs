@@ -15,13 +15,37 @@ use auth::hash_password;
 use std::ops::Deref;
 use schema::users;
 
-// #[derive(Serialize, Deserialize, Debug, DbEnum, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]  
-// pub enum Userrole {
-//     Unprivileged,
-//     Moderator,
-//     Admin
-// }
+pub enum UserRole {
+    Unprivileged,
+    Moderator,
+    Admin
+}
+
+impl From<UserRole> for i32 {
+    fn from(role: UserRole) -> i32 {
+        match role {
+            UserRole::Unprivileged => 1,
+            UserRole::Moderator => 2,
+            UserRole::Admin => 3
+        }
+    }
+}
+
+impl From<i32> for UserRole {
+    fn from(number: i32) -> UserRole {
+        match number {
+            1 => UserRole::Unprivileged,
+            2 => UserRole::Moderator,
+            3 => UserRole::Admin,
+            _ => {
+                warn!("Tried to convert an unsupported number into a user role");
+                UserRole::Unprivileged
+            }
+        }
+    }
+}
 
 /// User to be stored in db.
 /// This user will be used to check for auth.

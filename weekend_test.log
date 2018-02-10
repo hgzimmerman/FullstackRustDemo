@@ -1,16 +1,15 @@
-23:32:29 [INFO] eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl9leHBpcmVfZGF0ZSI6IjIwMTgtMDItMTBUMDU6MzI6MjkuMzI0MTIxNTYwIiwidG9rZW5fa2V5IjoiYW9ldWFvZXUiLCJ1c2VyX25hbWUiOiJuYW1lIn0=.FsElZqexMrSDi3zpwqquGwFQ9pcSGAHU0g_rYQDWUOs=
-23:32:29 [INFO] Couldn't delete user. Reason: NotFound
-23:32:29 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", token_expire_date: 2018-02-10T05:32:29.324121560 }
-23:32:29 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
-23:32:29 [INFO] Couldn't delete user. Reason: NotFound
-23:32:29 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
-23:32:36 [INFO] hashed_password: $rscrypt$0$CgoK$HeMLytAZMcIkoYPrDh9HBA==$TOY/JI3Ycp6uQ2fIk+++pXjDaqGbdBt0M3pmN3EtNho=$
-23:32:36 [INFO] Logging in for user: UserName
-23:32:36 [INFO] Getting user with Name: UserName
-23:32:36 [INFO] verifing password: TestPassword
-23:32:36 [INFO] against: $rscrypt$0$CgoK$/KswTTNSNtJj6fzd9hs4OQ==$tGbuPlvl5rk2w4NCA3dbMyJfVh2pMvNQ5rIl3NCmU7I=$
-23:32:41 [INFO] Password match verified
-23:32:41 [INFO] Generating JWT Expiry Date
-23:32:41 [INFO] Generating JWT key
-23:32:41 [INFO] Creating JWT
-23:32:41 [INFO] updating user
+08:21:35 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", user_roles: [Unprivileged], token_expire_date: 2018-02-10T14:21:35.671714264 }
+08:21:35 [INFO] Couldn't delete user. Reason: NotFound
+08:21:35 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
+08:21:35 [INFO] Couldn't delete user. Reason: NotFound
+08:21:35 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
+08:21:42 [INFO] Logging in for user: UserName
+08:21:42 [INFO] Getting user with Name: UserName
+08:21:42 [INFO] verifing password: TestPassword
+08:21:42 [INFO] against: $rscrypt$0$CgoK$EZSY8MXAxNS8jnxRIDgsyQ==$HbJD7MyKFeVxaOsV01kNzquiaKr6X5rM8DfGa8rh6DI=$
+08:21:43 [INFO] hashed_password: $rscrypt$0$CgoK$fFfRE2/KSf/tDxA9et7NYw==$TIpz/VfIJ+2pqanwhrBAXU9/nk65M+s+fpFveRIDC5k=$
+08:21:48 [INFO] Password match verified
+08:21:48 [INFO] Generating JWT Expiry Date
+08:21:48 [INFO] Generating JWT key
+08:21:48 [INFO] Creating JWT
+08:21:48 [INFO] updating user
