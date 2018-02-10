@@ -1,42 +1,28 @@
-use rocket::request::Form;
-use rocket::response::content::Html;
-use rocket::http::Cookies;
-use rocket::Route;
-use std::collections::HashMap;
+mod jwt;
+mod password;
 
-use crypto::scrypt;
-use super::Routable;
 
-use frank_jwt::{Algorithm, encode, decode};
-use frank_jwt;
-use chrono::{NaiveDateTime, DateTime, Utc, Duration};
-use rocket_contrib::Json;
+pub use self::jwt::user_authorization;
+pub use self::jwt::{Jwt, JwtError};
+
+// pub use self::login::login;
+// pub use self::login::{LoginRequest, LoginResult, LoginError};
+
+pub use self::password::{hash_password, verify_hash};
+
+use rand::{self, Rng};
+use chrono::{NaiveDateTime, Utc, Duration};
+use rocket::http::Status;
+use rocket::Response;
+use rocket::request::{self, Request, FromRequest};
+use rocket::response::Responder;
 use user::User;
 use db::Conn;
-use rocket::response::Responder;
-use rand::{self, Rng};
-use rocket::State;
-use rocket::http::Status;
-use rocket::http::ContentType;
-use rocket::Response;
-use serde_json;
-use routes::user::UserRole;
-use std::io;
-use rocket::Outcome;
-use rocket::request::{self, Request, FromRequest};
 
-#[derive(Debug)]
-pub enum LoginError {
-    UsernameDoesNotExist,
-    IncorrectPassword,
-    PasswordHashingError(&'static str),
-    JwtError(JwtError),
-    UpdateUserFailed,
-    OtherError(&'static str)
-}
 
 #[derive(Debug, Clone)]
 pub struct Secret(pub String);
+
 impl Secret {
     pub fn generate() -> Secret {
         let key = rand::thread_rng()
@@ -46,142 +32,6 @@ impl Secret {
         Secret(key)
     }
 }
-
-pub fn hash_password(password: &str) ->  io::Result<String> {
-    let params: scrypt::ScryptParams = scrypt::ScryptParams::new(10, 10, 10);
-    scrypt::scrypt_simple(password, &params)
-}
-
-pub fn verify_hash(plaintext: &str, expected_hash: &str) -> Result<bool, &'static str> {
-    scrypt::scrypt_check(plaintext, expected_hash)
-}
-
-pub enum RoleError {
-    InsufficientRights
-}
-
-pub struct NormalUser{
-    user_name: String
-}
-impl NormalUser {
-    pub fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
-        if jwt.user_roles.contains(&UserRole::Unprivileged){
-            Ok(NormalUser{
-                user_name: jwt.user_name.clone()
-            })
-        }
-        else {
-            Err(RoleError::InsufficientRights)
-        }
-    }
-}
-pub struct AdminUser {
-    user_name: String
-}
-impl AdminUser {
-    pub fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
-        if jwt.user_roles.contains(&UserRole::Admin){
-            Ok(AdminUser{
-                user_name: jwt.user_name.clone()
-            })
-        }
-        else {
-            Err(RoleError::InsufficientRights)
-        }
-    }
-}
-impl<'a, 'r> FromRequest<'a, 'r> for AdminUser {
-    type Error = ();
-
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, ()> {
-        let keys: Vec<_> = request.headers().get("Authorization").collect();
-        if keys.len() != 1 {
-            return Outcome::Failure((Status::BadRequest, ()));
-        };
-        // You can get the state secret from another request guard
-        let secret: String = match request.guard::<State<Secret>>() {
-            Outcome::Success(s) => s.0.clone(),
-            _ => return Outcome::Failure((Status::BadRequest, ()))
-        };
-
-        let key = keys[0];
-        let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
-            Ok(j) => j,
-            Err(_) => return Outcome::Failure((Status::BadRequest, ()))
-        };
-
-        match AdminUser::from_jwt(&jwt) {
-            Ok(admin) => Outcome::Success(admin),
-            Err(e) => Outcome::Forward(())
-        }
-    }
-}
-
-pub struct ModeratorUser {
-    user_name: String
-}
-impl ModeratorUser {
-    pub fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
-        if jwt.user_roles.contains(&UserRole::Moderator){
-            Ok(ModeratorUser{
-                user_name: jwt.user_name.clone()
-            })
-        }
-        else {
-            Err(RoleError::InsufficientRights)
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Jwt {
-    pub user_name: String,
-    pub token_key: String,// The token key may not be needed
-    pub user_roles: Vec<UserRole>,
-    pub token_expire_date: NaiveDateTime
-}
-
-impl Jwt {
-    pub fn encode_jwt_string(&self, secret: &String) -> Result<String, JwtError> {
-        let header = json!({});
-        use rocket_contrib::Value;
-
-        let payload: Value = match serde_json::to_value(self) {
-            Ok(x) => x,
-            Err(e) => return Err(JwtError::SerializeError)
-        };
-        match encode(header, secret, &payload, Algorithm::HS256) {
-            Ok(x) => return Ok(x),
-            Err(e) => return Err(JwtError::EncodeError)
-        }
-    }
-
-    pub fn decode_jwt_string(jwt_str: String, secret: &String) -> Result<Jwt, JwtError> {
-        let (header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
-            Ok(x) => x,
-            Err(e) => return Err(JwtError::DecodeError)
-        };
-        let jwt: Jwt = match serde_json::from_value(payload) {
-            Ok(x) => x,
-            Err(_) => return Err(JwtError::DeserializeError)
-        };
-        Ok(jwt)
-    }
-
-    
-}
-
-
-
-#[derive(Debug, Clone)]
-pub enum JwtError {
-    DecodeError,
-    EncodeError,
-    DeserializeError,
-    SerializeError,
-}
-
-
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -256,6 +106,16 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 }
 
 
+#[derive(Debug)]
+pub enum LoginError {
+    UsernameDoesNotExist,
+    IncorrectPassword,
+    PasswordHashingError(&'static str),
+    JwtError(JwtError),
+    UpdateUserFailed,
+    OtherError(&'static str)
+}
+
 impl <'a> Responder<'a> for LoginError {
     fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
         // TODO: use the string in a custom Status for internal server error
@@ -271,8 +131,7 @@ impl <'a> Responder<'a> for LoginError {
     }
 }
 
-
-
+#[cfg(test)]
 mod test {
     use super::*;
     use user::User;
@@ -364,3 +223,5 @@ mod test {
     }
 
 }
+
+

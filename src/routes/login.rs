@@ -1,14 +1,7 @@
-use rocket::request::Form;
-use rocket::response::content::Html;
-use rocket::http::Cookies;
 use rocket::Route;
-use std::collections::HashMap;
 
 use super::Routable;
 
-use frank_jwt::{Algorithm, encode, decode};
-use frank_jwt;
-use chrono::{NaiveDateTime, DateTime, Utc, Duration};
 use rocket_contrib::Json;
 use user::User;
 use db::Conn;
@@ -44,7 +37,6 @@ use auth::Secret;
 fn login(login_request: Json<LoginRequest>, secret: State<Secret>, conn: Conn) -> LoginResult {
     auth::login(login_request.0, secret.clone().0, &conn)
 }
-
 
 
 pub fn login_routes() -> Vec<Route> {

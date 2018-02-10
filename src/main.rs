@@ -43,9 +43,6 @@ mod db;
 mod auth;
 use auth::Secret;
 
-use diesel_infer_schema::*;
-//use diesel_codegen::*;
-use diesel::*;
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 use std::fs::File;

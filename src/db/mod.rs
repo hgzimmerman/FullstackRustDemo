@@ -1,17 +1,13 @@
-
-
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use r2d2;
-use r2d2::{PooledConnection,GetTimeout, Config};
+// use r2d2::{PooledConnection,GetTimeout, Config};
 
 use std::ops::Deref;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
 //use dotenv::dotenv;
-use std::env;
-use std::sync::Mutex;
 
 
 // pub fn create_db_pool() -> Pool<ConnectionManager<PgConnection>> {
