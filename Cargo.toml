@@ -24,10 +24,12 @@ serde_json = "1.0.3"
 serde_derive = "1.0.14"
 
 uuid = {version = "0.5", features = ["serde", "v4"] }
-bcrypt = "0.1"
+#bcrypt = "0.1"
 
 log = "0.3.8"
 simplelog = "^0.4.2"
 
 rand = "0.4.1"
 frank_jwt = "3.0.0"
+
+rust-crypto = "0.2.36"

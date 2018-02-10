@@ -1,0 +1,15 @@
+18:53:41 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
+18:53:41 [INFO] Couldn't delete user. Reason: NotFound
+18:53:41 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
+18:53:48 [INFO] Getting user with ID: 30
+18:53:48 [INFO] Updating the display name of user id 30 to NewDisplayName
+18:53:48 [INFO] Logging in for user: UserName
+18:53:48 [INFO] Getting user with Name: UserName
+18:53:48 [INFO] verifing password: TestPassword
+18:53:48 [INFO] against: $rscrypt$0$CgoK$8ZIOKogfAACYSJBUaWpBDg==$B232scMogooxHWx26L8O2whkxZD/FrjcOZWBdk6ofmA=$
+18:53:48 [INFO] hashed_password: $rscrypt$0$CgoK$uB1oM59RtVJBlE7+R+brtw==$1KD1/b0sr09aIXiGXFd16dq71EjZCSkhe5mjKDzGy38=$
+18:53:54 [INFO] Password match verified
+18:53:54 [INFO] Generating JWT Expiry Date
+18:53:54 [INFO] Generating JWT key
+18:53:54 [INFO] Creating JWT
+18:53:54 [INFO] JWT created

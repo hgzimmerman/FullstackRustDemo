@@ -6,7 +6,7 @@
 extern crate rocket;
 #[macro_use]
 extern crate rocket_contrib;
-extern crate rocket_simpleauth as auth;
+// extern crate rocket_simpleauth as auth;
 extern crate uuid;
 extern crate serde_json;
 #[macro_use]
@@ -28,7 +28,8 @@ extern crate r2d2;
 // #[macro_use]
 // extern crate lazy_static;
 
-extern crate bcrypt;
+// extern crate bcrypt;
+extern crate crypto;
 
 extern crate rand;
 
@@ -39,6 +40,8 @@ use std::collections::HashMap;
 mod routes;
 use routes::*;
 mod db;
+mod auth;
+use auth::Secret;
 
 use diesel_infer_schema::*;
 //use diesel_codegen::*;
@@ -78,8 +81,11 @@ pub fn init_rocket() -> Rocket {
 
     let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
+    let secret = Secret::generate();
+
     rocket::ignite()
         .manage(db::init_pool())
+        .manage(secret)
         .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
@@ -92,4 +98,23 @@ pub fn init_rocket() -> Rocket {
 ///Path should be an &str that starts with a /
 fn format_api(path: &str) -> String {
     String::from("/api") + path
+}
+
+
+use std::sync::{Once, ONCE_INIT};
+
+static INIT: Once = ONCE_INIT;
+
+/// Setup function that is only run once, even if called multiple times.
+pub fn test_setup() {
+    INIT.call_once(|| {
+
+        const LOGFILE_NAME: &'static str = "weekend_test.log";
+        CombinedLogger::init(
+            vec![
+                TermLogger::new(LogLevelFilter::Info, Config::default()).unwrap(),
+                WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
+            ]
+        ).unwrap();
+    });
 }

@@ -1,7 +1,7 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use auth::userpass::FromString;
-use bcrypt::{DEFAULT_COST, hash, BcryptError};
+// use auth::userpass::FromString;
+// use bcrypt::{DEFAULT_COST, hash, verify, BcryptError};
 use super::Routable;
 use diesel;
 use diesel::RunQueryDsl;
@@ -11,6 +11,8 @@ use diesel::result::Error;
 use chrono::{NaiveDateTime, Utc};
 use db::Conn;
 
+use auth::hash_password;
+use std::ops::Deref;
 use schema::users;
 
 // #[derive(Serialize, Deserialize, Debug, DbEnum, Clone)]
@@ -26,14 +28,14 @@ use schema::users;
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="users"]
 pub struct User {
-    id: i32,
-    user_name: String,
-    display_name: String,
-    password_hash: String,
+    pub id: i32,
+    pub user_name: String,
+    pub display_name: String,
+    pub password_hash: String,
 
-    token_key: Option<String>,
-    token_expire_date: Option<NaiveDateTime>,
-    roles: Vec<i32>
+    pub token_key: Option<String>,
+    pub token_expire_date: Option<NaiveDateTime>,
+    pub roles: Vec<i32>
 }
 
 
@@ -48,9 +50,9 @@ pub struct NewUser {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NewUserRequest {
-    user_name: String,
-    display_name: String,
-    plaintext_password: String
+    pub user_name: String,
+    pub display_name: String,
+    pub plaintext_password: String
 }
 
 impl From<NewUserRequest> for NewUser {
@@ -58,7 +60,7 @@ impl From<NewUserRequest> for NewUser {
         NewUser {
             user_name: new_user_request.user_name,
             display_name: new_user_request.display_name,
-            password_hash: hash_password(new_user_request.plaintext_password).expect("Couldn't hash password"),
+            password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
             roles: vec![1]
         }
     }
@@ -66,29 +68,36 @@ impl From<NewUserRequest> for NewUser {
 
 
 
+impl User {
+    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Option<User> {
+        use schema::users;
+        use schema::users::dsl::*;
+        info!("Getting user with Name: {}", name);
 
-fn hash_password(password: String) -> Result<String, BcryptError> {
-    hash(password.as_str(), DEFAULT_COST)
-}
+        let returned_users: Vec<User> = users
+            .filter(user_name.eq(user_name))
+            .limit(1)
+            .load::<User>(conn.deref())
+            .expect("db error");
 
+        return returned_users.get(0).map(|x| x.clone());
+    }
 
-// impl From<LoginUser> for User {
-//     fn from(new_user: LoginUser) -> StoredUser {
-//         let hashed_pw = hash_pw(new_user.password)
-//         User {
-//             name: new_user.name,
-//             pw_hash: hashed_pw,
-//             id: Uuid::new_v4().hyphenated().to_string(),
-//             user_roles: vec![UserRole::Unprivileged]
-//         }
-//     }
-// }
+    pub fn update_user_jwt(user_name: String, token_key: String, token_expire_date: NaiveDateTime, conn: &Conn ) -> Result<usize, Error> {
+        use schema::users::dsl::*;
+        use schema::users;
+        // info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
 
-/// Used for logging in and creating accounts.
-#[derive(Serialize, Deserialize, Debug)]
-struct LoginUser {
-    user_name: String,
-    plaintext_password: String 
+        let target = users.filter(user_name.eq(user_name));
+
+        let update_response = diesel::update(target)
+            .set((
+                users::token_key.eq(&token_key),
+                users::token_expire_date.eq(&token_expire_date))
+            )
+            .execute(conn.deref());  
+        update_response
+    }
 }
 
 
@@ -131,8 +140,11 @@ fn get_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
     }
 }
 
+
+
+
 #[post("/", data = "<new_user>")]
-fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Json<UserResponse> {
+pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Json<UserResponse> {
     use schema::users;
 
     info!("Creating new user with the following values: {:?}", new_user);
@@ -218,7 +230,7 @@ fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
 }
 
 /// Currently, this is not exposed as an API, but is useful in testing
-fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserResponse>> {
+pub fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserResponse>> {
     use schema::users::dsl::*;
     use schema::users;
 
@@ -232,7 +244,10 @@ fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserRespons
             let user_response: UserResponse = updated_user.into();
             Some(Json(user_response))
         }
-        Err(_) => None
+        Err(e) => {
+            info!("Couldn't delete user. Reason: {}", e);
+            None
+        }
     }
 }
 // Export the ROUTES and their path
@@ -260,7 +275,7 @@ mod test {
 
         // Delete the entry to avoid 
         let conn = Conn::new(pool.get().unwrap());
-        delete_user_by_name("UserName".into(), conn);
+        let response = delete_user_by_name("UserName".into(), conn);
 
         // Create a user
         let conn = Conn::new(pool.get().unwrap());
@@ -292,4 +307,6 @@ mod test {
         let conn = Conn::new(pool.get().unwrap());
         delete_user_by_name("UserName".into(), conn);
     }
+
+
 }
