@@ -28,6 +28,7 @@ pub trait Routable {
 #[derive(Debug, Clone, PartialEq)]
 pub enum WeekendAtJoesError {
     DatabaseError(Option<String>),
+    InternalServerError,
     NotFound{
         type_name: &'static str
     },
@@ -49,6 +50,9 @@ impl<'r> Responder<'r> for WeekendAtJoesError {
                 } else  {
                     build.merge("Database Error".to_string().respond_to(req)?);
                 }
+                build.status(Status::InternalServerError).ok()
+            }
+            InternalServerError => {
                 build.status(Status::InternalServerError).ok()
             }
             NotFound{type_name} => {
