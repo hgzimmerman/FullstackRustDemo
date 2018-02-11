@@ -40,10 +40,11 @@ use std::collections::HashMap;
 mod routes;
 use routes::*;
 mod db;
-mod requests_and_responses;
 mod auth;
 use auth::Secret;
 use db::user::User;
+
+extern crate requests_and_responses;
 
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};

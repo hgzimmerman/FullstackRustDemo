@@ -44,6 +44,33 @@ impl From<i32> for UserRole {
 }
 
 
+
+
+impl From<User> for UserResponse {
+    fn from(user: User) -> UserResponse {
+        UserResponse {
+            user_name: user.user_name,
+            display_name: user.display_name,
+            id: user.id
+        }
+    }
+}
+
+
+impl From<NewUserRequest> for NewUser {
+    fn from(new_user_request: NewUserRequest) -> NewUser {
+        NewUser {
+            user_name: new_user_request.user_name,
+            display_name: new_user_request.display_name,
+            password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
+            token_key: None,
+            token_expire_date: None,
+            roles: vec![1]
+        }
+    }
+}
+
+
 /// User to be stored in db.
 /// This user will be used to check for auth.
 #[derive( Debug, Clone, Identifiable, Queryable)]
@@ -166,7 +193,6 @@ impl User {
 
 #[cfg(test)]
 mod test {
-    use super::super::super::init_rocket; // initialize the webserver
     use rocket::local::Client;
     use rocket::http::Status;
     use rocket::http::ContentType;

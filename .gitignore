@@ -1,5 +1,6 @@
 /target/
 /www/target/
+/requests_and_responses/target/
 **/*.rs.bk
 weekend.log
 .idea

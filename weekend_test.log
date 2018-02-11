@@ -1,14 +1,14 @@
-07:55:14 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", user_roles: [Unprivileged], token_expire_date: 2018-02-11T13:55:14.220423499 }
-07:55:14 [INFO] Creating new user with the following values: NewUserRequest { user_name: "CrudTest-UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
-07:55:14 [INFO] Creating new user with the following values: NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
-07:55:21 [INFO] Logging in for user: UserName
-07:55:21 [INFO] Getting user with Name: UserName
-07:55:21 [INFO] verifing password: TestPassword
-07:55:21 [INFO] against: $rscrypt$0$CgoK$GPizcV4xGUhS2A2UWrfV/A==$7DEMEKJTfBXvCUq6qtfwPBwNaO7bPsTrerHSwQOp3A4=$
-07:55:21 [INFO] Getting user with ID: 74
-07:55:21 [INFO] hashed_password: $rscrypt$0$CgoK$eNa10GwtToW6sH66oqPHJg==$3d9I7FDrEVjRK3B5dwnM+fxqR7dzULqnFVZD3pAlnnM=$
-07:55:26 [INFO] Password match verified
-07:55:26 [INFO] Generating JWT Expiry Date
-07:55:26 [INFO] Generating JWT key
-07:55:26 [INFO] Creating JWT
-07:55:26 [INFO] updating user
+08:43:19 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", user_roles: [Unprivileged], token_expire_date: 2018-02-11T14:43:19.226095010 }
+08:43:19 [INFO] Creating new user with the following values: NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
+08:43:19 [INFO] Creating new user with the following values: NewUserRequest { user_name: "CrudTest-UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
+08:43:25 [INFO] hashed_password: $rscrypt$0$CgoK$99skuc8JBt6ULn3tev416Q==$cJw/UYdH9WHflJApspSreeP7eqwt5BCAbEw6f589+kQ=$
+08:43:25 [INFO] Logging in for user: UserName
+08:43:25 [INFO] Getting user with Name: UserName
+08:43:25 [INFO] verifing password: TestPassword
+08:43:25 [INFO] against: $rscrypt$0$CgoK$5AH+rDCtB2eZ4oxR8CCtPA==$FHwVIiT8u6cnjcVTq3wIYZ8M5hdgyJee5FInn27tGNs=$
+08:43:26 [INFO] Getting user with ID: 76
+08:43:31 [INFO] Password match verified
+08:43:31 [INFO] Generating JWT Expiry Date
+08:43:31 [INFO] Generating JWT key
+08:43:31 [INFO] Creating JWT
+08:43:31 [INFO] updating user
