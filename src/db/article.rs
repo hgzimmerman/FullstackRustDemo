@@ -7,7 +7,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::Insertable;
-use routes::DatabaseError;
+// use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
 use routes::WeekendAtJoesError;
@@ -47,7 +47,7 @@ impl Article {
             .get_result(conn.deref())
     }
 
-    pub fn publish_article(article_id: i32, conn: &Conn) -> Result<Option<NoContent>, DatabaseError> {
+    pub fn publish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::articles;
         match diesel::update(articles::table)
@@ -55,10 +55,10 @@ impl Article {
             .set(published.eq(true))
             .execute(conn.deref()) 
         {
-            Ok(_) => Ok(Some(NoContent)),
+            Ok(_) => Ok(NoContent),
             Err(e) => match e {
-                Error::NotFound => Ok(None),
-                _ => Err(DatabaseError(None))
+                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
+                _ => Err(WeekendAtJoesError::DatabaseError(None))
             }
         }
     }

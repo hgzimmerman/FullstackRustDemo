@@ -12,7 +12,8 @@ use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, Use
 use rocket::response::status::Custom;
 use rocket::http::Status;
 
-use routes::DatabaseError;
+// use routes::DatabaseError;
+use routes::WeekendAtJoesError;
 
 
 
@@ -27,7 +28,7 @@ fn get_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
 
 
 #[post("/", data = "<new_user>")]
-pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<UserResponse>, DatabaseError> {
+pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
     let new_user: NewUserRequest = new_user.into_inner();
     match User::create_user(new_user, &conn) {
         Ok(user) => {
@@ -35,7 +36,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
             Ok(Json(user_response))
         }
         Err(_) => {
-            Err(DatabaseError(None))
+            Err(WeekendAtJoesError::DatabaseError(None))
         }
     }
  

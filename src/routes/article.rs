@@ -11,7 +11,7 @@ use rocket::response::status::Custom;
 use rocket::http::Status;
 use db::article::*;
 use requests_and_responses::article::*;
-use routes::DatabaseError;
+// use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use routes::WeekendAtJoesError;
 
@@ -62,7 +62,7 @@ fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoe
 
 // TODO, test this interface
 #[put("/publish/<article_id>")]
-fn publish_article(article_id: i32, conn: Conn) -> Result<Option<NoContent>, DatabaseError> {
+fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     Article::publish_article(article_id, &conn)
 }
 
