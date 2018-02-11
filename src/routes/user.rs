@@ -1,44 +1,22 @@
 use rocket::Route;
 use rocket_contrib::Json;
-// use auth::userpass::FromString;
-// use bcrypt::{DEFAULT_COST, hash, verify, BcryptError};
-use super::Routable;
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
+
+use routes::Routable;
 use diesel::result::Error;
 use chrono::{NaiveDateTime};
 use db::Conn;
 
-use auth::hash_password;
-use std::ops::Deref;
-use schema::users;
 
 use db::user::User;
 use db::user::NewUser;
-use db::user::NewUserRequest;
+// use db::user::NewUserRequest;
+// use db::user::UpdateDisplayNameRequest;
+use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
 
 
 
 
-/// User to be sent over the wire
-#[derive(Serialize, Deserialize, Debug)]
-pub struct UserResponse {
-    user_name: String,
-    display_name: String,
-    id: i32,
-}
 
-impl From<User> for UserResponse {
-    fn from(user: User) -> UserResponse {
-        UserResponse {
-            user_name: user.user_name,
-            display_name: user.display_name,
-            id: user.id
-        }
-    }
-}
 
 #[get("/<user_id>")]
 fn get_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
@@ -98,22 +76,19 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct UpdateDisplayNameRequest {
-    id: i32,
-    new_display_name: String
-}
 #[put("/", data = "<data>")]
 fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -> Option<Json<UserResponse>> {
-    use schema::users::dsl::*;
-    let data: UpdateDisplayNameRequest = data.into_inner();
-    info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
+    // use schema::users::dsl::*;
+    // let data: UpdateDisplayNameRequest = data.into_inner();
+    // info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
 
-    let target = users.filter(id.eq(data.id));
+    // let target = users.filter(id.eq(data.id));
 
-    let updated_user: Result<User, Error> = diesel::update(target)
-        .set(display_name.eq(data.new_display_name))
-        .get_result(&*conn);
+    // let updated_user: Result<User, Error> = diesel::update(target)
+    //     .set(display_name.eq(data.new_display_name))
+    //     .get_result(&*conn);
+    let request: UpdateDisplayNameRequest = data.into_inner();
+    let updated_user = User::update_user_display_name(request, &conn);
 
     match updated_user {
         Ok(updated_user) => {
@@ -125,36 +100,12 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -
     
 }
 
-// #[delete("/<user_id>")]
-// fn tombstone_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
-//     use schema::users::dsl::*;
-//     use schema::users;
-//     info!("Tombstone the user id: {}.", user_id);
-
-//     let target = users.filter(id.eq(user_id));
-
-//     let updated_user: Result<User, Error> = diesel::update(target)
-//         .set(tombstone.eq(true))
-//         .get_result(&*conn);
-
-//     match updated_user {
-//         Ok(updated_user) => {
-//             let user_response: UserResponse = updated_user.into();
-//             Some(Json(user_response))
-//         }
-//         Err(_) => None
-//     }
-// }
 
 /// Currently, this is not exposed as an API, but is useful in testing
 #[delete("/<user_id>")]
 fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
-    use schema::users::dsl::*;
 
-    let target = users.filter(id.eq(user_id));
-
-    let updated_user: Result<User, Error> = diesel::delete(target)
-        .get_result(&*conn);
+    let updated_user = User::delete_user_by_id(user_id, &conn);
 
     match updated_user {
         Ok(updated_user) => {
@@ -167,12 +118,8 @@ fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
 
 /// Currently, this is not exposed as an API, but is useful in testing
 pub fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserResponse>> {
-    use schema::users::dsl::*;
 
-    let target = users.filter(user_name.eq(user_name));
-
-    let updated_user: Result<User, Error> = diesel::delete(target)
-        .get_result(&*conn);
+    let updated_user = User::delete_user_by_name(user_name, &conn);
 
     match updated_user {
         Ok(updated_user) => {
@@ -192,56 +139,3 @@ impl Routable for User {
 }
 
 
-#[cfg(test)]
-mod test {
-    use super::super::super::init_rocket; // initialize the webserver
-    use rocket::local::Client;
-    use rocket::http::Status;
-    use rocket::http::ContentType;
-    use db;
-    use db::Conn;
-    use super::*;
-
-
-    #[test]
-    fn crud() {
-
-        let pool = db::init_pool();
-
-        // Delete the entry to avoid 
-        let conn = Conn::new(pool.get().unwrap());
-        let response = delete_user_by_name("UserName".into(), conn);
-
-        // Create a user
-        let conn = Conn::new(pool.get().unwrap());
-        let new_user = NewUserRequest {
-            user_name: "UserName".into(),
-            display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into() 
-        };
-        let response: UserResponse =  create_user(Json(new_user), conn).into_inner();
-        assert_eq!("UserName".to_string(), response.user_name);
-
-        // Get User
-        let conn = Conn::new(pool.get().unwrap());
-        let response: UserResponse =  get_user(response.id, conn).unwrap().into_inner();
-        assert_eq!("UserName".to_string(), response.user_name);
-
-
-        // Modify user
-        let conn = Conn::new(pool.get().unwrap());
-        let update_display_name_request: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
-            id: response.id,
-            new_display_name: "NewDisplayName".into()
-        };
-        let response: UserResponse = update_user_display_name(Json(update_display_name_request), conn).unwrap().into_inner();
-        assert_eq!("NewDisplayName".to_string(), response.display_name);
-
-
-        // Delete the entry
-        let conn = Conn::new(pool.get().unwrap());
-        delete_user_by_name("UserName".into(), conn);
-    }
-
-
-}

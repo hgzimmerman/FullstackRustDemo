@@ -1,15 +1,14 @@
-08:21:35 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", user_roles: [Unprivileged], token_expire_date: 2018-02-10T14:21:35.671714264 }
-08:21:35 [INFO] Couldn't delete user. Reason: NotFound
-08:21:35 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
-08:21:35 [INFO] Couldn't delete user. Reason: NotFound
-08:21:35 [INFO] Creating new user with the following values: Json(NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" })
-08:21:42 [INFO] Logging in for user: UserName
-08:21:42 [INFO] Getting user with Name: UserName
-08:21:42 [INFO] verifing password: TestPassword
-08:21:42 [INFO] against: $rscrypt$0$CgoK$EZSY8MXAxNS8jnxRIDgsyQ==$HbJD7MyKFeVxaOsV01kNzquiaKr6X5rM8DfGa8rh6DI=$
-08:21:43 [INFO] hashed_password: $rscrypt$0$CgoK$fFfRE2/KSf/tDxA9et7NYw==$TIpz/VfIJ+2pqanwhrBAXU9/nk65M+s+fpFveRIDC5k=$
-08:21:48 [INFO] Password match verified
-08:21:48 [INFO] Generating JWT Expiry Date
-08:21:48 [INFO] Generating JWT key
-08:21:48 [INFO] Creating JWT
-08:21:48 [INFO] updating user
+07:55:14 [INFO] Jwt { user_name: "name", token_key: "aoeuaoeu", user_roles: [Unprivileged], token_expire_date: 2018-02-11T13:55:14.220423499 }
+07:55:14 [INFO] Creating new user with the following values: NewUserRequest { user_name: "CrudTest-UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
+07:55:14 [INFO] Creating new user with the following values: NewUserRequest { user_name: "UserName", display_name: "DisplayName", plaintext_password: "TestPassword" }
+07:55:21 [INFO] Logging in for user: UserName
+07:55:21 [INFO] Getting user with Name: UserName
+07:55:21 [INFO] verifing password: TestPassword
+07:55:21 [INFO] against: $rscrypt$0$CgoK$GPizcV4xGUhS2A2UWrfV/A==$7DEMEKJTfBXvCUq6qtfwPBwNaO7bPsTrerHSwQOp3A4=$
+07:55:21 [INFO] Getting user with ID: 74
+07:55:21 [INFO] hashed_password: $rscrypt$0$CgoK$eNa10GwtToW6sH66oqPHJg==$3d9I7FDrEVjRK3B5dwnM+fxqR7dzULqnFVZD3pAlnnM=$
+07:55:26 [INFO] Password match verified
+07:55:26 [INFO] Generating JWT Expiry Date
+07:55:26 [INFO] Generating JWT key
+07:55:26 [INFO] Creating JWT
+07:55:26 [INFO] updating user

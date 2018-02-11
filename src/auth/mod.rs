@@ -134,11 +134,9 @@ impl <'a> Responder<'a> for LoginError {
 #[cfg(test)]
 mod test {
     use super::*;
-    use user::User;
-    use user::UserResponse;
-    use user::NewUserRequest;
-    use user::delete_user_by_name;
-    use user::create_user;
+    use db::user::{User, UserRole};
+    use requests_and_responses::user::UserResponse;
+    use requests_and_responses::user::NewUserRequest;
     use db;
 
     #[test]
@@ -148,7 +146,7 @@ mod test {
 
         // Delete the entry to avoid 
         let conn = Conn::new(pool.get().unwrap());
-        delete_user_by_name("UserName".into(), conn);
+        let _ = User::delete_user_by_name("UserName".into(), &conn);
 
         // Create a user
         let conn = Conn::new(pool.get().unwrap());
@@ -157,7 +155,7 @@ mod test {
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into() 
         };
-        let response: UserResponse =  create_user(Json(new_user), conn).into_inner();
+        let response: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
         // assert_eq!("UserName".to_string(), response.user_name);
 
 
@@ -177,7 +175,7 @@ mod test {
         assert!(response.is_ok());
 
         let conn = Conn::new(pool.get().unwrap());
-        delete_user_by_name("UserName".into(), conn);
+        let _ = User::delete_user_by_name("UserName".into(), &conn);
 
 
     }
@@ -211,8 +209,8 @@ mod test {
             token_expire_date: Utc::now().naive_utc()
         };
 
-        let jwt_string: String = super::encode_jwt_string(jwt, &secret);
-        let jwt: Jwt = match super::decode_jwt_string(jwt_string, secret) {
+        let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
+        let jwt: Jwt = match  Jwt::decode_jwt_string(jwt_string, &secret) {
             Ok(j) => j,
             Err(e) => {
                 info!("{:?}", e);

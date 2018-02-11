@@ -9,6 +9,8 @@ use std::ops::Deref;
 use chrono::NaiveDateTime;
 use schema::users;
 
+use requests_and_responses::user::*;
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]  
 pub enum UserRole {
@@ -37,26 +39,6 @@ impl From<i32> for UserRole {
                 warn!("Tried to convert an unsupported number into a user role");
                 UserRole::Unprivileged
             }
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct NewUserRequest {
-    pub user_name: String,
-    pub display_name: String,
-    pub plaintext_password: String
-}
-
-impl From<NewUserRequest> for NewUser {
-    fn from(new_user_request: NewUserRequest) -> NewUser {
-        NewUser {
-            user_name: new_user_request.user_name,
-            display_name: new_user_request.display_name,
-            password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
-            token_key: None,
-            token_expire_date: None,
-            roles: vec![1]
         }
     }
 }
@@ -140,7 +122,7 @@ impl User {
         returned_users.get(0).cloned()
     }
 
-    pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, diesel::result::Error> {
+    pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, Error> {
         use schema::users;
 
         info!("Creating new user with the following values: {:?}", new_user);
@@ -149,6 +131,86 @@ impl User {
         diesel::insert_into(users::table)
             .values(&new_user)
             .get_result(conn.deref())
-        
     }
+    
+    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, Error> {
+
+        use schema::users::dsl::*;
+        let target = users.filter(id.eq(request.id));
+
+        let updated_user: Result<User, Error> = diesel::update(target)
+            .set(display_name.eq(request.new_display_name))
+            .get_result(conn.deref());
+
+        updated_user
+    }
+
+    pub fn delete_user_by_id(user_id: i32, conn: &Conn) -> Result<User, Error> {
+        use schema::users::dsl::*;
+
+        let target = users.filter(id.eq(user_id));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+    }
+
+    pub fn delete_user_by_name(user_name: String, conn: &Conn) -> Result<User, Error> {
+        use schema::users::dsl::*;
+
+        let target = users.filter(user_name.eq(user_name));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::super::super::init_rocket; // initialize the webserver
+    use rocket::local::Client;
+    use rocket::http::Status;
+    use rocket::http::ContentType;
+    use db;
+    use db::Conn;
+    use super::*;
+
+
+    #[test]
+    fn crud() {
+
+        let pool = db::init_pool();
+
+        let user_name: String = "CrudTest-UserName".into();
+
+        // Delete the entry to avoid 
+        let conn = Conn::new(pool.get().unwrap());
+        let _ = User::delete_user_by_name(user_name.clone(), &conn);
+
+        // Create a user
+        let new_user = NewUserRequest {
+            user_name: user_name.clone(),
+            display_name: "DisplayName".into(),
+            plaintext_password: "TestPassword".into() 
+        };
+        let response: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
+        assert_eq!(user_name.clone(), response.user_name);
+
+        // Get User
+        let response: UserResponse =  User::get_user(response.id, &conn).unwrap().into();
+        assert_eq!(user_name.clone(), response.user_name);
+
+
+        // Modify user
+        let update_display_name_request: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
+            id: response.id,
+            new_display_name: "NewDisplayName".into()
+        };
+        let response: UserResponse = User::update_user_display_name(update_display_name_request, &conn).unwrap().into();
+        assert_eq!("NewDisplayName".to_string(), response.display_name);
+
+
+        // Delete the entry
+        let _ = User::delete_user_by_name(user_name, &conn);
+    }
+
 }
