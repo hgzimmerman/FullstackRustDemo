@@ -7,8 +7,10 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::Insertable;
-
+use routes::DatabaseError;
+use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
+use routes::WeekendAtJoesError;
 
 #[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User)]
@@ -45,23 +47,34 @@ impl Article {
             .get_result(conn.deref())
     }
 
-    pub fn publish_article(article_id: i32, conn: &Conn) -> bool {
+    pub fn publish_article(article_id: i32, conn: &Conn) -> Result<Option<NoContent>, DatabaseError> {
         use schema::articles::dsl::*;
         use schema::articles;
-        diesel::update(articles::table)
+        match diesel::update(articles::table)
             .filter(id.eq(article_id))
             .set(published.eq(true))
-            .execute(conn.deref())
-            .is_ok()
+            .execute(conn.deref()) 
+        {
+            Ok(_) => Ok(Some(NoContent)),
+            Err(e) => match e {
+                Error::NotFound => Ok(None),
+                _ => Err(DatabaseError(None))
+            }
+        }
     }
 
-    pub fn delete_article(article_id: i32, conn: &Conn) -> bool {
+    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
         use schema::articles::dsl::*;
-        // let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
 
-        diesel::delete(articles.filter(id.eq(article_id)))
+        match diesel::delete(articles.filter(id.eq(article_id)))
             .execute(conn.deref())
-            .is_ok()
+        {
+            Ok(_) => Ok(NoContent),
+            Err(e) => match e {
+                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
+                _ => Err(WeekendAtJoesError::DatabaseError(None))
+            }
+        }
     }
     
 }

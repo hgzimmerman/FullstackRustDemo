@@ -13,6 +13,7 @@ use db::article::*;
 use requests_and_responses::article::*;
 use routes::DatabaseError;
 use rocket::response::status::NoContent;
+use routes::WeekendAtJoesError;
 
 // TODO: change the return type of this to Result<Json<Article>, Custom<>>
 // return a custom 404 or a custom 500 depending on the error type
@@ -55,13 +56,14 @@ fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article>
 
 // TODO, test this interface
 #[delete("/<article_id>")]
-fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, DatabaseError> {
-    if Article::delete_article(article_id, &conn) {
-        Ok(NoContent)
-    }
-    else {
-        Err(DatabaseError(None))
-    }
+fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    Article::delete_article(article_id, &conn) 
+}
+
+// TODO, test this interface
+#[put("/publish/<article_id>")]
+fn publish_article(article_id: i32, conn: Conn) -> Result<Option<NoContent>, DatabaseError> {
+    Article::publish_article(article_id, &conn)
 }
 
 // Export the ROUTES and their path

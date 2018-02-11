@@ -5,6 +5,7 @@ pub struct NewArticleRequest {
     pub author_id: i32
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UpdateArticleRequest {
     pub title: Option<String>,
     pub body: Option<String>,

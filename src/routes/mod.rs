@@ -27,7 +27,7 @@ pub trait Routable {
 
 // Response type to indicate if the backend encountered a database error
 #[derive(Debug, Clone, PartialEq)]
-pub struct DatabaseError(Option<String>);
+pub struct DatabaseError(pub Option<String>);
 impl<'r> Responder<'r> for DatabaseError {
     fn respond_to(self, req: &Request) -> Result<Response<'r>, Status> {
         let mut build = Response::build();
@@ -37,6 +37,52 @@ impl<'r> Responder<'r> for DatabaseError {
             build.merge("Database Error".to_string().respond_to(req)?);
         }
 
-        build.status(Status::Accepted).ok()
+        build.status(Status::InternalServerError).ok()
+    }
+}
+
+#[derive(Debug)]
+pub enum WeekendAtJoesError {
+    DatabaseError(Option<String>),
+    NotFound{
+        type_name: &'static str
+    },
+    NotAuthorized {
+        reason: &'static str
+    },
+    BadRequest
+}
+
+impl<'r> Responder<'r> for WeekendAtJoesError {
+    fn respond_to(self, req: &Request) -> Result<Response<'r>, Status> {
+        let mut build = Response::build();
+
+        use WeekendAtJoesError::*;
+        match self {
+            DatabaseError(db_error) => {
+                if let Some(error_message) = db_error {
+                    build.merge(error_message.respond_to(req)?);
+                } else  {
+                    build.merge("Database Error".to_string().respond_to(req)?);
+                }
+                build.status(Status::InternalServerError).ok()
+            }
+            NotFound{type_name} => {
+                let err_message = format!("Could not find requested {}", type_name );
+                Response::build_from(err_message.respond_to(req)?)
+                    .status(Status::NotFound)
+                    .ok()
+            }
+            NotAuthorized {reason} => {
+                build.merge(reason.respond_to(req)?)
+                    .status(Status::Unauthorized)
+                    .ok()
+            }
+            BadRequest => {
+                build.merge("Malformed request".respond_to(req)?)
+                    .status(Status::BadRequest)
+                    .ok()
+            }
+        }
     }
 }
