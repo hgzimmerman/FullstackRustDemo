@@ -1,7 +1,5 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use uuid::Uuid;
-use rocket::Rocket;
 use super::Routable;
 use std::sync::Mutex;
 use std::collections::HashMap;

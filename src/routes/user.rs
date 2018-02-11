@@ -8,121 +8,18 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
-use chrono::{NaiveDateTime, Utc};
+use chrono::{NaiveDateTime};
 use db::Conn;
 
 use auth::hash_password;
 use std::ops::Deref;
 use schema::users;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-// #[PgType = "Userrole"]  
-pub enum UserRole {
-    Unprivileged,
-    Moderator,
-    Admin
-}
-
-impl From<UserRole> for i32 {
-    fn from(role: UserRole) -> i32 {
-        match role {
-            UserRole::Unprivileged => 1,
-            UserRole::Moderator => 2,
-            UserRole::Admin => 3
-        }
-    }
-}
-
-impl From<i32> for UserRole {
-    fn from(number: i32) -> UserRole {
-        match number {
-            1 => UserRole::Unprivileged,
-            2 => UserRole::Moderator,
-            3 => UserRole::Admin,
-            _ => {
-                warn!("Tried to convert an unsupported number into a user role");
-                UserRole::Unprivileged
-            }
-        }
-    }
-}
-
-/// User to be stored in db.
-/// This user will be used to check for auth.
-#[derive( Debug, Clone, Identifiable, Queryable)]
-#[table_name="users"]
-pub struct User {
-    pub id: i32,
-    pub user_name: String,
-    pub display_name: String,
-    pub password_hash: String,
-
-    pub token_key: Option<String>,
-    pub token_expire_date: Option<NaiveDateTime>,
-    pub roles: Vec<i32>
-}
+use db::user::User;
+use db::user::NewUser;
+use db::user::NewUserRequest;
 
 
-#[derive(Serialize, Deserialize, Insertable, Debug)]
-#[table_name="users"]
-pub struct NewUser {
-    user_name: String,
-    display_name: String,
-    password_hash: String,
-    roles: Vec<i32>
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct NewUserRequest {
-    pub user_name: String,
-    pub display_name: String,
-    pub plaintext_password: String
-}
-
-impl From<NewUserRequest> for NewUser {
-    fn from(new_user_request: NewUserRequest) -> NewUser {
-        NewUser {
-            user_name: new_user_request.user_name,
-            display_name: new_user_request.display_name,
-            password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
-            roles: vec![1]
-        }
-    }
-}
-
-
-
-impl User {
-    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Option<User> {
-        use schema::users;
-        use schema::users::dsl::*;
-        info!("Getting user with Name: {}", name);
-
-        let returned_users: Vec<User> = users
-            .filter(user_name.eq(user_name))
-            .limit(1)
-            .load::<User>(conn.deref())
-            .expect("db error");
-
-        return returned_users.get(0).map(|x| x.clone());
-    }
-
-    pub fn update_user_jwt(user_name: String, token_key: String, token_expire_date: NaiveDateTime, conn: &Conn ) -> Result<usize, Error> {
-        use schema::users::dsl::*;
-        use schema::users;
-        // info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
-
-        let target = users.filter(user_name.eq(user_name));
-
-        let update_response = diesel::update(target)
-            .set((
-                users::token_key.eq(&token_key),
-                users::token_expire_date.eq(&token_expire_date))
-            )
-            .execute(conn.deref());  
-        update_response
-    }
-}
 
 
 /// User to be sent over the wire
@@ -145,42 +42,59 @@ impl From<User> for UserResponse {
 
 #[get("/<user_id>")]
 fn get_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
-    use schema::users;
-    use schema::users::dsl::*;
-    info!("Getting user with ID: {}", user_id);
+    User::get_user(user_id, &conn).and_then(|user|{
+        let user_response: UserResponse = user.into();
+        Some(Json(user_response))
+    })
+    
+    // use schema::users::dsl::*;
+    // info!("Getting user with ID: {}", user_id);
 
-    let returned_users: Vec<User> = users
-        .filter(id.eq(user_id))
-        .limit(1)
-        .load::<User>(&*conn)
-        .expect("db error");
+    // let returned_users: Vec<User> = users
+    //     .filter(id.eq(user_id))
+    //     .limit(1)
+    //     .load::<User>(&*conn)
+    //     .expect("db error");
 
-    match returned_users.get(0) {
-        Some(user) => {
-            let user_response: UserResponse = user.clone().into();
-            Some(Json(user_response))
-        },
-        None => None
-    }
+    // match returned_users.get(0) {
+    //     Some(user) => {
+    //         let user_response: UserResponse = user.clone().into();
+    //         Some(Json(user_response))
+    //     },
+    //     None => None
+    // }
 }
 
 
+use rocket::response::status::Custom;
+use rocket::http::Status;
 
 
 #[post("/", data = "<new_user>")]
-pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Json<UserResponse> {
-    use schema::users;
+pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<UserResponse>, Custom<&'static str>> {
+    // use schema::users;
 
-    info!("Creating new user with the following values: {:?}", new_user);
-    let new_user: NewUser = new_user.into_inner().into();
+    // info!("Creating new user with the following values: {:?}", new_user);
+    // let new_user: NewUser = new_user.into_inner().into();
 
-    let inserted_user: User = diesel::insert_into(users::table)
-        .values(&new_user)
-        .get_result(&*conn)
-        .expect("Couldn't create user");
-    
-    let user_response: UserResponse = inserted_user.into();
-    Json(user_response)
+    // let inserted_user: User = diesel::insert_into(users::table)
+    //     .values(&new_user)
+    //     .get_result(&*conn)
+    //     .expect("Couldn't create user");
+   
+    // let user_response: UserResponse = inserted_user.into();
+    // Json(user_response)
+    let new_user: NewUserRequest = new_user.into_inner();
+    match User::create_user(new_user, &conn) {
+        Ok(user) => {
+            let user_response: UserResponse = user.into();
+            Ok(Json(user_response))
+        }
+        Err(_) => {
+            Err(Custom(Status::InternalServerError, "DB Error"))
+        }
+    }
+ 
 }
 
 
@@ -192,7 +106,6 @@ pub struct UpdateDisplayNameRequest {
 #[put("/", data = "<data>")]
 fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -> Option<Json<UserResponse>> {
     use schema::users::dsl::*;
-    use schema::users;
     let data: UpdateDisplayNameRequest = data.into_inner();
     info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
 
@@ -237,7 +150,6 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -
 #[delete("/<user_id>")]
 fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
     use schema::users::dsl::*;
-    use schema::users;
 
     let target = users.filter(id.eq(user_id));
 
@@ -256,7 +168,6 @@ fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
 /// Currently, this is not exposed as an API, but is useful in testing
 pub fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserResponse>> {
     use schema::users::dsl::*;
-    use schema::users;
 
     let target = users.filter(user_name.eq(user_name));
 

@@ -2,7 +2,7 @@ use frank_jwt::{Algorithm, encode, decode};
 use rocket::State;
 use rocket::http::Status;
 use serde_json;
-use routes::user::UserRole;
+use db::user::UserRole;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
 use chrono::NaiveDateTime;
@@ -26,18 +26,18 @@ impl Jwt {
 
         let payload: Value = match serde_json::to_value(self) {
             Ok(x) => x,
-            Err(e) => return Err(JwtError::SerializeError)
+            Err(_) => return Err(JwtError::SerializeError)
         };
         match encode(header, secret, &payload, Algorithm::HS256) {
             Ok(x) => return Ok(x),
-            Err(e) => return Err(JwtError::EncodeError)
+            Err(_) => return Err(JwtError::EncodeError)
         }
     }
 
     pub fn decode_jwt_string(jwt_str: String, secret: &String) -> Result<Jwt, JwtError> {
-        let (header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
+        let (_header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
             Ok(x) => x,
-            Err(e) => return Err(JwtError::DecodeError)
+            Err(_) => return Err(JwtError::DecodeError)
         };
         let jwt: Jwt = match serde_json::from_value(payload) {
             Ok(x) => x,

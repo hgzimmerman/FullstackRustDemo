@@ -3,7 +3,6 @@ use rocket::Route;
 use super::Routable;
 
 use rocket_contrib::Json;
-use user::User;
 use db::Conn;
 use rocket::State;
 

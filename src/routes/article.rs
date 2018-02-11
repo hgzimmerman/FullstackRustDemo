@@ -1,15 +1,15 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use rocket::Rocket;
 use super::Routable;
-use schema::articles;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
-//use db::DB;
 use db::Conn;
-use db::Pool;
+
+
+
+use schema::articles;
 
 #[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User)]
@@ -39,7 +39,6 @@ struct NewArticle {
 
 #[get("/<article_id>", rank=0)]
 fn get_article(article_id: i32, db_conn: Conn) -> Option<Json<Article>> {
-    use schema::articles;
     use schema::articles::dsl::*;
 
     let returned_articles: Vec<Article> = articles
@@ -58,7 +57,6 @@ fn get_article(article_id: i32, db_conn: Conn) -> Option<Json<Article>> {
 fn create_article(new_article: Json<NewArticle>, db_conn: Conn) -> Json<Article> {
     use schema::articles;
 
-
     let new_article: NewArticle = new_article.into_inner();
 
     let inserted_article: Article = diesel::insert_into(articles::table)
@@ -73,7 +71,6 @@ fn create_article(new_article: Json<NewArticle>, db_conn: Conn) -> Json<Article>
 // TODO: Consider not exposing this directly, and instead create update methods for publishing and editing.
 #[put("/", data = "<update_article>")]
 fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article> {
-    use schema::articles::dsl::*;
     use schema::articles;
 
     let article: Article = update_article.into_inner();
@@ -88,9 +85,7 @@ fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article>
 
 #[delete("/<article_id>")]
 fn delete_article(article_id: i32, db_conn: Conn) -> Json<Article> {
-    use schema::articles;
     use schema::articles::dsl::*;
-
     // let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
 
     let deleted_article = diesel::delete(articles.filter(id.eq(article_id)))

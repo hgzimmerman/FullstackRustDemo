@@ -14,9 +14,9 @@ use rand::{self, Rng};
 use chrono::{NaiveDateTime, Utc, Duration};
 use rocket::http::Status;
 use rocket::Response;
-use rocket::request::{self, Request, FromRequest};
+use rocket::request::Request;
 use rocket::response::Responder;
-use user::User;
+use db::user::User;
 use db::Conn;
 
 

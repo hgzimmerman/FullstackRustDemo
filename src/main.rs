@@ -21,7 +21,7 @@ extern crate frank_jwt;
 #[macro_use] extern crate diesel;
 //#[macro_use] extern crate diesel_codegen;
 #[macro_use] extern crate diesel_infer_schema;
-#[macro_use] extern crate diesel_derive_enum;
+// #[macro_use] extern crate diesel_derive_enum;
 extern crate chrono;
 extern crate r2d2_diesel;
 extern crate r2d2;
@@ -42,6 +42,7 @@ use routes::*;
 mod db;
 mod auth;
 use auth::Secret;
+use db::user::User;
 
 
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
@@ -72,9 +73,8 @@ pub fn init_rocket() -> Rocket {
 
     let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
     bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
-    use std::env;
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    // let database_url = env::var("DATABASE_URL")
+    //     .expect("DATABASE_URL must be set");
 
     let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
