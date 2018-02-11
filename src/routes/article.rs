@@ -7,64 +7,34 @@ use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use db::Conn;
 
+use rocket::response::status::Custom;
+use rocket::http::Status;
+use db::article::*;
+use requests_and_responses::article::*;
+use routes::DatabaseError;
+use rocket::response::status::NoContent;
 
-
-use schema::articles;
-
-#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
-#[belongs_to(User)]
-#[table_name="articles"]
-pub struct Article {
-    pub id: i32,
-    pub author_id: i32,
-    pub title: String,
-//    publish_date: String,
-//    author: Uuid, // uuid of author
-    pub body: String,
-    pub published: bool
-}
-
-impl Article {
-
-}
-
-#[derive(Serialize, Deserialize, Insertable, Debug)]
-#[table_name="articles"]
-struct NewArticle {
-    title: String,
-    body: String,
-//    author: String
-}
-
-
+// TODO: change the return type of this to Result<Json<Article>, Custom<>>
+// return a custom 404 or a custom 500 depending on the error type
 #[get("/<article_id>", rank=0)]
-fn get_article(article_id: i32, db_conn: Conn) -> Option<Json<Article>> {
-    use schema::articles::dsl::*;
-
-    let returned_articles: Vec<Article> = articles
-        .filter(id.eq(article_id))
-        .limit(1)
-        .load::<Article>(&*db_conn)
-        .expect("db error");
-
-    match returned_articles.get(0) {
-        Some(a) => Some(Json(a.clone())),
-        None => None
+fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
+    
+    match Article::get_article_by_id(article_id, &conn) {
+        Ok(article_option) => article_option.and_then(|article| Some(Json(article))),
+        Err(e) => {
+            warn!("Getting article failed for reason: {:?}", e);
+            None
+        }
     }
 }
 
 #[post("/", data = "<new_article>")]
-fn create_article(new_article: Json<NewArticle>, db_conn: Conn) -> Json<Article> {
-    use schema::articles;
+fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Json<Article>, Custom<&'static str>> {
 
-    let new_article: NewArticle = new_article.into_inner();
-
-    let inserted_article: Article = diesel::insert_into(articles::table)
-        .values(&new_article)
-        .get_result(&*db_conn)
-        .expect("Failed to insert");
-    
-    Json(inserted_article)
+    match Article::create_article(new_article.into_inner(), &conn) {
+        Ok(article) => (Ok(Json(article))),
+        Err(e) => Err(Custom(Status::InternalServerError, "DB Error"))
+    }
 }
 
 /// Updates the article.
@@ -83,15 +53,15 @@ fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article>
     Json(updated_article)
 }
 
+// TODO, test this interface
 #[delete("/<article_id>")]
-fn delete_article(article_id: i32, db_conn: Conn) -> Json<Article> {
-    use schema::articles::dsl::*;
-    // let conn = db_conn.inner().lock().expect("Couldn't get mutex lock on db connection");
-
-    let deleted_article = diesel::delete(articles.filter(id.eq(article_id)))
-        .get_result(&*db_conn)
-        .expect("Failed to delete");
-    Json(deleted_article)
+fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, DatabaseError> {
+    if Article::delete_article(article_id, &conn) {
+        Ok(NoContent)
+    }
+    else {
+        Err(DatabaseError(None))
+    }
 }
 
 // Export the ROUTES and their path

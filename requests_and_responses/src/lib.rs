@@ -2,3 +2,4 @@
 extern crate serde_derive;
 
 pub mod user;
+pub mod article;

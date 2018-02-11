@@ -43,6 +43,7 @@ mod db;
 mod auth;
 use auth::Secret;
 use db::user::User;
+use db::article::Article;
 
 extern crate requests_and_responses;
 

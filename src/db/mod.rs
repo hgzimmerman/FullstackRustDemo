@@ -8,6 +8,7 @@ use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
 
 pub mod user;
+pub mod article;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
