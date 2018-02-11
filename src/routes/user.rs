@@ -12,8 +12,8 @@ use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, Use
 use rocket::response::status::Custom;
 use rocket::http::Status;
 
-// use routes::DatabaseError;
-use routes::WeekendAtJoesError;
+use error::WeekendAtJoesError;
+use auth::user_authorization::*;
 
 
 
@@ -44,7 +44,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
 
 
 #[put("/", data = "<data>")]
-fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -> Option<Json<UserResponse>> {
+fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, user: NormalUser, conn: Conn ) -> Option<Json<UserResponse>> {
 
     let request: UpdateDisplayNameRequest = data.into_inner();
     let updated_user = User::update_user_display_name(request, &conn);
@@ -61,7 +61,7 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, conn: Conn ) -
 
 /// Currently, this is not exposed as an API, but is useful in testing
 #[delete("/<user_id>")]
-fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
+fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Option<Json<UserResponse>> {
 
     let updated_user = User::delete_user_by_id(user_id, &conn);
 
@@ -75,7 +75,7 @@ fn delete_user(user_id: i32, conn: Conn) -> Option<Json<UserResponse>> {
 }
 
 #[delete("/<user_name>")]
-pub fn delete_user_by_name(user_name: String, conn: Conn) -> Option<Json<UserResponse>> {
+pub fn delete_user_by_name(user_name: String, _admin: AdminUser,conn: Conn) -> Option<Json<UserResponse>> {
 
     let updated_user = User::delete_user_by_name(user_name, &conn);
 

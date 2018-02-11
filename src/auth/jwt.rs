@@ -5,10 +5,11 @@ use serde_json;
 use db::user::UserRole;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 
 use auth::Secret;
 
+use error::WeekendAtJoesError;
 
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -86,6 +87,38 @@ pub mod user_authorization {
             }
         }
     }
+    impl<'a, 'r> FromRequest<'a, 'r> for NormalUser {
+        type Error = WeekendAtJoesError;
+
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<NormalUser, WeekendAtJoesError> {
+            let keys: Vec<_> = request.headers().get("Authorization").collect();
+            if keys.len() != 1 {
+                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
+            };
+            // You can get the state secret from another request guard
+            let secret: String = match request.guard::<State<Secret>>() {
+                Outcome::Success(s) => s.0.clone(),
+                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+            };
+
+            let key = keys[0];
+            let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
+                Ok(token) => {
+                    if token.token_expire_date < Utc::now().naive_utc() {
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                    }
+                    token
+                }
+                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+            };
+
+            match NormalUser::from_jwt(&jwt) {
+                Ok(admin) => Outcome::Success(admin),
+                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+            }
+        }
+    }
+
     pub struct AdminUser {
         pub user_name: String
     }
@@ -102,28 +135,33 @@ pub mod user_authorization {
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for AdminUser {
-        type Error = ();
+        type Error = WeekendAtJoesError;
 
-        fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, ()> {
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, WeekendAtJoesError> {
             let keys: Vec<_> = request.headers().get("Authorization").collect();
             if keys.len() != 1 {
-                return Outcome::Failure((Status::BadRequest, ()));
+                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
             };
             // You can get the state secret from another request guard
             let secret: String = match request.guard::<State<Secret>>() {
                 Outcome::Success(s) => s.0.clone(),
-                _ => return Outcome::Failure((Status::BadRequest, ()))
+                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
             };
 
             let key = keys[0];
             let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
-                Ok(j) => j,
-                Err(_) => return Outcome::Failure((Status::BadRequest, ()))
+                Ok(token) => {
+                    if token.token_expire_date < Utc::now().naive_utc() {
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                    }
+                    token
+                }
+                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
             };
 
             match AdminUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(e) => Outcome::Forward(())
+                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
             }
         }
     }
@@ -140,6 +178,37 @@ pub mod user_authorization {
             }
             else {
                 Err(RoleError::InsufficientRights)
+            }
+        }
+    }
+    impl<'a, 'r> FromRequest<'a, 'r> for ModeratorUser {
+        type Error = WeekendAtJoesError;
+
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<ModeratorUser, WeekendAtJoesError> {
+            let keys: Vec<_> = request.headers().get("Authorization").collect();
+            if keys.len() != 1 {
+                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
+            };
+            // You can get the state secret from another request guard
+            let secret: String = match request.guard::<State<Secret>>() {
+                Outcome::Success(s) => s.0.clone(),
+                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+            };
+
+            let key = keys[0];
+            let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
+                Ok(token) => {
+                    if token.token_expire_date < Utc::now().naive_utc() {
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                    }
+                    token
+                }
+                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+            };
+
+            match ModeratorUser::from_jwt(&jwt) {
+                Ok(admin) => Outcome::Success(admin),
+                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
             }
         }
     }

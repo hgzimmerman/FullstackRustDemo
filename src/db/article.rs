@@ -10,7 +10,7 @@ use diesel::Insertable;
 // use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
-use routes::WeekendAtJoesError;
+use error::WeekendAtJoesError;
 
 #[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User)]

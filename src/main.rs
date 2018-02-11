@@ -41,6 +41,7 @@ mod routes;
 use routes::*;
 mod db;
 mod auth;
+mod error;
 use auth::Secret;
 use db::user::User;
 use db::article::Article;

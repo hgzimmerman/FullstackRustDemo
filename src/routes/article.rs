@@ -13,7 +13,7 @@ use db::article::*;
 use requests_and_responses::article::*;
 // use routes::DatabaseError;
 use rocket::response::status::NoContent;
-use routes::WeekendAtJoesError;
+use error::WeekendAtJoesError;
 
 // TODO: change the return type of this to Result<Json<Article>, Custom<>>
 // return a custom 404 or a custom 500 depending on the error type

@@ -16,7 +16,8 @@ use requests_and_responses::user::*;
 pub enum UserRole {
     Unprivileged,
     Moderator,
-    Admin
+    Admin,
+    Publisher
 }
 
 impl From<UserRole> for i32 {
@@ -24,7 +25,8 @@ impl From<UserRole> for i32 {
         match role {
             UserRole::Unprivileged => 1,
             UserRole::Moderator => 2,
-            UserRole::Admin => 3
+            UserRole::Admin => 3,
+            UserRole::Publisher => 4,
         }
     }
 }
@@ -35,6 +37,7 @@ impl From<i32> for UserRole {
             1 => UserRole::Unprivileged,
             2 => UserRole::Moderator,
             3 => UserRole::Admin,
+            4 => UserRole::Publisher,
             _ => {
                 warn!("Tried to convert an unsupported number into a user role");
                 UserRole::Unprivileged
