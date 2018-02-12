@@ -5,9 +5,6 @@ mod password;
 pub use self::jwt::user_authorization;
 pub use self::jwt::{Jwt, JwtError};
 
-// pub use self::login::login;
-// pub use self::login::{LoginRequest, LoginResult, LoginError};
-
 pub use self::password::{hash_password, verify_hash};
 
 use rand::{self, Rng};
@@ -166,9 +163,6 @@ mod test {
             password: "TestPassword".into()
         };
 
-        // let secret: State<Secret> = State {
-        //     0: &Secret::generate()
-        // };
         let secret: Secret = Secret::generate();
 
         let response = login(login_request, secret.0, &conn);

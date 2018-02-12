@@ -74,7 +74,7 @@ fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Option<Json<UserR
     }
 }
 
-#[delete("/<user_name>")]
+#[delete("/<user_name>", rank = 2)]
 pub fn delete_user_by_name(user_name: String, _admin: AdminUser,conn: Conn) -> Option<Json<UserResponse>> {
 
     let updated_user = User::delete_user_by_name(user_name, &conn);
