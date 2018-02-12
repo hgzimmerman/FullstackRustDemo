@@ -6,7 +6,7 @@ use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
 use std::ops::Deref;
-use chrono::NaiveDateTime;
+// use chrono::NaiveDateTime;
 use schema::users;
 
 use requests_and_responses::user::*;
@@ -66,8 +66,8 @@ impl From<NewUserRequest> for NewUser {
             user_name: new_user_request.user_name,
             display_name: new_user_request.display_name,
             password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
-            token_key: None,
-            token_expire_date: None,
+            // token_key: None,
+            // token_expire_date: None,
             roles: vec![1]
         }
     }
@@ -84,8 +84,8 @@ pub struct User {
     pub display_name: String,
     pub password_hash: String,
 
-    pub token_key: Option<String>,
-    pub token_expire_date: Option<NaiveDateTime>,
+    // pub token_key: Option<String>,
+    // pub token_expire_date: Option<NaiveDateTime>,
     pub roles: Vec<i32>
 }
 
@@ -96,8 +96,8 @@ pub struct NewUser {
     pub user_name: String,
     pub display_name: String,
     pub password_hash: String,
-    pub token_key: Option<String>,
-    pub token_expire_date: Option<NaiveDateTime>,
+    // pub token_key: Option<String>,
+    // pub token_expire_date: Option<NaiveDateTime>,
     pub roles: Vec<i32>
 }
 

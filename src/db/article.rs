@@ -9,8 +9,10 @@ use diesel::ExpressionMethods;
 use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
 use error::WeekendAtJoesError;
+use chrono::{NaiveDateTime, Utc};
+use requests_and_responses::article::*;
 
-#[derive(Serialize, Deserialize, Clone, Queryable, AsChangeset, Identifiable, Associations, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User)]
 #[table_name="articles"]
 pub struct Article {
@@ -20,7 +22,25 @@ pub struct Article {
 //    publish_date: String,
 //    author: Uuid, // uuid of author
     pub body: String,
-    pub published: bool
+    pub publish_date: Option<NaiveDateTime>
+}
+
+#[derive(AsChangeset, Clone, PartialEq)]
+#[table_name="articles"]
+pub struct ArticleChangeset {
+    id: i32,
+    title: Option<String>,
+    body: Option<String>,
+}
+
+impl From<UpdateArticleRequest> for ArticleChangeset {
+    fn from(request: UpdateArticleRequest) -> ArticleChangeset {
+        ArticleChangeset {
+            id: request.id,
+            title: request.title,
+            body: request.body,
+        }
+    }
 }
 
 impl Article {
@@ -50,10 +70,25 @@ impl Article {
         use schema::articles;
         match diesel::update(articles::table)
             .filter(id.eq(article_id))
-            .set(published.eq(true))
+            .set(publish_date.eq(Utc::now().naive_utc()))
             .execute(conn.deref()) 
         {
             Ok(_) => Ok(NoContent),
+            Err(e) => match e {
+                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
+                _ => Err(WeekendAtJoesError::DatabaseError(None))
+            }
+        }
+    }
+
+    pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+        use schema::articles;
+        match diesel::update(articles::table)
+            // .filter(id.eq(article_id))
+            .set(&changeset)
+            .get_result(conn.deref()) 
+        {
+            Ok(article) => Ok(article),
             Err(e) => match e {
                 Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
                 _ => Err(WeekendAtJoesError::DatabaseError(None))

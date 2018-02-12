@@ -1,8 +1,6 @@
 use rocket::Route;
 use rocket_contrib::Json;
 use super::Routable;
-use diesel;
-use diesel::RunQueryDsl;
 use db::Conn;
 
 use rocket::response::status::Custom;
@@ -36,20 +34,10 @@ fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Js
     }
 }
 
-/// Updates the article.
-// TODO: Consider not exposing this directly, and instead create update methods for publishing and editing.
-#[put("/", data = "<update_article>")]
-fn update_article(update_article: Json<Article>, db_conn: Conn) -> Json<Article> {
-    use schema::articles;
-
-    let article: Article = update_article.into_inner();
-
-    let updated_article: Article = diesel::update(articles::table)
-        .set(&article)
-        .get_result(&*db_conn)
-        .expect("Failed to insert");
-    
-    Json(updated_article)
+#[put("/", data = "<update_article_request>")]
+fn update_article(update_article_request: Json<UpdateArticleRequest>, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
+    let update_article = update_article_request.into_inner();
+    Article::update_article(update_article.into(), &conn).and_then(|x| Ok(Json(x)))
 }
 
 // TODO, test this interface
