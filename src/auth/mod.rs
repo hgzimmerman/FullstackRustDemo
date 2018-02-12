@@ -213,6 +213,34 @@ mod test {
         };
         info!("{:?}", jwt);
     }
+    #[test]
+    fn jwt_tampering_detected() {
+        use test_setup;
+        test_setup();
+        let secret = "secret".to_string();
+        // create a normal jwt
+        let jwt = Jwt {
+            user_name: "name".to_string(),
+            token_key: "aoeuaoeu".to_string(),
+            user_roles: vec!(UserRole::Unprivileged),
+            token_expire_date: Utc::now().naive_utc()
+        };
+        let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
+        // alter the username of a copy of the accepted jwt
+        let mut altered_jwt = jwt.clone();
+        altered_jwt.user_name = "other_name".to_string();
+        let altered_jwt_string = altered_jwt.encode_jwt_string(&secret).unwrap();
+        // split the JWTs
+        let split_jwt: Vec<&str> = jwt_string.split(".").collect();
+        let split_altered_jwt: Vec<&str> = altered_jwt_string.split(".").collect();
+        // Mix together the header from the first jwt, the modified payload, and the signature.
+        let normal_header: &str = split_jwt.get(0).unwrap();
+        let modified_payload: &str = split_altered_jwt.get(1).unwrap();
+        let normal_sig: &str = split_jwt.get(2).unwrap();
+        let synthesized_jwt_string: String = format!("{}.{}.{}", normal_header, modified_payload, normal_sig);
+        // The decode should fail because the signature does not correspond to the payload
+        Jwt::decode_jwt_string(synthesized_jwt_string, &secret).expect_err("Should not be able to decode this modified jwt.");
+    }
 
 }
 
