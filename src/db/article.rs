@@ -6,8 +6,6 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use diesel::Insertable;
-// use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
 use error::WeekendAtJoesError;

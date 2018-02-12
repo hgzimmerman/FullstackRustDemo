@@ -22,8 +22,8 @@ struct ThreadTitle {
 }
 
 
-#[post("/<topic>/threads", rank=0)]
-fn get_threads(topic: String) -> Json<Vec<ThreadTitle>> {
+#[post("/<_topic>/threads", rank=0)]
+fn get_threads(_topic: String) -> Json<Vec<ThreadTitle>> {
     unimplemented!()
 }
 

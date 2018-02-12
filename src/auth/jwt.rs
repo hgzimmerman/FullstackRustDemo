@@ -109,12 +109,12 @@ pub mod user_authorization {
                     }
                     token
                 }
-                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+                Err(_) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
             };
 
             match NormalUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
             }
         }
     }
@@ -156,12 +156,12 @@ pub mod user_authorization {
                     }
                     token
                 }
-                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+                Err(_) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
             };
 
             match AdminUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
             }
         }
     }
@@ -203,12 +203,12 @@ pub mod user_authorization {
                     }
                     token
                 }
-                Err(e) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+                Err(_) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
             };
 
             match ModeratorUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(e) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
             }
         }
     }

@@ -2,15 +2,10 @@ use rocket::Route;
 use rocket_contrib::Json;
 
 use routes::Routable;
-use diesel::result::Error;
-use chrono::{NaiveDateTime};
 use db::Conn;
 
 use db::user::User;
-use db::user::NewUser;
 use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
-use rocket::response::status::Custom;
-use rocket::http::Status;
 
 use error::WeekendAtJoesError;
 use auth::user_authorization::*;
@@ -44,7 +39,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
 
 
 #[put("/", data = "<data>")]
-fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, user: NormalUser, conn: Conn ) -> Option<Json<UserResponse>> {
+fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn ) -> Option<Json<UserResponse>> {
 
     let request: UpdateDisplayNameRequest = data.into_inner();
     let updated_user = User::update_user_display_name(request, &conn);

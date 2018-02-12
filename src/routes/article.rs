@@ -3,8 +3,6 @@ use rocket_contrib::Json;
 use super::Routable;
 use diesel;
 use diesel::RunQueryDsl;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
 use db::Conn;
 
 use rocket::response::status::Custom;
@@ -34,7 +32,7 @@ fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Js
 
     match Article::create_article(new_article.into_inner(), &conn) {
         Ok(article) => (Ok(Json(article))),
-        Err(e) => Err(Custom(Status::InternalServerError, "DB Error"))
+        Err(_) => Err(Custom(Status::InternalServerError, "DB Error"))
     }
 }
 
@@ -66,13 +64,8 @@ fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJo
     Article::publish_article(article_id, &conn)
 }
 
-// Export the ROUTES and their path
-pub fn article_routes() -> Vec<Route> {
-    routes![create_article, update_article, get_article, delete_article]
-}
-
 
 impl Routable for Article {
-    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![create_article, update_article, get_article, delete_article];
+    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![create_article, update_article, get_article, delete_article, publish_article];
     const PATH: &'static str = "/article/";
 }

@@ -90,15 +90,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         Err(e) => return Err(LoginError::JwtError(e))
     };
 
-    // update entry with new values
-    // and return the token
-    info!("updating user");
-    return match User::update_user_jwt(user.user_name, new_key, new_expire_date, &conn) {
-        Ok(_) => {
-            Ok(jwt_string)
-        }
-        Err(_) => Err(LoginError::UpdateUserFailed)
-    }
+    Ok(jwt_string)
 
 }
 
@@ -109,8 +101,7 @@ pub enum LoginError {
     IncorrectPassword,
     PasswordHashingError(&'static str),
     JwtError(JwtError),
-    UpdateUserFailed,
-    OtherError(&'static str)
+   OtherError(&'static str)
 }
 
 impl <'a> Responder<'a> for LoginError {
@@ -120,7 +111,6 @@ impl <'a> Responder<'a> for LoginError {
         match self {
             LoginError::IncorrectPassword => Err(Status::Unauthorized),
             LoginError::UsernameDoesNotExist => Err(Status::NotFound),
-            LoginError::UpdateUserFailed => Err(Status::InternalServerError),
             LoginError::JwtError(_) => Err(Status::InternalServerError),
             LoginError::PasswordHashingError(_) => Err(Status::InternalServerError),
             LoginError::OtherError(_) => Err(Status::InternalServerError)
