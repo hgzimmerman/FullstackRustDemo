@@ -3,8 +3,6 @@ use rocket_contrib::Json;
 use super::Routable;
 use db::Conn;
 
-use rocket::response::status::Custom;
-use rocket::http::Status;
 use db::article::*;
 use requests_and_responses::article::*;
 // use routes::DatabaseError;
@@ -25,12 +23,17 @@ fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
     }
 }
 
+#[get("/articles/<number_of_articles>", rank=0)]
+fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
+    Article::get_published_articles(number_of_articles, &conn).and_then(|a| Ok(Json(a)))
+}
+
 #[post("/", data = "<new_article>")]
-fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Json<Article>, Custom<&'static str>> {
+fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
 
     match Article::create_article(new_article.into_inner(), &conn) {
         Ok(article) => (Ok(Json(article))),
-        Err(_) => Err(Custom(Status::InternalServerError, "DB Error"))
+        Err(_) => Err(WeekendAtJoesError::DatabaseError(None))
     }
 }
 
@@ -52,8 +55,20 @@ fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJo
     Article::publish_article(article_id, &conn)
 }
 
+#[put("/publish/<article_id>")]
+fn unpublish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    Article::unpublish_article(article_id, &conn)
+}
 
 impl Routable for Article {
-    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![create_article, update_article, get_article, delete_article, publish_article];
+    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
+            create_article,
+            update_article,
+            get_article,
+            get_published_articles,
+            delete_article,
+            publish_article,
+            unpublish_article
+        ];
     const PATH: &'static str = "/article/";
 }
