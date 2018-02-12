@@ -93,6 +93,7 @@ pub fn init_rocket() -> Rocket {
         .mount( &format_api(Article::PATH), Article::ROUTES() )
         .mount( &format_api(Login::PATH), Login::ROUTES() )
         .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
+        .mount( &format_api(Forum::PATH), Forum::ROUTES())
 }
 
 

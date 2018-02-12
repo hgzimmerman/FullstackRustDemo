@@ -1,5 +1,8 @@
 use rocket_contrib::Json;
+use routes::Routable;
+use rocket::Route;
 
+pub struct Forum;
 
 #[derive(Clone, Debug, Serialize)]
 struct Topic {
@@ -19,7 +22,13 @@ struct ThreadTitle {
 }
 
 
-#[post("/threads", data = "<topic>", rank=0)]
+#[post("/<topic>/threads", rank=0)]
 fn get_threads(topic: String) -> Json<Vec<ThreadTitle>> {
     unimplemented!()
 }
+
+impl Routable for Forum {
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_topics, get_threads];
+    const PATH: &'static str = "/forum/";
+}
+
