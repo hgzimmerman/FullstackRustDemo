@@ -55,6 +55,18 @@ impl Article {
         returned_articles.and_then(|x| Ok(x.get(0).cloned()))
     }
 
+    pub fn get_published_articles(number_of_articles: i64, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
+        use schema::articles::dsl::*;
+
+        let returned_articles: Result<Vec<Article>, Error> = articles
+            .filter(publish_date.is_not_null())
+            .limit(number_of_articles)
+            .load::<Article>(conn.deref());
+        
+        returned_articles.or(Err(WeekendAtJoesError::DatabaseError(None)))
+    }
+
+
     pub fn create_article(new_article_request: NewArticleRequest, conn: &Conn) -> Result<Article, Error> {
         use schema::articles;
 
@@ -71,6 +83,22 @@ impl Article {
         match diesel::update(articles::table)
             .filter(id.eq(article_id))
             .set(publish_date.eq(Utc::now().naive_utc()))
+            .execute(conn.deref()) 
+        {
+            Ok(_) => Ok(NoContent),
+            Err(e) => match e {
+                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
+                _ => Err(WeekendAtJoesError::DatabaseError(None))
+            }
+        }
+    }
+
+    pub fn unpublish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
+        use schema::articles::dsl::*;
+        use schema::articles;
+        match diesel::update(articles::table)
+            .filter(id.eq(article_id))
+            .set(publish_date.eq(None as Option<NaiveDateTime>))
             .execute(conn.deref()) 
         {
             Ok(_) => Ok(NoContent),
