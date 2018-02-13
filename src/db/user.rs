@@ -10,6 +10,7 @@ use std::ops::Deref;
 use schema::users;
 
 use requests_and_responses::user::*;
+use error::WeekendAtJoesError;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]  
@@ -132,27 +133,20 @@ impl User {
     //     update_response
     // }
 
-    pub fn get_user(user_id: i32, conn: &Conn) -> Option<User> {
+    pub fn get_user(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
         info!("Getting user with ID: {}", user_id);
 
-        let returned_users: Vec<User> = match users
-            .filter(id.eq(user_id))
+        match users.filter(id.eq(user_id))
             .limit(1)
             .load::<User>(conn.deref()) 
         {
-             Ok(x) => x,
-             Err(e) => {
-                info!("get_user failed: {:?}", e);
-                return None;
-             }
-
-        };
-
-        returned_users.get(0).cloned()
+             Ok(x) => x.get(0).cloned().ok_or(WeekendAtJoesError::NotFound { type_name: "User"}),
+             Err(_) => Err(WeekendAtJoesError::DatabaseError(None))
+        }
     }
 
-    pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, Error> {
+    pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users;
 
         info!("Creating new user with the following values: {:?}", new_user);
@@ -161,6 +155,12 @@ impl User {
         diesel::insert_into(users::table)
             .values(&new_user)
             .get_result(conn.deref())
+            .map_err(|e| {
+                match e {
+                    Error::NotFound => WeekendAtJoesError::NotFound { type_name: "User"},
+                    _ => WeekendAtJoesError::DatabaseError(None),
+                }
+            })
     }
     
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, Error> {
