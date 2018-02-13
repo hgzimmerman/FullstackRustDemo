@@ -24,7 +24,8 @@ W@J intends to support the following features:
 * Backend
   * Install nightly rust via `rustup`.
   * Nixos/Nix is used as the primary configuration management tool. This is an option for Linux and macOS developers.
-    * You are welcome to create a dockerfile with the database, packages and environment variables already set up independent from the Nix ecosystem, but Nixos/Nix will remain as the primairily supported config tool.
-  * Install the Nix package manager if you have not already and run `nix-shell` from the project root.
+    * Install nix: `curl https://nixos.org/nix/install | sh`.
+    * You are welcome to create a dockerfile with the database, packages and environment variables already set up, independent from the Nix ecosystem, but Nixos/Nix will remain as the primairily supported config tool.
+  * Run `nix-shell` from the project root.
   * Postgres will need to be setup to correspond to the DATABASE_URL specified in `default.nix`. (proper instructions forthcoming)
   * From the project root, run `cargo run` to build and run the webserver.
