@@ -25,7 +25,7 @@ fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
 
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
-    Article::get_published_articles(number_of_articles, &conn).and_then(|a| Ok(Json(a)))
+    Article::get_recent_published_articles(number_of_articles, &conn).and_then(|a| Ok(Json(a)))
 }
 
 #[post("/", data = "<new_article>")]
