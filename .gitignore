@@ -3,6 +3,7 @@
 /requests_and_responses/target/
 **/*.rs.bk
 weekend.log
+**.log
 .idea
 db.logfile
 pgsql
