@@ -10,11 +10,11 @@ stdenv.mkDerivation rec {
     postgresql
 
 
-    # these two are optional, but they help with installing some rust Programs 
     openssl 
+    # these two are optional, but they help with installing some rust Programs 
     pkgconfig
     zlib
-
+    # used for compiling the frontend to js
     emscripten
   ];
   shellHook = ''
@@ -23,6 +23,8 @@ stdenv.mkDerivation rec {
     export DATABASE_URL='postgres://hzimmerman:password@localhost/weekend'
     pg_ctl init
     pg_ctl -l db.logfile start -o "-h localhost -i"
+
+    alias docs='cargo rustdoc --bins --open -- --document-private-items'
   '';
 
 }

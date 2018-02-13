@@ -1,3 +1,6 @@
+//! The routes module contains the routes that are used by Rocket.
+//! The methods in this module are responsible for deserializing and validating the incoming requests and sending them on to their respective `db` methods.
+
 pub mod static_file;
 pub mod article;
 pub mod user;
@@ -15,8 +18,6 @@ pub use self::bucket_questions::*;
 pub use self::forum::*;
 use rocket::Route;
 
-//! The routes module contains the routes that are used by Rocket.
-//! The methods in this module are responsible for deserializing and validating the incoming requests and sending them on to their respective `db` methods.
 
 
 /// Convienence trait that specifies that implementors must package up their routes into a vector 

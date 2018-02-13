@@ -1,3 +1,13 @@
+//! The auth module deals with authenticating users on the site.
+//! Passwords are hashed with scrypt.
+//! JSON Web Tokens are returned to the user.
+//! JWTs should be included in http requests to the site under the `Authorization` header.
+//! Because of signature checking, the server can trust the contents of the JWT payload and can use them to guard access to protected APIs.
+//! FromRequest is implemented for some dummy user types. 
+//! They will only succeed in creating themselves if the JWT contains the role the user type corresponds to.
+//! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the jwt in the request header.
+
+
 mod jwt;
 mod password;
 
@@ -16,14 +26,6 @@ use rocket::response::Responder;
 use db::user::User;
 use db::Conn;
 
-//! The auth module deals with authenticating users on the site.
-//! Passwords are hashed with scrypt.
-//! JSON Web Tokens are returned to the user.
-//! JWTs should be included in http requests to the site under the `Authorization` header.
-//! Because of signature checking, the server can trust the contents of the JWT payload and can use them to guard access to protected APIs.
-//! FromRequest is implemented for some dummy user types. 
-//! They will only succeed in creating themselves if the JWT contains the role the user type corresponds to.
-//! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the jwt in the request header.
 
 /// The secret contains a random string that is generated at startup.
 /// This will be different every time the server restarts.
