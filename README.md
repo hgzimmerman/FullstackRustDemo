@@ -5,12 +5,26 @@ The frontend uses Yew (React-like framework).
 
 External dependency management is handled with Nix/Nixos.
 
+# Planned Features
+W@J intends to support the following features: 
+* User accounts / .
+* "News" article viewing and authoring via markdown.
+* A forum system for talking about Joe.
+* A Bucket Questions game implementation.
 
 # Build Instructions
-* Install nightly rust via `rustup`
-* Install the `wasm32-unknown-unknown` target via rustup.
-* Install `cargo-web` via `cargo install cargo-web`.
-* From the `/www/` directory, run `cargo web build --release --target-webasm` to build the frontend.
-* Make sure that `libsql`, `sqlite`, and `postgresql` are installed.
-  * Alternatively, install the Nix package manager and run `nix-shell` from the project root.
-* From the project root, run `cargo run --release` to build and run the webserver.
+
+* Frontend (Currently not set up for development)
+  * Install nightly rust via `rustup`
+  * Install the `wasm32-unknown-unknown` target via rustup.
+    * Currently wasm32 doesn't work with Yew, so `asmjs-unknown-emscripten` should also be installed.
+  * Install `cargo-web` via `cargo install cargo-web`.
+  * From the `/www/` directory, run `cargo web build --release --target-webasm` to build the frontend.
+    * If targeting asmjs, just run `cargo web build` or `cargo web build --release` to build the frontend instead.
+* Backend
+  * Install nightly rust via `rustup`.
+  * Nixos/Nix is used as the primary configuration management tool. This is an option for Linux and macOS developers.
+    * You are welcome to create a dockerfile with the database, packages and environment variables already set up independent from the Nix ecosystem, but Nixos/Nix will remain as the primairily supported config tool.
+  * Install the Nix package manager if you have not already and run `nix-shell` from the project root.
+  * Postgres will need to be setup to correspond to the DATABASE_URL specified in `default.nix`. (proper instructions forthcoming)
+  * From the project root, run `cargo run` to build and run the webserver.
