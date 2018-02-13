@@ -7,7 +7,7 @@ External dependency management is handled with Nix/Nixos.
 
 # Planned Features
 W@J intends to support the following features: 
-* User accounts / .
+* User accounts.
 * "News" article viewing and authoring via markdown.
 * A forum system for talking about Joe.
 * A Bucket Questions game implementation.
