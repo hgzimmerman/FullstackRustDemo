@@ -6,6 +6,6 @@ pub fn hash_password(password: &str) ->  io::Result<String> {
     scrypt::scrypt_simple(password, &params)
 }
 
-pub fn verify_hash(plaintext: &str, expected_hash: &str) -> Result<bool, &'static str> {
-    scrypt::scrypt_check(plaintext, expected_hash)
+pub fn verify_hash(given_hash: &str, expected_hash: &str) -> Result<bool, &'static str> {
+    scrypt::scrypt_check(given_hash, expected_hash)
 }

@@ -16,7 +16,19 @@ use rocket::response::Responder;
 use db::user::User;
 use db::Conn;
 
+//! The auth module deals with authenticating users on the site.
+//! Passwords are hashed with scrypt.
+//! JSON Web Tokens are returned to the user.
+//! JWTs should be included in http requests to the site under the `Authorization` header.
+//! Because of signature checking, the server can trust the contents of the JWT payload and can use them to guard access to protected APIs.
+//! FromRequest is implemented for some dummy user types. 
+//! They will only succeed in creating themselves if the JWT contains the role the user type corresponds to.
+//! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the jwt in the request header.
 
+/// The secret contains a random string that is generated at startup.
+/// This will be different every time the server restarts.
+/// This secret randomization has the effect of invalidating JWTs whenever the server is restarted. 
+/// The Secret is used for creating and validating JWTs.
 #[derive(Debug, Clone)]
 pub struct Secret(pub String);
 
@@ -36,9 +48,9 @@ pub struct LoginRequest {
     pub user_name: String,
     pub password: String
 }
-
 pub type LoginResult = Result<String, LoginError>;
 
+/// Logs the user in by validating their password and returning a jwt.
 pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginResult {
     info!("Logging in for user: {}", &login_request.user_name);
     // get user
