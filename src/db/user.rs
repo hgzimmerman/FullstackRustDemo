@@ -166,8 +166,9 @@ impl User {
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, Error> {
 
         use schema::users::dsl::*;
-        let target = users.filter(id.eq(request.id));
+        let target = users.filter(user_name.eq(request.user_name));
 
+        info!("Updating the user display name");
         let updated_user: Result<User, Error> = diesel::update(target)
             .set(display_name.eq(request.new_display_name))
             .get_result(conn.deref());
@@ -196,9 +197,6 @@ impl User {
 
 #[cfg(test)]
 mod test {
-    use rocket::local::Client;
-    use rocket::http::Status;
-    use rocket::http::ContentType;
     use db;
     use db::Conn;
     use super::*;
@@ -231,7 +229,7 @@ mod test {
 
         // Modify user
         let update_display_name_request: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
-            id: response.id,
+            user_name: user_name.clone(),
             new_display_name: "NewDisplayName".into()
         };
         let response: UserResponse = User::update_user_display_name(update_display_name_request, &conn).unwrap().into();

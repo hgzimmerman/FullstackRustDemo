@@ -126,8 +126,14 @@ mod test {
     use requests_and_responses::user::NewUserRequest;
     use db;
 
+    use rocket::local::Client;
+    use requests_and_responses::user::UpdateDisplayNameRequest;
+    use serde_json;
+    use rocket::http::Header;
+    use rocket::http::ContentType;
+    use init_rocket;
     #[test]
-    fn integration_test() {
+    fn login_test() {
 
         let pool = db::init_pool();
 
@@ -136,18 +142,14 @@ mod test {
         let _ = User::delete_user_by_name("UserName".into(), &conn);
 
         // Create a user
-        let conn = Conn::new(pool.get().unwrap());
         let new_user = NewUserRequest {
             user_name: "UserName".into(),
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into() 
         };
-        let response: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
-        // assert_eq!("UserName".to_string(), response.user_name);
-
+        let _: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
 
         // Log in as user
-        let conn = Conn::new(pool.get().unwrap());
         let login_request: LoginRequest = LoginRequest {
             user_name: "UserName".into(),
             password: "TestPassword".into()
@@ -158,11 +160,64 @@ mod test {
         let response = login(login_request, secret.0, &conn);
         assert!(response.is_ok());
 
-        let conn = Conn::new(pool.get().unwrap());
         let _ = User::delete_user_by_name("UserName".into(), &conn);
-
-
     }
+
+    #[test]
+    fn jwt_integration_test() {
+
+        let pool = db::init_pool();
+
+        let user_name: String = "UserName-JwtIntegrationTest".into();
+
+        // Delete the entry to avoid 
+        let conn = Conn::new(pool.get().unwrap());
+        let _ = User::delete_user_by_name(user_name.clone(), &conn);
+
+        // Create a user
+        let new_user = NewUserRequest {
+            user_name: user_name.clone(),
+            display_name: "DisplayName".into(),
+            plaintext_password: "TestPassword".into() 
+        };
+        let _: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
+
+        // Log in as user
+        let login_request: LoginRequest = LoginRequest {
+            user_name: user_name.clone(),
+            password: "TestPassword".into()
+        };
+        let rocket = init_rocket();
+        let client = Client::new(rocket).expect("valid rocket instance");
+
+        let mut response = client.post("/api/login/login/")
+            .header(ContentType::JSON)
+            .body(&serde_json::to_string(&login_request).unwrap())
+            .dispatch();
+        
+        //login(login_request, secret.0, &conn);
+        assert_eq!(response.status(), Status::Ok);
+        let jwt_string: String = response.body().unwrap().into_string().unwrap();
+
+
+
+        let request_body: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
+            user_name: user_name.clone(),
+            new_display_name: "new name".into()
+        };
+
+        let response = client.put("/api/user/")
+            .header(ContentType::JSON)
+            .header(Header::new("Authorization", jwt_string.clone()))
+            .body(serde_json::to_string(&request_body).unwrap())
+            .dispatch();
+        assert_eq!(response.status(), Status::Ok);
+
+
+
+        let _ = User::delete_user_by_name(user_name, &conn);
+    }
+
 
     #[test]
     fn password_hash_and_verify() {

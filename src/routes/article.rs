@@ -55,7 +55,7 @@ fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJo
     Article::publish_article(article_id, &conn)
 }
 
-#[put("/publish/<article_id>")]
+#[put("/unpublish/<article_id>")]
 fn unpublish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     Article::unpublish_article(article_id, &conn)
 }

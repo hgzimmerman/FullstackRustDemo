@@ -93,23 +93,30 @@ pub mod user_authorization {
         fn from_request(request: &'a Request<'r>) -> request::Outcome<NormalUser, WeekendAtJoesError> {
             let keys: Vec<_> = request.headers().get("Authorization").collect();
             if keys.len() != 1 {
-                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
+                return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MissingToken));
             };
             // You can get the state secret from another request guard
             let secret: String = match request.guard::<State<Secret>>() {
                 Outcome::Success(s) => s.0.clone(),
-                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+                _ => {
+                    warn!("Couldn't get secret from state.");
+                    return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+                }
             };
 
             let key = keys[0];
             let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
                 Ok(token) => {
                     if token.token_expire_date < Utc::now().naive_utc() {
+                        info!("Token expired.");
                         return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
                     }
                     token
                 }
-                Err(_) => return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken)),
+                Err(_) => {
+                    info!("Token couldn't be deserialized.");
+                    return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken));
+                }
             };
 
             match NormalUser::from_jwt(&jwt) {

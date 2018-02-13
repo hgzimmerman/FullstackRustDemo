@@ -16,7 +16,7 @@ pub struct NewUserRequest {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UpdateDisplayNameRequest {
-    pub id: i32,
+    pub user_name: String,
     pub new_display_name: String
 }
 

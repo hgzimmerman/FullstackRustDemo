@@ -40,7 +40,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
 
 #[put("/", data = "<data>")]
 fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn ) -> Option<Json<UserResponse>> {
-
+    info!("updating user display name");
     let request: UpdateDisplayNameRequest = data.into_inner();
     let updated_user = User::update_user_display_name(request, &conn);
 
