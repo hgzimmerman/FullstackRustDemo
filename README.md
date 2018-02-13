@@ -29,3 +29,5 @@ W@J intends to support the following features:
   * Run `nix-shell` from the project root.
   * Postgres will need to be setup to correspond to the DATABASE_URL specified in `default.nix`. (proper instructions forthcoming)
   * From the project root, run `cargo run` to build and run the webserver.
+  * For ease of development, run `cargo install cargo-watch` and run `cargo watch -x check` to run rust's type checker whenever you save a file.
+  * To build documentation, nix-shell should have set up an alias: `docs` that builds the documentation and opens a tab in the browser for viewing.
