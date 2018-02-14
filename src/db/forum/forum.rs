@@ -26,12 +26,14 @@ impl Forum {
         diesel::insert_into(forums::table)
             .values(&new_forum)
             .get_result(conn.deref())
-            .map_err(|e| {
-                match e {
-                    Error::NotFound => WeekendAtJoesError::NotFound { type_name: "Forum"},
-                    _ => WeekendAtJoesError::DatabaseError(None),
-                }
-            })
+            .map_err(|_| WeekendAtJoesError::DatabaseError(None))
+    }
+
+    pub fn get_forums(conn: &Conn) -> Result<Vec<Forum>, WeekendAtJoesError> {
+        use schema::forums::dsl::*;
+        forums
+            .load::<Forum>(conn.deref())
+            .map_err(|_|  WeekendAtJoesError::DatabaseError(None))
     }
 
 }
