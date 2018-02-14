@@ -48,8 +48,6 @@ impl From<i32> for UserRole {
 }
 
 
-
-
 impl From<User> for UserResponse {
     fn from(user: User) -> UserResponse {
         UserResponse {
@@ -76,7 +74,6 @@ impl From<NewUserRequest> for NewUser {
 
 
 /// User to be stored in db.
-/// This user will be used to check for auth.
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="users"]
 pub struct User {
@@ -84,9 +81,6 @@ pub struct User {
     pub user_name: String,
     pub display_name: String,
     pub password_hash: String,
-
-    // pub token_key: Option<String>,
-    // pub token_expire_date: Option<NaiveDateTime>,
     pub roles: Vec<i32>
 }
 
@@ -97,8 +91,6 @@ pub struct NewUser {
     pub user_name: String,
     pub display_name: String,
     pub password_hash: String,
-    // pub token_key: Option<String>,
-    // pub token_expire_date: Option<NaiveDateTime>,
     pub roles: Vec<i32>
 }
 
@@ -116,22 +108,6 @@ impl User {
 
         return returned_users.get(0).map(|x| x.clone());
     }
-
-    // pub fn update_user_jwt(user_name: String, token_key: String, token_expire_date: NaiveDateTime, conn: &Conn ) -> Result<usize, Error> {
-    //     use schema::users::dsl::*;
-    //     use schema::users;
-    //     // info!("Updating the display name of user id {} to {}", data.id, data.new_display_name);
-
-    //     let target = users.filter(user_name.eq(user_name));
-
-    //     let update_response = diesel::update(target)
-    //         .set((
-    //             users::token_key.eq(&token_key),
-    //             users::token_expire_date.eq(&token_expire_date))
-    //         )
-    //         .execute(conn.deref());  
-    //     update_response
-    // }
 
     pub fn get_user(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;

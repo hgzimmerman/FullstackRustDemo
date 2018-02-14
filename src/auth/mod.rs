@@ -204,7 +204,7 @@ mod test {
         let rocket = init_rocket();
         let client = Client::new(rocket).expect("valid rocket instance");
 
-        let mut response = client.post("/api/login/login/")
+        let mut response = client.post("/api/auth/login/")
             .header(ContentType::JSON)
             .body(&serde_json::to_string(&login_request).unwrap())
             .dispatch();

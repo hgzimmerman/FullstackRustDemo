@@ -89,7 +89,7 @@ pub fn init_rocket() -> Rocket {
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
         .mount( &format_api(Article::PATH), Article::ROUTES() )
-        .mount( &format_api(Login::PATH), Login::ROUTES() )
+        .mount( &format_api(Auth::PATH), Auth::ROUTES() )
         .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
         .mount( &format_api(Forum::PATH), Forum::ROUTES())
 }
