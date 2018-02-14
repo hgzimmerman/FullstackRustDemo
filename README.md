@@ -12,6 +12,14 @@ W@J intends to support the following features:
 * A forum system for talking about Joe.
 * A Bucket Questions game implementation.
 
+# Status
+* User accounts, authentication and articles are implemented on the backend.
+* Database access is being set up for the forum system and bucket questions.
+* HTTP Routes are planned for the forum system.
+* Bucket questions will require Websockets, so instead of using the Rocket framework, I will need to find another solution.
+* Frontend work has not started. Some prototypes were made, but the framework was deemed as not ready.
+* Frontend work will start when Yew has routing.
+
 # Build Instructions
 
 * Frontend (Currently not set up for development)
