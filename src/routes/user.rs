@@ -20,6 +20,7 @@
         })
     }
 
+    // TODO Consider requiring admin access for this.
     #[get("/users/<num_users>")]
     fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
         User::get_users(num_users, &conn).and_then(|users|{
