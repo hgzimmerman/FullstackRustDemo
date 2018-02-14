@@ -11,16 +11,16 @@ use requests_and_responses::article::NewArticleRequest;
 use error::WeekendAtJoesError;
 use chrono::{NaiveDateTime, Utc};
 use requests_and_responses::article::*;
+use db::user::User;
+use diesel::BelongingToDsl;
 
 #[derive(Serialize, Deserialize, Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
-#[belongs_to(User)]
+#[belongs_to(User, foreign_key = "author_id")]
 #[table_name="articles"]
 pub struct Article {
     pub id: i32,
     pub author_id: i32,
     pub title: String,
-//    publish_date: String,
-//    author: Uuid, // uuid of author
     pub body: String,
     pub publish_date: Option<NaiveDateTime>
 }
@@ -61,6 +61,33 @@ impl Article {
         let returned_articles: Result<Vec<Article>, Error> = articles
             .filter(publish_date.is_not_null())
             .limit(number_of_articles)
+            .order(publish_date)
+            .load::<Article>(conn.deref());
+        
+        returned_articles.or(Err(WeekendAtJoesError::DatabaseError(None)))
+    }
+
+    pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
+        use schema::articles::dsl::*;
+        use schema::users::dsl::*;
+
+        let user: User = match users
+            .filter(user_name.eq(username))
+            .get_result::<User>(conn.deref())
+            {
+                Ok(u) => u,
+                Err(e) => {
+                    match e {
+                        Error::NotFound => return Err(WeekendAtJoesError::NotFound {type_name: "User"}),
+                        _ => return Err(WeekendAtJoesError::DatabaseError(None))
+                    }
+                }
+            };
+
+        let returned_articles: Result<Vec<Article>, Error> = Article::belonging_to(&user)
+            .filter(
+                publish_date.is_null(),
+            )
             .order(publish_date)
             .load::<Article>(conn.deref());
         
