@@ -8,6 +8,7 @@ use requests_and_responses::article::*;
 // use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
+use auth::user_authorization::NormalUser;
 
 // TODO: change the return type of this to Result<Json<Article>, Custom<>>
 // return a custom 404 or a custom 500 depending on the error type
@@ -26,6 +27,12 @@ fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
     Article::get_recent_published_articles(number_of_articles, &conn).and_then(|a| Ok(Json(a)))
+}
+
+#[get("/users_unpublished_articles")]
+fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
+    let name = logged_in_user.user_name; // extract the username from the jwt
+    Article::get_unpublished_articles_for_username(name, &conn).and_then(|a| Ok(Json(a)))
 }
 
 #[post("/", data = "<new_article>")]
@@ -66,6 +73,7 @@ impl Routable for Article {
             update_article,
             get_article,
             get_published_articles,
+            get_users_unpublished_articles,
             delete_article,
             publish_article,
             unpublish_article
