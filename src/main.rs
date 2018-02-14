@@ -52,10 +52,8 @@ extern crate requests_and_responses;
 use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
 use std::fs::File;
 
+pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
 
-pub mod schema {
-    infer_schema!("dotenv:DATABASE_URL");
-}
 
 fn main() {
 

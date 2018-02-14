@@ -14,6 +14,9 @@ use rocket::{Request, State, Outcome};
 pub mod user;
 pub mod article;
 
+pub mod schema {
+    infer_schema!("dotenv:DATABASE_URL");
+}
 
 /// Holds a bunch of connections to the database and hands them out to routes as needed.
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;

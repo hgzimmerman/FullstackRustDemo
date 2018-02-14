@@ -146,6 +146,19 @@ impl User {
         }
     }
 
+    pub fn get_users(num_users: i64, conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
+        use schema::users::dsl::*;
+        users
+            .limit(num_users)
+            .load::<User>(conn.deref())
+            .map_err(|e| {
+                match e {
+                    Error::NotFound => WeekendAtJoesError::NotFound { type_name: "User"},
+                    _ => WeekendAtJoesError::DatabaseError(None),
+                }
+            })
+    }
+
     pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users;
 

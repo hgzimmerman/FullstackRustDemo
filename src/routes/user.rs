@@ -20,6 +20,14 @@
         })
     }
 
+    #[get("/users/<num_users>")]
+    fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
+        User::get_users(num_users, &conn).and_then(|users|{
+            let user_responses: Vec<UserResponse> = users.into_iter().map(|user| user.into()).collect();
+            Ok(Json(user_responses))
+        })
+    }
+
 
 
     #[post("/", data = "<new_user>")]
@@ -81,7 +89,15 @@
 
     // Export the ROUTES and their path
     impl Routable for User {
-        const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![create_user, update_user_display_name, get_user, delete_user, delete_user_by_name];
+        const ROUTES: &'static Fn() -> Vec<Route> = &|| routes!
+        [
+            create_user,
+            update_user_display_name,
+            get_user,
+            get_users,
+            delete_user,
+            delete_user_by_name
+        ];
         const PATH: &'static str = "/user/";
     }
 
