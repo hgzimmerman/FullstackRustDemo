@@ -7,7 +7,7 @@ pub mod user;
 pub mod auth;
 pub mod bucket_questions;
 pub mod forum;
-
+pub mod post;
 
 pub use self::article::*;
 pub use self::static_file::*;

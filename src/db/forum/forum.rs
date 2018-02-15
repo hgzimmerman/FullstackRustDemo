@@ -5,6 +5,8 @@ use diesel::result::Error;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
+use diesel::QueryDsl;
+use db::handle_diesel_error;
 
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="forums"]
@@ -36,6 +38,17 @@ impl Forum {
         forums
             .load::<Forum>(conn.deref())
             .map_err(|_|  WeekendAtJoesError::DatabaseError(None))
+    }
+
+    pub fn get_forum(id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
+        use schema::forums::dsl::*;
+
+        // Gets the first thread that matches the id.
+        forums 
+            .find(id)
+            .first::<Forum>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Forum"))
+
     }
 
 }

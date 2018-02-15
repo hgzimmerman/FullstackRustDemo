@@ -10,6 +10,8 @@ use std::ops::Deref;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
+use diesel::result::Error;
+use error::WeekendAtJoesError;
 
 pub mod user;
 pub mod article;
@@ -66,5 +68,13 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
             Ok(conn) => Outcome::Success(Conn(conn)),
             Err(_) => Outcome::Failure((Status::ServiceUnavailable, ()))
         }
+    }
+}
+
+
+pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) ->  WeekendAtJoesError {
+    match diesel_error {
+        Error::NotFound => WeekendAtJoesError::NotFound { type_name },
+        _ => WeekendAtJoesError::DatabaseError(None),
     }
 }

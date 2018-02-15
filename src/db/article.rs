@@ -140,7 +140,6 @@ impl Article {
     pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
         match diesel::update(articles::table)
-            // .filter(id.eq(article_id))
             .set(&changeset)
             .get_result(conn.deref()) 
         {
