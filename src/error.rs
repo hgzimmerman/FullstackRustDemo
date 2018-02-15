@@ -14,6 +14,8 @@ pub enum WeekendAtJoesError {
     NotAuthorized {
         reason: &'static str
     },
+    // The thread being posted to or edited was locked by an admin.
+    ThreadLocked,
     /// Used to indicate that the signature does not match the hashed contents + secret
     IllegalToken,
     /// The expired field in the token is in the past
@@ -53,6 +55,11 @@ impl<'r> Responder<'r> for WeekendAtJoesError {
             BadRequest => {
                 build.merge("Malformed request".respond_to(req)?)
                     .status(Status::BadRequest)
+                    .ok()
+            }
+            ThreadLocked => {
+                build.merge("Thread being operated upon is locked and therefore cant be changed".respond_to(req)?)
+                    .status(Status::MethodNotAllowed)
                     .ok()
             }
             IllegalToken => {

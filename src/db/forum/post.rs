@@ -55,29 +55,48 @@ impl Post {
     fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
+        let target_thread = Thread::get_thread(new_post.thread_id, conn)?;
+        if target_thread.locked {
+            return Err(WeekendAtJoesError::ThreadLocked)
+        }
+
         diesel::insert_into(posts::table)
             .values(&new_post)
             .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
-    fn modify_post(edit_post_changeset: EditPostChangeset, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
-        match diesel::update(posts::table)
-            .set(&edit_post_changeset)
-            .get_result(conn.deref()) 
-        {
-            Ok(post) => Ok(post),
-            Err(e) => Err(handle_diesel_error(e, "Post"))
+
+        let target_thread = Thread::get_thread(thread_id, conn)?;
+        if target_thread.locked {
+            return Err(WeekendAtJoesError::ThreadLocked)
         }
+
+        diesel::update(posts::table)
+            .set(&edit_post_changeset)
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
     fn censor_post(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        unimplemented!()
+        use schema::posts::dsl::*;
+        use schema::posts;
+        diesel::update(posts::table)
+            .set(censored.eq(true))
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
     fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
-        unimplemented!()
+        
+        let user: User = User::get_user(user_id, conn)?;
+
+        Post::belonging_to(&user)
+            .load::<Post>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Post"))
+
     }
 
     fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
@@ -106,12 +125,4 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
-    /// Takes thread id,
-    /// gets root post,
-    /// gets its children,
-    /// for each child, get its children, until no children,
-    /// recurse!
-    fn get_thread_post_tree() {
-        unimplemented!()
-    }
 }

@@ -10,7 +10,7 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
-
+use diesel::ExpressionMethods;
 
 #[derive( Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -50,11 +50,30 @@ impl Thread {
     }
 
     fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
-        unimplemented!()
+        use schema::threads;
+        use schema::threads::dsl::*;
+        diesel::update(threads::table)
+            .set(locked.eq(true))
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Thread"))
+    }
+
+    fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
+        use schema::threads;
+        use schema::threads::dsl::*;
+        diesel::update(threads::table)
+            .set(locked.eq(false))
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
     fn archive_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
-        unimplemented!()
+        use schema::threads;
+        use schema::threads::dsl::*;
+        diesel::update(threads::table)
+            .set(archived.eq(true))
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
     fn get_threads_in_forum(requested_forum_id: i32, num_threads: i32, conn: &Conn) -> Result<Vec<Thread>, WeekendAtJoesError> {
@@ -64,6 +83,7 @@ impl Thread {
         let forum: Forum = Forum::get_forum(requested_forum_id, conn)?;
 
         Thread::belonging_to(&forum)
+            .filter(archived.eq(false)) // don't get archived threads
             .order(created_date)
             .get_results(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Thread"))
