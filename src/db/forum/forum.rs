@@ -9,14 +9,16 @@ use diesel::RunQueryDsl;
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="forums"]
 pub struct Forum {
-    id: i32,
-    title: String
+    pub id: i32,
+    pub title: String,
+    pub description: String
 }
 
 #[derive(Serialize, Deserialize, Insertable, Debug)]
 #[table_name="forums"]
 pub struct NewForum {
-    title: String
+    pub title: String,
+    pub description: String
 }
 
 impl Forum {

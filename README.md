@@ -21,7 +21,6 @@ W@J intends to support the following features:
 * Frontend work will start when Yew has routing.
 
 # Build Instructions
-
 * Frontend (Currently not set up for development)
   * Install nightly rust via `rustup`
   * Install the `wasm32-unknown-unknown` target via rustup.
@@ -36,6 +35,7 @@ W@J intends to support the following features:
     * You are welcome to create a dockerfile with the database, packages and environment variables already set up, independent from the Nix ecosystem, but Nixos/Nix will remain as the primairily supported config tool.
   * Run `nix-shell` from the project root.
   * Postgres will need to be setup to correspond to the DATABASE_URL specified in `default.nix`. (proper instructions forthcoming)
+    * After the database account is set up, diesel will need to be installed and configured. Run `cargo install diesel` to install it and `diesel migration run` to run the migrations that set up the database.
   * From the project root, run `cargo run` to build and run the webserver.
   * For ease of development, run `cargo install cargo-watch` and run `cargo watch -x check` to run rust's type checker whenever you save a file.
   * To build documentation, nix-shell should have set up an alias: `docs` that builds the documentation and opens a tab in the browser for viewing.

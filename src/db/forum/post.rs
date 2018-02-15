@@ -17,7 +17,8 @@ pub struct Post {
     parent_id: Option<i32>,
     created_date: NaiveDateTime,
     modified_date: Option<NaiveDateTime>,
-    content: String
+    content: String,
+    censored: bool
 }
 
 #[derive(Serialize, Deserialize, Insertable, Debug)]
@@ -26,7 +27,8 @@ pub struct NewPost {
     thread_id: i32,
     author_id: i32,
     // parent_id: Option<i32>, // this will always be None, try removing this.
-    content: String
+    content: String,
+    censored: bool
 }
 
 pub struct EditPostChangeset {

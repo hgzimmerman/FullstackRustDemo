@@ -2,33 +2,53 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
-pub struct Forum;
+use db::forum::Forum;
+use db::forum::NewForum;
+use error::WeekendAtJoesError;
+use db::Conn;
+use requests_and_responses::forum::ForumResponse;
+use requests_and_responses::forum::NewForumRequest;
 
-#[derive(Clone, Debug, Serialize)]
-struct Topic {
-    name: String
+impl From<Forum> for ForumResponse {
+    fn from(forum: Forum) -> ForumResponse {
+        ForumResponse {
+            id: forum.id,
+            title: forum.title,
+            description: forum.description
+        }
+    }
 }
 
-#[post("/topics")]
-fn get_topics() -> Json<Vec<Topic>> {
-    unimplemented!()
-}
-
-#[derive(Clone, Debug, Serialize)]
-struct ThreadTitle {
-    title: String,
-    posts: usize,
-    poster: String // Username?
+impl From<NewForumRequest> for NewForum {
+    fn from(new_forum_request: NewForumRequest) -> NewForum {
+        NewForum {
+            title: new_forum_request.title,
+            description: new_forum_request.description
+        }
+    }
 }
 
 
-#[post("/<_topic>/threads", rank=0)]
-fn get_threads(_topic: String) -> Json<Vec<ThreadTitle>> {
-    unimplemented!()
+
+#[get("/forums")]
+fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError> {
+    Forum::get_forums(&conn)
+        .and_then(|forums| {
+            let forum_responses: Vec<ForumResponse> = forums.into_iter().map(|f| f.into()).collect();
+            Ok(Json(forum_responses))
+        })
 }
+
+#[post("/forums", data = "<new_forum>")]
+fn create_forum(new_forum: Json<NewForumRequest>, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
+    Forum::create_forum(new_forum.into_inner().into(), &conn)
+        .and_then(|forum| Ok(Json(forum.into())))
+}
+
+
 
 impl Routable for Forum {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_topics, get_threads];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_forums];
     const PATH: &'static str = "/forum/";
 }
 

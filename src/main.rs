@@ -45,6 +45,7 @@ mod error;
 use auth::Secret;
 use db::user::User;
 use db::article::Article;
+use db::forum::Forum;
 
 extern crate requests_and_responses;
 

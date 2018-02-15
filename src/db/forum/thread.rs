@@ -15,8 +15,11 @@ pub struct Thread {
     forum_id: i32,
     author_id: i32,
     created_date: NaiveDateTime,
+    locked: bool,
+    archived: bool,
     title: String
 }
+
 
 #[derive(Serialize, Deserialize, Insertable, Debug)]
 #[table_name="threads"]
@@ -24,6 +27,8 @@ pub struct NewThread {
     forum_id: i32,
     author_id: i32,
     created_date: NaiveDateTime,
+    locked: bool,
+    archived: bool,
     title: String
 }
 
