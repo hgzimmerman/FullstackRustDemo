@@ -1,7 +1,6 @@
 use schema::forums;
 use error::WeekendAtJoesError;
 use db::Conn;
-use diesel::result::Error;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;

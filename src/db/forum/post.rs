@@ -6,13 +6,11 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use std::ops::Deref;
 use diesel;
-use diesel::result::Error;
 use diesel::RunQueryDsl;
 use db::handle_diesel_error;
 use diesel::ExpressionMethods;
 use diesel::BelongingToDsl;
 use diesel::QueryDsl;
-use diesel::Identifiable;
 
 #[derive( Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -119,7 +117,6 @@ impl Post {
     }
 
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
-        use schema::posts::dsl::*;
 
         Post::belonging_to(self)
             .load::<Post>(conn.deref())

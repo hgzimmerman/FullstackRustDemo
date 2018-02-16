@@ -46,6 +46,7 @@ use auth::Secret;
 use db::user::User;
 use db::article::Article;
 use db::forum::Forum;
+use db::forum::Thread;
 
 extern crate requests_and_responses;
 
@@ -93,6 +94,8 @@ pub fn init_rocket() -> Rocket {
         .mount( &format_api(Auth::PATH), Auth::ROUTES() )
         .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
         .mount( &format_api(Forum::PATH), Forum::ROUTES())
+        .mount( &format_api(Thread::PATH), Thread::ROUTES())
+
 }
 
 

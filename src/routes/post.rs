@@ -63,8 +63,20 @@ impl Post {
     }
 }
 
+
+#[post("/create", data = "<new_post>")]
+fn create_post(new_post: Json<NewPostRequest>, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    let user: User = User::get_user(new_post.author_id, &conn)?;
+    Post::create_post(new_post.into_inner().into(), &conn)
+        .and_then(|post| Ok(Json(post.into_childless_response(user))))
+}
+
+
+
+
 impl Routable for Post {
   const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
-        ];
+        create_post  
+    ];
     const PATH: &'static str = "/post/";
 }
