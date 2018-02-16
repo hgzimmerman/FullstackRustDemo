@@ -42,9 +42,9 @@ pub struct NewPost {
 #[derive(Serialize, Deserialize, AsChangeset, Debug)]
 #[table_name="posts"]
 pub struct EditPostChangeset {
-    id: i32,
-    modified_date: NaiveDateTime,
-    content: String,
+    pub id: i32,
+    pub modified_date: NaiveDateTime,
+    pub content: String,
 }
 
 
@@ -89,13 +89,25 @@ impl Post {
     }
 
     pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
-        
         let user: User = User::get_user(user_id, conn)?;
 
         Post::belonging_to(&user)
             .load::<Post>(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))
+    }
 
+    pub fn get_user_by_post(post_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+        use schema::posts::dsl::*;
+        use schema::users::dsl::*;
+        let post: Post = posts 
+            .find(post_id)
+            .first::<Post>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Post"))?;
+
+        users
+            .find(post.author_id)
+            .first(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
     pub fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
@@ -117,7 +129,6 @@ impl Post {
     }
 
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
-
         Post::belonging_to(self)
             .load::<Post>(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))

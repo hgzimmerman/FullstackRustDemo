@@ -20,3 +20,10 @@ pub struct NewPostRequest {
     pub content: String,
 
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EditPostRequest {
+    pub id: i32,
+    pub thread_id: i32,
+    pub content: String,
+}
