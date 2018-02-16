@@ -100,7 +100,7 @@ impl Post {
 
     }
 
-    fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use db::forum::Thread;
 

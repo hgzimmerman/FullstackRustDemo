@@ -24,15 +24,15 @@ impl From<NewPostRequest> for NewPost {
 
 
 impl Post {
-    fn to_post_response(post: Post, conn: &Conn) -> Result<PostResponse, WeekendAtJoesError> {
+    pub fn into_post_response(self, conn: &Conn) -> Result<PostResponse, WeekendAtJoesError> {
         use db::user::User;
     
-        let user: User = User::get_user(post.author_id, conn)?;
-        let children: Result<Vec<PostResponse>, WeekendAtJoesError> = post
-        .get_post_children(conn)?
-        .into_iter()
-        .map(|p| Post::to_post_response(p, conn)) // recursion ocurrs here, beware of any performance problems
-        .collect();
+        let user: User = User::get_user(self.author_id, conn)?;
+        let children: Result<Vec<PostResponse>, WeekendAtJoesError> = self
+            .get_post_children(conn)?
+            .into_iter()
+            .map(|p| Post::into_post_response(p, conn)) // recursion ocurrs here, beware of any performance problems
+            .collect();
 
         let children: Vec<PostResponse> = match children {
             Ok(c) => c,
@@ -40,13 +40,13 @@ impl Post {
         };
 
         Ok(PostResponse {
-            id: post.id,
+            id: self.id,
             author: user.into(),
-            created_date: post.created_date,
-            modified_date: post.modified_date,
-            content: post.content,
-            censored: post.censored,
-            children:children
+            created_date: self.created_date,
+            modified_date: self.modified_date,
+            content: self.content,
+            censored: self.censored,
+            children: children
         })
     }
 
