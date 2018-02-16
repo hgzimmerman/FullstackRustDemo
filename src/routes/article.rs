@@ -26,13 +26,15 @@ fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
 
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
-    Article::get_recent_published_articles(number_of_articles, &conn).and_then(|a| Ok(Json(a)))
+    Article::get_recent_published_articles(number_of_articles, &conn)
+        .and_then(|a| Ok(Json(a)))
 }
 
 #[get("/users_unpublished_articles")]
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
-    Article::get_unpublished_articles_for_username(name, &conn).and_then(|a| Ok(Json(a)))
+    Article::get_unpublished_articles_for_username(name, &conn)
+        .and_then(|a| Ok(Json(a)))
 }
 
 #[post("/", data = "<new_article>")]
@@ -47,7 +49,8 @@ fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Js
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
     let update_article = update_article_request.into_inner();
-    Article::update_article(update_article.into(), &conn).and_then(|x| Ok(Json(x)))
+    Article::update_article(update_article.into(), &conn)
+        .and_then(|x| Ok(Json(x)))
 }
 
 // TODO, test this interface

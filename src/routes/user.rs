@@ -24,7 +24,9 @@
     #[get("/users/<num_users>")]
     fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
         User::get_users(num_users, &conn).and_then(|users|{
-            let user_responses: Vec<UserResponse> = users.into_iter().map(|user| user.into()).collect();
+            let user_responses: Vec<UserResponse> = users
+            .into_iter().map(|user| user.into())
+            .collect();
             Ok(Json(user_responses))
         })
     }
@@ -53,7 +55,7 @@
 
     #[delete("/<user_id>")]
     fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
-
+    
         User::delete_user_by_id(user_id, &conn)
             .and_then(|deleted_user| Ok(Json(deleted_user.into())))
     }
