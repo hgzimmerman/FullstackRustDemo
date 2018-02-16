@@ -40,12 +40,12 @@ impl Forum {
             .map_err(|_|  WeekendAtJoesError::DatabaseError(None))
     }
 
-    pub fn get_forum(id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
+    pub fn get_forum(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums::dsl::*;
 
         // Gets the first thread that matches the id.
         forums 
-            .find(id)
+            .find(forum_id)
             .first::<Forum>(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Forum"))
 

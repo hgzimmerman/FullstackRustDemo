@@ -8,3 +8,4 @@ pub mod user;
 pub mod article;
 pub mod forum;
 pub mod post;
+pub mod thread;

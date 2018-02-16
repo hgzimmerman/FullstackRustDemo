@@ -33,12 +33,12 @@ pub struct Post {
 #[derive(Serialize, Deserialize, Insertable, Debug)]
 #[table_name="posts"]
 pub struct NewPost {
-    thread_id: i32,
-    author_id: i32,
-    parent_id: Option<i32>, // this will always be None, try removing this.
-    created_date: NaiveDateTime,
-    content: String,
-    censored: bool
+    pub thread_id: i32,
+    pub author_id: i32,
+    pub parent_id: Option<i32>, // this will always be None, try removing this.
+    pub created_date: NaiveDateTime,
+    pub content: String,
+    pub censored: bool
 }
 
 #[derive(Serialize, Deserialize, AsChangeset, Debug)]
@@ -52,7 +52,7 @@ pub struct EditPostChangeset {
 
 impl Post {
     
-    fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
         let target_thread = Thread::get_thread(new_post.thread_id, conn)?;
@@ -66,7 +66,7 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
-    fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
         let target_thread = Thread::get_thread(thread_id, conn)?;
@@ -80,16 +80,17 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
-    fn censor_post(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn censor_post(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use schema::posts;
         diesel::update(posts::table)
+            .filter(id.eq(post_id))
             .set(censored.eq(true))
             .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
-    fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
+    pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         
         let user: User = User::get_user(user_id, conn)?;
 

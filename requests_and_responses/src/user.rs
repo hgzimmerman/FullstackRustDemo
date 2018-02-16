@@ -1,5 +1,5 @@
 /// User to be sent over the wire
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserResponse {
     pub user_name: String,
     pub display_name: String,
@@ -7,7 +7,7 @@ pub struct UserResponse {
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewUserRequest {
     pub user_name: String,
     pub display_name: String,

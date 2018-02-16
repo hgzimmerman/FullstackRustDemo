@@ -40,7 +40,7 @@ pub struct NewThread {
 
 impl Thread {
 
-    fn create_thread(new_thread: NewThread, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    pub fn create_thread(new_thread: NewThread, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads;
 
         diesel::insert_into(threads::table)
@@ -49,34 +49,37 @@ impl Thread {
             .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
-    fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
+    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
         use schema::threads;
         use schema::threads::dsl::*;
         diesel::update(threads::table)
+            .filter(id.eq(thread_id))
             .set(locked.eq(true))
             .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
-    fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
+    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
         use schema::threads;
         use schema::threads::dsl::*;
         diesel::update(threads::table)
+            .filter(id.eq(thread_id))
             .set(locked.eq(false))
             .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
-    fn archive_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    pub fn archive_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
         diesel::update(threads::table)
+            .filter(id.eq(thread_id))
             .set(archived.eq(true))
             .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Thread"))
     }
 
-    fn get_threads_in_forum(requested_forum_id: i32, num_threads: i32, conn: &Conn) -> Result<Vec<Thread>, WeekendAtJoesError> {
+    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> Result<Vec<Thread>, WeekendAtJoesError> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
 
@@ -85,6 +88,7 @@ impl Thread {
         Thread::belonging_to(&forum)
             .filter(archived.eq(false)) // don't get archived threads
             .order(created_date)
+            .limit(num_threads)
             .get_results(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Thread"))
     }

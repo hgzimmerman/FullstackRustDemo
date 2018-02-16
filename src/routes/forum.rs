@@ -39,7 +39,7 @@ fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError
         })
 }
 
-#[post("/forums", data = "<new_forum>")]
+#[post("/create", data = "<new_forum>")]
 fn create_forum(new_forum: Json<NewForumRequest>, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
     Forum::create_forum(new_forum.into_inner().into(), &conn)
         .and_then(|forum| Ok(Json(forum.into())))
@@ -48,7 +48,7 @@ fn create_forum(new_forum: Json<NewForumRequest>, conn: Conn) -> Result<Json<For
 
 
 impl Routable for Forum {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_forums];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_forums, create_forum];
     const PATH: &'static str = "/forum/";
 }
 
