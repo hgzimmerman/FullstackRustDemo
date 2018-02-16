@@ -99,12 +99,26 @@ fn censor_post(post_id: i32, conn: Conn) -> Result<Json<PostResponse>, WeekendAt
         .and_then(|post| Ok(Json(post.into_childless_response(user))))
 }
 
+#[get("/users_posts/<user_id>")]
+fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
+    let user: User = User::get_user(user_id, &conn)?;
+    Post::get_posts_by_user(user_id, &conn)
+        .and_then(|posts| {
+            let post_responses = posts
+            .into_iter()
+            .map(|post| post.into_childless_response(user.clone()))
+            .collect();
+            Ok(Json(post_responses))
+        })
+}
+
 
 impl Routable for Post {
   const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
         create_post,
         censor_post,
-        edit_post
+        edit_post,
+        get_posts_by_user
     ];
     const PATH: &'static str = "/post/";
 }
