@@ -11,6 +11,8 @@ use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
 use requests_and_responses::thread::MinimalThreadResponse;
 use requests_and_responses::post::PostResponse;
 use chrono::Utc;
+use auth::user_authorization::NormalUser;
+use auth::user_authorization::ModeratorUser;
 
 
 impl From<NewThreadRequest> for NewThread {
@@ -73,7 +75,7 @@ impl Thread {
 
 
 #[post("/create", data = "<new_thread_request>")]
-fn create_thread(new_thread_request: Json<NewThreadRequest>, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
+fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: NormalUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let new_thread_request = new_thread_request.into_inner();
 
     let new_thread: NewThread = new_thread_request.clone().into();
@@ -87,19 +89,19 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, conn: Conn) -> Resu
 }
 
 #[put("/lock/<thread_id>")] 
-fn lock_thread(thread_id: i32, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
+fn lock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::lock_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }
 
 #[put("/unlock/<thread_id>")] 
-fn unlock_thread(thread_id: i32, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
+fn unlock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::unlock_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }
 
 #[delete("/archive/<thread_id>")] 
-fn archive_thread(thread_id: i32, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
+fn archive_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::archive_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }

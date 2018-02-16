@@ -8,6 +8,7 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::forum::ForumResponse;
 use requests_and_responses::forum::NewForumRequest;
+use auth::user_authorization::AdminUser;
 
 impl From<Forum> for ForumResponse {
     fn from(forum: Forum) -> ForumResponse {
@@ -40,7 +41,7 @@ fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError
 }
 
 #[post("/create", data = "<new_forum>")]
-fn create_forum(new_forum: Json<NewForumRequest>, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
+fn create_forum(new_forum: Json<NewForumRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
     Forum::create_forum(new_forum.into_inner().into(), &conn)
         .and_then(|forum| Ok(Json(forum.into())))
 }

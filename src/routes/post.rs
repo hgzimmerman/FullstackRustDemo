@@ -8,6 +8,8 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::post::{PostResponse, NewPostRequest, EditPostRequest};
 use chrono::Utc;
+use auth::user_authorization::NormalUser;
+use auth::user_authorization::ModeratorUser;
 
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest ) -> NewPost {
@@ -75,7 +77,8 @@ impl Post {
 
 
 #[post("/create", data = "<new_post>")]
-fn create_post(new_post: Json<NewPostRequest>, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+fn create_post(new_post: Json<NewPostRequest>, _login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    // todo check if token user id matches the request user id
     let user: User = User::get_user(new_post.author_id, &conn)?;
     Post::create_post(new_post.into_inner().into(), &conn)
         .and_then(|post| Ok(Json(post.into_childless_response(user))))
@@ -83,7 +86,8 @@ fn create_post(new_post: Json<NewPostRequest>, conn: Conn) -> Result<Json<PostRe
 
 
 #[put("/edit", data = "<edit_post_request>")]
-fn edit_post(edit_post_request: Json<EditPostRequest>, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+fn edit_post(edit_post_request: Json<EditPostRequest>, _login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    //TODO check if the request user id matches 
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
     let edit_post_changeset: EditPostChangeset = edit_post_request.clone().into();
     let thread_id: i32 = edit_post_request.thread_id;
@@ -93,7 +97,7 @@ fn edit_post(edit_post_request: Json<EditPostRequest>, conn: Conn) -> Result<Jso
 }
 
 #[put("/censor/<post_id>")]
-fn censor_post(post_id: i32, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     let user: User = Post::get_user_by_post(post_id, &conn)?;
     Post::censor_post(post_id, &conn)
         .and_then(|post| Ok(Json(post.into_childless_response(user))))
