@@ -71,31 +71,24 @@ impl Article {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
 
-        let user: User = match users
+        let user: User = users
             .filter(user_name.eq(username))
             .get_result::<User>(conn.deref())
-            {
-                Ok(u) => u,
-                Err(e) => {
-                    match e {
-                        Error::NotFound => return Err(WeekendAtJoesError::NotFound {type_name: "User"}),
-                        _ => return Err(WeekendAtJoesError::DatabaseError(None))
-                    }
-                }
-            };
+            .map_err(|e| handle_diesel_error(e, "User"))?;
 
-        let returned_articles: Result<Vec<Article>, Error> = Article::belonging_to(&user)
+
+        Article::belonging_to(&user)
             .filter(
                 publish_date.is_null(),
             )
             .order(publish_date)
-            .load::<Article>(conn.deref());
+            .load::<Article>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Article"))
         
-        returned_articles.or(Err(WeekendAtJoesError::DatabaseError(None)))
     }
 
-
-    pub fn create_article(new_article_request: NewArticleRequest, conn: &Conn) -> Result<Article, Error> {
+    
+    pub fn create_article(new_article_request: NewArticleRequest, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
 
         let new_article: NewArticle = new_article_request.into();
@@ -103,6 +96,8 @@ impl Article {
         diesel::insert_into(articles::table)
             .values(&new_article)
             .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Article"))
+            
     }
 
     pub fn publish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
