@@ -11,6 +11,7 @@ use schema::users;
 
 use requests_and_responses::user::*;
 use error::WeekendAtJoesError;
+use db::handle_diesel_error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]  
@@ -152,35 +153,36 @@ impl User {
             })
     }
     
-    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, Error> {
+    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
 
         use schema::users::dsl::*;
         let target = users.filter(user_name.eq(request.user_name));
 
         info!("Updating the user display name");
-        let updated_user: Result<User, Error> = diesel::update(target)
+        diesel::update(target)
             .set(display_name.eq(request.new_display_name))
-            .get_result(conn.deref());
-
-        updated_user
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
-    pub fn delete_user_by_id(user_id: i32, conn: &Conn) -> Result<User, Error> {
+    pub fn delete_user_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
         let target = users.filter(id.eq(user_id));
 
         diesel::delete(target)
             .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
-    pub fn delete_user_by_name(name: String, conn: &Conn) -> Result<User, Error> {
+    pub fn delete_user_by_name(name: String, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
         let target = users.filter(user_name.eq(name));
 
         diesel::delete(target)
             .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 }
 
