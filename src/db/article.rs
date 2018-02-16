@@ -13,6 +13,7 @@ use chrono::{NaiveDateTime, Utc};
 use requests_and_responses::article::*;
 use db::user::User;
 use diesel::BelongingToDsl;
+use db::handle_diesel_error;
 
 #[derive(Serialize, Deserialize, Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -44,15 +45,14 @@ impl From<UpdateArticleRequest> for ArticleChangeset {
 }
 
 impl Article {
-    pub fn get_article_by_id(article_id: i32, conn: &Conn) -> Result<Option<Article>, Error> {
+    pub fn get_article_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
-        let returned_articles: Result<Vec<Article>, Error> = articles
-            .filter(id.eq(article_id))
-            .limit(1)
-            .load::<Article>(conn.deref());
+        articles
+            .find(article_id)
+            .first(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Article"))
         
-        returned_articles.and_then(|x| Ok(x.get(0).cloned()))
     }
 
     pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {

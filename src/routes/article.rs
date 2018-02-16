@@ -13,15 +13,10 @@ use auth::user_authorization::NormalUser;
 // TODO: change the return type of this to Result<Json<Article>, Custom<>>
 // return a custom 404 or a custom 500 depending on the error type
 #[get("/<article_id>", rank=0)]
-fn get_article(article_id: i32, conn: Conn) -> Option<Json<Article>> {
+fn get_article(article_id: i32, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
     
-    match Article::get_article_by_id(article_id, &conn) {
-        Ok(article_option) => article_option.and_then(|article| Some(Json(article))),
-        Err(e) => {
-            warn!("Getting article failed for reason: {:?}", e);
-            None
-        }
-    }
+    Article::get_article_by_id(article_id, &conn)
+        .and_then(|article| Ok(Json(article)))
 }
 
 #[get("/articles/<number_of_articles>", rank=0)]
