@@ -86,17 +86,12 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         Some(ndt) => ndt.naive_utc(),
         None => return Err(LoginError::OtherError("Could not calculate offset for token expiry"))
     };
-    info!("Generating JWT key");
-    let new_key: String = rand::thread_rng()
-        .gen_ascii_chars()
-        .take(16)
-        .collect::<String>();
     
     info!("Creating JWT");
     let jwt = Jwt {
         user_name: user.user_name.clone(),
+        user_id: user.id.clone(),
         user_roles: user.roles.iter().map(|role_id| (*role_id).into()).collect(),
-        token_key: new_key.clone(),
         token_expire_date: new_expire_date
     };
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {

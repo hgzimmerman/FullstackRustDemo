@@ -15,7 +15,7 @@ use error::WeekendAtJoesError;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Jwt {
     pub user_name: String,
-    pub token_key: String,// The token key may not be needed
+    pub user_id: i32,
     pub user_roles: Vec<UserRole>,
     pub token_expire_date: NaiveDateTime
 }
@@ -73,13 +73,15 @@ pub mod user_authorization {
     }
 
     pub struct NormalUser{
-        pub user_name: String
+        pub user_name: String,
+        pub user_id: i32
     }
     impl FromJwt for NormalUser {
         fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
-            if jwt.user_roles.contains(&UserRole::Unprivileged){
+            if jwt.user_roles.contains(&UserRole::Unprivileged) {
                 Ok(NormalUser{
-                    user_name: jwt.user_name.clone()
+                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.user_id
                 })
             }
             else {
@@ -127,13 +129,15 @@ pub mod user_authorization {
     }
 
     pub struct AdminUser {
-        pub user_name: String
+        pub user_name: String,
+        pub user_id: i32
     }
     impl FromJwt for AdminUser {
         fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
             if jwt.user_roles.contains(&UserRole::Admin){
                 Ok(AdminUser{
-                    user_name: jwt.user_name.clone()
+                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.user_id
                 })
             }
             else {
@@ -174,13 +178,15 @@ pub mod user_authorization {
     }
 
     pub struct ModeratorUser {
-        pub user_name: String
+        pub user_name: String,
+        pub user_id: i32
     }
     impl FromJwt for ModeratorUser {
         fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
             if jwt.user_roles.contains(&UserRole::Moderator){
                 Ok(ModeratorUser{
-                    user_name: jwt.user_name.clone()
+                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.user_id
                 })
             }
             else {

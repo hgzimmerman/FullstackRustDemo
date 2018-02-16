@@ -77,8 +77,12 @@ impl Post {
 
 
 #[post("/create", data = "<new_post>")]
-fn create_post(new_post: Json<NewPostRequest>, _login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
-    // todo check if token user id matches the request user id
+fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    // check if token user id matches the request user id.
+    // This prevents users from creating posts under other user's names.
+    if new_post.0.author_id != login_user.user_id {
+        return Err(WeekendAtJoesError::BadRequest)
+    }
     let user: User = User::get_user(new_post.author_id, &conn)?;
     Post::create_post(new_post.into_inner().into(), &conn)
         .and_then(|post| Ok(Json(post.into_childless_response(user))))
@@ -86,8 +90,13 @@ fn create_post(new_post: Json<NewPostRequest>, _login_user: NormalUser, conn: Co
 
 
 #[put("/edit", data = "<edit_post_request>")]
-fn edit_post(edit_post_request: Json<EditPostRequest>, _login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
-    //TODO check if the request user id matches 
+fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    // Prevent editing other users posts
+    let existing_post = Post::get_post_by_id(edit_post_request.0.id , &conn)?;
+    if login_user.user_id != existing_post.author_id {
+        return Err(WeekendAtJoesError::BadRequest)
+    }
+
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
     let edit_post_changeset: EditPostChangeset = edit_post_request.clone().into();
     let thread_id: i32 = edit_post_request.thread_id;

@@ -96,6 +96,15 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
+    pub fn get_post_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+        use schema::posts::dsl::*;
+        posts
+            .find(post_id)
+            .first::<Post>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Post"))
+
+    }
+
     pub fn get_user_by_post(post_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
