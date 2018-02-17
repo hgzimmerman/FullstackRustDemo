@@ -10,8 +10,11 @@ use db::handle_diesel_error;
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="forums"]
 pub struct Forum {
+    /// Primary Key.
     pub id: i32,
+    /// Displayed title of the forum
     pub title: String,
+    /// The description that informs users what topics should be discussed in the forum.
     pub description: String
 }
 
@@ -23,6 +26,7 @@ pub struct NewForum {
 }
 
 impl Forum {
+    /// Creates a new forum.
     pub fn create_forum(new_forum: NewForum, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums;
 
@@ -32,6 +36,7 @@ impl Forum {
             .map_err(|_| WeekendAtJoesError::DatabaseError(None))
     }
 
+    /// Gets a list of all forums.
     pub fn get_forums(conn: &Conn) -> Result<Vec<Forum>, WeekendAtJoesError> {
         use schema::forums::dsl::*;
         forums
@@ -39,6 +44,7 @@ impl Forum {
             .map_err(|_|  WeekendAtJoesError::DatabaseError(None))
     }
 
+    /// Gets a forum by id.
     pub fn get_forum(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums::dsl::*;
 

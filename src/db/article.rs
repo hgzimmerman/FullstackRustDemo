@@ -15,17 +15,25 @@ use db::user::User;
 use diesel::BelongingToDsl;
 use db::handle_diesel_error;
 
+/// The database's representation of an article
 #[derive(Serialize, Deserialize, Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[table_name="articles"]
 pub struct Article {
+    /// The public key for the article.
     pub id: i32,
+    /// The key of the user that authored the article.
     pub author_id: i32,
+    /// The title of the article. This will be used to when showing the article in "Suggested Articles" panes.
     pub title: String,
+    /// The body will be rendered in markdown and will constitute the main content of the article.
     pub body: String,
+    /// The presense of a publish date will idicate the article's published status,
+    /// and will be used in ordering sets of the most recent articles.
     pub publish_date: Option<NaiveDateTime>
 }
 
+/// Specifies the attributes that can be changed for an article.
 #[derive(AsChangeset, Clone, PartialEq)]
 #[table_name="articles"]
 pub struct ArticleChangeset {
@@ -45,6 +53,7 @@ impl From<UpdateArticleRequest> for ArticleChangeset {
 }
 
 impl Article {
+    /// Gets the article associated with the id.
     pub fn get_article_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
@@ -52,9 +61,10 @@ impl Article {
             .find(article_id)
             .first(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Article"))
-        
     }
 
+    /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
+    /// The the returned articles will only include ones with a publish date.
     pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
@@ -67,6 +77,8 @@ impl Article {
         returned_articles.or(Err(WeekendAtJoesError::DatabaseError(None)))
     }
 
+    /// Gets the unpublished articles for a given user 
+    // TODO, consiter switching this interface to take a user_id instead of a string
     pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
@@ -87,7 +99,7 @@ impl Article {
         
     }
 
-    
+    // Creates a new article
     pub fn create_article(new_article_request: NewArticleRequest, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
 
@@ -100,6 +112,7 @@ impl Article {
             
     }
 
+    /// Marks the article as published, this allows the article to be viewed people other than the author.
     pub fn publish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::articles;
@@ -116,6 +129,7 @@ impl Article {
         }
     }
 
+    /// Hide the article from public view by setting its published date to NULL.
     pub fn unpublish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::articles;
@@ -132,6 +146,7 @@ impl Article {
         }
     }
 
+    /// Applies the changeset to its corresponding article.
     pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
         match diesel::update(articles::table)
@@ -145,7 +160,8 @@ impl Article {
             }
         }
     }
-
+    
+    /// Deletes the article corresponding to the provided id
     pub fn delete_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
@@ -162,6 +178,7 @@ impl Article {
     
 }
 
+/// Represents an article that will be inserted into the database.
 #[derive(Serialize, Deserialize, Insertable, Debug)]
 #[table_name="articles"]
 pub struct NewArticle {

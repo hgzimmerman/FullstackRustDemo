@@ -18,13 +18,21 @@ use diesel::QueryDsl;
 #[belongs_to(Post, foreign_key = "parent_id")]
 #[table_name="posts"]
 pub struct Post {
+    /// Primary Key
     pub id: i32,
+    /// The Foreign Key of the thread the post belongs to.
     pub thread_id: i32,
+    /// The Foreign Key of the user that created the post.
     pub author_id: i32,
+    /// The Foreign Key of the post to which this post is replying to.
     pub parent_id: Option<i32>,
+    /// The timestamp of when the post was created.
     pub created_date: NaiveDateTime,
+    /// If the post was edited, the most recent edit time will be attached to the post.
     pub modified_date: Option<NaiveDateTime>,
+    /// The content of the post. This may be rendered with markdown or a subset thereof.
     pub content: String,
+    /// If the post has been censored, it will not be immediately viewabe by people viewing the thread.
     pub censored: bool
 }
 
@@ -49,7 +57,8 @@ pub struct EditPostChangeset {
 
 
 impl Post {
-    
+    /// Creates a new post.
+    /// If the thread is locked, the post cannot be modified.
     pub fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
@@ -64,6 +73,8 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
+    /// Applies the EditPostChangeset to the post.
+    /// If the thread is locked, the post cannot be modified
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
@@ -78,6 +89,7 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
+    /// Censors the post, preventing users from seeing it by default.
     pub fn censor_post(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use schema::posts;
@@ -88,14 +100,18 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
+    /// Gets all of the posts associated with a given user.
     pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
+        use schema::posts::dsl::*;
         let user: User = User::get_user(user_id, conn)?;
 
         Post::belonging_to(&user)
+            .order(created_date)
             .load::<Post>(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))
     }
 
+    /// Gets the post associated with its id.
     pub fn get_post_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         posts
@@ -105,6 +121,7 @@ impl Post {
 
     }
 
+    /// Gets the user associated with a given post
     pub fn get_user_by_post(post_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
@@ -119,6 +136,9 @@ impl Post {
             .map_err(|e| handle_diesel_error(e, "User"))
     }
 
+    /// Gets the first post associated with a thread.
+    /// This post is identifed by it not having a parent id.
+    /// All posts in a given thread that aren't root posts will have non-null parent ids.
     pub fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use db::forum::Thread;
@@ -136,7 +156,8 @@ impl Post {
                 returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
             })
     }
-
+    
+    /// Gets all of the posts that belong to the post.
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
             .load::<Post>(conn.deref())

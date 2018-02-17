@@ -74,15 +74,20 @@ impl From<NewUserRequest> for NewUser {
 }
 
 
-/// User to be stored in db.
+/// The database's representation of a user.
 #[derive( Debug, Clone, Identifiable, Queryable)]
 #[table_name="users"]
 pub struct User {
+    /// The primary key
     pub id: i32,
+    /// The user name of the user. This is used primairily for logging in, and is seldom displayed.
     pub user_name: String,
+    /// This name will be displayed on data associated with the user, such as forum posts, or as the author of articles.
     pub display_name: String,
+    /// The stored hash of the password.
     pub password_hash: String,
-    pub roles: Vec<i32>
+    /// The roles of the user.
+    pub roles: Vec<i32> // currently this is stored as an int. It would be better to store it as an enum, if diesel-enum serialization can be made to work.
 }
 
 
@@ -97,6 +102,8 @@ pub struct NewUser {
 
 
 impl User {
+
+    /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Option<User> {
         use schema::users::dsl::*;
         info!("Getting user with Name: {}", name);
@@ -110,12 +117,12 @@ impl User {
         return returned_users.get(0).map(|x| x.clone());
     }
 
+    /// Gets the user by their id.
     pub fn get_user(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
         info!("Getting user with ID: {}", user_id);
 
-        match users.filter(id.eq(user_id))
-            .limit(1)
+        match users.find(user_id)
             .load::<User>(conn.deref()) 
         {
              Ok(x) => x.get(0).cloned().ok_or(WeekendAtJoesError::NotFound { type_name: "User"}),
@@ -123,6 +130,8 @@ impl User {
         }
     }
 
+    /// Gets a vector of users of length n.
+    // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
     pub fn get_users(num_users: i64, conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
         use schema::users::dsl::*;
         users
@@ -136,6 +145,7 @@ impl User {
             })
     }
 
+    /// Creates a new user.
     pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users;
 
@@ -153,6 +163,7 @@ impl User {
             })
     }
     
+    /// Updates the user's display name.
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
 
         use schema::users::dsl::*;
@@ -165,6 +176,7 @@ impl User {
             .map_err(|e| handle_diesel_error(e, "User"))
     }
 
+    /// Deletes the user by id.
     pub fn delete_user_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
@@ -175,6 +187,7 @@ impl User {
             .map_err(|e| handle_diesel_error(e, "User"))
     }
 
+    /// Deletes the user by their name.
     pub fn delete_user_by_name(name: String, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
