@@ -1,0 +1,44 @@
+body {
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+}
+.header {
+    width: 100%;
+    height: 70px;
+    background-color: orangered;
+    font-size: 20px;
+}
+
+.thread-card {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 5px; /* 5px rounded corners */
+    margin: 20px;
+    padding: 20px;
+}
+
+.main-container {
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0;
+}
+
+.thread-list {
+    width: 600px;
+    height: 100%;
+    margin: auto;
+    border-left: 1px solid gray;
+    border-right: 1px solid gray;
+    padding: 0;
+    margin-top: 0;
+}
+
+.thread-card-title {
+    font-size: 18px;
+}
+
+.thread-card-author-link {
+    font-size: 14px;
+}

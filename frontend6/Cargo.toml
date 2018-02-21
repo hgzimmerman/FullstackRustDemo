@@ -1,0 +1,8 @@
+[package]
+name = "frontend6"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "6e7a5611c9a6d8ae4e2f2437d1c41a5bb28919af" }
+requests_and_responses = {path = "../requests_and_responses"}
