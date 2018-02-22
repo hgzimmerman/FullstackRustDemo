@@ -133,16 +133,10 @@ impl Article {
     /// Applies the changeset to its corresponding article.
     pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
-        match diesel::update(articles::table)
+        diesel::update(articles::table)
             .set(&changeset)
             .get_result(conn.deref()) 
-        {
-            Ok(article) => Ok(article),
-            Err(e) => match e {
-                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
-                _ => Err(WeekendAtJoesError::DatabaseError(None))
-            }
-        }
+            .map_err(|e| handle_diesel_error(e, "Article")) 
     }
     
     /// Deletes the article corresponding to the provided id
