@@ -123,8 +123,8 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
         })
         .collect();
 
-    minimal_thread_responses.and_then(|mtrs| {
-        Ok(Json(mtrs))
+    minimal_thread_responses.map(|mtrs| {
+        Json(mtrs)
     })
 
 

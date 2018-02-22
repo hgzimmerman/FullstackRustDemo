@@ -14,20 +14,20 @@
 
     #[get("/<user_id>")]
     fn get_user(user_id: i32, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
-        User::get_user(user_id, &conn).and_then(|user|{
+        User::get_user(user_id, &conn).map(|user|{
             let user_response: UserResponse = user.into();
-            Ok(Json(user_response))
+            Json(user_response)
         })
     }
 
     // TODO Consider requiring admin access for this.
     #[get("/users/<num_users>")]
     fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
-        User::get_users(num_users, &conn).and_then(|users|{
+        User::get_users(num_users, &conn).map(|users|{
             let user_responses: Vec<UserResponse> = users
             .into_iter().map(|user| user.into())
             .collect();
-            Ok(Json(user_responses))
+            Json(user_responses)
         })
     }
 
@@ -36,9 +36,9 @@
     #[post("/", data = "<new_user>")]
     pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
         let new_user: NewUserRequest = new_user.into_inner();
-        User::create_user(new_user, &conn).and_then(|user| {
+        User::create_user(new_user, &conn).map(|user| {
             let user_response: UserResponse = user.into();
-            Ok(Json(user_response))
+            Json(user_response)
         })
     }
 
@@ -48,7 +48,7 @@
         info!("updating user display name");
         let request: UpdateDisplayNameRequest = data.into_inner();
         User::update_user_display_name(request, &conn)
-            .and_then(|deleted_user| Ok(Json(deleted_user.into())))
+            .map(|deleted_user| Json(deleted_user.into()))
 
     }
 
@@ -57,14 +57,14 @@
     fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
     
         User::delete_user_by_id(user_id, &conn)
-            .and_then(|deleted_user| Ok(Json(deleted_user.into())))
+            .map(|deleted_user| Json(deleted_user.into()))
     }
 
     #[delete("/<user_name>", rank = 2)]
     pub fn delete_user_by_name(user_name: String, _admin: AdminUser,conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
 
         User::delete_user_by_name(user_name, &conn)
-            .and_then(|deleted_user| Ok(Json(deleted_user.into())))
+            .map(|deleted_user| Json(deleted_user.into()))
     }
 
     // Export the ROUTES and their path

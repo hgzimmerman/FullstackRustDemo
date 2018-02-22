@@ -5,47 +5,41 @@ use db::Conn;
 
 use db::article::*;
 use requests_and_responses::article::*;
-// use routes::DatabaseError;
 use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
 use auth::user_authorization::NormalUser;
 
-// TODO: change the return type of this to Result<Json<Article>, Custom<>>
-// return a custom 404 or a custom 500 depending on the error type
 #[get("/<article_id>", rank=0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
-    
     Article::get_article_by_id(article_id, &conn)
-        .and_then(|article| Ok(Json(article)))
+        .map(|article| Json(article))
 }
 
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
     Article::get_recent_published_articles(number_of_articles, &conn)
-        .and_then(|a| Ok(Json(a)))
+        .map(|a| Json(a))
 }
 
 #[get("/users_unpublished_articles")]
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<Article>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
     Article::get_unpublished_articles_for_username(name, &conn)
-        .and_then(|a| Ok(Json(a)))
+        .map(|a| Json(a))
 }
 
 #[post("/", data = "<new_article>")]
 fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
 
-    match Article::create_article(new_article.into_inner(), &conn) {
-        Ok(article) => (Ok(Json(article))),
-        Err(_) => Err(WeekendAtJoesError::DatabaseError(None))
-    }
+    Article::create_article(new_article.into_inner(), &conn)
+        .map(|a| Json(a))
 }
 
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, conn: Conn) -> Result<Json<Article>, WeekendAtJoesError> {
     let update_article = update_article_request.into_inner();
     Article::update_article(update_article.into(), &conn)
-        .and_then(|x| Ok(Json(x)))
+        .map(|x| Json(x))
 }
 
 // TODO, test this interface

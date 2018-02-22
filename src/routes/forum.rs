@@ -34,16 +34,16 @@ impl From<NewForumRequest> for NewForum {
 #[get("/forums")]
 fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError> {
     Forum::get_forums(&conn)
-        .and_then(|forums| {
+        .map(|forums| {
             let forum_responses: Vec<ForumResponse> = forums.into_iter().map(|f| f.into()).collect();
-            Ok(Json(forum_responses))
+            Json(forum_responses)
         })
 }
 
 #[post("/create", data = "<new_forum>")]
 fn create_forum(new_forum: Json<NewForumRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
     Forum::create_forum(new_forum.into_inner().into(), &conn)
-        .and_then(|forum| Ok(Json(forum.into())))
+        .map(|forum| Json(forum.into()))
 }
 
 
