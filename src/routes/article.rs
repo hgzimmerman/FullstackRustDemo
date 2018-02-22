@@ -41,35 +41,56 @@ fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Res
 }
 
 #[post("/", data = "<new_article>")]
-fn create_article(new_article: Json<NewArticleRequest>, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
-
+fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
+    if new_article.author_id != user.user_id {
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being created's user does not match the user's id."});
+    } 
     Article::create_article(new_article.into_inner(), &conn)
         .map(|a| Json(a.into()))
 }
 
 #[put("/", data = "<update_article_request>")]
-fn update_article(update_article_request: Json<UpdateArticleRequest>, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
+fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_article_by_id(update_article_request.id, &conn)?;
+    if article_to_update.author_id != user.user_id {
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+    }
+
     let update_article = update_article_request.into_inner();
     Article::update_article(update_article.into(), &conn)
         .map(|a| Json(a.into()))
 }
 
-// TODO, test this interface
+/// Given an article id, delete the row that represents it.
 #[delete("/<article_id>")]
-fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    if article_to_update.author_id != user.user_id {
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id."});
+    }
     Article::delete_article(article_id, &conn)
         .map(|_| NoContent)
 }
 
-// TODO, test this interface
+/// Given an article id, set the corresponding article's date_published column to contain the current date.
 #[put("/publish/<article_id>")]
-fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    if article_to_update.author_id != user.user_id {
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+    }
     Article::set_publish_status(article_id, true, &conn)
         .map(|_| NoContent)
 }
 
+// Given an article id, set the corresponding article's date_published colum to NULL.
 #[put("/unpublish/<article_id>")]
-fn unpublish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    if article_to_update.author_id != user.user_id {
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+    }
+
     Article::set_publish_status(article_id, false, &conn)
         .map(|_| NoContent)
 }
