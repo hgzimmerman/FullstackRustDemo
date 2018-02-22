@@ -6,7 +6,6 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use rocket::response::status::NoContent;
 use requests_and_responses::article::NewArticleRequest;
 use error::WeekendAtJoesError;
 use chrono::{NaiveDateTime, Utc};
@@ -112,39 +111,24 @@ impl Article {
             
     }
 
-    /// Marks the article as published, this allows the article to be viewed people other than the author.
-    pub fn publish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
+    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<(), WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::articles;
-        match diesel::update(articles::table)
+
+        let publish_value: Option<NaiveDateTime> = if publish {
+            Some(Utc::now().naive_utc())
+        } else {
+            None
+        };
+
+        diesel::update(articles::table)
             .filter(id.eq(article_id))
-            .set(publish_date.eq(Utc::now().naive_utc()))
+            .set(publish_date.eq(publish_value))
             .execute(conn.deref()) 
-        {
-            Ok(_) => Ok(NoContent),
-            Err(e) => match e {
-                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
-                _ => Err(WeekendAtJoesError::DatabaseError(None))
-            }
-        }
+            .map(|_| ())
+            .map_err(|e| handle_diesel_error(e, "Article"))
     }
 
-    /// Hide the article from public view by setting its published date to NULL.
-    pub fn unpublish_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
-        use schema::articles::dsl::*;
-        use schema::articles;
-        match diesel::update(articles::table)
-            .filter(id.eq(article_id))
-            .set(publish_date.eq(None as Option<NaiveDateTime>))
-            .execute(conn.deref()) 
-        {
-            Ok(_) => Ok(NoContent),
-            Err(e) => match e {
-                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
-                _ => Err(WeekendAtJoesError::DatabaseError(None))
-            }
-        }
-    }
 
     /// Applies the changeset to its corresponding article.
     pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
@@ -162,18 +146,13 @@ impl Article {
     }
     
     /// Deletes the article corresponding to the provided id
-    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<NoContent, WeekendAtJoesError> {
+    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<(), WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
-        match diesel::delete(articles.filter(id.eq(article_id)))
+        diesel::delete(articles.filter(id.eq(article_id)))
             .execute(conn.deref())
-        {
-            Ok(_) => Ok(NoContent),
-            Err(e) => match e {
-                Error::NotFound => Err(WeekendAtJoesError::NotFound{type_name: "Article"}),
-                _ => Err(WeekendAtJoesError::DatabaseError(None))
-            }
-        }
+            .map(|_| ())
+            .map_err(|e| handle_diesel_error(e, "Article"))
     }
     
 }

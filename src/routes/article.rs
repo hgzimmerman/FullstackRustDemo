@@ -45,18 +45,21 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, conn: Conn
 // TODO, test this interface
 #[delete("/<article_id>")]
 fn delete_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    Article::delete_article(article_id, &conn) 
+    Article::delete_article(article_id, &conn)
+        .map(|_| NoContent)
 }
 
 // TODO, test this interface
 #[put("/publish/<article_id>")]
 fn publish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    Article::publish_article(article_id, &conn)
+    Article::set_publish_status(article_id, true, &conn)
+        .map(|_| NoContent)
 }
 
 #[put("/unpublish/<article_id>")]
 fn unpublish_article(article_id: i32, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    Article::unpublish_article(article_id, &conn)
+    Article::set_publish_status(article_id, false, &conn)
+        .map(|_| NoContent)
 }
 
 impl Routable for Article {

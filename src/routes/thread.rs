@@ -30,8 +30,8 @@ impl From<NewThreadRequest> for NewThread {
 
 impl From<NewThreadRequest> for NewPost {
     fn from(request: NewThreadRequest) -> NewPost {
+        // Just grab the post field from the thread request.
         NewPost::from(request.post)
-        // unimplemented!()
     }
 } 
 
