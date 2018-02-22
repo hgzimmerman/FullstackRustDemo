@@ -45,6 +45,7 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
     if new_article.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being created's user does not match the user's id."});
     } 
+    
     Article::create_article(new_article.into_inner(), &conn)
         .map(|a| Json(a.into()))
 }
@@ -68,6 +69,7 @@ fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCon
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id."});
     }
+
     Article::delete_article(article_id, &conn)
         .map(|_| NoContent)
 }
@@ -79,6 +81,7 @@ fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCo
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
     }
+
     Article::set_publish_status(article_id, true, &conn)
         .map(|_| NoContent)
 }
