@@ -36,7 +36,7 @@ pub struct Post {
     pub censored: bool
 }
 
-#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name="posts"]
 pub struct NewPost {
     pub thread_id: i32,

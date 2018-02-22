@@ -7,7 +7,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use db::handle_diesel_error;
 
-#[derive( Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable)]
 #[table_name="forums"]
 pub struct Forum {
     /// Primary Key.
@@ -18,7 +18,7 @@ pub struct Forum {
     pub description: String
 }
 
-#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[derive(Insertable, Debug)]
 #[table_name="forums"]
 pub struct NewForum {
     pub title: String,
@@ -33,7 +33,7 @@ impl Forum {
         diesel::insert_into(forums::table)
             .values(&new_forum)
             .get_result(conn.deref())
-            .map_err(|_| WeekendAtJoesError::DatabaseError(None))
+            .map_err(|e| handle_diesel_error(e, "Forum"))
     }
 
     /// Gets a list of all forums.
@@ -41,7 +41,7 @@ impl Forum {
         use schema::forums::dsl::*;
         forums
             .load::<Forum>(conn.deref())
-            .map_err(|_|  WeekendAtJoesError::DatabaseError(None))
+            .map_err(|e| handle_diesel_error(e, "Forum")) 
     }
 
     /// Gets a forum by id.

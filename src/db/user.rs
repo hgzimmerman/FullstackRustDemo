@@ -75,7 +75,7 @@ impl From<NewUserRequest> for NewUser {
 
 
 /// The database's representation of a user.
-#[derive( Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable)]
 #[table_name="users"]
 pub struct User {
     /// The primary key
@@ -91,7 +91,7 @@ pub struct User {
 }
 
 
-#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name="users"]
 pub struct NewUser {
     pub user_name: String,

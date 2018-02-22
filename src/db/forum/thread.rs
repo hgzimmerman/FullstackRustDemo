@@ -34,7 +34,7 @@ pub struct Thread {
 }
 
 
-#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name="threads"]
 pub struct NewThread {
     pub forum_id: i32,

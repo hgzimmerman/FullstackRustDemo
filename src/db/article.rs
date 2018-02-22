@@ -15,7 +15,7 @@ use diesel::BelongingToDsl;
 use db::handle_diesel_error;
 
 /// The database's representation of an article
-#[derive(Serialize, Deserialize, Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
+#[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[table_name="articles"]
 pub struct Article {
