@@ -24,20 +24,29 @@ impl From<Article> for ArticleResponse {
 #[get("/<article_id>", rank=0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     Article::get_article_by_id(article_id, &conn)
-        .map(|article| Json(article.into()))
+        .map(ArticleResponse::from)
+        .map(Json)
 }
 
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     Article::get_recent_published_articles(number_of_articles, &conn)
-        .map(|articles| Json(articles.into_iter().map(|article| article.into()).collect()))
+        .map(|articles| articles
+            .into_iter()
+            .map(ArticleResponse::from)
+            .collect())
+        .map(Json)
 }
 
 #[get("/users_unpublished_articles")]
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
     Article::get_unpublished_articles_for_username(name, &conn)
-        .map(|articles| Json(articles.into_iter().map(|article| article.into()).collect()))
+        .map(|articles| articles
+            .into_iter()
+            .map(ArticleResponse::from)
+            .collect())
+        .map(Json)
 }
 
 #[post("/", data = "<new_article>")]
@@ -47,7 +56,8 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
     } 
     
     Article::create_article(new_article.into_inner(), &conn)
-        .map(|a| Json(a.into()))
+        .map(ArticleResponse::from)
+        .map(Json)
 }
 
 #[put("/", data = "<update_article_request>")]
@@ -59,7 +69,8 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 
     let update_article = update_article_request.into_inner();
     Article::update_article(update_article.into(), &conn)
-        .map(|a| Json(a.into()))
+        .map(ArticleResponse::from)
+        .map(Json)
 }
 
 /// Given an article id, delete the row that represents it.

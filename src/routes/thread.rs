@@ -114,18 +114,14 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     let minimal_thread_responses: Result<Vec<MinimalThreadResponse>, WeekendAtJoesError> = threads
         .into_iter()
         .map(|thread| {
-            let user: User = match User::get_user(thread.author_id, &conn) {
-                Ok(u) => u,
-                Err(e) => return Err(e)
-            };
+            let user: User = User::get_user(thread.author_id, &conn)?; 
             let mtr: MinimalThreadResponse = thread.into_minimal_thread_response(user);
             Ok(mtr)
         })
         .collect();
 
-    minimal_thread_responses.map(|mtrs| {
-        Json(mtrs)
-    })
+    minimal_thread_responses
+        .map(Json)
 
 
 }

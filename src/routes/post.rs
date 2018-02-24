@@ -85,7 +85,8 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
     }
     let user: User = User::get_user(new_post.author_id, &conn)?;
     Post::create_post(new_post.into_inner().into(), &conn)
-        .map(|post| Json(post.into_childless_response(user)))
+        .map(|post| post.into_childless_response(user))
+        .map(Json)
 }
 
 
@@ -102,14 +103,16 @@ fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, c
     let thread_id: i32 = edit_post_request.thread_id;
     let user: User = Post::get_user_by_post(edit_post_changeset.id, &conn)?;
     Post::modify_post(edit_post_changeset, thread_id, &conn)
-        .map(|post| Json(post.into_childless_response(user)))
+        .map(|post| post.into_childless_response(user))
+        .map(Json)
 }
 
 #[put("/censor/<post_id>")]
 fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     let user: User = Post::get_user_by_post(post_id, &conn)?;
     Post::censor_post(post_id, &conn)
-        .map(|post| Json(post.into_childless_response(user)))
+        .map(|post| post.into_childless_response(user))
+        .map(Json)
 }
 
 #[get("/users_posts/<user_id>")]
@@ -117,12 +120,12 @@ fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>
     let user: User = User::get_user(user_id, &conn)?;
     Post::get_posts_by_user(user_id, &conn)
         .map(|posts| {
-            let post_responses = posts
-            .into_iter()
-            .map(|post| post.into_childless_response(user.clone()))
-            .collect();
-            Json(post_responses)
+            posts
+                .into_iter()
+                .map(|post| post.into_childless_response(user.clone()))
+                .collect()
         })
+        .map(Json)
 }
 
 
