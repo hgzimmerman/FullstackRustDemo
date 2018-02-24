@@ -1,7 +1,7 @@
 use schema::posts;
 use chrono::NaiveDateTime;
 use db::user::User;
-use db::forum::Thread;
+use db::thread::Thread;
 use error::WeekendAtJoesError;
 use db::Conn;
 use std::ops::Deref;
@@ -141,7 +141,7 @@ impl Post {
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
     pub fn get_root_post(requested_thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
-        use db::forum::Thread;
+        use db::thread::Thread;
 
         let thread: Thread = Thread::get_thread(requested_thread_id, conn)?;
 

@@ -2,7 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
-use db::forum::{Post, NewPost, EditPostChangeset};
+use db::post::{Post, NewPost, EditPostChangeset};
 use db::user::User;
 use error::WeekendAtJoesError;
 use db::Conn;

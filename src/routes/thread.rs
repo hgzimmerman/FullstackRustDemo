@@ -2,8 +2,8 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
-use db::forum::{Thread, NewThread};
-use db::forum::{Post, NewPost};
+use db::thread::{Thread, NewThread};
+use db::post::{Post, NewPost};
 use db::user::User;
 use error::WeekendAtJoesError;
 use db::Conn;
