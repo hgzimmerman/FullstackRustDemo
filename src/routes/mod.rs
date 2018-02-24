@@ -19,7 +19,14 @@ pub use self::bucket_questions::*;
 pub use self::forum::*;
 use rocket::Route;
 
-
+/// Abstracts away a common closure that is used to convert the wrapped values of a vector 
+/// into another type.
+pub fn convert_vector<T, W>(vec: Vec<T>) -> Vec<W>
+    where W: From<T> {
+        vec.into_iter()
+            .map(W::from)
+            .collect()
+}
 
 /// Convienence trait that specifies that implementors must package up their routes into a vector 
 /// and a path so that consumption by Rocket's mount() function is painless.

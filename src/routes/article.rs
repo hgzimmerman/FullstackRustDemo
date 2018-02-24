@@ -1,6 +1,6 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use super::Routable;
+use super::{ Routable, convert_vector } ;
 use db::Conn;
 
 use db::article::*;
@@ -31,10 +31,7 @@ fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, Wee
 #[get("/articles/<number_of_articles>", rank=0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     Article::get_recent_published_articles(number_of_articles, &conn)
-        .map(|articles| articles
-            .into_iter()
-            .map(ArticleResponse::from)
-            .collect())
+        .map(convert_vector)
         .map(Json)
 }
 
@@ -42,10 +39,7 @@ fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Ve
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
     Article::get_unpublished_articles_for_username(name, &conn)
-        .map(|articles| articles
-            .into_iter()
-            .map(ArticleResponse::from)
-            .collect())
+        .map(convert_vector)
         .map(Json)
 }
 

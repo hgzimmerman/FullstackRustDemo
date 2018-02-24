@@ -111,19 +111,15 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     // TODO move the 25 into a parameter
     // TODO make this more efficient by doing a join in the database method
     let threads: Vec<Thread> = Thread::get_threads_in_forum(forum_id, 25, &conn)?;
-    let minimal_thread_responses: Result<Vec<MinimalThreadResponse>, WeekendAtJoesError> = threads
+    threads
         .into_iter()
         .map(|thread| {
             let user: User = User::get_user(thread.author_id, &conn)?; 
             let mtr: MinimalThreadResponse = thread.into_minimal_thread_response(user);
             Ok(mtr)
         })
-        .collect();
-
-    minimal_thread_responses
+        .collect::<Result<Vec<MinimalThreadResponse>, WeekendAtJoesError>>()
         .map(Json)
-
-
 }
 
 

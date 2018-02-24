@@ -40,16 +40,11 @@ impl Post {
         use db::user::User;
     
         let user: User = User::get_user(self.author_id, conn)?;
-        let children: Result<Vec<PostResponse>, WeekendAtJoesError> = self
+        let children: Vec<PostResponse> = self
             .get_post_children(conn)?
             .into_iter()
-            .map(|p| Post::into_post_response(p, conn)) // recursion ocurrs here, beware of any performance problems
-            .collect();
-
-        let children: Vec<PostResponse> = match children {
-            Ok(c) => c,
-            Err(e) => return Err(e)
-        };
+            .map(|p| p.into_post_response(conn)) // recursion ocurrs here, beware of any performance problems
+            .collect::<Result<Vec<PostResponse>, WeekendAtJoesError>>()?;
 
         Ok(PostResponse {
             id: self.id,

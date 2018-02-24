@@ -1,6 +1,6 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use routes::Routable;
+use routes::{ Routable, convert_vector };
 use db::Conn;
 use db::user::User;
 use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
@@ -19,12 +19,7 @@ fn get_user(user_id: i32, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoe
 #[get("/users/<num_users>")]
 fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
     User::get_users(num_users, &conn)
-        .map(|users|{
-            users
-                .into_iter()
-                .map(UserResponse::from)
-                .collect()
-        })
+        .map(convert_vector)
         .map(Json)
 }
 

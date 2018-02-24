@@ -9,6 +9,7 @@ use db::Conn;
 use requests_and_responses::forum::ForumResponse;
 use requests_and_responses::forum::NewForumRequest;
 use auth::user_authorization::AdminUser;
+use routes::convert_vector;
 
 impl From<Forum> for ForumResponse {
     fn from(forum: Forum) -> ForumResponse {
@@ -31,14 +32,12 @@ impl From<NewForumRequest> for NewForum {
 
 
 
+
 #[get("/forums")]
 fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError> {
+
     Forum::get_forums(&conn)
-        .map(|forums| {
-            forums.into_iter()
-                .map(ForumResponse::from)
-                .collect()
-        })
+        .map(convert_vector)
         .map(Json)
 }
 
