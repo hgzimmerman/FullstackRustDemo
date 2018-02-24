@@ -149,12 +149,11 @@ impl Post {
             .filter(
                 parent_id.is_null(), // There should only be one thread that has a null parent, and that is the OP/root post
             )
-            .limit(1)
-            .load::<Post>(conn.deref())
+            .first::<Post>(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Post"))
-            .and_then(|returned_posts| {
-                returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
-            })
+            // .and_then(|returned_posts| {
+            //     returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
+            // })
     }
     
     /// Gets all of the posts that belong to the post.

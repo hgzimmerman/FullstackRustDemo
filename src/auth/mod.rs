@@ -56,11 +56,9 @@ pub type LoginResult = Result<String, LoginError>;
 pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginResult {
     info!("Logging in for user: {}", &login_request.user_name);
     // get user
-    let user: User = match User::get_user_by_user_name(&login_request.user_name, &conn){
-        Some(user) => user,
-        None => return Err(LoginError::UsernameDoesNotExist)
-    };
-
+    let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
+        .map_err(|_| LoginError::UsernameDoesNotExist)?;
+    
 
     info!("verifing password: {}", &login_request.password);
     info!("against: {}", &user.password_hash);

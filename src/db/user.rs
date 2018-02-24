@@ -4,7 +4,6 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use diesel::result::Error;
 use std::ops::Deref;
 // use chrono::NaiveDateTime;
 use schema::users;
@@ -104,17 +103,14 @@ pub struct NewUser {
 impl User {
 
     /// Gets the user by their user name.
-    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Option<User> {
+    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
         info!("Getting user with Name: {}", name);
 
-        let returned_users: Vec<User> = users
+        users
             .filter(user_name.eq(user_name))
-            .limit(1)
-            .load::<User>(conn.deref())
-            .expect("db error");
-
-        return returned_users.get(0).map(|x| x.clone());
+            .first::<User>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
     /// Gets the user by their id.
@@ -122,12 +118,9 @@ impl User {
         use schema::users::dsl::*;
         info!("Getting user with ID: {}", user_id);
 
-        match users.find(user_id)
-            .load::<User>(conn.deref()) 
-        {
-             Ok(x) => x.get(0).cloned().ok_or(WeekendAtJoesError::NotFound { type_name: "User"}),
-             Err(_) => Err(WeekendAtJoesError::DatabaseError(None))
-        }
+        users.find(user_id)
+            .first::<User>(conn.deref()) 
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
     /// Gets a vector of users of length n.
@@ -137,12 +130,7 @@ impl User {
         users
             .limit(num_users)
             .load::<User>(conn.deref())
-            .map_err(|e| {
-                match e {
-                    Error::NotFound => WeekendAtJoesError::NotFound { type_name: "User"},
-                    _ => WeekendAtJoesError::DatabaseError(None),
-                }
-            })
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
 
     /// Creates a new user.
@@ -155,12 +143,7 @@ impl User {
         diesel::insert_into(users::table)
             .values(&new_user)
             .get_result(conn.deref())
-            .map_err(|e| {
-                match e {
-                    Error::NotFound => WeekendAtJoesError::NotFound { type_name: "User"},
-                    _ => WeekendAtJoesError::DatabaseError(None),
-                }
-            })
+            .map_err(|e| handle_diesel_error(e, "User"))
     }
     
     /// Updates the user's display name.

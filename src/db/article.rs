@@ -111,7 +111,7 @@ impl Article {
             
     }
 
-    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<(), WeekendAtJoesError> {
+    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
         use schema::articles;
 
@@ -124,8 +124,7 @@ impl Article {
         diesel::update(articles::table)
             .filter(id.eq(article_id))
             .set(publish_date.eq(publish_value))
-            .execute(conn.deref()) 
-            .map(|_| ())
+            .get_result(conn.deref()) 
             .map_err(|e| handle_diesel_error(e, "Article"))
     }
 
@@ -140,12 +139,11 @@ impl Article {
     }
     
     /// Deletes the article corresponding to the provided id
-    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<(), WeekendAtJoesError> {
+    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
         diesel::delete(articles.filter(id.eq(article_id)))
-            .execute(conn.deref())
-            .map(|_| ())
+            .get_result(conn.deref())
             .map_err(|e| handle_diesel_error(e, "Article"))
     }
     
