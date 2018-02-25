@@ -1,13 +1,14 @@
 use schema::answers;
 use db::user::User;
 use db::question::Question;
-use db::handle_diesel_error;
 use db::Conn;
-use error::WeekendAtJoesError;
+use error::*;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel;
+use diesel::result::Error;
 use std::ops::Deref;
+
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
@@ -39,7 +40,7 @@ impl Question {
         diesel::insert_into(answers::table)
             .values(&new_answer)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Answer"))
+            .map_err(Answer::handle_error)
     }
 
     pub fn get_answer(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
@@ -49,8 +50,14 @@ impl Question {
         answers 
             .find(answer_id)
             .first::<Answer>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Answer"))
+            .map_err(Answer::handle_error)
     }
 
 
+}
+
+impl ErrorFormatter for Answer {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Answer")
+    }
 }

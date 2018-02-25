@@ -2,15 +2,15 @@ use schema::threads;
 use chrono::NaiveDateTime;
 use db::user::User;
 use db::forum::Forum;
-use error::WeekendAtJoesError;
+use error::*;
 use db::Conn;
 use std::ops::Deref;
-use db::handle_diesel_error;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
+use diesel::result::Error;
 
 #[derive( Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -54,7 +54,7 @@ impl Thread {
         diesel::insert_into(threads::table)
             .values(&new_thread)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
     /// Locks the thread, preventing posting and editing
@@ -66,7 +66,7 @@ impl Thread {
             .filter(id.eq(thread_id))
             .set(locked.eq(true))
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
     /// Unlocks the thread, allowing posting and editing again.
@@ -77,7 +77,7 @@ impl Thread {
             .filter(id.eq(thread_id))
             .set(locked.eq(false))
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
@@ -88,7 +88,7 @@ impl Thread {
             .filter(id.eq(thread_id))
             .set(archived.eq(true))
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
     /// Gets all of the most recent threads in a forum.
@@ -105,7 +105,7 @@ impl Thread {
             .order(created_date)
             .limit(num_threads)
             .get_results(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
     /// Currently this acts as a helper method for Post::get_root_post() and isn't intended to be exposed via api
@@ -116,7 +116,13 @@ impl Thread {
         threads
             .find(thread_id)
             .first::<Thread>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Thread"))
+            .map_err(Thread::handle_error)
     }
 
+}
+
+impl ErrorFormatter for Thread {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Thread")
+    }
 }

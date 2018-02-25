@@ -1,11 +1,11 @@
 use schema::buckets;
-use error::WeekendAtJoesError;
+use error::*;
 use db::Conn;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
-use db::handle_diesel_error;
+use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
 #[table_name="buckets"]
@@ -30,7 +30,7 @@ impl Bucket {
         diesel::insert_into(buckets::table)
             .values(&new_bucket)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Bucket"))
+            .map_err(Bucket::handle_error)
     }
 
     /// Gets a list of all buckets.
@@ -38,7 +38,7 @@ impl Bucket {
         use schema::buckets::dsl::*;
         buckets
             .load::<Bucket>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Bucket")) 
+            .map_err(Bucket::handle_error)
     }
 
     /// Gets a bucket by id.
@@ -49,7 +49,13 @@ impl Bucket {
         buckets 
             .find(bucket_id)
             .first::<Bucket>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Forum"))
+            .map_err(Bucket::handle_error)
 
+    }
+}
+
+impl ErrorFormatter for Bucket {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Bucket")
     }
 }

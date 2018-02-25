@@ -1,11 +1,11 @@
 use schema::forums;
-use error::WeekendAtJoesError;
+use error::*;
 use db::Conn;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
-use db::handle_diesel_error;
+use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
 #[table_name="forums"]
@@ -33,7 +33,7 @@ impl Forum {
         diesel::insert_into(forums::table)
             .values(&new_forum)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Forum"))
+            .map_err(Forum::handle_error)
     }
 
     /// Gets a list of all forums.
@@ -41,7 +41,7 @@ impl Forum {
         use schema::forums::dsl::*;
         forums
             .load::<Forum>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Forum")) 
+            .map_err(Forum::handle_error)
     }
 
     /// Gets a forum by id.
@@ -52,8 +52,13 @@ impl Forum {
         forums 
             .find(forum_id)
             .first::<Forum>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Forum"))
-
+            .map_err(Forum::handle_error)
     }
 
+}
+
+impl ErrorFormatter for Forum {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Forum")
+    }
 }

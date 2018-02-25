@@ -1,6 +1,7 @@
 use rocket::response::{Responder, Response};
 use rocket::http::Status;
 use rocket::request::Request;
+use diesel::result::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum WeekendAtJoesError {
@@ -22,6 +23,17 @@ pub enum WeekendAtJoesError {
     ExpiredToken,
     /// The request did not have a token
     MissingToken
+}
+
+pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) ->  WeekendAtJoesError {
+    match diesel_error {
+        Error::NotFound => WeekendAtJoesError::NotFound { type_name },
+        _ => WeekendAtJoesError::DatabaseError(None),
+    }
+}
+
+pub trait ErrorFormatter {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError;
 }
 
 impl<'r> Responder<'r> for WeekendAtJoesError {

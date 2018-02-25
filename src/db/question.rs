@@ -1,14 +1,14 @@
 use schema::questions;
-use error::WeekendAtJoesError;
+use error::*;
 use db::Conn;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
-use db::handle_diesel_error;
 use db::user::User;
 use db::bucket::Bucket;
 use diesel::BelongingToDsl;
+use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
 #[table_name="questions"]
@@ -38,7 +38,7 @@ impl Question {
         diesel::insert_into(questions::table)
             .values(&new_question)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Question"))
+            .map_err(Question::handle_error)
     }
 
     /// Gets a list of all buckets.
@@ -46,7 +46,7 @@ impl Question {
         use schema::questions::dsl::*;
         questions 
             .load::<Question>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Question")) 
+            .map_err(Question::handle_error)
     }
 
     pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<Question>, WeekendAtJoesError> {
@@ -54,7 +54,7 @@ impl Question {
         let bucket = Bucket::get_bucket(owning_bucket_id, &conn)?;
         Question::belonging_to(&bucket)
             .load::<Question>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Question")) 
+            .map_err(Question::handle_error)
     }
 
     /// Gets a bucket by id.
@@ -65,7 +65,13 @@ impl Question {
         questions
             .find(question_id)
             .first::<Question>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Question"))
+            .map_err(Question::handle_error)
 
+    }
+}
+
+impl ErrorFormatter for Question {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Question")
     }
 }

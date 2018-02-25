@@ -9,8 +9,8 @@ use std::ops::Deref;
 use schema::users;
 
 use requests_and_responses::user::*;
-use error::WeekendAtJoesError;
-use db::handle_diesel_error;
+use error::*;
+use diesel::result::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]  
@@ -110,7 +110,7 @@ impl User {
         users
             .filter(user_name.eq(user_name))
             .first::<User>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
 
     /// Gets the user by their id.
@@ -120,7 +120,7 @@ impl User {
 
         users.find(user_id)
             .first::<User>(conn.deref()) 
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
 
     /// Gets a vector of users of length n.
@@ -130,7 +130,7 @@ impl User {
         users
             .limit(num_users)
             .load::<User>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
 
     /// Creates a new user.
@@ -143,7 +143,7 @@ impl User {
         diesel::insert_into(users::table)
             .values(&new_user)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
     
     /// Updates the user's display name.
@@ -156,7 +156,7 @@ impl User {
         diesel::update(target)
             .set(display_name.eq(request.new_display_name))
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
 
     /// Deletes the user by id.
@@ -167,7 +167,7 @@ impl User {
 
         diesel::delete(target)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
     }
 
     /// Deletes the user by their name.
@@ -178,7 +178,13 @@ impl User {
 
         diesel::delete(target)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))
+            .map_err(User::handle_error)
+    }
+}
+
+impl ErrorFormatter for User {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "User")
     }
 }
 
@@ -228,3 +234,4 @@ mod test {
     }
 
 }
+

@@ -7,12 +7,11 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use requests_and_responses::article::NewArticleRequest;
-use error::WeekendAtJoesError;
+use error::*;
 use chrono::{NaiveDateTime, Utc};
 use requests_and_responses::article::*;
 use db::user::User;
 use diesel::BelongingToDsl;
-use db::handle_diesel_error;
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
@@ -85,7 +84,7 @@ impl Article {
         let user: User = users
             .filter(user_name.eq(username))
             .get_result::<User>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "User"))?;
+            .map_err(User::handle_error)?;
 
 
         Article::belonging_to(&user)
@@ -94,7 +93,7 @@ impl Article {
             )
             .order(publish_date)
             .load::<Article>(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Article"))
+            .map_err(Article::handle_error)
         
     }
 
@@ -107,8 +106,7 @@ impl Article {
         diesel::insert_into(articles::table)
             .values(&new_article)
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Article"))
-            
+            .map_err(Article::handle_error)
     }
 
     pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
@@ -125,7 +123,7 @@ impl Article {
             .filter(id.eq(article_id))
             .set(publish_date.eq(publish_value))
             .get_result(conn.deref()) 
-            .map_err(|e| handle_diesel_error(e, "Article"))
+            .map_err(Article::handle_error)
     }
 
 
@@ -135,7 +133,7 @@ impl Article {
         diesel::update(articles::table)
             .set(&changeset)
             .get_result(conn.deref()) 
-            .map_err(|e| handle_diesel_error(e, "Article")) 
+            .map_err(Article::handle_error)
     }
     
     /// Deletes the article corresponding to the provided id
@@ -144,7 +142,7 @@ impl Article {
 
         diesel::delete(articles.filter(id.eq(article_id)))
             .get_result(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Article"))
+            .map_err(Article::handle_error)
     }
     
 }
@@ -165,5 +163,11 @@ impl From<NewArticleRequest> for NewArticle {
             body: new_article_request.body,
             author_id: new_article_request.author_id
         }
+    }
+}
+
+impl ErrorFormatter for Article {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Article")
     }
 }
