@@ -1,0 +1,56 @@
+use schema::answers;
+use db::user::User;
+use db::question::Question;
+use db::handle_diesel_error;
+use db::Conn;
+use error::WeekendAtJoesError;
+use diesel::RunQueryDsl;
+use diesel::QueryDsl;
+use diesel;
+use std::ops::Deref;
+
+
+#[derive(Debug, Clone, Identifiable, Queryable, Associations)]
+#[table_name="answers"]
+#[belongs_to(User, foreign_key = "author_id")]
+#[belongs_to(Question, foreign_key = "question_id")]
+pub struct Answer {
+    /// Primary Key.
+    pub id: i32,
+    pub question_id: i32,
+    pub author_id: i32,
+    pub answer_text: String,
+}
+
+#[derive(Insertable, Debug)]
+#[table_name="answers"]
+pub struct NewAnswer {
+    author_id: i32,
+    question_id: i32,
+    answer_text: String
+}
+
+
+impl Question {
+    /// Creates a new answer
+    pub fn create_answer(new_answer: NewAnswer, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
+        use schema::answers;
+
+        diesel::insert_into(answers::table)
+            .values(&new_answer)
+            .get_result(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Answer"))
+    }
+
+    pub fn get_answer(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
+        use schema::answers::dsl::*;
+
+        // Gets the first bucket that matches the id.
+        answers 
+            .find(answer_id)
+            .first::<Answer>(conn.deref())
+            .map_err(|e| handle_diesel_error(e, "Answer"))
+    }
+
+
+}

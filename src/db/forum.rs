@@ -48,7 +48,7 @@ impl Forum {
     pub fn get_forum(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums::dsl::*;
 
-        // Gets the first thread that matches the id.
+        // Gets the first forum that matches the id.
         forums 
             .find(forum_id)
             .first::<Forum>(conn.deref())
