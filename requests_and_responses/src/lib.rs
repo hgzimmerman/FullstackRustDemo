@@ -9,3 +9,4 @@ pub mod article;
 pub mod forum;
 pub mod post;
 pub mod thread;
+pub mod bucket;

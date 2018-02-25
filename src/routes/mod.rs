@@ -9,6 +9,7 @@ pub mod bucket_questions;
 pub mod forum;
 pub mod post;
 pub mod thread;
+pub mod bucket;
 
 pub use self::article::*;
 pub use self::static_file::*;
@@ -17,6 +18,9 @@ pub use self::auth::*;
 // these are mostly unused
 pub use self::bucket_questions::*;
 pub use self::forum::*;
+// pub use self::post::*;
+// pub use self::thread::*;
+pub use self::bucket::*;
 use rocket::Route;
 
 /// Abstracts away a common closure that is used to convert the wrapped values of a vector 

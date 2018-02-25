@@ -50,7 +50,6 @@ impl Bucket {
             .find(bucket_id)
             .first::<Bucket>(conn.deref())
             .map_err(Bucket::handle_error)
-
     }
 }
 
