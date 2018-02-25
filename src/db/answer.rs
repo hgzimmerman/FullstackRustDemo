@@ -19,7 +19,7 @@ pub struct Answer {
     pub id: i32,
     pub question_id: i32,
     pub author_id: i32,
-    pub answer_text: String,
+    pub answer_text: Option<String>
 }
 
 #[derive(Insertable, Debug)]
@@ -27,7 +27,7 @@ pub struct Answer {
 pub struct NewAnswer {
     author_id: i32,
     question_id: i32,
-    answer_text: String
+    answer_text: Option<String>
 }
 
 
@@ -45,7 +45,7 @@ impl Question {
     pub fn get_answer(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
         use schema::answers::dsl::*;
 
-        // Gets the first bucket that matches the id.
+        // Gets the first answer that matches the id.
         answers 
             .find(answer_id)
             .first::<Answer>(conn.deref())

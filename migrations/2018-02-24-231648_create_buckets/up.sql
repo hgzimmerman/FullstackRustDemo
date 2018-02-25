@@ -16,5 +16,5 @@ CREATE TABLE answers (
     id SERIAL PRIMARY KEY,
     question_id INTEGER REFERENCES questions(id) NOT NULL,
     author_id INTEGER REFERENCES users(id) NOT NULL,
-    answer_text VARCHAR NOT NULL
+    answer_text VARCHAR
 );
