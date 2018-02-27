@@ -14,7 +14,7 @@ use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
-#[table_name="questions"]
+#[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_id")]
 #[belongs_to(User, foreign_key = "author_id")]
 pub struct Question {
@@ -26,11 +26,11 @@ pub struct Question {
 }
 
 #[derive(Insertable, Debug)]
-#[table_name="questions"]
+#[table_name = "questions"]
 pub struct NewQuestion {
     pub bucket_id: i32,
     pub author_id: i32,
-    pub question_text: String
+    pub question_text: String,
 }
 
 impl Question {
@@ -47,7 +47,7 @@ impl Question {
     /// Gets a list of all questions across all buckets.
     pub fn get_questions(conn: &Conn) -> Result<Vec<Question>, WeekendAtJoesError> {
         use schema::questions::dsl::*;
-        questions 
+        questions
             .load::<Question>(conn.deref())
             .map_err(Question::handle_error)
     }
@@ -110,18 +110,18 @@ impl Question {
             .map_err(|_| WeekendAtJoesError::InternalServerError)?
             .first()
             .cloned()
-            .ok_or(WeekendAtJoesError::NotFound{ type_name: "Question" })?;
+            .ok_or(WeekendAtJoesError::NotFound { type_name: "Question" })?;
 
         // Get the matching user
         let user: User = users
             .find(random_question.author_id)
             .first::<User>(conn.deref())
-            .map_err(User::handle_error)?; 
+            .map_err(User::handle_error)?;
 
         Ok((random_question, user))
     }
 
-    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec< (User, Vec<(Question, Vec<Answer>)> )>, WeekendAtJoesError> {
+    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<(User, Vec<(Question, Vec<Answer>)>)>, WeekendAtJoesError> {
 
         let bucket = Bucket::get_bucket(owning_bucket_id, &conn)?;
         let users: Vec<User> = User::get_all_users(conn)?;
@@ -138,8 +138,8 @@ impl Question {
             .into_iter()
             .zip(grouped_answers)
             .grouped_by(&users);
-        
-        let retval: Vec< (User, Vec<(Question, Vec<Answer>)> )>  = users
+
+        let retval: Vec<(User, Vec<(Question, Vec<Answer>)>)> = users
             .into_iter()
             .zip(questions_with_answers)
             .collect();
@@ -175,7 +175,7 @@ impl Question {
         let user: User = users
             .find(question.author_id)
             .first::<User>(conn.deref())
-            .map_err(User::handle_error)?; 
+            .map_err(User::handle_error)?;
         Ok((question, user, answers))
     }
 }

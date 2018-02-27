@@ -12,10 +12,10 @@ use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
 
-#[derive( Debug, Clone, Identifiable, Associations, Queryable)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Forum, foreign_key = "forum_id")]
-#[table_name="threads"]
+#[table_name = "threads"]
 pub struct Thread {
     /// Primary Key
     pub id: i32,
@@ -30,23 +30,22 @@ pub struct Thread {
     /// If the thread is archived, then it cannot be seen by non-moderators
     pub archived: bool,
     /// The title of the thread will be shown on think in the forum that will take you to the thread, as well as at the top of the thread's page.
-    pub title: String
+    pub title: String,
 }
 
 
 #[derive(Insertable, Debug, Clone)]
-#[table_name="threads"]
+#[table_name = "threads"]
 pub struct NewThread {
     pub forum_id: i32,
     pub author_id: i32,
     pub created_date: NaiveDateTime,
     pub locked: bool,
     pub archived: bool,
-    pub title: String
+    pub title: String,
 }
 
 impl Thread {
-
     /// Creates a new Thread.
     pub fn create_thread(new_thread: NewThread, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads;
@@ -59,7 +58,7 @@ impl Thread {
 
     /// Locks the thread, preventing posting and editing
     // TODO consolidate this function and unlock_thread(), by specifiying an additional bool value.
-    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
+    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
         diesel::update(threads::table)
@@ -70,7 +69,7 @@ impl Thread {
     }
 
     /// Unlocks the thread, allowing posting and editing again.
-    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError>{
+    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
         diesel::update(threads::table)
@@ -118,7 +117,6 @@ impl Thread {
             .first::<Thread>(conn.deref())
             .map_err(Thread::handle_error)
     }
-
 }
 
 impl ErrorFormatter for Thread {

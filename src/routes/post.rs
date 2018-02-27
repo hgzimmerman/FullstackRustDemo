@@ -12,14 +12,14 @@ use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 
 impl From<NewPostRequest> for NewPost {
-    fn from(request: NewPostRequest ) -> NewPost {
+    fn from(request: NewPostRequest) -> NewPost {
         NewPost {
             thread_id: request.thread_id,
             author_id: request.author_id,
             parent_id: request.parent_id,
             created_date: Utc::now().naive_utc(),
             content: request.content,
-            censored: false 
+            censored: false,
         }
     }
 }
@@ -29,7 +29,7 @@ impl From<EditPostRequest> for EditPostChangeset {
         EditPostChangeset {
             id: request.id,
             modified_date: Utc::now().naive_utc(),
-            content: request.content
+            content: request.content,
         }
     }
 }
@@ -38,7 +38,7 @@ impl From<EditPostRequest> for EditPostChangeset {
 impl Post {
     pub fn into_post_response(self, conn: &Conn) -> Result<PostResponse, WeekendAtJoesError> {
         use db::user::User;
-    
+
         let user: User = User::get_user(self.author_id, conn)?;
         let children: Vec<PostResponse> = self
             .get_post_children(conn)?
@@ -53,7 +53,7 @@ impl Post {
             modified_date: self.modified_date,
             content: self.content,
             censored: self.censored,
-            children: children
+            children: children,
         })
     }
 
@@ -65,7 +65,7 @@ impl Post {
             modified_date: self.modified_date,
             content: self.content,
             censored: self.censored,
-            children: vec!()
+            children: vec![],
         }
     }
 }
@@ -76,7 +76,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
     // check if token user id matches the request user id.
     // This prevents users from creating posts under other user's names.
     if new_post.0.author_id != login_user.user_id {
-        return Err(WeekendAtJoesError::BadRequest)
+        return Err(WeekendAtJoesError::BadRequest);
     }
     let user: User = User::get_user(new_post.author_id, &conn)?;
     Post::create_post(new_post.into_inner().into(), &conn)
@@ -88,9 +88,9 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
-    let existing_post = Post::get_post_by_id(edit_post_request.0.id , &conn)?;
+    let existing_post = Post::get_post_by_id(edit_post_request.0.id, &conn)?;
     if login_user.user_id != existing_post.author_id {
-        return Err(WeekendAtJoesError::BadRequest)
+        return Err(WeekendAtJoesError::BadRequest);
     }
 
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
@@ -117,7 +117,11 @@ fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>
         .map(|posts| {
             posts
                 .into_iter()
-                .map(|post| post.into_childless_response(user.clone()))
+                .map(|post| {
+                    post.into_childless_response(
+                        user.clone(),
+                    )
+                })
                 .collect()
         })
         .map(Json)
@@ -125,11 +129,6 @@ fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>
 
 
 impl Routable for Post {
-  const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
-        create_post,
-        censor_post,
-        edit_post,
-        get_posts_by_user
-    ];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![create_post, censor_post, edit_post, get_posts_by_user];
     const PATH: &'static str = "/post/";
 }

@@ -3,7 +3,7 @@
 //! JSON Web Tokens are returned to the user.
 //! JWTs should be included in http requests to the site under the `Authorization` header.
 //! Because of signature checking, the server can trust the contents of the JWT payload and can use them to guard access to protected APIs.
-//! FromRequest is implemented for some dummy user types. 
+//! FromRequest is implemented for some dummy user types.
 //! They will only succeed in creating themselves if the JWT contains the role the user type corresponds to.
 //! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the jwt in the request header.
 
@@ -29,7 +29,7 @@ use db::Conn;
 
 /// The secret contains a random string that is generated at startup.
 /// This will be different every time the server restarts.
-/// This secret randomization has the effect of invalidating JWTs whenever the server is restarted. 
+/// This secret randomization has the effect of invalidating JWTs whenever the server is restarted.
 /// The Secret is used for creating and validating JWTs.
 #[derive(Debug, Clone)]
 pub struct Secret(pub String);
@@ -37,9 +37,9 @@ pub struct Secret(pub String);
 impl Secret {
     pub fn generate() -> Secret {
         let key = rand::thread_rng()
-        .gen_ascii_chars()
-        .take(256)
-        .collect::<String>();
+            .gen_ascii_chars()
+            .take(256)
+            .collect::<String>();
         Secret(key)
     }
 }
@@ -48,7 +48,7 @@ impl Secret {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LoginRequest {
     pub user_name: String,
-    pub password: String
+    pub password: String,
 }
 pub type LoginResult = Result<String, LoginError>;
 
@@ -58,7 +58,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     // get user
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
         .map_err(|_| LoginError::UsernameDoesNotExist)?;
-    
+
 
     info!("verifing password: {}", &login_request.password);
     info!("against: {}", &user.password_hash);
@@ -71,30 +71,31 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
                 info!("Password match verified");
             }
         }
-        Err(e) => {
-            return Err(LoginError::PasswordHashingError(e))
-        }
+        Err(e) => return Err(LoginError::PasswordHashingError(e)),
     }
-    
+
 
     // generate token
     info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(1);
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
-        None => return Err(LoginError::OtherError("Could not calculate offset for token expiry"))
+        None => return Err(LoginError::OtherError("Could not calculate offset for token expiry")),
     };
-    
+
     info!("Creating JWT");
     let jwt = Jwt {
         user_name: user.user_name.clone(),
         user_id: user.id.clone(),
-        user_roles: user.roles.iter().map(|role_id| (*role_id).into()).collect(),
-        token_expire_date: new_expire_date
+        user_roles: user.roles
+            .iter()
+            .map(|role_id| (*role_id).into())
+            .collect(),
+        token_expire_date: new_expire_date,
     };
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {
         Ok(s) => s,
-        Err(e) => return Err(LoginError::JwtError(e))
+        Err(e) => return Err(LoginError::JwtError(e)),
     };
 
     Ok(jwt_string)
@@ -108,10 +109,10 @@ pub enum LoginError {
     IncorrectPassword,
     PasswordHashingError(&'static str),
     JwtError(JwtError),
-   OtherError(&'static str)
+    OtherError(&'static str),
 }
 
-impl <'a> Responder<'a> for LoginError {
+impl<'a> Responder<'a> for LoginError {
     fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
         // TODO: use the string in a custom Status for internal server error
         info!("User login failed with error: {:?}", &self);
@@ -120,7 +121,7 @@ impl <'a> Responder<'a> for LoginError {
             LoginError::UsernameDoesNotExist => Err(Status::NotFound),
             LoginError::JwtError(_) => Err(Status::InternalServerError),
             LoginError::PasswordHashingError(_) => Err(Status::InternalServerError),
-            LoginError::OtherError(_) => Err(Status::InternalServerError)
+            LoginError::OtherError(_) => Err(Status::InternalServerError),
         }
     }
 }
@@ -144,7 +145,7 @@ mod test {
 
         let pool = db::init_pool();
 
-        // Delete the entry to avoid 
+        // Delete the entry to avoid
         let conn = Conn::new(pool.get().unwrap());
         let _ = User::delete_user_by_name("UserName".into(), &conn);
 
@@ -152,14 +153,16 @@ mod test {
         let new_user = NewUserRequest {
             user_name: "UserName".into(),
             display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into() 
+            plaintext_password: "TestPassword".into(),
         };
-        let _: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
+        let _: UserResponse = User::create_user(new_user, &conn)
+            .unwrap()
+            .into();
 
         // Log in as user
         let login_request: LoginRequest = LoginRequest {
             user_name: "UserName".into(),
-            password: "TestPassword".into()
+            password: "TestPassword".into(),
         };
 
         let secret: Secret = Secret::generate();
@@ -177,7 +180,7 @@ mod test {
 
         let user_name: String = "UserName-JwtIntegrationTest".into();
 
-        // Delete the entry to avoid 
+        // Delete the entry to avoid
         let conn = Conn::new(pool.get().unwrap());
         let _ = User::delete_user_by_name(user_name.clone(), &conn);
 
@@ -185,38 +188,52 @@ mod test {
         let new_user = NewUserRequest {
             user_name: user_name.clone(),
             display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into() 
+            plaintext_password: "TestPassword".into(),
         };
-        let _: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
+        let _: UserResponse = User::create_user(new_user, &conn)
+            .unwrap()
+            .into();
 
         // Log in as user
         let login_request: LoginRequest = LoginRequest {
             user_name: user_name.clone(),
-            password: "TestPassword".into()
+            password: "TestPassword".into(),
         };
         let rocket = init_rocket();
-        let client = Client::new(rocket).expect("valid rocket instance");
+        let client = Client::new(rocket).expect(
+            "valid rocket instance",
+        );
 
-        let mut response = client.post("/api/auth/login/")
+        let mut response = client
+            .post("/api/auth/login/")
             .header(ContentType::JSON)
-            .body(&serde_json::to_string(&login_request).unwrap())
+            .body(&serde_json::to_string(&login_request)
+                .unwrap())
             .dispatch();
-        
+
         //login(login_request, secret.0, &conn);
         assert_eq!(response.status(), Status::Ok);
-        let jwt_string: String = response.body().unwrap().into_string().unwrap();
+        let jwt_string: String = response
+            .body()
+            .unwrap()
+            .into_string()
+            .unwrap();
 
 
 
         let request_body: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
             user_name: user_name.clone(),
-            new_display_name: "new name".into()
+            new_display_name: "new name".into(),
         };
 
-        let response = client.put("/api/user/")
+        let response = client
+            .put("/api/user/")
             .header(ContentType::JSON)
             .header(Header::new("Authorization", jwt_string.clone()))
-            .body(serde_json::to_string(&request_body).unwrap())
+            .body(
+                serde_json::to_string(&request_body)
+                    .unwrap(),
+            )
             .dispatch();
         assert_eq!(response.status(), Status::Ok);
 
@@ -236,7 +253,7 @@ mod test {
         match verify_hash(&plaintext, &hash_1) {
             Ok(_) => {}
             Err(e) => {
-                info!("error: {}",e);
+                info!("error: {}", e);
                 assert!(false);
             }
         }
@@ -251,12 +268,12 @@ mod test {
         let jwt = Jwt {
             user_name: "name".to_string(),
             token_key: "aoeuaoeu".to_string(),
-            user_roles: vec!(UserRole::Unprivileged),
-            token_expire_date: Utc::now().naive_utc()
+            user_roles: vec![UserRole::Unprivileged],
+            token_expire_date: Utc::now().naive_utc(),
         };
 
         let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
-        let jwt: Jwt = match  Jwt::decode_jwt_string(jwt_string, &secret) {
+        let jwt: Jwt = match Jwt::decode_jwt_string(jwt_string, &secret) {
             Ok(j) => j,
             Err(e) => {
                 info!("{:?}", e);
@@ -274,14 +291,16 @@ mod test {
         let jwt = Jwt {
             user_name: "name".to_string(),
             token_key: "aoeuaoeu".to_string(),
-            user_roles: vec!(UserRole::Unprivileged),
-            token_expire_date: Utc::now().naive_utc()
+            user_roles: vec![UserRole::Unprivileged],
+            token_expire_date: Utc::now().naive_utc(),
         };
         let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
         // alter the username of a copy of the accepted jwt
         let mut altered_jwt = jwt.clone();
         altered_jwt.user_name = "other_name".to_string();
-        let altered_jwt_string = altered_jwt.encode_jwt_string(&secret).unwrap();
+        let altered_jwt_string = altered_jwt
+            .encode_jwt_string(&secret)
+            .unwrap();
         // split the JWTs
         let split_jwt: Vec<&str> = jwt_string.split(".").collect();
         let split_altered_jwt: Vec<&str> = altered_jwt_string.split(".").collect();
@@ -291,9 +310,8 @@ mod test {
         let normal_sig: &str = split_jwt.get(2).unwrap();
         let synthesized_jwt_string: String = format!("{}.{}.{}", normal_header, modified_payload, normal_sig);
         // The decode should fail because the signature does not correspond to the payload
-        Jwt::decode_jwt_string(synthesized_jwt_string, &secret).expect_err("Should not be able to decode this modified jwt.");
+        Jwt::decode_jwt_string(synthesized_jwt_string, &secret)
+            .expect_err("Should not be able to decode this modified jwt.");
     }
 
 }
-
-

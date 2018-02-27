@@ -16,7 +16,7 @@ use diesel::BelongingToDsl;
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
 #[belongs_to(User, foreign_key = "author_id")]
-#[table_name="articles"]
+#[table_name = "articles"]
 pub struct Article {
     /// The public key for the article.
     pub id: i32,
@@ -28,12 +28,12 @@ pub struct Article {
     pub body: String,
     /// The presense of a publish date will idicate the article's published status,
     /// and will be used in ordering sets of the most recent articles.
-    pub publish_date: Option<NaiveDateTime>
+    pub publish_date: Option<NaiveDateTime>,
 }
 
 /// Specifies the attributes that can be changed for an article.
 #[derive(AsChangeset, Clone, PartialEq)]
-#[table_name="articles"]
+#[table_name = "articles"]
 pub struct ArticleChangeset {
     id: i32,
     title: Option<String>,
@@ -71,11 +71,13 @@ impl Article {
             .limit(number_of_articles)
             .order(publish_date)
             .load::<Article>(conn.deref());
-        
-        returned_articles.or(Err(WeekendAtJoesError::DatabaseError(None)))
+
+        returned_articles.or(Err(
+            WeekendAtJoesError::DatabaseError(None),
+        ))
     }
 
-    /// Gets the unpublished articles for a given user 
+    /// Gets the unpublished articles for a given user
     // TODO, consiter switching this interface to take a user_id instead of a string
     pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
         use schema::articles::dsl::*;
@@ -88,13 +90,11 @@ impl Article {
 
 
         Article::belonging_to(&user)
-            .filter(
-                publish_date.is_null(),
-            )
+            .filter(publish_date.is_null())
             .order(publish_date)
             .load::<Article>(conn.deref())
             .map_err(Article::handle_error)
-        
+
     }
 
     // Creates a new article
@@ -122,7 +122,7 @@ impl Article {
         diesel::update(articles::table)
             .filter(id.eq(article_id))
             .set(publish_date.eq(publish_value))
-            .get_result(conn.deref()) 
+            .get_result(conn.deref())
             .map_err(Article::handle_error)
     }
 
@@ -132,10 +132,10 @@ impl Article {
         use schema::articles;
         diesel::update(articles::table)
             .set(&changeset)
-            .get_result(conn.deref()) 
+            .get_result(conn.deref())
             .map_err(Article::handle_error)
     }
-    
+
     /// Deletes the article corresponding to the provided id
     pub fn delete_article(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
@@ -144,16 +144,15 @@ impl Article {
             .get_result(conn.deref())
             .map_err(Article::handle_error)
     }
-    
 }
 
 /// Represents an article that will be inserted into the database.
 #[derive(Serialize, Deserialize, Insertable, Debug)]
-#[table_name="articles"]
+#[table_name = "articles"]
 pub struct NewArticle {
     pub title: String,
     pub body: String,
-    pub author_id: i32
+    pub author_id: i32,
 }
 
 impl From<NewArticleRequest> for NewArticle {
@@ -161,7 +160,7 @@ impl From<NewArticleRequest> for NewArticle {
         NewArticle {
             title: new_article_request.title,
             body: new_article_request.body,
-            author_id: new_article_request.author_id
+            author_id: new_article_request.author_id,
         }
     }
 }

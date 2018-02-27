@@ -1,7 +1,7 @@
 //! This module is responsible for facilitating interaction with the database.
 //! Pools and Connections are defined which allow a pool to be specified at startup, and for routes to request a connection from the pool.
 //! The files in this module contain functions that interact with the type specified by the filename.
-//! These functions are analagous to stored procedures.  
+//! These functions are analagous to stored procedures.
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use r2d2;
@@ -34,7 +34,8 @@ pub const DATABASE_FILE: &'static str = env!("DATABASE_URL");
 pub fn init_pool() -> Pool {
     let config = r2d2::Config::default();
     let manager = ConnectionManager::<PgConnection>::new(DATABASE_FILE);
-    r2d2::Pool::new(config, manager).expect("db pool")
+    r2d2::Pool::new(config, manager)
+        .expect("db pool")
 }
 
 /// Wrapper for PgConnection.
@@ -43,7 +44,7 @@ pub struct Conn(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
 
 impl Conn {
     #[cfg(test)]
-    pub (crate) fn new( pooled_connection: r2d2::PooledConnection<ConnectionManager<PgConnection>> ) -> Conn {
+    pub(crate) fn new(pooled_connection: r2d2::PooledConnection<ConnectionManager<PgConnection>>) -> Conn {
         Conn(pooled_connection)
     }
 }
@@ -69,9 +70,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 
         match pool.get() {
             Ok(conn) => Outcome::Success(Conn(conn)),
-            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ()))
+            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ())),
         }
     }
 }
-
-

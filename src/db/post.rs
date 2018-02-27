@@ -12,11 +12,11 @@ use diesel::BelongingToDsl;
 use diesel::QueryDsl;
 use diesel::result::Error;
 
-#[derive( Debug, Clone, Identifiable, Associations, Queryable)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
 #[belongs_to(Post, foreign_key = "parent_id")]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct Post {
     /// Primary Key
     pub id: i32,
@@ -33,22 +33,22 @@ pub struct Post {
     /// The content of the post. This may be rendered with markdown or a subset thereof.
     pub content: String,
     /// If the post has been censored, it will not be immediately viewabe by people viewing the thread.
-    pub censored: bool
+    pub censored: bool,
 }
 
 #[derive(Insertable, Debug, Clone)]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct NewPost {
     pub thread_id: i32,
     pub author_id: i32,
     pub parent_id: Option<i32>, // this will always be None, try removing this.
     pub created_date: NaiveDateTime,
     pub content: String,
-    pub censored: bool
+    pub censored: bool,
 }
 
 #[derive(Serialize, Deserialize, AsChangeset, Debug)]
-#[table_name="posts"]
+#[table_name = "posts"]
 pub struct EditPostChangeset {
     pub id: i32,
     pub modified_date: NaiveDateTime,
@@ -64,7 +64,7 @@ impl Post {
 
         let target_thread = Thread::get_thread(new_post.thread_id, conn)?;
         if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked)
+            return Err(WeekendAtJoesError::ThreadLocked);
         }
 
         diesel::insert_into(posts::table)
@@ -80,7 +80,7 @@ impl Post {
 
         let target_thread = Thread::get_thread(thread_id, conn)?;
         if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked)
+            return Err(WeekendAtJoesError::ThreadLocked);
         }
 
         diesel::update(posts::table)
@@ -125,7 +125,7 @@ impl Post {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
         // TODO consider using a select to just pull out the author id
-        let post: Post = posts 
+        let post: Post = posts
             .find(post_id)
             .first::<Post>(conn.deref())
             .map_err(Post::handle_error)?;
@@ -151,18 +151,17 @@ impl Post {
             )
             .first::<Post>(conn.deref())
             .map_err(Post::handle_error)
-            // .and_then(|returned_posts| {
-            //     returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
-            // })
+        // .and_then(|returned_posts| {
+        //     returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
+        // })
     }
-    
+
     /// Gets all of the posts that belong to the post.
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
             .load::<Post>(conn.deref())
             .map_err(Post::handle_error)
     }
-
 }
 
 

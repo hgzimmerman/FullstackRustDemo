@@ -18,9 +18,11 @@ extern crate simplelog;
 
 extern crate frank_jwt;
 
-#[macro_use] extern crate diesel;
+#[macro_use]
+extern crate diesel;
 //#[macro_use] extern crate diesel_codegen;
-#[macro_use] extern crate diesel_infer_schema;
+#[macro_use]
+extern crate diesel_infer_schema;
 // #[macro_use] extern crate diesel_derive_enum;
 extern crate chrono;
 extern crate r2d2_diesel;
@@ -59,12 +61,11 @@ fn main() {
 
 
     const LOGFILE_NAME: &'static str = "weekend.log";
-    CombinedLogger::init(
-        vec![
-            TermLogger::new(LogLevelFilter::Info, Config::default()).unwrap(),
-            WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
-        ]
-    ).unwrap();
+    CombinedLogger::init(vec![
+        TermLogger::new(LogLevelFilter::Info, Config::default())
+            .unwrap(),
+        WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
+    ]).unwrap();
 
     init_rocket().launch();
 }
@@ -112,11 +113,10 @@ pub fn test_setup() {
     INIT.call_once(|| {
 
         const LOGFILE_NAME: &'static str = "weekend_test.log";
-        CombinedLogger::init(
-            vec![
-                TermLogger::new(LogLevelFilter::Info, Config::default()).unwrap(),
-                WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
-            ]
-        ).unwrap();
+        CombinedLogger::init(vec![
+            TermLogger::new(LogLevelFilter::Info, Config::default())
+                .unwrap(),
+            WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
+        ]).unwrap();
     });
 }

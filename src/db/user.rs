@@ -13,12 +13,12 @@ use error::*;
 use diesel::result::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-// #[PgType = "Userrole"]  
+// #[PgType = "Userrole"]
 pub enum UserRole {
     Unprivileged,
     Moderator,
     Admin,
-    Publisher
+    Publisher,
 }
 
 impl From<UserRole> for i32 {
@@ -53,7 +53,7 @@ impl From<User> for UserResponse {
         UserResponse {
             user_name: user.user_name,
             display_name: user.display_name,
-            id: user.id
+            id: user.id,
         }
     }
 }
@@ -64,10 +64,11 @@ impl From<NewUserRequest> for NewUser {
         NewUser {
             user_name: new_user_request.user_name,
             display_name: new_user_request.display_name,
-            password_hash: hash_password(&new_user_request.plaintext_password).expect("Couldn't hash password"),
+            password_hash: hash_password(&new_user_request.plaintext_password)
+                .expect("Couldn't hash password"),
             // token_key: None,
             // token_expire_date: None,
-            roles: vec![1]
+            roles: vec![1],
         }
     }
 }
@@ -75,7 +76,7 @@ impl From<NewUserRequest> for NewUser {
 
 /// The database's representation of a user.
 #[derive(Debug, Clone, Identifiable, Queryable)]
-#[table_name="users"]
+#[table_name = "users"]
 pub struct User {
     /// The primary key
     pub id: i32,
@@ -86,22 +87,21 @@ pub struct User {
     /// The stored hash of the password.
     pub password_hash: String,
     /// The roles of the user.
-    pub roles: Vec<i32> // currently this is stored as an int. It would be better to store it as an enum, if diesel-enum serialization can be made to work.
+    pub roles: Vec<i32>, // currently this is stored as an int. It would be better to store it as an enum, if diesel-enum serialization can be made to work.
 }
 
 
 #[derive(Insertable, Debug, Clone)]
-#[table_name="users"]
+#[table_name = "users"]
 pub struct NewUser {
     pub user_name: String,
     pub display_name: String,
     pub password_hash: String,
-    pub roles: Vec<i32>
+    pub roles: Vec<i32>,
 }
 
 
 impl User {
-
     /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
@@ -118,8 +118,9 @@ impl User {
         use schema::users::dsl::*;
         info!("Getting user with ID: {}", user_id);
 
-        users.find(user_id)
-            .first::<User>(conn.deref()) 
+        users
+            .find(user_id)
+            .first::<User>(conn.deref())
             .map_err(User::handle_error)
     }
 
@@ -152,16 +153,20 @@ impl User {
             .get_result(conn.deref())
             .map_err(User::handle_error)
     }
-    
+
     /// Updates the user's display name.
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
 
         use schema::users::dsl::*;
-        let target = users.filter(user_name.eq(request.user_name));
+        let target = users.filter(
+            user_name.eq(request.user_name),
+        );
 
         info!("Updating the user display name");
         diesel::update(target)
-            .set(display_name.eq(request.new_display_name))
+            .set(display_name.eq(
+                request.new_display_name,
+            ))
             .get_result(conn.deref())
             .map_err(User::handle_error)
     }
@@ -209,7 +214,7 @@ mod test {
 
         let user_name: String = "CrudTest-UserName".into();
 
-        // Delete the entry to avoid 
+        // Delete the entry to avoid
         let conn = Conn::new(pool.get().unwrap());
         let _ = User::delete_user_by_name(user_name.clone(), &conn);
 
@@ -217,22 +222,28 @@ mod test {
         let new_user = NewUserRequest {
             user_name: user_name.clone(),
             display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into() 
+            plaintext_password: "TestPassword".into(),
         };
-        let response: UserResponse =  User::create_user(new_user, &conn).unwrap().into();
+        let response: UserResponse = User::create_user(new_user, &conn)
+            .unwrap()
+            .into();
         assert_eq!(user_name.clone(), response.user_name);
 
         // Get User
-        let response: UserResponse =  User::get_user(response.id, &conn).unwrap().into();
+        let response: UserResponse = User::get_user(response.id, &conn)
+            .unwrap()
+            .into();
         assert_eq!(user_name.clone(), response.user_name);
 
 
         // Modify user
         let update_display_name_request: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
             user_name: user_name.clone(),
-            new_display_name: "NewDisplayName".into()
+            new_display_name: "NewDisplayName".into(),
         };
-        let response: UserResponse = User::update_user_display_name(update_display_name_request, &conn).unwrap().into();
+        let response: UserResponse = User::update_user_display_name(update_display_name_request, &conn)
+            .unwrap()
+            .into();
         assert_eq!("NewDisplayName".to_string(), response.display_name);
 
 
@@ -241,4 +252,3 @@ mod test {
     }
 
 }
-

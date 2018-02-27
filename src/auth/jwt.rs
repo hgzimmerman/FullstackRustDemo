@@ -17,7 +17,7 @@ pub struct Jwt {
     pub user_name: String,
     pub user_id: i32,
     pub user_roles: Vec<UserRole>,
-    pub token_expire_date: NaiveDateTime
+    pub token_expire_date: NaiveDateTime,
 }
 
 impl Jwt {
@@ -27,27 +27,25 @@ impl Jwt {
 
         let payload: Value = match serde_json::to_value(self) {
             Ok(x) => x,
-            Err(_) => return Err(JwtError::SerializeError)
+            Err(_) => return Err(JwtError::SerializeError),
         };
         match encode(header, secret, &payload, Algorithm::HS256) {
             Ok(x) => return Ok(x),
-            Err(_) => return Err(JwtError::EncodeError)
+            Err(_) => return Err(JwtError::EncodeError),
         }
     }
 
     pub fn decode_jwt_string(jwt_str: String, secret: &String) -> Result<Jwt, JwtError> {
         let (_header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
             Ok(x) => x,
-            Err(_) => return Err(JwtError::DecodeError)
+            Err(_) => return Err(JwtError::DecodeError),
         };
         let jwt: Jwt = match serde_json::from_value(payload) {
             Ok(x) => x,
-            Err(_) => return Err(JwtError::DeserializeError)
+            Err(_) => return Err(JwtError::DeserializeError),
         };
         Ok(jwt)
     }
-
-    
 }
 
 #[derive(Debug, Clone)]
@@ -65,26 +63,29 @@ pub mod user_authorization {
 
     trait FromJwt {
         fn from_jwt(jwt: &Jwt) -> Result<Self, RoleError>
-            where Self: Sized;
+        where
+            Self: Sized;
     }
 
     pub enum RoleError {
-        InsufficientRights
+        InsufficientRights,
     }
 
-    pub struct NormalUser{
+    pub struct NormalUser {
         pub user_name: String,
-        pub user_id: i32
+        pub user_id: i32,
     }
     impl FromJwt for NormalUser {
         fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
-            if jwt.user_roles.contains(&UserRole::Unprivileged) {
-                Ok(NormalUser{
+            if jwt.user_roles.contains(
+                &UserRole::Unprivileged,
+            )
+            {
+                Ok(NormalUser {
                     user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id
+                    user_id: jwt.user_id,
                 })
-            }
-            else {
+            } else {
                 Err(RoleError::InsufficientRights)
             }
         }
@@ -93,7 +94,10 @@ pub mod user_authorization {
         type Error = WeekendAtJoesError;
 
         fn from_request(request: &'a Request<'r>) -> request::Outcome<NormalUser, WeekendAtJoesError> {
-            let keys: Vec<_> = request.headers().get("Authorization").collect();
+            let keys: Vec<_> = request
+                .headers()
+                .get("Authorization")
+                .collect();
             if keys.len() != 1 {
                 return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MissingToken));
             };
@@ -102,7 +106,7 @@ pub mod user_authorization {
                 Outcome::Success(s) => s.0.clone(),
                 _ => {
                     warn!("Couldn't get secret from state.");
-                    return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+                    return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
                 }
             };
 
@@ -111,7 +115,7 @@ pub mod user_authorization {
                 Ok(token) => {
                     if token.token_expire_date < Utc::now().naive_utc() {
                         info!("Token expired.");
-                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
                     }
                     token
                 }
@@ -123,24 +127,26 @@ pub mod user_authorization {
 
             match NormalUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role." })),
             }
         }
     }
 
     pub struct AdminUser {
         pub user_name: String,
-        pub user_id: i32
+        pub user_id: i32,
     }
     impl FromJwt for AdminUser {
         fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
-            if jwt.user_roles.contains(&UserRole::Admin){
-                Ok(AdminUser{
+            if jwt.user_roles.contains(
+                &UserRole::Admin,
+            )
+            {
+                Ok(AdminUser {
                     user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id
+                    user_id: jwt.user_id,
                 })
-            }
-            else {
+            } else {
                 Err(RoleError::InsufficientRights)
             }
         }
@@ -149,21 +155,24 @@ pub mod user_authorization {
         type Error = WeekendAtJoesError;
 
         fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, WeekendAtJoesError> {
-            let keys: Vec<_> = request.headers().get("Authorization").collect();
+            let keys: Vec<_> = request
+                .headers()
+                .get("Authorization")
+                .collect();
             if keys.len() != 1 {
                 return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
             };
             // You can get the state secret from another request guard
             let secret: String = match request.guard::<State<Secret>>() {
                 Outcome::Success(s) => s.0.clone(),
-                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError)),
             };
 
             let key = keys[0];
             let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
                 Ok(token) => {
                     if token.token_expire_date < Utc::now().naive_utc() {
-                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
                     }
                     token
                 }
@@ -172,24 +181,26 @@ pub mod user_authorization {
 
             match AdminUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role." })),
             }
         }
     }
 
     pub struct ModeratorUser {
         pub user_name: String,
-        pub user_id: i32
+        pub user_id: i32,
     }
     impl FromJwt for ModeratorUser {
         fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
-            if jwt.user_roles.contains(&UserRole::Moderator){
-                Ok(ModeratorUser{
+            if jwt.user_roles.contains(
+                &UserRole::Moderator,
+            )
+            {
+                Ok(ModeratorUser {
                     user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id
+                    user_id: jwt.user_id,
                 })
-            }
-            else {
+            } else {
                 Err(RoleError::InsufficientRights)
             }
         }
@@ -198,21 +209,24 @@ pub mod user_authorization {
         type Error = WeekendAtJoesError;
 
         fn from_request(request: &'a Request<'r>) -> request::Outcome<ModeratorUser, WeekendAtJoesError> {
-            let keys: Vec<_> = request.headers().get("Authorization").collect();
+            let keys: Vec<_> = request
+                .headers()
+                .get("Authorization")
+                .collect();
             if keys.len() != 1 {
                 return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::MissingToken));
             };
             // You can get the state secret from another request guard
             let secret: String = match request.guard::<State<Secret>>() {
                 Outcome::Success(s) => s.0.clone(),
-                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError))
+                _ => return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError)),
             };
 
             let key = keys[0];
             let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
                 Ok(token) => {
                     if token.token_expire_date < Utc::now().naive_utc() {
-                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken))
+                        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
                     }
                     token
                 }
@@ -221,7 +235,7 @@ pub mod user_authorization {
 
             match ModeratorUser::from_jwt(&jwt) {
                 Ok(admin) => Outcome::Success(admin),
-                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role."}))
+                Err(_) => Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role." })),
             }
         }
     }

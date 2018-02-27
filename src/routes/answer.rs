@@ -12,7 +12,7 @@ use auth::user_authorization::NormalUser;
 
 pub struct AnswerData(pub (Answer, User));
 impl From<AnswerData> for AnswerResponse {
-    fn from(answer_data: AnswerData ) -> AnswerResponse {
+    fn from(answer_data: AnswerData) -> AnswerResponse {
         let (answer, user) = answer_data.0;
         AnswerResponse {
             id: answer.id,
@@ -27,7 +27,7 @@ impl From<NewAnswerRequest> for NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
             author_id: request.author_id,
-            question_id: request.question_id
+            question_id: request.question_id,
         }
     }
 }
@@ -45,8 +45,10 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: 
 }
 
 impl Routable for Answer {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
         answer_question,
-    ];
+    ]
+    };
     const PATH: &'static str = "/answer/";
 }

@@ -23,8 +23,8 @@ impl From<QuestionData> for QuestionResponse {
             author: user.clone().into(),
             answers: answers
                 .into_iter()
-                .map(|a|AnswerResponse::from(AnswerData((a, user.clone())) ))
-                .collect()
+                .map(|a| AnswerResponse::from(AnswerData((a, user.clone()))))
+                .collect(),
         }
     }
 }
@@ -34,7 +34,7 @@ impl From<NewQuestionRequest> for NewQuestion {
         NewQuestion {
             bucket_id: request.bucket_id,
             author_id: request.author_id,
-            question_text: request.question_text
+            question_text: request.question_text,
         }
     }
 }
@@ -45,19 +45,19 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
     Question::get_questions_for_bucket(bucket_id, &conn)
         .map(|groups| {
             groups
-            .into_iter()
-            .flat_map(|group: (User, Vec<(Question, Vec<Answer>)>)| {
-                let user: User = group.0;
-                let question_groups: Vec<(Question, Vec<Answer>)> = group.1;
-                question_groups
                 .into_iter()
-                .map(|question_group: (Question, Vec<Answer>)| {
-                    let (question, answers) = question_group;
-                    QuestionResponse::from(QuestionData((question, user.clone(), answers)))
+                .flat_map(|group: (User, Vec<(Question, Vec<Answer>)>)| {
+                    let user: User = group.0;
+                    let question_groups: Vec<(Question, Vec<Answer>)> = group.1;
+                    question_groups
+                        .into_iter()
+                        .map(|question_group: (Question, Vec<Answer>)| {
+                            let (question, answers) = question_group;
+                            QuestionResponse::from(QuestionData((question, user.clone(), answers)))
+                        })
+                        .collect::<Vec<QuestionResponse>>()
                 })
-                .collect::<Vec<QuestionResponse>>()
-                })
-            .collect()
+                .collect()
         })
         .map(Json)
 }
@@ -65,18 +65,14 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
 #[get("/random_question/<bucket_id>")]
 fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_random_unanswered_question(bucket_id, &conn)
-        .map(|group: (Question, User)| {
-            QuestionResponse::from(QuestionData((group.0, group.1, vec!())))
-        })
+        .map(|group: (Question, User)| QuestionResponse::from(QuestionData((group.0, group.1, vec![]))))
         .map(Json)
 }
 
 #[get("/<question_id>")]
 fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_full_question(question_id, &conn)
-        .map(|group: (Question, User, Vec<Answer>)| {
-            QuestionResponse::from(QuestionData(group))
-        })
+        .map(|group: (Question, User, Vec<Answer>)| QuestionResponse::from(QuestionData(group)))
         .map(Json)
 }
 
@@ -93,12 +89,14 @@ fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, co
 
 
 impl Routable for Question {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![
-        get_questions_for_bucket,
-        create_question,
-        get_random_unanswered_question,
-        get_questions_for_bucket,
-        get_question
-    ];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
+            get_questions_for_bucket,
+            create_question,
+            get_random_unanswered_question,
+            get_questions_for_bucket,
+            get_question,
+        ]
+    };
     const PATH: &'static str = "/question/";
 }

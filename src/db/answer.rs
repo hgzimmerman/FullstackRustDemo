@@ -12,7 +12,7 @@ use std::ops::Deref;
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
-#[table_name="answers"]
+#[table_name = "answers"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Question, foreign_key = "question_id")]
 pub struct Answer {
@@ -20,15 +20,15 @@ pub struct Answer {
     pub id: i32,
     pub question_id: i32,
     pub author_id: i32,
-    pub answer_text: Option<String>
+    pub answer_text: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
-#[table_name="answers"]
+#[table_name = "answers"]
 pub struct NewAnswer {
     pub author_id: i32,
     pub question_id: i32,
-    pub answer_text: Option<String>
+    pub answer_text: Option<String>,
 }
 
 
@@ -47,13 +47,11 @@ impl Answer {
         use schema::answers::dsl::*;
 
         // Gets the first answer that matches the id.
-        answers 
+        answers
             .find(answer_id)
             .first::<Answer>(conn.deref())
             .map_err(Answer::handle_error)
     }
-
-
 }
 
 impl ErrorFormatter for Answer {

@@ -8,18 +8,18 @@ use diesel::QueryDsl;
 use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
-#[table_name="buckets"]
+#[table_name = "buckets"]
 pub struct Bucket {
     /// Primary Key.
     pub id: i32,
     /// The name of the bucket
-    pub bucket_name: String
+    pub bucket_name: String,
 }
 
 #[derive(Insertable, Debug)]
-#[table_name="buckets"]
+#[table_name = "buckets"]
 pub struct NewBucket {
-    pub bucket_name: String
+    pub bucket_name: String,
 }
 
 impl Bucket {
@@ -46,7 +46,7 @@ impl Bucket {
         use schema::buckets::dsl::*;
 
         // Gets the first bucket that matches the id.
-        buckets 
+        buckets
             .find(bucket_id)
             .first::<Bucket>(conn.deref())
             .map_err(Bucket::handle_error)

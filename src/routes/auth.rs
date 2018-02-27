@@ -20,6 +20,6 @@ fn login(login_request: Json<LoginRequest>, secret: State<Secret>, conn: Conn) -
 /// Acts as a namespace for auth related methods
 pub struct Auth {}
 impl Routable for Auth {
-    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![login];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![login];
     const PATH: &'static str = "/auth";
 }

@@ -23,17 +23,17 @@ impl From<NewThreadRequest> for NewThread {
             created_date: Utc::now().naive_utc(),
             locked: false,
             archived: false,
-            title: request.title 
+            title: request.title,
         }
     }
-} 
+}
 
 impl From<NewThreadRequest> for NewPost {
     fn from(request: NewThreadRequest) -> NewPost {
         // Just grab the post field from the thread request.
         NewPost::from(request.post)
     }
-} 
+}
 
 
 impl Thread {
@@ -49,7 +49,7 @@ impl Thread {
         }
     }
 
-    fn into_full_thread_response(self, conn: &Conn) -> Result<ThreadResponse, WeekendAtJoesError>{
+    fn into_full_thread_response(self, conn: &Conn) -> Result<ThreadResponse, WeekendAtJoesError> {
         let post: Post = Post::get_root_post(self.id, conn)?;
         let post_response: PostResponse = post.into_post_response(conn)?;
         Ok(ThreadResponse {
@@ -85,28 +85,31 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: Norma
     let original_post: Post = Post::create_post(new_original_post, &conn)?;
     let user = User::get_user(thread.author_id, &conn)?;
 
-    Ok(Json(thread.into_one_post_thread_response( original_post, user)))
+    Ok(Json(thread.into_one_post_thread_response(
+        original_post,
+        user,
+    )))
 }
 
-#[put("/lock/<thread_id>")] 
+#[put("/lock/<thread_id>")]
 fn lock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::lock_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }
 
-#[put("/unlock/<thread_id>")] 
+#[put("/unlock/<thread_id>")]
 fn unlock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::unlock_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }
 
-#[delete("/archive/<thread_id>")] 
+#[delete("/archive/<thread_id>")]
 fn archive_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let thread: Thread = Thread::archive_thread(thread_id, &conn)?;
     Ok(Json(thread.into_full_thread_response(&conn)?))
 }
 
-#[get("/get/<forum_id>")] 
+#[get("/get/<forum_id>")]
 fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<MinimalThreadResponse>>, WeekendAtJoesError> {
     // TODO move the 25 into a parameter
     // TODO make this more efficient by doing a join in the database method
@@ -114,8 +117,10 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     threads
         .into_iter()
         .map(|thread| {
-            let user: User = User::get_user(thread.author_id, &conn)?; 
-            let mtr: MinimalThreadResponse = thread.into_minimal_thread_response(user);
+            let user: User = User::get_user(thread.author_id, &conn)?;
+            let mtr: MinimalThreadResponse = thread.into_minimal_thread_response(
+                user,
+            );
             Ok(mtr)
         })
         .collect::<Result<Vec<MinimalThreadResponse>, WeekendAtJoesError>>()
@@ -126,12 +131,14 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
 
 
 impl Routable for Thread {
-  const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
-          create_thread,
-          lock_thread,
-          unlock_thread,
-          archive_thread,
-          get_threads_by_forum_id
-        ];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
+            create_thread,
+            lock_thread,
+            unlock_thread,
+            archive_thread,
+            get_threads_by_forum_id,
+        ]
+    };
     const PATH: &'static str = "/thread/";
 }

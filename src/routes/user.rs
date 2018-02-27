@@ -1,6 +1,6 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use routes::{ Routable, convert_vector };
+use routes::{Routable, convert_vector};
 use db::Conn;
 use db::user::User;
 use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
@@ -35,7 +35,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<Us
 
 
 #[put("/", data = "<data>")]
-fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn ) -> Result<Json<UserResponse>, WeekendAtJoesError> {
+fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
     info!("updating user display name");
     let request: UpdateDisplayNameRequest = data.into_inner();
     User::update_user_display_name(request, &conn)
@@ -54,7 +54,7 @@ fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Result<Json<UserR
 }
 
 #[delete("/<user_name>", rank = 2)]
-pub fn delete_user_by_name(user_name: String, _admin: AdminUser,conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
+pub fn delete_user_by_name(user_name: String, _admin: AdminUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
 
     User::delete_user_by_name(user_name, &conn)
         .map(UserResponse::from)
@@ -63,16 +63,15 @@ pub fn delete_user_by_name(user_name: String, _admin: AdminUser,conn: Conn) -> R
 
 // Export the ROUTES and their path
 impl Routable for User {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes!
-    [
-        create_user,
-        update_user_display_name,
-        get_user,
-        get_users,
-        delete_user,
-        delete_user_by_name
-    ];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
+            create_user,
+            update_user_display_name,
+            get_user,
+            get_users,
+            delete_user,
+            delete_user_by_name,
+        ]
+    };
     const PATH: &'static str = "/user/";
 }
-
-

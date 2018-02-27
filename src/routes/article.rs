@@ -1,6 +1,6 @@
 use rocket::Route;
 use rocket_contrib::Json;
-use super::{ Routable, convert_vector } ;
+use super::{Routable, convert_vector};
 use db::Conn;
 
 use db::article::*;
@@ -16,19 +16,19 @@ impl From<Article> for ArticleResponse {
             author_id: article.author_id,
             title: article.title,
             body: article.body,
-            publish_date: article.publish_date
+            publish_date: article.publish_date,
         }
     }
 }
 
-#[get("/<article_id>", rank=0)]
+#[get("/<article_id>", rank = 0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     Article::get_article_by_id(article_id, &conn)
         .map(ArticleResponse::from)
         .map(Json)
 }
 
-#[get("/articles/<number_of_articles>", rank=0)]
+#[get("/articles/<number_of_articles>", rank = 0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     Article::get_recent_published_articles(number_of_articles, &conn)
         .map(convert_vector)
@@ -46,9 +46,11 @@ fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Res
 #[post("/", data = "<new_article>")]
 fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     if new_article.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being created's user does not match the user's id."});
-    } 
-    
+        return Err(WeekendAtJoesError::NotAuthorized {
+            reason: "Article being created's user does not match the user's id.",
+        });
+    }
+
     Article::create_article(new_article.into_inner(), &conn)
         .map(ArticleResponse::from)
         .map(Json)
@@ -58,7 +60,7 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
 fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_article_by_id(update_article_request.id, &conn)?;
     if article_to_update.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
 
     let update_article = update_article_request.into_inner();
@@ -72,7 +74,7 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id."});
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id." });
     }
 
     Article::delete_article(article_id, &conn)
@@ -84,7 +86,7 @@ fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCon
 fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
 
     Article::set_publish_status(article_id, true, &conn)
@@ -96,7 +98,7 @@ fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCo
 fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id."});
+        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
 
     Article::set_publish_status(article_id, false, &conn)
@@ -104,7 +106,8 @@ fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<No
 }
 
 impl Routable for Article {
-    const ROUTES: &'static Fn() -> Vec<Route> = &||routes![
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
             create_article,
             update_article,
             get_article,
@@ -112,7 +115,8 @@ impl Routable for Article {
             get_users_unpublished_articles,
             delete_article,
             publish_article,
-            unpublish_article
-        ];
+            unpublish_article,
+        ]
+    };
     const PATH: &'static str = "/article/";
 }
