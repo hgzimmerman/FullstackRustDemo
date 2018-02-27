@@ -71,6 +71,15 @@ fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<Que
         .map(Json)
 }
 
+#[get("/<question_id>")]
+fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+    Question::get_full_question(question_id, &conn)
+        .map(|group: (Question, User, Vec<Answer>)| {
+            QuestionResponse::from(QuestionData(group))
+        })
+        .map(Json)
+}
+
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
@@ -88,7 +97,8 @@ impl Routable for Question {
         get_questions_for_bucket,
         create_question,
         get_random_unanswered_question,
-        get_questions_for_bucket
+        get_questions_for_bucket,
+        get_question
     ];
     const PATH: &'static str = "/question/";
 }

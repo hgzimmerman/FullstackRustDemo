@@ -56,21 +56,26 @@ impl Question {
     pub fn get_random_question(bucket_id: i32, conn: &Conn) -> Result<(Question, User, Vec<Answer>), WeekendAtJoesError> {
         use schema::users::dsl::*;
 
+        // Get the bucket from which questions will be retrieved.
         let bucket = Bucket::get_bucket(bucket_id, &conn)?;
 
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
 
+        // Get a random question belonging to the bucket.
         let question: Question = Question::belonging_to(&bucket)
             .order(RANDOM)
             .first::<Question>(conn.deref())
             .map_err(Question::handle_error)?;
+        // Get the answers associated with the question.
         let answers: Vec<Answer> = Answer::belonging_to(&question)
             .load::<Answer>(conn.deref())
             .map_err(Answer::handle_error)?;
+        // Get the author of the question.
         let user: User = users
             .find(question.author_id)
             .first::<User>(conn.deref())
             .map_err(User::handle_error)?;
+        // Get them all together.
         Ok((question, user, answers))
     }
 
@@ -78,13 +83,17 @@ impl Question {
     pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> Result<(Question, User), WeekendAtJoesError> {
         use schema::users::dsl::*;
 
+        // Get the bucket from which the questions will be retrieved.
         let bucket = Bucket::get_bucket(bucket_id, &conn)?;
+        // Get all the questions in the bucket.
         let questions: Vec<Question> = Question::belonging_to(&bucket)
             .load::<Question>(conn.deref())
             .map_err(Question::handle_error)?;
+        // Get all the answers belonging to the questions.
         let answers: Vec<Answer> = Answer::belonging_to(&questions)
             .load::<Answer>(conn.deref())
             .map_err(Answer::handle_error)?;
+        // Group the answers in such a way that they correspond to their questions.
         let grouped_answers: Vec<Vec<Answer>> = answers.grouped_by(&questions);
 
         // Select the questions that don't already have answers
@@ -92,7 +101,7 @@ impl Question {
             .into_iter()
             .zip(grouped_answers)
             .filter(|x| x.1.len() == 0) // only keep the questions with unanswered questions
-            .map(|x| x.0)
+            .map(|x| x.0) // only keep the questions
             .collect();
 
         // Select one random question from the group
@@ -148,7 +157,26 @@ impl Question {
             .find(question_id)
             .first::<Question>(conn.deref())
             .map_err(Question::handle_error)
+    }
 
+    pub fn get_full_question(question_id: i32, conn: &Conn) -> Result<(Question, User, Vec<Answer>), WeekendAtJoesError> {
+        use schema::questions::dsl::*;
+        use schema::users::dsl::*;
+
+        // Get the question
+        let question: Question = questions
+            .find(question_id)
+            .first::<Question>(conn.deref())
+            .map_err(Question::handle_error)?;
+        let answers: Vec<Answer> = Answer::belonging_to(&question)
+            .load::<Answer>(conn.deref())
+            .map_err(Answer::handle_error)?;
+        // Get the matching user
+        let user: User = users
+            .find(question.author_id)
+            .first::<User>(conn.deref())
+            .map_err(User::handle_error)?; 
+        Ok((question, user, answers))
     }
 }
 
