@@ -34,8 +34,6 @@ extern crate crypto;
 extern crate rand;
 
 use rocket::Rocket;
-use std::sync::Mutex;
-use std::collections::HashMap;
 
 mod routes;
 use routes::*;
@@ -75,24 +73,24 @@ fn main() {
 pub fn init_rocket() -> Rocket {
 
 
-    let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
-    bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
+    // let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
+    // bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
     // let database_url = env::var("DATABASE_URL")
     //     .expect("DATABASE_URL must be set");
 
-    let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
+    // let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
     let secret = Secret::generate();
 
     rocket::ignite()
         .manage(db::init_pool())
         .manage(secret)
-        .manage(mutexed_bucket_sessions)
+        // .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
         .mount( &format_api(Article::PATH), Article::ROUTES() )
         .mount( &format_api(Auth::PATH), Auth::ROUTES() )
-        .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
+        // .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
         .mount( &format_api(Forum::PATH), Forum::ROUTES())
         .mount( &format_api(Thread::PATH), Thread::ROUTES())
 

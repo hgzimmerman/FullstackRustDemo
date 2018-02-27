@@ -26,13 +26,13 @@ pub struct Answer {
 #[derive(Insertable, Debug)]
 #[table_name="answers"]
 pub struct NewAnswer {
-    author_id: i32,
-    question_id: i32,
-    answer_text: Option<String>
+    pub author_id: i32,
+    pub question_id: i32,
+    pub answer_text: Option<String>
 }
 
 
-impl Question {
+impl Answer {
     /// Creates a new answer
     pub fn create_answer(new_answer: NewAnswer, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
         use schema::answers;

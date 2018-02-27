@@ -133,6 +133,13 @@ impl User {
             .map_err(User::handle_error)
     }
 
+    pub fn get_all_users(conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
+        use schema::users::dsl::*;
+        users
+            .load::<User>(conn.deref())
+            .map_err(User::handle_error)
+    }
+
     /// Creates a new user.
     pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users;

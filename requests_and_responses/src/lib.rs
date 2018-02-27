@@ -10,3 +10,5 @@ pub mod forum;
 pub mod post;
 pub mod thread;
 pub mod bucket;
+pub mod question;
+pub mod answer;
