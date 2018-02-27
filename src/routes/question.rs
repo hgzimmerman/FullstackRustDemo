@@ -9,7 +9,7 @@ use db::user::User;
 use db::Conn;
 use requests_and_responses::question::*;
 use requests_and_responses::answer::*;
-use auth::user_authorization::AdminUser;
+use auth::user_authorization::*;
 use routes::answer::AnswerData;
 
 pub struct QuestionData(pub (Question, User, Vec<Answer>));
@@ -81,7 +81,7 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
 }
 
 #[post("/create", data = "<new_question>")]
-fn create_question(new_question: Json<NewQuestionRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
     let user: User = User::get_user(request.author_id, &conn)?;
     Question::create_question(request.into(), &conn)

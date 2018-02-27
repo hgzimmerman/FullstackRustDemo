@@ -42,8 +42,6 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: 
         .map(|x| AnswerData((x, user)))
         .map(AnswerResponse::from)
         .map(Json)
-
-    // Answer::create_answer()
 }
 
 impl Routable for Answer {
