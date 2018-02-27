@@ -128,8 +128,6 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
 }
 
 
-
-
 impl Routable for Thread {
     const ROUTES: &'static Fn() -> Vec<Route> = &|| {
         routes![
