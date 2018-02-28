@@ -1,6 +1,7 @@
 use schema::answers;
 use db::user::User;
 use db::question::Question;
+use db::Retrievable;
 use db::Conn;
 use error::*;
 use diesel::RunQueryDsl;
@@ -42,8 +43,10 @@ impl Answer {
             .get_result(conn.deref())
             .map_err(Answer::handle_error)
     }
+}
 
-    pub fn get_answer(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
+impl<'a> Retrievable<'a, answers::SqlType> for Answer {
+    fn get_by_id(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
         use schema::answers::dsl::*;
 
         // Gets the first answer that matches the id.

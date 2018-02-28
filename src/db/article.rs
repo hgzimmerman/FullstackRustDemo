@@ -2,6 +2,7 @@ use schema::articles;
 use diesel::result::Error;
 use std::ops::Deref;
 use db::Conn;
+use db::Deletable;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
@@ -138,6 +139,16 @@ impl Article {
 
     /// Deletes the article corresponding to the provided id
     pub fn delete_article(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+        use schema::articles::dsl::*;
+
+        diesel::delete(articles.filter(id.eq(article_id)))
+            .get_result(conn.deref())
+            .map_err(Article::handle_error)
+    }
+}
+
+impl<'a> Deletable<'a> for Article {
+    fn delete_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
         diesel::delete(articles.filter(id.eq(article_id)))

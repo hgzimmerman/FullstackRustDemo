@@ -5,6 +5,7 @@ use rocket::Route;
 use db::thread::{Thread, NewThread};
 use db::post::{Post, NewPost};
 use db::user::User;
+use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
@@ -83,7 +84,7 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: Norma
 
     let thread: Thread = Thread::create_thread(new_thread, &conn)?;
     let original_post: Post = Post::create_post(new_original_post, &conn)?;
-    let user = User::get_user(thread.author_id, &conn)?;
+    let user = User::get_by_id(thread.author_id, &conn)?;
 
     Ok(Json(thread.into_one_post_thread_response(
         original_post,
@@ -117,7 +118,7 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     threads
         .into_iter()
         .map(|thread| {
-            let user: User = User::get_user(thread.author_id, &conn)?;
+            let user: User = User::get_by_id(thread.author_id, &conn)?;
             let mtr: MinimalThreadResponse = thread.into_minimal_thread_response(
                 user,
             );

@@ -8,6 +8,7 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::answer::*;
 use auth::user_authorization::NormalUser;
+use db::Retrievable;
 
 
 pub struct AnswerData(pub (Answer, User));
@@ -36,7 +37,7 @@ impl From<NewAnswerRequest> for NewAnswer {
 #[post("/create", data = "<new_answer>")]
 fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, WeekendAtJoesError> {
     let new_answer: NewAnswer = new_answer.into_inner().into();
-    let user: User = User::get_user(new_answer.author_id, &conn)?;
+    let user: User = User::get_by_id(new_answer.author_id, &conn)?;
 
     Answer::create_answer(new_answer, &conn)
         .map(|x| AnswerData((x, user)))

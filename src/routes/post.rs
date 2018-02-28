@@ -4,6 +4,7 @@ use rocket::Route;
 
 use db::post::{Post, NewPost, EditPostChangeset};
 use db::user::User;
+use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::post::{PostResponse, NewPostRequest, EditPostRequest};
@@ -39,7 +40,7 @@ impl Post {
     pub fn into_post_response(self, conn: &Conn) -> Result<PostResponse, WeekendAtJoesError> {
         use db::user::User;
 
-        let user: User = User::get_user(self.author_id, conn)?;
+        let user: User = User::get_by_id(self.author_id, conn)?;
         let children: Vec<PostResponse> = self
             .get_post_children(conn)?
             .into_iter()
@@ -78,7 +79,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
     if new_post.0.author_id != login_user.user_id {
         return Err(WeekendAtJoesError::BadRequest);
     }
-    let user: User = User::get_user(new_post.author_id, &conn)?;
+    let user: User = User::get_by_id(new_post.author_id, &conn)?;
     Post::create_post(new_post.into_inner().into(), &conn)
         .map(|post| post.into_childless_response(user))
         .map(Json)
@@ -112,7 +113,7 @@ fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Js
 
 #[get("/users_posts/<user_id>")]
 fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
-    let user: User = User::get_user(user_id, &conn)?;
+    let user: User = User::get_by_id(user_id, &conn)?;
     Post::get_posts_by_user(user_id, &conn)
         .map(|posts| {
             posts

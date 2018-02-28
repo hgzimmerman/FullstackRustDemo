@@ -1,6 +1,7 @@
 use schema::buckets;
 use error::*;
 use db::Conn;
+use db::Retrievable;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
@@ -40,9 +41,11 @@ impl Bucket {
             .load::<Bucket>(conn.deref())
             .map_err(Bucket::handle_error)
     }
+}
 
+impl<'a> Retrievable<'a, buckets::SqlType> for Bucket {
     /// Gets a bucket by id.
-    pub fn get_bucket(bucket_id: i32, conn: &Conn) -> Result<Bucket, WeekendAtJoesError> {
+    fn get_by_id(bucket_id: i32, conn: &Conn) -> Result<Bucket, WeekendAtJoesError> {
         use schema::buckets::dsl::*;
 
         // Gets the first bucket that matches the id.

@@ -4,6 +4,7 @@ use db::user::User;
 use db::forum::Forum;
 use error::*;
 use db::Conn;
+use db::Retrievable;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
@@ -97,7 +98,7 @@ impl Thread {
         use schema::threads::dsl::*;
         use db::forum::Forum;
 
-        let forum: Forum = Forum::get_forum(requested_forum_id, conn)?;
+        let forum: Forum = Forum::get_by_id(requested_forum_id, conn)?;
 
         Thread::belonging_to(&forum)
             .filter(archived.eq(false)) // don't get archived threads
@@ -106,9 +107,11 @@ impl Thread {
             .get_results(conn.deref())
             .map_err(Thread::handle_error)
     }
+}
 
+impl<'a> Retrievable<'a, threads::SqlType> for Thread {
     /// Currently this acts as a helper method for Post::get_root_post() and isn't intended to be exposed via api
-    pub fn get_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    fn get_by_id(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads::dsl::*;
 
         // Gets the first thread that matches the id.

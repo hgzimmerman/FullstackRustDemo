@@ -1,6 +1,7 @@
 use schema::forums;
 use error::*;
 use db::Conn;
+use db::Retrievable;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
@@ -43,9 +44,11 @@ impl Forum {
             .load::<Forum>(conn.deref())
             .map_err(Forum::handle_error)
     }
+}
 
+impl<'a> Retrievable<'a, forums::SqlType> for Forum {
     /// Gets a forum by id.
-    pub fn get_forum(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
+    fn get_by_id(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums::dsl::*;
 
         // Gets the first forum that matches the id.

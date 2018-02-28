@@ -2,6 +2,9 @@ use rocket::Route;
 use rocket_contrib::Json;
 use routes::{Routable, convert_vector};
 use db::Conn;
+use db::Deletable;
+use db::Retrievable;
+use db::Creatable;
 use db::user::User;
 use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
 use error::WeekendAtJoesError;
@@ -10,7 +13,7 @@ use auth::user_authorization::*;
 
 #[get("/<user_id>")]
 fn get_user(user_id: i32, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
-    User::get_user(user_id, &conn)
+    User::get_by_id(user_id, &conn)
         .map(UserResponse::from)
         .map(Json)
 }
@@ -23,12 +26,12 @@ fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, Week
         .map(Json)
 }
 
-
+use db::user::NewUser;
 
 #[post("/", data = "<new_user>")]
 pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
-    let new_user: NewUserRequest = new_user.into_inner();
-    User::create_user(new_user, &conn)
+    let new_user: NewUser = new_user.into_inner().into();
+    User::create(new_user, &conn)
         .map(UserResponse::from)
         .map(Json)
 }
@@ -48,7 +51,7 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalU
 #[delete("/<user_id>")]
 fn delete_user(user_id: i32, _admin: AdminUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
 
-    User::delete_user_by_id(user_id, &conn)
+    User::delete_by_id(user_id, &conn)
         .map(UserResponse::from)
         .map(Json)
 }

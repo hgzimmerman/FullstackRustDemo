@@ -1,6 +1,7 @@
 use schema::posts;
 use chrono::NaiveDateTime;
 use db::user::User;
+use db::Retrievable;
 use db::thread::Thread;
 use error::*;
 use db::Conn;
@@ -62,7 +63,7 @@ impl Post {
     pub fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
-        let target_thread = Thread::get_thread(new_post.thread_id, conn)?;
+        let target_thread = Thread::get_by_id(new_post.thread_id, conn)?;
         if target_thread.locked {
             return Err(WeekendAtJoesError::ThreadLocked);
         }
@@ -78,7 +79,7 @@ impl Post {
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts;
 
-        let target_thread = Thread::get_thread(thread_id, conn)?;
+        let target_thread = Thread::get_by_id(thread_id, conn)?;
         if target_thread.locked {
             return Err(WeekendAtJoesError::ThreadLocked);
         }
@@ -103,7 +104,7 @@ impl Post {
     /// Gets all of the posts associated with a given user.
     pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         use schema::posts::dsl::*;
-        let user: User = User::get_user(user_id, conn)?;
+        let user: User = User::get_by_id(user_id, conn)?;
 
         Post::belonging_to(&user)
             .order(created_date)
@@ -143,7 +144,7 @@ impl Post {
         use schema::posts::dsl::*;
         use db::thread::Thread;
 
-        let thread: Thread = Thread::get_thread(requested_thread_id, conn)?;
+        let thread: Thread = Thread::get_by_id(requested_thread_id, conn)?;
 
         Post::belonging_to(&thread)
             .filter(

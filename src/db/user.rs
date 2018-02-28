@@ -1,4 +1,8 @@
 use db::Conn;
+use db::Deletable;
+use db::Retrievable;
+use db::Creatable;
+use db::CRD;
 use auth::hash_password;
 use diesel;
 use diesel::RunQueryDsl;
@@ -113,16 +117,7 @@ impl User {
             .map_err(User::handle_error)
     }
 
-    /// Gets the user by their id.
-    pub fn get_user(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users::dsl::*;
-        info!("Getting user with ID: {}", user_id);
 
-        users
-            .find(user_id)
-            .first::<User>(conn.deref())
-            .map_err(User::handle_error)
-    }
 
     /// Gets a vector of users of length n.
     // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
@@ -142,17 +137,6 @@ impl User {
     }
 
     /// Creates a new user.
-    pub fn create_user(new_user: NewUserRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users;
-
-        info!("Creating new user with the following values: {:?}", new_user);
-        let new_user: NewUser = new_user.into();
-
-        diesel::insert_into(users::table)
-            .values(&new_user)
-            .get_result(conn.deref())
-            .map_err(User::handle_error)
-    }
 
     /// Updates the user's display name.
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
@@ -171,17 +155,6 @@ impl User {
             .map_err(User::handle_error)
     }
 
-    /// Deletes the user by id.
-    pub fn delete_user_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users::dsl::*;
-
-        let target = users.filter(id.eq(user_id));
-
-        diesel::delete(target)
-            .get_result(conn.deref())
-            .map_err(User::handle_error)
-    }
-
     /// Deletes the user by their name.
     pub fn delete_user_by_name(name: String, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
@@ -193,6 +166,46 @@ impl User {
             .map_err(User::handle_error)
     }
 }
+
+impl<'a> Creatable<'a, users::SqlType, users::table, NewUser> for User {
+    fn create(new_user: NewUser, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+        use schema::users;
+
+        info!("Creating new user with the following values: {:?}", new_user);
+
+        diesel::insert_into(users::table)
+            .values(&new_user)
+            .get_result(conn.deref())
+            .map_err(User::handle_error)
+    }
+}
+
+impl<'a> Retrievable<'a, users::SqlType> for User {
+    /// Gets the user by their id.
+    fn get_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+        use schema::users::dsl::*;
+        info!("Getting user with ID: {}", user_id);
+
+        users
+            .find(user_id)
+            .first::<User>(conn.deref())
+            .map_err(User::handle_error)
+    }
+}
+
+impl<'a> Deletable<'a> for User {
+    fn delete_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+        use schema::users::dsl::*;
+
+        let target = users.filter(id.eq(user_id));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+            .map_err(User::handle_error)
+    }
+}
+
+impl<'a> CRD<'a, users::SqlType, users::table, NewUser> for User {}
 
 impl ErrorFormatter for User {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

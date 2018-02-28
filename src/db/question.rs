@@ -12,6 +12,7 @@ use diesel::result::Error;
 use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
+use db::Retrievable;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
 #[table_name = "questions"]
@@ -57,7 +58,7 @@ impl Question {
         use schema::users::dsl::*;
 
         // Get the bucket from which questions will be retrieved.
-        let bucket = Bucket::get_bucket(bucket_id, &conn)?;
+        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
 
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
 
@@ -84,7 +85,7 @@ impl Question {
         use schema::users::dsl::*;
 
         // Get the bucket from which the questions will be retrieved.
-        let bucket = Bucket::get_bucket(bucket_id, &conn)?;
+        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
         // Get all the questions in the bucket.
         let questions: Vec<Question> = Question::belonging_to(&bucket)
             .load::<Question>(conn.deref())
@@ -123,7 +124,7 @@ impl Question {
 
     pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<(User, Vec<(Question, Vec<Answer>)>)>, WeekendAtJoesError> {
 
-        let bucket = Bucket::get_bucket(owning_bucket_id, &conn)?;
+        let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
         let users: Vec<User> = User::get_all_users(conn)?;
 
         let questions: Vec<Question> = Question::belonging_to(&bucket)
@@ -148,16 +149,7 @@ impl Question {
         Ok(retval)
     }
 
-    /// Gets a bucket by id.
-    pub fn get_question(question_id: i32, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
-        use schema::questions::dsl::*;
 
-        // Gets the first bucket that matches the id.
-        questions
-            .find(question_id)
-            .first::<Question>(conn.deref())
-            .map_err(Question::handle_error)
-    }
 
     pub fn get_full_question(question_id: i32, conn: &Conn) -> Result<(Question, User, Vec<Answer>), WeekendAtJoesError> {
         use schema::questions::dsl::*;
@@ -177,6 +169,18 @@ impl Question {
             .first::<User>(conn.deref())
             .map_err(User::handle_error)?;
         Ok((question, user, answers))
+    }
+}
+
+impl<'a> Retrievable<'a, questions::SqlType> for Question {
+    fn get_by_id(question_id: i32, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
+        use schema::questions::dsl::*;
+
+        // Gets the first bucket that matches the id.
+        questions
+            .find(question_id)
+            .first::<Question>(conn.deref())
+            .map_err(Question::handle_error)
     }
 }
 

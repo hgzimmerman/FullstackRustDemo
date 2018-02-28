@@ -2,6 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
+use db::Retrievable;
 use db::question::*;
 use db::answer::Answer;
 use error::WeekendAtJoesError;
@@ -79,7 +80,7 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
-    let user: User = User::get_user(request.author_id, &conn)?;
+    let user: User = User::get_by_id(request.author_id, &conn)?;
     Question::create_question(request.into(), &conn)
         .map(|question| QuestionData((question, user, vec![])))
         .map(QuestionResponse::from)
