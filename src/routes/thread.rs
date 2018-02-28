@@ -6,6 +6,7 @@ use db::thread::{Thread, NewThread};
 use db::post::{Post, NewPost};
 use db::user::User;
 use db::Retrievable;
+use db::Creatable;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
@@ -82,8 +83,8 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: Norma
     let new_thread: NewThread = new_thread_request.clone().into();
     let new_original_post: NewPost = new_thread_request.into();
 
-    let thread: Thread = Thread::create_thread(new_thread, &conn)?;
-    let original_post: Post = Post::create_post(new_original_post, &conn)?;
+    let thread: Thread = Thread::create(new_thread, &conn)?;
+    let original_post: Post = Post::create(new_original_post, &conn)?;
     let user = User::get_by_id(thread.author_id, &conn)?;
 
     Ok(Json(thread.into_one_post_thread_response(

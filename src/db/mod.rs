@@ -81,9 +81,9 @@ use error::WeekendAtJoesError;
 use diesel::Identifiable;
 
 pub trait Creatable<T> {
-    fn create(insert:  T, conn: &Conn) -> Result<Self, WeekendAtJoesError>
-        where
-            Self: Sized;
+    fn create(insert: T, conn: &Conn) -> Result<Self, WeekendAtJoesError>
+    where
+        Self: Sized;
 }
 
 pub trait Retrievable<'a> {
@@ -107,3 +107,19 @@ where
     Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
 {
 }
+
+// Currently broken because I can't access the ids for the elements
+//
+// [cfg(test)]
+// pub fn create_upload_delete<'a, T: 'a, W>(insertable: W, conn: &Conn) -> Result<T, WeekendAtJoesError>
+//     where
+//         T: CRD<'a, W>,
+//         &'a T: Identifiable
+
+// {
+//         let inserted: T = T::create(insertable, conn)?;
+//         T::get_by_id(inserted.id(), conn)?;
+//         T::delete_by_id(inserted.id(), conn)?;
+
+//         unimplemented!()
+// }

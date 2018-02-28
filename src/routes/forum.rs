@@ -2,6 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
+use db::Creatable;
 use db::forum::Forum;
 use db::forum::NewForum;
 use error::WeekendAtJoesError;
@@ -31,8 +32,6 @@ impl From<NewForumRequest> for NewForum {
 }
 
 
-
-
 #[get("/forums")]
 fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError> {
 
@@ -43,7 +42,7 @@ fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError
 
 #[post("/create", data = "<new_forum>")]
 fn create_forum(new_forum: Json<NewForumRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<ForumResponse>, WeekendAtJoesError> {
-    Forum::create_forum(new_forum.into_inner().into(), &conn)
+    Forum::create(new_forum.into_inner().into(), &conn)
         .map(ForumResponse::from)
         .map(Json)
 }

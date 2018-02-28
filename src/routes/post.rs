@@ -5,6 +5,7 @@ use rocket::Route;
 use db::post::{Post, NewPost, EditPostChangeset};
 use db::user::User;
 use db::Retrievable;
+use db::Creatable;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::post::{PostResponse, NewPostRequest, EditPostRequest};
@@ -80,7 +81,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
         return Err(WeekendAtJoesError::BadRequest);
     }
     let user: User = User::get_by_id(new_post.author_id, &conn)?;
-    Post::create_post(new_post.into_inner().into(), &conn)
+    Post::create(new_post.into_inner().into(), &conn)
         .map(|post| post.into_childless_response(user))
         .map(Json)
 }

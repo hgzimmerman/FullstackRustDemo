@@ -5,6 +5,7 @@ use db::Retrievable;
 use db::thread::Thread;
 use error::*;
 use db::Conn;
+use db::Creatable;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
@@ -58,22 +59,6 @@ pub struct EditPostChangeset {
 
 
 impl Post {
-    /// Creates a new post.
-    /// If the thread is locked, the post cannot be modified.
-    pub fn create_post(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts;
-
-        let target_thread = Thread::get_by_id(new_post.thread_id, conn)?;
-        if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked);
-        }
-
-        diesel::insert_into(posts::table)
-            .values(&new_post)
-            .get_result(conn.deref())
-            .map_err(Post::handle_error)
-    }
-
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
@@ -161,6 +146,24 @@ impl Post {
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
             .load::<Post>(conn.deref())
+            .map_err(Post::handle_error)
+    }
+}
+
+impl Creatable<NewPost> for Post {
+    /// Creates a new post.
+    /// If the thread is locked, the post cannot be created.
+    fn create(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+        use schema::posts;
+
+        let target_thread = Thread::get_by_id(new_post.thread_id, conn)?;
+        if target_thread.locked {
+            return Err(WeekendAtJoesError::ThreadLocked);
+        }
+
+        diesel::insert_into(posts::table)
+            .values(&new_post)
+            .get_result(conn.deref())
             .map_err(Post::handle_error)
     }
 }
