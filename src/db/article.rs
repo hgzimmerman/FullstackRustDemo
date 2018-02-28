@@ -3,6 +3,9 @@ use diesel::result::Error;
 use std::ops::Deref;
 use db::Conn;
 use db::Deletable;
+use db::Retrievable;
+use db::Creatable;
+use db::CRD;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
@@ -52,15 +55,6 @@ impl From<UpdateArticleRequest> for ArticleChangeset {
 }
 
 impl Article {
-    /// Gets the article associated with the id.
-    pub fn get_article_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
-        use schema::articles::dsl::*;
-
-        articles
-            .find(article_id)
-            .first(conn.deref())
-            .map_err(|e| handle_diesel_error(e, "Article"))
-    }
 
     /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
     /// The the returned articles will only include ones with a publish date.
@@ -98,17 +92,6 @@ impl Article {
 
     }
 
-    // Creates a new article
-    pub fn create_article(new_article_request: NewArticleRequest, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
-        use schema::articles;
-
-        let new_article: NewArticle = new_article_request.into();
-
-        diesel::insert_into(articles::table)
-            .values(&new_article)
-            .get_result(conn.deref())
-            .map_err(Article::handle_error)
-    }
 
     pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
@@ -137,12 +120,29 @@ impl Article {
             .map_err(Article::handle_error)
     }
 
-    /// Deletes the article corresponding to the provided id
-    pub fn delete_article(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+}
+
+
+impl<'a> Creatable<'a, articles::SqlType, articles::table, NewArticle> for Article {
+    fn create(new_article: NewArticle, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+        use schema::articles;
+
+        diesel::insert_into(articles::table)
+            .values(&new_article)
+            .get_result(conn.deref())
+            .map_err(Article::handle_error)
+    }
+}
+
+impl<'a> Retrievable<'a, articles::SqlType> for Article {
+    /// Gets a bucket by id.
+    fn get_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
 
-        diesel::delete(articles.filter(id.eq(article_id)))
-            .get_result(conn.deref())
+        // Gets the first bucket that matches the id.
+        articles
+            .find(article_id)
+            .first::<Article>(conn.deref())
             .map_err(Article::handle_error)
     }
 }
@@ -156,6 +156,10 @@ impl<'a> Deletable<'a> for Article {
             .map_err(Article::handle_error)
     }
 }
+
+
+impl<'a> CRD<'a, articles::SqlType, articles::table, NewArticle> for Article {}
+
 
 /// Represents an article that will be inserted into the database.
 #[derive(Serialize, Deserialize, Insertable, Debug)]

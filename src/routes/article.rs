@@ -2,6 +2,9 @@ use rocket::Route;
 use rocket_contrib::Json;
 use super::{Routable, convert_vector};
 use db::Conn;
+use db::Deletable;
+use db::Retrievable;
+use db::Creatable;
 
 use db::article::*;
 use requests_and_responses::article::*;
@@ -23,7 +26,7 @@ impl From<Article> for ArticleResponse {
 
 #[get("/<article_id>", rank = 0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
-    Article::get_article_by_id(article_id, &conn)
+    Article::get_by_id(article_id, &conn)
         .map(ArticleResponse::from)
         .map(Json)
 }
@@ -51,14 +54,14 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
         });
     }
 
-    Article::create_article(new_article.into_inner(), &conn)
+    Article::create(new_article.into_inner().into(), &conn)
         .map(ArticleResponse::from)
         .map(Json)
 }
 
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_article_by_id(update_article_request.id, &conn)?;
+    let article_to_update: Article = Article::get_by_id(update_article_request.id, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
@@ -72,19 +75,19 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 /// Given an article id, delete the row that represents it.
 #[delete("/<article_id>")]
 fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id." });
     }
 
-    Article::delete_article(article_id, &conn)
+    Article::delete_by_id(article_id, &conn)
         .map(|_| NoContent)
 }
 
 /// Given an article id, set the corresponding article's date_published column to contain the current date.
 #[put("/publish/<article_id>")]
 fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
@@ -96,7 +99,7 @@ fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCo
 // Given an article id, set the corresponding article's date_published colum to NULL.
 #[put("/unpublish/<article_id>")]
 fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_article_by_id(article_id, &conn)?;
+    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
