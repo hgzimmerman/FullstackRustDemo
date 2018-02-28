@@ -43,7 +43,7 @@ impl Bucket {
     }
 }
 
-impl<'a> Retrievable<'a, buckets::SqlType> for Bucket {
+impl<'a> Retrievable<'a> for Bucket {
     /// Gets a bucket by id.
     fn get_by_id(bucket_id: i32, conn: &Conn) -> Result<Bucket, WeekendAtJoesError> {
         use schema::buckets::dsl::*;

@@ -45,7 +45,7 @@ impl Answer {
     }
 }
 
-impl<'a> Retrievable<'a, answers::SqlType> for Answer {
+impl<'a> Retrievable<'a> for Answer {
     fn get_by_id(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
         use schema::answers::dsl::*;
 

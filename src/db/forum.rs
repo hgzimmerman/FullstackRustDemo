@@ -46,7 +46,7 @@ impl Forum {
     }
 }
 
-impl<'a> Retrievable<'a, forums::SqlType> for Forum {
+impl<'a> Retrievable<'a> for Forum {
     /// Gets a forum by id.
     fn get_by_id(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
         use schema::forums::dsl::*;

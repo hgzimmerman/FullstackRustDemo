@@ -121,7 +121,7 @@ impl Article {
 }
 
 
-impl<'a> Creatable<'a, articles::SqlType, articles::table, NewArticle> for Article {
+impl<'a> Creatable<NewArticle> for Article {
     fn create(new_article: NewArticle, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles;
 
@@ -132,7 +132,7 @@ impl<'a> Creatable<'a, articles::SqlType, articles::table, NewArticle> for Artic
     }
 }
 
-impl<'a> Retrievable<'a, articles::SqlType> for Article {
+impl<'a> Retrievable<'a> for Article {
     /// Gets a bucket by id.
     fn get_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
         use schema::articles::dsl::*;
@@ -156,7 +156,7 @@ impl<'a> Deletable<'a> for Article {
 }
 
 
-impl<'a> CRD<'a, articles::SqlType, articles::table, NewArticle> for Article {}
+impl<'a> CRD<'a, NewArticle> for Article {}
 
 
 /// Represents an article that will be inserted into the database.

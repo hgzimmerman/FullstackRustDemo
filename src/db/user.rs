@@ -167,7 +167,7 @@ impl User {
     }
 }
 
-impl<'a> Creatable<'a, users::SqlType, users::table, NewUser> for User {
+impl<'a> Creatable<NewUser> for User {
     fn create(new_user: NewUser, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users;
 
@@ -180,7 +180,7 @@ impl<'a> Creatable<'a, users::SqlType, users::table, NewUser> for User {
     }
 }
 
-impl<'a> Retrievable<'a, users::SqlType> for User {
+impl<'a> Retrievable<'a> for User {
     /// Gets the user by their id.
     fn get_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
         use schema::users::dsl::*;
@@ -205,7 +205,7 @@ impl<'a> Deletable<'a> for User {
     }
 }
 
-impl<'a> CRD<'a, users::SqlType, users::table, NewUser> for User {}
+impl<'a> CRD<'a, NewUser> for User {}
 
 impl ErrorFormatter for User {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

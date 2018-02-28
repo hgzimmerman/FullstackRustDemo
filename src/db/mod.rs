@@ -10,8 +10,8 @@ use std::ops::Deref;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
-use diesel::Insertable;
-use diesel::Queryable;
+// use diesel::Insertable;
+// use diesel::Queryable;
 
 pub mod user;
 pub mod article;
@@ -78,21 +78,18 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 }
 
 use error::WeekendAtJoesError;
-use diesel::pg::Pg;
 use diesel::Identifiable;
 
-
-pub trait Creatable<'a, W, S, T: 'a> {
-    fn create(insert: T, conn: &Conn) -> Result<Self, WeekendAtJoesError>
-    where
-        Self: Sized + Queryable<W, Pg>,
-        &'a T: Insertable<S>;
+pub trait Creatable<T> {
+    fn create(insert:  T, conn: &Conn) -> Result<Self, WeekendAtJoesError>
+        where
+            Self: Sized;
 }
 
-pub trait Retrievable<'a, W> {
+pub trait Retrievable<'a> {
     fn get_by_id(id: i32, conn: &Conn) -> Result<Self, WeekendAtJoesError>
     where
-        Self: 'a + Sized + Queryable<W, Pg>,
+        Self: 'a + Sized,
         &'a Self: Identifiable;
 }
 
@@ -105,8 +102,8 @@ pub trait Deletable<'a> {
 
 /// Type tag that indicates that the tagged type can be created, retrieved, and deleted.
 /// This collection of abilities means that it is safe to use in integration tests.
-pub trait CRD<'a, W, S, T: 'a>
+pub trait CRD<'a, T>
 where
-    Self: Creatable<'a, W, S, T> + Retrievable<'a, W> + Deletable<'a>
+    Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
 {
 }

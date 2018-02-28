@@ -109,7 +109,7 @@ impl Thread {
     }
 }
 
-impl<'a> Retrievable<'a, threads::SqlType> for Thread {
+impl<'a> Retrievable<'a> for Thread {
     /// Currently this acts as a helper method for Post::get_root_post() and isn't intended to be exposed via api
     fn get_by_id(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
         use schema::threads::dsl::*;
