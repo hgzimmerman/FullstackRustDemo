@@ -55,7 +55,6 @@ impl From<UpdateArticleRequest> for ArticleChangeset {
 }
 
 impl Article {
-
     /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
     /// The the returned articles will only include ones with a publish date.
     pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
@@ -119,7 +118,6 @@ impl Article {
             .get_result(conn.deref())
             .map_err(Article::handle_error)
     }
-
 }
 
 
