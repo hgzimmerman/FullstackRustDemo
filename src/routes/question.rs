@@ -2,9 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
-use db::Retrievable;
 use db::question::*;
-use db::answer::Answer;
 use error::WeekendAtJoesError;
 use db::user::User;
 use db::Conn;
@@ -13,18 +11,24 @@ use requests_and_responses::answer::*;
 use auth::user_authorization::*;
 use routes::answer::AnswerData;
 
-pub struct QuestionData(pub (Question, User, Vec<Answer>));
+pub struct QuestionData {
+    pub question: Question,
+    pub user: User,
+    pub answers: Vec<AnswerData>,
+}
+
+
 impl From<QuestionData> for QuestionResponse {
-    fn from(tuple: QuestionData) -> QuestionResponse {
-        let (question, user, answers) = tuple.0;
+    fn from(data: QuestionData) -> QuestionResponse {
+
         QuestionResponse {
-            id: question.id,
-            bucket_id: question.bucket_id,
-            question_text: question.question_text,
-            author: user.clone().into(),
-            answers: answers
+            id: data.question.id,
+            bucket_id: data.question.bucket_id,
+            question_text: data.question.question_text,
+            author: data.user.clone().into(),
+            answers: data.answers
                 .into_iter()
-                .map(|a| AnswerResponse::from(AnswerData((a, user.clone()))))
+                .map(AnswerResponse::from)
                 .collect(),
         }
     }
@@ -44,20 +48,10 @@ impl From<NewQuestionRequest> for NewQuestion {
 fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
 
     Question::get_questions_for_bucket(bucket_id, &conn)
-        .map(|groups| {
-            groups
+        .map(|questions| {
+            questions
                 .into_iter()
-                .flat_map(|group: (User, Vec<(Question, Vec<Answer>)>)| {
-                    let user: User = group.0;
-                    let question_groups: Vec<(Question, Vec<Answer>)> = group.1;
-                    question_groups
-                        .into_iter()
-                        .map(|question_group: (Question, Vec<Answer>)| {
-                            let (question, answers) = question_group;
-                            QuestionResponse::from(QuestionData((question, user.clone(), answers)))
-                        })
-                        .collect::<Vec<QuestionResponse>>()
-                })
+                .map(QuestionResponse::from)
                 .collect()
         })
         .map(Json)
@@ -66,23 +60,21 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
 #[get("/random_question/<bucket_id>")]
 fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_random_unanswered_question(bucket_id, &conn)
-        .map(|group: (Question, User)| QuestionResponse::from(QuestionData((group.0, group.1, vec![]))))
+        .map(QuestionResponse::from)
         .map(Json)
 }
 
 #[get("/<question_id>")]
 fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_full_question(question_id, &conn)
-        .map(|group: (Question, User, Vec<Answer>)| QuestionResponse::from(QuestionData(group)))
+        .map(QuestionResponse::from)
         .map(Json)
 }
 
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
-    let user: User = User::get_by_id(request.author_id, &conn)?;
     Question::create_question(request.into(), &conn)
-        .map(|question| QuestionData((question, user, vec![])))
         .map(QuestionResponse::from)
         .map(Json)
 }

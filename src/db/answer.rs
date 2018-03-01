@@ -2,6 +2,7 @@ use schema::answers;
 use db::user::User;
 use db::question::Question;
 use db::Retrievable;
+use db::Creatable;
 use db::Conn;
 use error::*;
 use diesel::RunQueryDsl;
@@ -33,9 +34,9 @@ pub struct NewAnswer {
 }
 
 
-impl Answer {
+impl Creatable<NewAnswer> for Answer {
     /// Creates a new answer
-    pub fn create_answer(new_answer: NewAnswer, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
+    fn create(new_answer: NewAnswer, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
         use schema::answers;
 
         diesel::insert_into(answers::table)

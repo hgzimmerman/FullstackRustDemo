@@ -9,16 +9,20 @@ use db::Conn;
 use requests_and_responses::answer::*;
 use auth::user_authorization::NormalUser;
 use db::Retrievable;
+use db::Creatable;
 
 
-pub struct AnswerData(pub (Answer, User));
+pub struct AnswerData {
+    pub answer: Answer,
+    pub user: User,
+}
+
 impl From<AnswerData> for AnswerResponse {
-    fn from(answer_data: AnswerData) -> AnswerResponse {
-        let (answer, user) = answer_data.0;
+    fn from(data: AnswerData) -> AnswerResponse {
         AnswerResponse {
-            id: answer.id,
-            answer_text: answer.answer_text,
-            author: user.into(),
+            id: data.answer.id,
+            answer_text: data.answer.answer_text,
+            author: data.user.into(),
         }
     }
 }
@@ -39,10 +43,12 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: 
     let new_answer: NewAnswer = new_answer.into_inner().into();
     let user: User = User::get_by_id(new_answer.author_id, &conn)?;
 
-    Answer::create_answer(new_answer, &conn)
-        .map(|x| AnswerData((x, user)))
+    // unimplemented!(
+    Answer::create(new_answer, &conn)
+        .map(|answer| AnswerData { answer, user })
         .map(AnswerResponse::from)
         .map(Json)
+
 }
 
 impl Routable for Answer {

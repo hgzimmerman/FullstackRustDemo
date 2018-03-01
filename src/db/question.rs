@@ -13,6 +13,8 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::Retrievable;
+use routes::question::QuestionData;
+use routes::answer::AnswerData;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
 #[table_name = "questions"]
@@ -36,25 +38,46 @@ pub struct NewQuestion {
 
 impl Question {
     /// Creates a new bucket
-    pub fn create_question(new_question: NewQuestion, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
+    pub fn create_question(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
         use schema::questions;
-
-        diesel::insert_into(questions::table)
+        let question: Question = diesel::insert_into(questions::table)
             .values(&new_question)
             .get_result(conn.deref())
-            .map_err(Question::handle_error)
+            .map_err(Question::handle_error)?;
+        let user = User::get_by_id(question.author_id, conn)?;
+
+        Ok(QuestionData {
+            question,
+            user,
+            answers: vec![],
+        })
+
     }
 
     /// Gets a list of all questions across all buckets.
-    pub fn get_questions(conn: &Conn) -> Result<Vec<Question>, WeekendAtJoesError> {
+    pub fn get_questions(conn: &Conn) -> Result<Vec<QuestionData>, WeekendAtJoesError> {
         use schema::questions::dsl::*;
-        questions
-            .load::<Question>(conn.deref())
-            .map_err(Question::handle_error)
+        use schema::users::dsl::*;
+        let questions_and_users = questions
+            .inner_join(users)
+            .load::<(Question, User)>(conn.deref())
+            .map_err(Question::handle_error)?;
+
+        let question_data: Vec<QuestionData> = questions_and_users
+            .into_iter()
+            .map(|x| {
+                QuestionData {
+                    question: x.0,
+                    user: x.1,
+                    answers: vec![], // TODO make a minimal response question
+                }
+            })
+            .collect();
+        Ok(question_data)
     }
 
     /// Gets a random question that may have already been answered
-    pub fn get_random_question(bucket_id: i32, conn: &Conn) -> Result<(Question, User, Vec<Answer>), WeekendAtJoesError> {
+    pub fn get_random_question(bucket_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
         // Get the bucket from which questions will be retrieved.
@@ -68,8 +91,9 @@ impl Question {
             .first::<Question>(conn.deref())
             .map_err(Question::handle_error)?;
         // Get the answers associated with the question.
-        let answers: Vec<Answer> = Answer::belonging_to(&question)
-            .load::<Answer>(conn.deref())
+        let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
+            .inner_join(users)
+            .load::<(Answer, User)>(conn.deref())
             .map_err(Answer::handle_error)?;
         // Get the author of the question.
         let user: User = users
@@ -77,11 +101,24 @@ impl Question {
             .first::<User>(conn.deref())
             .map_err(User::handle_error)?;
         // Get them all together.
-        Ok((question, user, answers))
+
+        Ok(QuestionData {
+            question,
+            user,
+            answers: answers_and_users
+                .into_iter()
+                .map(|x| {
+                    AnswerData {
+                        answer: x.0,
+                        user: x.1,
+                    }
+                })
+                .collect(),
+        })
     }
 
     /// Gets a random question from the bucket that has not been answered yet.
-    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> Result<(Question, User), WeekendAtJoesError> {
+    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
         // Get the bucket from which the questions will be retrieved.
@@ -118,57 +155,92 @@ impl Question {
             .find(random_question.author_id)
             .first::<User>(conn.deref())
             .map_err(User::handle_error)?;
-
-        Ok((random_question, user))
+        Ok(QuestionData {
+            question: random_question,
+            user,
+            answers: vec![],
+        })
     }
 
-    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<(User, Vec<(Question, Vec<Answer>)>)>, WeekendAtJoesError> {
-
+    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<QuestionData>, WeekendAtJoesError> {
+        use schema::users::dsl::*;
         let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
-        let users: Vec<User> = User::get_all_users(conn)?;
 
-        let questions: Vec<Question> = Question::belonging_to(&bucket)
-            .load::<Question>(conn.deref())
+        let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
+            .inner_join(users)
+            .load::<(Question, User)>(conn.deref())
             .map_err(Question::handle_error)?;
-        let answers: Vec<Answer> = Answer::belonging_to(&questions)
-            .load::<Answer>(conn.deref())
-            .map_err(Answer::handle_error)?;
-        let grouped_answers: Vec<Vec<Answer>> = answers.grouped_by(&questions);
 
-        let questions_with_answers: Vec<Vec<(Question, Vec<Answer>)>> = questions
-            .into_iter()
-            .zip(grouped_answers)
-            .grouped_by(&users);
-
-        let retval: Vec<(User, Vec<(Question, Vec<Answer>)>)> = users
-            .into_iter()
-            .zip(questions_with_answers)
+        let questions: Vec<Question> = questions_and_users
+            .iter()
+            .map(|q_and_u| q_and_u.0.clone())
             .collect();
 
+        let answers: Vec<(Answer, User)> = Answer::belonging_to(&questions)
+            .inner_join(users)
+            .load::<(Answer, User)>(conn.deref())
+            .map_err(Answer::handle_error)?;
+        let grouped_answers: Vec<Vec<(Answer, User)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
 
-        Ok(retval)
+        let data_tuple: Vec<((Question, User), Vec<(Answer, User)>)> = questions_and_users
+            .into_iter()
+            .zip(grouped_answers)
+            .collect();
+
+        let question_data = data_tuple
+            .into_iter()
+            .map(|x| {
+                let question = (x.0).0;
+                let user = (x.0).1;
+                let a_u = x.1;
+                QuestionData {
+                    question,
+                    user,
+                    answers: a_u.into_iter()
+                        .map(|y| {
+                            AnswerData {
+                                answer: y.0,
+                                user: y.1,
+                            }
+                        })
+                        .collect(),
+                }
+            })
+            .collect();
+        Ok(question_data)
     }
 
 
 
-    pub fn get_full_question(question_id: i32, conn: &Conn) -> Result<(Question, User, Vec<Answer>), WeekendAtJoesError> {
-        use schema::questions::dsl::*;
+    pub fn get_full_question(q_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
         use schema::users::dsl::*;
 
         // Get the question
-        let question: Question = questions
-            .find(question_id)
-            .first::<Question>(conn.deref())
-            .map_err(Question::handle_error)?;
-        let answers: Vec<Answer> = Answer::belonging_to(&question)
-            .load::<Answer>(conn.deref())
+        let question: Question = Question::get_by_id(q_id, conn)?;
+
+        let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
+            .inner_join(users)
+            .load::<(Answer, User)>(conn.deref())
             .map_err(Answer::handle_error)?;
         // Get the matching user
         let user: User = users
             .find(question.author_id)
             .first::<User>(conn.deref())
             .map_err(User::handle_error)?;
-        Ok((question, user, answers))
+
+        Ok(QuestionData {
+            question,
+            user,
+            answers: answers_and_users
+                .into_iter()
+                .map(|x| {
+                    AnswerData {
+                        answer: x.0,
+                        user: x.1,
+                    }
+                })
+                .collect(),
+        })
     }
 }
 
