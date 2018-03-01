@@ -2,6 +2,8 @@ use schema::posts;
 use chrono::NaiveDateTime;
 use db::user::User;
 use db::Retrievable;
+use db::Deletable;
+use db::CRD;
 use db::thread::Thread;
 use error::*;
 use db::Conn;
@@ -237,6 +239,19 @@ impl<'a> Retrievable<'a> for Post {
     }
 }
 
+impl <'a> Deletable<'a> for Post {
+    fn delete_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+        use schema::posts::dsl::*;
+
+        let target = posts.filter(id.eq(post_id));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+            .map_err(Post::handle_error)
+    }
+}
+
+impl<'a> CRD<'a, NewPost> for Post {}
 
 impl ErrorFormatter for Post {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

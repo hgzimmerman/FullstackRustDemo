@@ -13,7 +13,11 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::Retrievable;
+use db::Deletable;
 use db::answer::AnswerData;
+use diesel::ExpressionMethods;
+use db::Creatable;
+use db::CRD;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
 #[table_name = "questions"]
@@ -43,12 +47,9 @@ pub struct QuestionData {
 
 impl Question {
     /// Creates a new bucket
-    pub fn create_question(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
-        use schema::questions;
-        let question: Question = diesel::insert_into(questions::table)
-            .values(&new_question)
-            .get_result(conn.deref())
-            .map_err(Question::handle_error)?;
+    pub fn create_data(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+
+        let question: Question = Question::create(new_question, conn)?;
         let user = User::get_by_id(question.author_id, conn)?;
 
         Ok(QuestionData {
@@ -249,6 +250,23 @@ impl Question {
     }
 }
 
+impl Creatable<NewQuestion> for Question {
+    fn create(new_question: NewQuestion, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
+        use schema::questions;
+        diesel::insert_into(questions::table)
+            .values(&new_question)
+            .get_result(conn.deref())
+            .map_err(Question::handle_error)
+        // let user = User::get_by_id(question.author_id, conn)?;
+
+        // Ok(QuestionData {
+        //     question,
+        //     user,
+        //     answers: vec![],
+        // })
+    }
+}
+
 impl<'a> Retrievable<'a> for Question {
     fn get_by_id(question_id: i32, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
         use schema::questions::dsl::*;
@@ -260,6 +278,20 @@ impl<'a> Retrievable<'a> for Question {
             .map_err(Question::handle_error)
     }
 }
+
+impl<'a> Deletable<'a> for Question {
+    fn delete_by_id(question_id: i32, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
+        use schema::questions::dsl::*;
+
+        let target = questions.filter(id.eq(question_id));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+            .map_err(Question::handle_error)
+    }
+}
+
+impl<'a> CRD<'a, NewQuestion> for Question {}
 
 impl ErrorFormatter for Question {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

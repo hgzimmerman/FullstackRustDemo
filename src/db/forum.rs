@@ -4,6 +4,7 @@ use db::Conn;
 use db::Retrievable;
 use db::Creatable;
 use db::Deletable;
+use db::CRD;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
@@ -49,6 +50,7 @@ impl Creatable<NewForum> for Forum {
             .map_err(Forum::handle_error)
     }
 }
+
 impl<'a> Retrievable<'a> for Forum {
     /// Gets a forum by id.
     fn get_by_id(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
@@ -73,6 +75,8 @@ impl<'a> Deletable<'a> for Forum {
             .map_err(Forum::handle_error)
     }
 }
+
+impl<'a> CRD<'a, NewForum> for Forum {}
 
 impl ErrorFormatter for Forum {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

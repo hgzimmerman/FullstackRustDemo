@@ -8,6 +8,7 @@ use db::Conn;
 use requests_and_responses::bucket::*;
 use auth::user_authorization::AdminUser;
 use routes::convert_vector;
+use db::Creatable;
 
 impl From<Bucket> for BucketResponse {
     fn from(bucket: Bucket) -> BucketResponse {
@@ -34,7 +35,7 @@ fn get_buckets(conn: Conn) -> Result<Json<Vec<BucketResponse>>, WeekendAtJoesErr
 
 #[post("/create", data = "<new_bucket>")]
 fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<BucketResponse>, WeekendAtJoesError> {
-    Bucket::create_bucket(new_bucket.into_inner().into(), &conn)
+    Bucket::create(new_bucket.into_inner().into(), &conn)
         .map(BucketResponse::from)
         .map(Json)
 }

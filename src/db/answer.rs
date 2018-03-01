@@ -3,6 +3,8 @@ use db::user::User;
 use db::question::Question;
 use db::Retrievable;
 use db::Creatable;
+use db::Deletable;
+use db::CRD;
 use db::Conn;
 use error::*;
 use diesel::RunQueryDsl;
@@ -10,6 +12,7 @@ use diesel::QueryDsl;
 use diesel;
 use diesel::result::Error;
 use std::ops::Deref;
+use diesel::ExpressionMethods;
 
 
 
@@ -61,6 +64,20 @@ impl<'a> Retrievable<'a> for Answer {
             .map_err(Answer::handle_error)
     }
 }
+
+impl<'a> Deletable<'a> for Answer {
+    fn delete_by_id(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
+        use schema::answers::dsl::*;
+
+        let target = answers.filter(id.eq(answer_id));
+
+        diesel::delete(target)
+            .get_result(conn.deref())
+            .map_err(Answer::handle_error)
+    }
+}
+
+impl<'a> CRD<'a, NewAnswer> for Answer {}
 
 impl ErrorFormatter for Answer {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
