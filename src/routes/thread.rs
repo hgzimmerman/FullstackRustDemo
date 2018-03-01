@@ -4,7 +4,6 @@ use rocket::Route;
 
 use db::thread::{Thread, NewThread};
 use db::post::NewPost;
-use db::user::User;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
@@ -13,7 +12,7 @@ use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 
-use routes::post::PostData;
+use db::thread::{MinimalThreadData, ThreadData};
 
 
 impl From<NewThreadRequest> for NewThread {
@@ -36,11 +35,7 @@ impl From<NewThreadRequest> for NewPost {
     }
 }
 
-pub struct ThreadData {
-    pub thread: Thread,
-    pub post: PostData,
-    pub user: User,
-}
+
 
 impl From<ThreadData> for ThreadResponse {
     fn from(data: ThreadData) -> ThreadResponse {
@@ -55,10 +50,7 @@ impl From<ThreadData> for ThreadResponse {
     }
 }
 
-pub struct MinimalThreadData {
-    pub thread: Thread,
-    pub user: User,
-}
+
 
 impl From<MinimalThreadData> for MinimalThreadResponse {
     fn from(data: MinimalThreadData) -> MinimalThreadResponse {

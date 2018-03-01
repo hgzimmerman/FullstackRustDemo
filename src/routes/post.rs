@@ -3,7 +3,6 @@ use routes::Routable;
 use rocket::Route;
 
 use db::post::{Post, NewPost, EditPostChangeset};
-use db::user::User;
 use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
@@ -11,6 +10,7 @@ use requests_and_responses::post::{PostResponse, NewPostRequest, EditPostRequest
 use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
+use db::post::{PostData, ChildlessPostData};
 
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest) -> NewPost {
@@ -35,10 +35,7 @@ impl From<EditPostRequest> for EditPostChangeset {
     }
 }
 
-pub struct ChildlessPostData {
-    pub post: Post,
-    pub user: User,
-}
+
 
 impl From<ChildlessPostData> for PostResponse {
     fn from(data: ChildlessPostData) -> PostResponse {
@@ -54,11 +51,7 @@ impl From<ChildlessPostData> for PostResponse {
     }
 }
 
-pub struct PostData {
-    pub post: Post,
-    pub user: User,
-    pub children: Vec<PostData>,
-}
+
 
 impl From<PostData> for PostResponse {
     fn from(data: PostData) -> PostResponse {
@@ -86,41 +79,6 @@ impl From<ChildlessPostData> for PostData {
         }
     }
 }
-
-// impl Post {
-//     pub fn into_post_response(self, conn: &Conn) -> Result<PostResponse, WeekendAtJoesError> {
-//         use db::user::User;
-
-//         let user: User = User::get_by_id(self.author_id, conn)?;
-//         let children: Vec<PostResponse> = self
-//             .get_post_children(conn)?
-//             .into_iter()
-//             .map(|p| p.into_post_response(conn)) // recursion ocurrs here, beware of any performance problems
-//             .collect::<Result<Vec<PostResponse>, WeekendAtJoesError>>()?;
-
-//         Ok(PostResponse {
-//             id: self.id,
-//             author: user.into(),
-//             created_date: self.created_date,
-//             modified_date: self.modified_date,
-//             content: self.content,
-//             censored: self.censored,
-//             children: children,
-//         })
-//     }
-
-//     pub fn into_childless_response(self, user: User) -> PostResponse {
-//         PostResponse {
-//             id: self.id,
-//             author: user.into(),
-//             created_date: self.created_date,
-//             modified_date: self.modified_date,
-//             content: self.content,
-//             censored: self.censored,
-//             children: vec![],
-//         }
-//     }
-// }
 
 
 #[post("/create", data = "<new_post>")]

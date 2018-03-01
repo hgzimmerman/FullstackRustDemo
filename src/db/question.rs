@@ -13,8 +13,7 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::Retrievable;
-use routes::question::QuestionData;
-use routes::answer::AnswerData;
+use db::answer::AnswerData;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations)]
 #[table_name = "questions"]
@@ -34,6 +33,12 @@ pub struct NewQuestion {
     pub bucket_id: i32,
     pub author_id: i32,
     pub question_text: String,
+}
+
+pub struct QuestionData {
+    pub question: Question,
+    pub user: User,
+    pub answers: Vec<AnswerData>,
 }
 
 impl Question {

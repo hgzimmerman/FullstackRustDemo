@@ -14,8 +14,6 @@ use diesel::BelongingToDsl;
 use diesel::QueryDsl;
 use diesel::result::Error;
 
-use routes::post::PostData;
-use routes::post::ChildlessPostData;
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -60,6 +58,17 @@ pub struct EditPostChangeset {
     pub content: String,
 }
 
+
+pub struct PostData {
+    pub post: Post,
+    pub user: User,
+    pub children: Vec<PostData>,
+}
+
+pub struct ChildlessPostData {
+    pub post: Post,
+    pub user: User,
+}
 
 impl Post {
     /// Applies the EditPostChangeset to the post.
@@ -163,9 +172,6 @@ impl Post {
             )
             .first::<Post>(conn.deref())
             .map_err(Post::handle_error)
-        // .and_then(|returned_posts| {
-        //     returned_posts.get(0).cloned().ok_or(WeekendAtJoesError::NotFound {type_name: "Post"})
-        // })
     }
 
     pub fn get_individual_post(post_id: i32, conn: &Conn) -> Result<ChildlessPostData, WeekendAtJoesError> {
@@ -175,6 +181,8 @@ impl Post {
     }
 
     /// Gets all of the childern for a post and assembels the tree with the `self` post as the root node.
+    /// This will make recursive calls into the database.
+    /// This method should be the target of significant scrutiny.
     pub fn get_post_data(self, conn: &Conn) -> Result<PostData, WeekendAtJoesError> {
         let user: User = User::get_by_id(self.author_id, conn)?;
         let children: Vec<Post> = self.get_post_children(conn)?; // gets the children

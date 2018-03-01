@@ -33,6 +33,10 @@ pub struct NewAnswer {
     pub answer_text: Option<String>,
 }
 
+pub struct AnswerData {
+    pub answer: Answer,
+    pub user: User,
+}
 
 impl Creatable<NewAnswer> for Answer {
     /// Creates a new answer

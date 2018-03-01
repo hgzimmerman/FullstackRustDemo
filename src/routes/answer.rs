@@ -12,10 +12,7 @@ use db::Retrievable;
 use db::Creatable;
 
 
-pub struct AnswerData {
-    pub answer: Answer,
-    pub user: User,
-}
+
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {

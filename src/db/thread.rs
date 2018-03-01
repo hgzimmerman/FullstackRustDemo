@@ -17,8 +17,7 @@ use diesel::ExpressionMethods;
 use diesel::result::Error;
 
 use db::post::{Post, NewPost};
-use routes::post::{PostData, ChildlessPostData};
-use routes::thread::{MinimalThreadData, ThreadData};
+use db::post::{PostData, ChildlessPostData};
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -51,6 +50,17 @@ pub struct NewThread {
     pub locked: bool,
     pub archived: bool,
     pub title: String,
+}
+
+pub struct ThreadData {
+    pub thread: Thread,
+    pub post: PostData,
+    pub user: User,
+}
+
+pub struct MinimalThreadData {
+    pub thread: Thread,
+    pub user: User,
 }
 
 impl Thread {

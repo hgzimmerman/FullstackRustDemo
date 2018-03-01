@@ -4,18 +4,12 @@ use rocket::Route;
 
 use db::question::*;
 use error::WeekendAtJoesError;
-use db::user::User;
 use db::Conn;
 use requests_and_responses::question::*;
 use requests_and_responses::answer::*;
 use auth::user_authorization::*;
-use routes::answer::AnswerData;
 
-pub struct QuestionData {
-    pub question: Question,
-    pub user: User,
-    pub answers: Vec<AnswerData>,
-}
+
 
 
 impl From<QuestionData> for QuestionResponse {
