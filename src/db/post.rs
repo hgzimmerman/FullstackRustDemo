@@ -239,7 +239,7 @@ impl<'a> Retrievable<'a> for Post {
     }
 }
 
-impl <'a> Deletable<'a> for Post {
+impl<'a> Deletable<'a> for Post {
     fn delete_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
         use schema::posts::dsl::*;
 

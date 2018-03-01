@@ -28,7 +28,6 @@ pub struct NewBucket {
 }
 
 impl Bucket {
-
     /// Gets a list of all buckets.
     pub fn get_buckets(conn: &Conn) -> Result<Vec<Bucket>, WeekendAtJoesError> {
         use schema::buckets::dsl::*;
