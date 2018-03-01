@@ -14,6 +14,9 @@ use diesel::BelongingToDsl;
 use diesel::QueryDsl;
 use diesel::result::Error;
 
+use routes::post::PostData;
+use routes::post::ChildlessPostData;
+
 #[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
@@ -61,7 +64,7 @@ pub struct EditPostChangeset {
 impl Post {
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
-    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> Result<ChildlessPostData, WeekendAtJoesError> {
         use schema::posts;
 
         let target_thread = Thread::get_by_id(thread_id, conn)?;
@@ -69,42 +72,65 @@ impl Post {
             return Err(WeekendAtJoesError::ThreadLocked);
         }
 
-        diesel::update(posts::table)
+        let modified_post: Post = diesel::update(posts::table)
             .set(&edit_post_changeset)
             .get_result(conn.deref())
-            .map_err(Post::handle_error)
+            .map_err(Post::handle_error)?;
+        let user = User::get_by_id(modified_post.author_id, conn)?;
+        Ok(ChildlessPostData {
+            post: modified_post,
+            user,
+        })
+    }
+
+
+    pub fn create_and_get_user(new_post: NewPost, conn: &Conn) -> Result<ChildlessPostData, WeekendAtJoesError> {
+        let post: Post = Post::create(new_post, conn)?;
+        let user: User = User::get_by_id(post.author_id, conn)?;
+        Ok(ChildlessPostData { post, user })
     }
 
     /// Censors the post, preventing users from seeing it by default.
-    pub fn censor_post(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+    pub fn censor_post(post_id: i32, conn: &Conn) -> Result<ChildlessPostData, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         use schema::posts;
-        diesel::update(posts::table)
+        let censored_post: Post = diesel::update(posts::table)
             .filter(id.eq(post_id))
             .set(censored.eq(true))
             .get_result(conn.deref())
-            .map_err(Post::handle_error)
+            .map_err(Post::handle_error)?;
+        let user = User::get_by_id(censored_post.author_id, conn)?;
+
+        Ok(ChildlessPostData {
+            post: censored_post,
+            user,
+        })
+
     }
 
     /// Gets all of the posts associated with a given user.
-    pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
+    pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> Result<Vec<ChildlessPostData>, WeekendAtJoesError> {
         use schema::posts::dsl::*;
         let user: User = User::get_by_id(user_id, conn)?;
 
-        Post::belonging_to(&user)
+        let user_posts: Vec<Post> = Post::belonging_to(&user)
             .order(created_date)
             .load::<Post>(conn.deref())
-            .map_err(Post::handle_error)
+            .map_err(Post::handle_error)?;
+
+        return Ok(
+            user_posts
+                .into_iter()
+                .map(|post| {
+                    ChildlessPostData {
+                        post,
+                        user: user.clone(),
+                    }
+                })
+                .collect(),
+        );
     }
 
-    /// Gets the post associated with its id.
-    pub fn get_post_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts::dsl::*;
-        posts
-            .find(post_id)
-            .first::<Post>(conn.deref())
-            .map_err(Post::handle_error)
-    }
 
     /// Gets the user associated with a given post
     pub fn get_user_by_post(post_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
@@ -142,6 +168,29 @@ impl Post {
         // })
     }
 
+    pub fn get_individual_post(post_id: i32, conn: &Conn) -> Result<ChildlessPostData, WeekendAtJoesError> {
+        let post = Post::get_by_id(post_id, conn)?;
+        let user = User::get_by_id(post.author_id, conn)?;
+        Ok(ChildlessPostData { post, user })
+    }
+
+    /// Gets all of the childern for a post and assembels the tree with the `self` post as the root node.
+    pub fn get_post_data(self, conn: &Conn) -> Result<PostData, WeekendAtJoesError> {
+        let user: User = User::get_by_id(self.author_id, conn)?;
+        let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
+        // turns the children into PostData
+        let children: Vec<PostData> = children
+            .into_iter()
+            .map(|child| child.get_post_data(conn))
+            .collect::<Result<Vec<PostData>, WeekendAtJoesError>>()?;
+
+        Ok(PostData {
+            post: self,
+            user,
+            children,
+        })
+    }
+
     /// Gets all of the posts that belong to the post.
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
@@ -164,6 +213,18 @@ impl Creatable<NewPost> for Post {
         diesel::insert_into(posts::table)
             .values(&new_post)
             .get_result(conn.deref())
+            .map_err(Post::handle_error)
+    }
+}
+
+impl<'a> Retrievable<'a> for Post {
+    /// Gets the user by their id.
+    fn get_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
+        use schema::posts::dsl::*;
+
+        posts
+            .find(post_id)
+            .first::<Post>(conn.deref())
             .map_err(Post::handle_error)
     }
 }

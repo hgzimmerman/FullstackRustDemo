@@ -16,6 +16,10 @@ use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
 use diesel::result::Error;
 
+use db::post::{Post, NewPost};
+use routes::post::{PostData, ChildlessPostData};
+use routes::thread::{MinimalThreadData, ThreadData};
+
 #[derive(Debug, Clone, Identifiable, Associations, Queryable)]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Forum, foreign_key = "forum_id")]
@@ -52,53 +56,89 @@ pub struct NewThread {
 impl Thread {
     /// Locks the thread, preventing posting and editing
     // TODO consolidate this function and unlock_thread(), by specifiying an additional bool value.
-    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
-        diesel::update(threads::table)
+        let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
             .set(locked.eq(true))
             .get_result(conn.deref())
-            .map_err(Thread::handle_error)
+            .map_err(Thread::handle_error)?;
+        let user: User = User::get_by_id(thread.author_id, conn)?;
+
+        Ok(MinimalThreadData { thread, user })
     }
 
     /// Unlocks the thread, allowing posting and editing again.
-    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
-        diesel::update(threads::table)
+        let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
             .set(locked.eq(false))
             .get_result(conn.deref())
-            .map_err(Thread::handle_error)
+            .map_err(Thread::handle_error)?;
+        let user: User = User::get_by_id(thread.author_id, conn)?;
+
+        Ok(MinimalThreadData { thread, user })
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
-    pub fn archive_thread(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
+    pub fn archive_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
         use schema::threads;
         use schema::threads::dsl::*;
-        diesel::update(threads::table)
+        let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
             .set(archived.eq(true))
             .get_result(conn.deref())
-            .map_err(Thread::handle_error)
+            .map_err(Thread::handle_error)?;
+        let user: User = User::get_by_id(thread.author_id, conn)?;
+
+        Ok(MinimalThreadData { thread, user })
     }
 
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
     // TODO add a step to enable pagination
-    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> Result<Vec<Thread>, WeekendAtJoesError> {
+    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> Result<Vec<MinimalThreadData>, WeekendAtJoesError> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
+        use schema::users::dsl::*;
 
         let forum: Forum = Forum::get_by_id(requested_forum_id, conn)?;
 
-        Thread::belonging_to(&forum)
-            .filter(archived.eq(false)) // don't get archived threads
+        // Get the threads that belong to the forum, and then get the users that are associated with the threads.
+        let threads_and_users: Vec<(Thread, User)> = Thread::belonging_to(&forum)
+            .filter(archived.eq(false))
             .order(created_date)
             .limit(num_threads)
-            .get_results(conn.deref())
-            .map_err(Thread::handle_error)
+            .inner_join(users)
+            .load::<(Thread, User)>(conn.deref())
+            .map_err(Thread::handle_error)?;
+
+
+        let min_threads = threads_and_users
+            .into_iter()
+            .map(|x| {
+                MinimalThreadData {
+                    thread: x.0,
+                    user: x.1,
+                }
+            })
+            .collect();
+        Ok(min_threads)
+    }
+
+
+    pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> Result<ThreadData, WeekendAtJoesError> {
+        let thread: Thread = Thread::create(new_thread, conn)?;
+        let post_data: ChildlessPostData = Post::create_and_get_user(new_post, conn)?;
+        let user: User = post_data.user.clone();
+        Ok(ThreadData {
+            thread,
+            post: PostData::from(post_data),
+            user,
+        })
     }
 }
 
