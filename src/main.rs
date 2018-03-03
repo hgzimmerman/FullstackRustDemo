@@ -33,6 +33,8 @@ extern crate diesel_infer_schema;
 extern crate chrono;
 extern crate r2d2_diesel;
 extern crate r2d2;
+
+extern crate slug;
 // #[macro_use]
 // extern crate lazy_static;
 
@@ -96,12 +98,10 @@ pub fn init_rocket() -> Rocket {
     rocket::ignite()
         .manage(db::init_pool())
         .manage(secret)
-        // .manage(mutexed_bucket_sessions)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount( &format_api(User::PATH), User::ROUTES() )
         .mount( &format_api(Article::PATH), Article::ROUTES() )
         .mount( &format_api(Auth::PATH), Auth::ROUTES() )
-        // .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
         .mount( &format_api(Forum::PATH), Forum::ROUTES())
         .mount( &format_api(Thread::PATH), Thread::ROUTES())
         .mount( &format_api(Post::PATH), Post::ROUTES())

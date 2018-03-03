@@ -12,6 +12,9 @@ use chrono::{NaiveDateTime, Utc};
 use requests_and_responses::article::*;
 use db::user::User;
 use diesel::BelongingToDsl;
+use slug;
+use rand;
+use rand::Rng;
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Crd, Debug, PartialEq)]
@@ -25,6 +28,8 @@ pub struct Article {
     pub author_id: i32,
     /// The title of the article. This will be used to when showing the article in "Suggested Articles" panes.
     pub title: String,
+    /// Converted title + suffix for use in urls
+    pub slug: String,
     /// The body will be rendered in markdown and will constitute the main content of the article.
     pub body: String,
     /// The presense of a publish date will idicate the article's published status,
@@ -124,6 +129,7 @@ impl Article {
 #[table_name = "articles"]
 pub struct NewArticle {
     pub title: String,
+    pub slug: String,
     pub body: String,
     pub author_id: i32,
 }
@@ -131,7 +137,8 @@ pub struct NewArticle {
 impl From<NewArticleRequest> for NewArticle {
     fn from(new_article_request: NewArticleRequest) -> NewArticle {
         NewArticle {
-            title: new_article_request.title,
+            title: new_article_request.title.clone(),
+            slug: slugify(&new_article_request.title),
             body: new_article_request.body,
             author_id: new_article_request.author_id,
         }
@@ -142,4 +149,22 @@ impl ErrorFormatter for Article {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
         handle_diesel_error(diesel_error, "Article")
     }
+}
+
+
+const SUFFIX_LEN: usize = 8;
+
+fn slugify(title: &str) -> String {
+    // if cfg!(feature = "random_suffix") {
+    format!("{}-{}", slug::slugify(title), generate_suffix(SUFFIX_LEN))
+    // } else {
+        // slug::slugify(title)
+    // }
+}
+
+fn generate_suffix(len: usize) -> String {
+    rand::thread_rng()
+        .gen_ascii_chars()
+        .take(len)
+        .collect::<String>()
 }
