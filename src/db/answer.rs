@@ -1,10 +1,6 @@
 use schema::answers;
 use db::user::User;
 use db::question::Question;
-use db::Retrievable;
-use db::Creatable;
-use db::Deletable;
-use db::CRD;
 use db::Conn;
 use error::*;
 use diesel::result::Error;

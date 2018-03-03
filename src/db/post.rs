@@ -1,13 +1,9 @@
 use schema::posts;
 use chrono::NaiveDateTime;
 use db::user::User;
-use db::Retrievable;
-use db::Deletable;
-use db::CRD;
 use db::thread::Thread;
 use error::*;
 use db::Conn;
-use db::Creatable;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;

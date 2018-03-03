@@ -11,11 +11,7 @@ use diesel::result::Error;
 use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
-use db::Retrievable;
-use db::Deletable;
 use db::answer::AnswerData;
-use db::Creatable;
-use db::CRD;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd)]
 #[insertable = "NewQuestion"]

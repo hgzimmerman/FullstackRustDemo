@@ -1,10 +1,6 @@
 use schema::forums;
 use error::*;
 use db::Conn;
-use db::Retrievable;
-use db::Creatable;
-use db::Deletable;
-use db::CRD;
 use std::ops::Deref;
 use diesel::RunQueryDsl;
 use diesel::result::Error;

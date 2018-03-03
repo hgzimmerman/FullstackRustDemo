@@ -1,8 +1,4 @@
 use db::Conn;
-use db::Deletable;
-use db::Retrievable;
-use db::Creatable;
-use db::CRD;
 use auth::hash_password;
 use diesel;
 use diesel::RunQueryDsl;
