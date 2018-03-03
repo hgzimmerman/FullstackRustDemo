@@ -17,7 +17,7 @@ use rand;
 use rand::Rng;
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, Crd, Debug, PartialEq)]
+#[derive(Clone, Queryable, Identifiable, Associations, Crd, ErrorHandler, Debug, PartialEq)]
 #[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[table_name = "articles"]
@@ -77,11 +77,6 @@ impl From<NewArticleRequest> for NewArticle {
     }
 }
 
-impl ErrorFormatter for Article {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Article")
-    }
-}
 
 impl Article {
     /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.

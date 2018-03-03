@@ -91,6 +91,29 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
     }
 }
 
+#[proc_macro_derive(ErrorHandler)]
+pub fn error_handler(input: TokenStream) -> TokenStream {
+    // Parse the string representation
+    let ast = syn::parse(input).unwrap();
+
+    // Build the impl
+    let gen = impl_error_handler(&ast);
+    // Return the generated impl
+    gen.into()
+}
+
+fn impl_error_handler( ast: &syn::DeriveInput) -> quote::Tokens {
+    let name: &syn::Ident = &ast.ident;
+
+    quote!(
+        impl ErrorFormatter for #name {
+            fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+                handle_diesel_error(diesel_error, stringify!(#name))
+            }
+        }
+
+    )
+}
 
 /// Given a string that coreesponds to the ident specified in the attributes section in the proc_macro_derive(...) above
 /// extract the value that corresponds to it.

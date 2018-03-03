@@ -8,7 +8,7 @@ use std::ops::Deref;
 
 
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[table_name = "answers"]
 #[insertable = "NewAnswer"]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -32,11 +32,4 @@ pub struct NewAnswer {
 pub struct AnswerData {
     pub answer: Answer,
     pub user: User,
-}
-
-
-impl ErrorFormatter for Answer {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Answer")
-    }
 }

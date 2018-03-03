@@ -15,7 +15,7 @@ use diesel::result::Error;
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Forum, foreign_key = "forum_id")]
@@ -146,11 +146,5 @@ impl Thread {
             post: PostData::from(post_data),
             user,
         })
-    }
-}
-
-impl ErrorFormatter for Thread {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Thread")
     }
 }

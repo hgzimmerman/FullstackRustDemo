@@ -13,7 +13,7 @@ use diesel::QueryDsl;
 use diesel::result::Error;
 
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
@@ -203,12 +203,5 @@ impl Post {
         Post::belonging_to(self)
             .load::<Post>(conn.deref())
             .map_err(Post::handle_error)
-    }
-}
-
-
-impl ErrorFormatter for Post {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Post")
     }
 }

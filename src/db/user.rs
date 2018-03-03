@@ -75,7 +75,7 @@ impl From<NewUserRequest> for NewUser {
 
 
 /// The database's representation of a user.
-#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewUser"]
 #[table_name = "users"]
 pub struct User {
@@ -164,12 +164,6 @@ impl User {
     }
 }
 
-
-impl ErrorFormatter for User {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "User")
-    }
-}
 
 #[cfg(test)]
 mod test {

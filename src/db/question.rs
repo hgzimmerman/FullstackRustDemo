@@ -13,7 +13,7 @@ use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::answer::AnswerData;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[insertable = "NewQuestion"]
 #[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_id")]
@@ -242,12 +242,5 @@ impl Question {
                 })
                 .collect(),
         })
-    }
-}
-
-
-impl ErrorFormatter for Question {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Question")
     }
 }

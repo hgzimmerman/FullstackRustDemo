@@ -5,7 +5,7 @@ use std::ops::Deref;
 use diesel::RunQueryDsl;
 use diesel::result::Error;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewForum"]
 #[table_name = "forums"]
 pub struct Forum {
@@ -31,13 +31,5 @@ impl Forum {
         forums
             .load::<Forum>(conn.deref())
             .map_err(Forum::handle_error)
-    }
-}
-
-
-
-impl ErrorFormatter for Forum {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Forum")
     }
 }

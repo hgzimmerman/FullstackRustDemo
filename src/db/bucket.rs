@@ -5,7 +5,7 @@ use std::ops::Deref;
 use diesel::RunQueryDsl;
 use diesel::result::Error;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewBucket"]
 #[table_name = "buckets"]
 pub struct Bucket {
@@ -28,11 +28,5 @@ impl Bucket {
         buckets
             .load::<Bucket>(conn.deref())
             .map_err(Bucket::handle_error)
-    }
-}
-
-impl ErrorFormatter for Bucket {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Bucket")
     }
 }
