@@ -5,7 +5,6 @@ pub mod static_file;
 pub mod article;
 pub mod user;
 pub mod auth;
-pub mod bucket_questions;
 pub mod forum;
 pub mod post;
 pub mod thread;
@@ -18,7 +17,6 @@ pub use self::static_file::*;
 pub use self::user::*;
 pub use self::auth::*;
 // these are mostly unused
-pub use self::bucket_questions::*;
 pub use self::forum::*;
 // pub use self::post::*;
 // pub use self::thread::*;

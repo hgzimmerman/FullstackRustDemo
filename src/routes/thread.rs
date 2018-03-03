@@ -65,44 +65,6 @@ impl From<MinimalThreadData> for MinimalThreadResponse {
 }
 
 
-// impl Thread {
-//     /// The response requires both a post and a user to be attached.
-//     fn into_one_post_thread_response(self, post: Post, user: User) -> ThreadResponse {
-//         ThreadResponse {
-//             id: self.id,
-//             title: self.title,
-//             author: user.clone().into(),
-//             posts: post.into_childless_response(user),
-//             created_date: self.created_date,
-//             locked: self.locked,
-//         }
-//     }
-
-//     fn into_full_thread_response(self, conn: &Conn) -> Result<ThreadResponse, WeekendAtJoesError> {
-//         let post: Post = Post::get_root_post(self.id, conn)?;
-//         let post_response: PostResponse = post.into_post_response(conn)?;
-//         Ok(ThreadResponse {
-//             id: self.id,
-//             title: self.title,
-//             author: post_response.author.clone(),
-//             posts: post_response,
-//             created_date: self.created_date,
-//             locked: self.locked,
-//         })
-//     }
-
-//     fn into_minimal_thread_response(self, user: User) -> MinimalThreadResponse {
-//         MinimalThreadResponse {
-//             id: self.id,
-//             title: self.title,
-//             author: user.clone().into(),
-//             created_date: self.created_date,
-//             locked: self.locked,
-//         }
-//     }
-// }
-
-
 #[post("/create", data = "<new_thread_request>")]
 fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: NormalUser, conn: Conn) -> Result<Json<ThreadResponse>, WeekendAtJoesError> {
     let new_thread_request = new_thread_request.into_inner();

@@ -56,6 +56,33 @@ impl From<UpdateArticleRequest> for ArticleChangeset {
     }
 }
 
+/// Represents an article that will be inserted into the database.
+#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[table_name = "articles"]
+pub struct NewArticle {
+    pub title: String,
+    pub slug: String,
+    pub body: String,
+    pub author_id: i32,
+}
+
+impl From<NewArticleRequest> for NewArticle {
+    fn from(new_article_request: NewArticleRequest) -> NewArticle {
+        NewArticle {
+            title: new_article_request.title.clone(),
+            slug: slugify(&new_article_request.title),
+            body: new_article_request.body,
+            author_id: new_article_request.author_id,
+        }
+    }
+}
+
+impl ErrorFormatter for Article {
+    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
+        handle_diesel_error(diesel_error, "Article")
+    }
+}
+
 impl Article {
     /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
     /// The the returned articles will only include ones with a publish date.
@@ -124,35 +151,10 @@ impl Article {
 
 
 
-/// Represents an article that will be inserted into the database.
-#[derive(Serialize, Deserialize, Insertable, Debug)]
-#[table_name = "articles"]
-pub struct NewArticle {
-    pub title: String,
-    pub slug: String,
-    pub body: String,
-    pub author_id: i32,
-}
-
-impl From<NewArticleRequest> for NewArticle {
-    fn from(new_article_request: NewArticleRequest) -> NewArticle {
-        NewArticle {
-            title: new_article_request.title.clone(),
-            slug: slugify(&new_article_request.title),
-            body: new_article_request.body,
-            author_id: new_article_request.author_id,
-        }
-    }
-}
-
-impl ErrorFormatter for Article {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-        handle_diesel_error(diesel_error, "Article")
-    }
-}
 
 
-const SUFFIX_LEN: usize = 8;
+
+const SUFFIX_LEN: usize = 6;
 
 fn slugify(title: &str) -> String {
     // if cfg!(feature = "random_suffix") {
