@@ -21,9 +21,6 @@ use diesel::ExpressionMethods;
 #[insertable = "NewAnswer"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Question, foreign_key = "question_id")]
-// #[insertable = "NewAnswer"]
-// #[TableName = "answers"]
-// #[InsertedType = "NewAnswer"]
 pub struct Answer {
     /// Primary Key.
     pub id: i32,

@@ -43,18 +43,18 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
 
         impl<'a> Retrievable<'a> for #name {
             fn get_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
-                use schema::answers::dsl::*;
+                use schema::#table_name::dsl::*;
 
                 #table_name
                     .find(item_id)
                     .first::<#name>(conn.deref())
-                    .map_err(Answer::handle_error)
+                    .map_err(#name::handle_error)
             }
         }
 
         impl<'a> Deletable<'a> for #name {
             fn delete_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
-                use schema::answers::dsl::*;
+                use schema::#table_name::dsl::*;
 
                 let target = #table_name.filter(id.eq(item_id));
 

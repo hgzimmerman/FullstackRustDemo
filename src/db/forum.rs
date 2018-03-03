@@ -12,7 +12,8 @@ use diesel::QueryDsl;
 use diesel::result::Error;
 use diesel::ExpressionMethods;
 
-#[derive(Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[insertable = "NewForum"]
 #[table_name = "forums"]
 pub struct Forum {
     /// Primary Key.
@@ -40,43 +41,7 @@ impl Forum {
     }
 }
 
-impl Creatable<NewForum> for Forum {
-    fn create(new_forum: NewForum, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
-        use schema::forums;
 
-        diesel::insert_into(forums::table)
-            .values(&new_forum)
-            .get_result(conn.deref())
-            .map_err(Forum::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Forum {
-    /// Gets a forum by id.
-    fn get_by_id(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
-        use schema::forums::dsl::*;
-
-        // Gets the first forum that matches the id.
-        forums
-            .find(forum_id)
-            .first::<Forum>(conn.deref())
-            .map_err(Forum::handle_error)
-    }
-}
-
-impl<'a> Deletable<'a> for Forum {
-    fn delete_by_id(forum_id: i32, conn: &Conn) -> Result<Forum, WeekendAtJoesError> {
-        use schema::forums::dsl::*;
-
-        let target = forums.filter(id.eq(forum_id));
-
-        diesel::delete(target)
-            .get_result(conn.deref())
-            .map_err(Forum::handle_error)
-    }
-}
-
-impl<'a> CRD<'a, NewForum> for Forum {}
 
 impl ErrorFormatter for Forum {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

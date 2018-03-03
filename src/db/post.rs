@@ -17,7 +17,8 @@ use diesel::QueryDsl;
 use diesel::result::Error;
 
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd)]
+#[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
 #[belongs_to(Post, foreign_key = "parent_id")]
@@ -209,49 +210,6 @@ impl Post {
     }
 }
 
-impl Creatable<NewPost> for Post {
-    /// Creates a new post.
-    /// If the thread is locked, the post cannot be created.
-    fn create(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts;
-
-        let target_thread = Thread::get_by_id(new_post.thread_id, conn)?;
-        if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked);
-        }
-
-        diesel::insert_into(posts::table)
-            .values(&new_post)
-            .get_result(conn.deref())
-            .map_err(Post::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Post {
-    /// Gets the user by their id.
-    fn get_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts::dsl::*;
-
-        posts
-            .find(post_id)
-            .first::<Post>(conn.deref())
-            .map_err(Post::handle_error)
-    }
-}
-
-impl<'a> Deletable<'a> for Post {
-    fn delete_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts::dsl::*;
-
-        let target = posts.filter(id.eq(post_id));
-
-        diesel::delete(target)
-            .get_result(conn.deref())
-            .map_err(Post::handle_error)
-    }
-}
-
-impl<'a> CRD<'a, NewPost> for Post {}
 
 impl ErrorFormatter for Post {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
