@@ -2,7 +2,7 @@ use schema::forums;
 use error::*;
 use db::Conn;
 use std::ops::Deref;
-use diesel::RunQueryDsl;
+// use diesel::RunQueryDsl;
 use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
@@ -22,14 +22,4 @@ pub struct Forum {
 pub struct NewForum {
     pub title: String,
     pub description: String,
-}
-
-impl Forum {
-    /// Gets a list of all forums.
-    pub fn get_forums(conn: &Conn) -> Result<Vec<Forum>, WeekendAtJoesError> {
-        use schema::forums::dsl::*;
-        forums
-            .load::<Forum>(conn.deref())
-            .map_err(Forum::handle_error)
-    }
 }

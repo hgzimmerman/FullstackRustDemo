@@ -1,7 +1,7 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
+use db::Retrievable;
 use db::bucket::*;
 use error::WeekendAtJoesError;
 use db::Conn;
@@ -28,7 +28,7 @@ impl From<NewBucketRequest> for NewBucket {
 #[get("/buckets")]
 fn get_buckets(conn: Conn) -> Result<Json<Vec<BucketResponse>>, WeekendAtJoesError> {
 
-    Bucket::get_buckets(&conn)
+    Bucket::get_all(&conn)
         .map(convert_vector)
         .map(Json)
 }

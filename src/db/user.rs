@@ -126,14 +126,7 @@ impl User {
             .map_err(User::handle_error)
     }
 
-    pub fn get_all_users(conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
-        use schema::users::dsl::*;
-        users
-            .load::<User>(conn.deref())
-            .map_err(User::handle_error)
-    }
 
-    /// Creates a new user.
 
     /// Updates the user's display name.
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {

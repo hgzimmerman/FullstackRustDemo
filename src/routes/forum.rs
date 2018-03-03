@@ -1,7 +1,7 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
+use db::Retrievable;
 use db::Creatable;
 use db::forum::Forum;
 use db::forum::NewForum;
@@ -35,7 +35,7 @@ impl From<NewForumRequest> for NewForum {
 #[get("/forums")]
 fn get_forums(conn: Conn) -> Result<Json<Vec<ForumResponse>>, WeekendAtJoesError> {
 
-    Forum::get_forums(&conn)
+    Forum::get_all(&conn)
         .map(convert_vector)
         .map(Json)
 }
