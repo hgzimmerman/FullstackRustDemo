@@ -13,9 +13,14 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::Retrievable;
+use db::Deletable;
 use db::answer::AnswerData;
+use diesel::ExpressionMethods;
+use db::Creatable;
+use db::CRD;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd)]
+#[insertable = "NewQuestion"]
 #[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_id")]
 #[belongs_to(User, foreign_key = "author_id")]
@@ -43,12 +48,9 @@ pub struct QuestionData {
 
 impl Question {
     /// Creates a new bucket
-    pub fn create_question(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
-        use schema::questions;
-        let question: Question = diesel::insert_into(questions::table)
-            .values(&new_question)
-            .get_result(conn.deref())
-            .map_err(Question::handle_error)?;
+    pub fn create_data(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+
+        let question: Question = Question::create(new_question, conn)?;
         let user = User::get_by_id(question.author_id, conn)?;
 
         Ok(QuestionData {
@@ -249,17 +251,6 @@ impl Question {
     }
 }
 
-impl<'a> Retrievable<'a> for Question {
-    fn get_by_id(question_id: i32, conn: &Conn) -> Result<Question, WeekendAtJoesError> {
-        use schema::questions::dsl::*;
-
-        // Gets the first bucket that matches the id.
-        questions
-            .find(question_id)
-            .first::<Question>(conn.deref())
-            .map_err(Question::handle_error)
-    }
-}
 
 impl ErrorFormatter for Question {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

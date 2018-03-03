@@ -2,13 +2,18 @@ use schema::buckets;
 use error::*;
 use db::Conn;
 use db::Retrievable;
+use db::Creatable;
+use db::Deletable;
+use db::CRD;
 use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::result::Error;
+use diesel::ExpressionMethods;
 
-#[derive(Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[insertable = "NewBucket"]
 #[table_name = "buckets"]
 pub struct Bucket {
     /// Primary Key.
@@ -24,34 +29,11 @@ pub struct NewBucket {
 }
 
 impl Bucket {
-    /// Creates a new bucket
-    pub fn create_bucket(new_bucket: NewBucket, conn: &Conn) -> Result<Bucket, WeekendAtJoesError> {
-        use schema::buckets;
-
-        diesel::insert_into(buckets::table)
-            .values(&new_bucket)
-            .get_result(conn.deref())
-            .map_err(Bucket::handle_error)
-    }
-
     /// Gets a list of all buckets.
     pub fn get_buckets(conn: &Conn) -> Result<Vec<Bucket>, WeekendAtJoesError> {
         use schema::buckets::dsl::*;
         buckets
             .load::<Bucket>(conn.deref())
-            .map_err(Bucket::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Bucket {
-    /// Gets a bucket by id.
-    fn get_by_id(bucket_id: i32, conn: &Conn) -> Result<Bucket, WeekendAtJoesError> {
-        use schema::buckets::dsl::*;
-
-        // Gets the first bucket that matches the id.
-        buckets
-            .find(bucket_id)
-            .first::<Bucket>(conn.deref())
             .map_err(Bucket::handle_error)
     }
 }

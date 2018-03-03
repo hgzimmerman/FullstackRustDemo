@@ -3,6 +3,8 @@ use db::user::User;
 use db::question::Question;
 use db::Retrievable;
 use db::Creatable;
+use db::Deletable;
+use db::CRD;
 use db::Conn;
 use error::*;
 use diesel::RunQueryDsl;
@@ -10,11 +12,13 @@ use diesel::QueryDsl;
 use diesel;
 use diesel::result::Error;
 use std::ops::Deref;
+use diesel::ExpressionMethods;
 
 
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd)]
 #[table_name = "answers"]
+#[insertable = "NewAnswer"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Question, foreign_key = "question_id")]
 pub struct Answer {
@@ -38,29 +42,6 @@ pub struct AnswerData {
     pub user: User,
 }
 
-impl Creatable<NewAnswer> for Answer {
-    /// Creates a new answer
-    fn create(new_answer: NewAnswer, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
-        use schema::answers;
-
-        diesel::insert_into(answers::table)
-            .values(&new_answer)
-            .get_result(conn.deref())
-            .map_err(Answer::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Answer {
-    fn get_by_id(answer_id: i32, conn: &Conn) -> Result<Answer, WeekendAtJoesError> {
-        use schema::answers::dsl::*;
-
-        // Gets the first answer that matches the id.
-        answers
-            .find(answer_id)
-            .first::<Answer>(conn.deref())
-            .map_err(Answer::handle_error)
-    }
-}
 
 impl ErrorFormatter for Answer {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

@@ -19,7 +19,8 @@ use diesel::result::Error;
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd)]
+#[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Forum, foreign_key = "forum_id")]
 #[table_name = "threads"]
@@ -151,44 +152,6 @@ impl Thread {
         })
     }
 }
-
-impl Creatable<NewThread> for Thread {
-    fn create(new_thread: NewThread, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
-        use schema::threads;
-
-        diesel::insert_into(threads::table)
-            .values(&new_thread)
-            .get_result(conn.deref())
-            .map_err(Thread::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Thread {
-    /// Currently this acts as a helper method for Post::get_root_post() and isn't intended to be exposed via api
-    fn get_by_id(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
-        use schema::threads::dsl::*;
-
-        // Gets the first thread that matches the id.
-        threads
-            .find(thread_id)
-            .first::<Thread>(conn.deref())
-            .map_err(Thread::handle_error)
-    }
-}
-
-impl<'a> Deletable<'a> for Thread {
-    fn delete_by_id(thread_id: i32, conn: &Conn) -> Result<Thread, WeekendAtJoesError> {
-        use schema::threads::dsl::*;
-
-        let target = threads.filter(id.eq(thread_id));
-
-        diesel::delete(target)
-            .get_result(conn.deref())
-            .map_err(Thread::handle_error)
-    }
-}
-
-impl<'a> CRD<'a, NewThread> for Thread {}
 
 impl ErrorFormatter for Thread {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

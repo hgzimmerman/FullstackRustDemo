@@ -18,7 +18,8 @@ use db::user::User;
 use diesel::BelongingToDsl;
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq)]
+#[derive(Clone, Queryable, Identifiable, Associations, Crd, Debug, PartialEq)]
+#[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[table_name = "articles"]
 pub struct Article {
@@ -120,43 +121,6 @@ impl Article {
     }
 }
 
-
-impl<'a> Creatable<NewArticle> for Article {
-    fn create(new_article: NewArticle, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
-        use schema::articles;
-
-        diesel::insert_into(articles::table)
-            .values(&new_article)
-            .get_result(conn.deref())
-            .map_err(Article::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Article {
-    /// Gets a bucket by id.
-    fn get_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
-        use schema::articles::dsl::*;
-
-        // Gets the first bucket that matches the id.
-        articles
-            .find(article_id)
-            .first::<Article>(conn.deref())
-            .map_err(Article::handle_error)
-    }
-}
-
-impl<'a> Deletable<'a> for Article {
-    fn delete_by_id(article_id: i32, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
-        use schema::articles::dsl::*;
-
-        diesel::delete(articles.filter(id.eq(article_id)))
-            .get_result(conn.deref())
-            .map_err(Article::handle_error)
-    }
-}
-
-
-impl<'a> CRD<'a, NewArticle> for Article {}
 
 
 /// Represents an article that will be inserted into the database.

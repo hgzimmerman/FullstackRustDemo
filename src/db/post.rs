@@ -2,6 +2,8 @@ use schema::posts;
 use chrono::NaiveDateTime;
 use db::user::User;
 use db::Retrievable;
+use db::Deletable;
+use db::CRD;
 use db::thread::Thread;
 use error::*;
 use db::Conn;
@@ -15,7 +17,8 @@ use diesel::QueryDsl;
 use diesel::result::Error;
 
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd)]
+#[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
 #[belongs_to(Post, foreign_key = "parent_id")]
@@ -203,36 +206,6 @@ impl Post {
     pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
             .load::<Post>(conn.deref())
-            .map_err(Post::handle_error)
-    }
-}
-
-impl Creatable<NewPost> for Post {
-    /// Creates a new post.
-    /// If the thread is locked, the post cannot be created.
-    fn create(new_post: NewPost, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts;
-
-        let target_thread = Thread::get_by_id(new_post.thread_id, conn)?;
-        if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked);
-        }
-
-        diesel::insert_into(posts::table)
-            .values(&new_post)
-            .get_result(conn.deref())
-            .map_err(Post::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for Post {
-    /// Gets the user by their id.
-    fn get_by_id(post_id: i32, conn: &Conn) -> Result<Post, WeekendAtJoesError> {
-        use schema::posts::dsl::*;
-
-        posts
-            .find(post_id)
-            .first::<Post>(conn.deref())
             .map_err(Post::handle_error)
     }
 }

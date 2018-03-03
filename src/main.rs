@@ -2,6 +2,13 @@
 #![plugin(rocket_codegen)]
 #![feature(rand)]
 #![recursion_limit="128"]
+// #![feature(proc_macro)]
+
+
+#![feature(use_extern_macros)]
+
+#[macro_use]
+extern crate db_proc_macros;
 
 extern crate rocket;
 #[macro_use]

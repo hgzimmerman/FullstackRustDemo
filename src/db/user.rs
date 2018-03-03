@@ -79,7 +79,8 @@ impl From<NewUserRequest> for NewUser {
 
 
 /// The database's representation of a user.
-#[derive(Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable, Crd)]
+#[insertable = "NewUser"]
 #[table_name = "users"]
 pub struct User {
     /// The primary key
@@ -167,45 +168,6 @@ impl User {
     }
 }
 
-impl<'a> Creatable<NewUser> for User {
-    fn create(new_user: NewUser, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users;
-
-        info!("Creating new user with the following values: {:?}", new_user);
-
-        diesel::insert_into(users::table)
-            .values(&new_user)
-            .get_result(conn.deref())
-            .map_err(User::handle_error)
-    }
-}
-
-impl<'a> Retrievable<'a> for User {
-    /// Gets the user by their id.
-    fn get_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users::dsl::*;
-        info!("Getting user with ID: {}", user_id);
-
-        users
-            .find(user_id)
-            .first::<User>(conn.deref())
-            .map_err(User::handle_error)
-    }
-}
-
-impl<'a> Deletable<'a> for User {
-    fn delete_by_id(user_id: i32, conn: &Conn) -> Result<User, WeekendAtJoesError> {
-        use schema::users::dsl::*;
-
-        let target = users.filter(id.eq(user_id));
-
-        diesel::delete(target)
-            .get_result(conn.deref())
-            .map_err(User::handle_error)
-    }
-}
-
-impl<'a> CRD<'a, NewUser> for User {}
 
 impl ErrorFormatter for User {
     fn handle_error(diesel_error: Error) -> WeekendAtJoesError {

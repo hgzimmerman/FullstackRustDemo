@@ -68,7 +68,7 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
-    Question::create_question(request.into(), &conn)
+    Question::create_data(request.into(), &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
