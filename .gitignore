@@ -1,6 +1,7 @@
 /target/
 /www/target/
 /requests_and_responses/target/
+/db_proc_macros/target
 /frontend6/target/
 **/*.rs.bk
 weekend.log
