@@ -93,10 +93,10 @@ pub trait Retrievable<'a> {
         Self: 'a + Sized,
         &'a Self: Identifiable;
 
-    fn get_all(conn: &Conn) -> Result<Vec<Self>,WeekendAtJoesError>
-        where
-            Self: 'a + Sized,
-            &'a Self: Identifiable;
+    fn get_all(conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
+    where
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
 }
 
 pub trait Deletable<'a> {
