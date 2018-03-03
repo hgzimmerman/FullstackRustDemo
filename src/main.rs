@@ -53,6 +53,10 @@ use db::user::User;
 use db::article::Article;
 use db::forum::Forum;
 use db::thread::Thread;
+use db::post::Post;
+use db::bucket::Bucket;
+use db::question::Question;
+use db::answer::Answer;
 
 extern crate requests_and_responses;
 
@@ -100,6 +104,11 @@ pub fn init_rocket() -> Rocket {
         // .mount( &format_api(Bucket::PATH), Bucket::ROUTES() )
         .mount( &format_api(Forum::PATH), Forum::ROUTES())
         .mount( &format_api(Thread::PATH), Thread::ROUTES())
+        .mount( &format_api(Post::PATH), Post::ROUTES())
+        .mount( &format_api(Bucket::PATH), Bucket::ROUTES())
+        .mount( &format_api(Question::PATH), Question::ROUTES())
+        .mount( &format_api(Answer::PATH), Answer::ROUTES())
+
 
 }
 

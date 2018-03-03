@@ -78,7 +78,6 @@ fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, co
 impl Routable for Question {
     const ROUTES: &'static Fn() -> Vec<Route> = &|| {
         routes![
-            get_questions_for_bucket,
             create_question,
             get_random_unanswered_question,
             get_questions_for_bucket,
