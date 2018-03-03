@@ -91,6 +91,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
     }
 }
 
+/// Derive a macro that implements the error handling for DB types.
 #[proc_macro_derive(ErrorHandler)]
 pub fn error_handler(input: TokenStream) -> TokenStream {
     // Parse the string representation
@@ -105,6 +106,8 @@ pub fn error_handler(input: TokenStream) -> TokenStream {
 fn impl_error_handler( ast: &syn::DeriveInput) -> quote::Tokens {
     let name: &syn::Ident = &ast.ident;
 
+    // Convert the name of the class into a string, so that it may be used
+    // to identify what DB method went wrong
     quote!(
         impl ErrorFormatter for #name {
             fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
