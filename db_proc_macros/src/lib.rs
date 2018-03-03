@@ -1,5 +1,5 @@
 #![feature(proc_macro)]
-#![recursion_limit="128"]
+#![recursion_limit="256"]
 extern crate proc_macro;
 extern crate syn;
 #[macro_use]
@@ -68,6 +68,22 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .load::<#name>(conn.deref())
                     .map_err(#name::handle_error)
             }
+
+            // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<#name>, WeekendAtJoesError> {
+            //     use schema::#table_name::dsl::*;
+            //     use diesel::associations::HasTable;
+            //     use diesel::RunQueryDsl;
+            //     use diesel::prelude::*;
+            //     use db::diesel_extensions::pagination::Paginate;
+
+            //     #table_name ::tab
+            //         .paginate(page_index)
+            //         .per_page(page_size)
+            //         .load_and_count_pages(conn.deref());
+
+            //     unimplemented!()
+            // }
+
         }
 
         impl<'a> macro_Deletable<'a> for #name {

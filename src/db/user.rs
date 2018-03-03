@@ -127,6 +127,19 @@ impl User {
     }
 
 
+    fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> Result<(Vec<User>, i64), WeekendAtJoesError> {
+        use schema::users::dsl::*;
+        use schema::users;
+        use db::diesel_extensions::pagination::Paginate;
+        use diesel::query_builder::Query;
+
+
+        users::table
+            .paginate(page_index.into())
+            .per_page(page_size.into())
+            .load_and_count_pages(conn.deref())
+            .map_err(User::handle_error)
+    }
 
     /// Updates the user's display name.
     pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
@@ -157,6 +170,9 @@ impl User {
     }
 }
 
+use schema;
+use diesel::pg::Pg;
+// impl diesel::query_builder::QueryFragment<Pg> for schema::users::table {}
 
 #[cfg(test)]
 mod test {
