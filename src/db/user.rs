@@ -126,6 +126,44 @@ impl User {
             .map_err(User::handle_error)
     }
 
+    pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
+
+        let user_role_id: i32 = i32::from(user_role);
+
+        User::get_all(conn)
+            .map(|users| {
+                users
+                .into_iter()
+                .filter(|user| user.roles.contains(&user_role_id))
+                .collect()
+            })
+    }
+
+    pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+
+        use schema::users::dsl::*;
+
+        let user = User::get_by_id(user_id, conn)?;
+
+        let user_role_id: i32 = i32::from(user_role);
+        if user.roles.contains(&user_role_id) {
+            // The user already has the id, no need to assign it again.
+            return Ok(user);
+        } else {
+            // Because the user does not have the role, it needs to be added to to its list
+            let mut new_roles = user.roles.clone();
+            new_roles.push(user_role_id);
+
+            let target = users.filter(
+                id.eq(user_id),
+            );
+            diesel::update(target)
+                .set(roles.eq(new_roles))
+                .get_result(conn.deref())
+                .map_err(User::handle_error)
+        }
+    }
+
 
 
     /// Updates the user's display name.

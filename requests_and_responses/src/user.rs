@@ -20,3 +20,8 @@ pub struct UpdateDisplayNameRequest {
     pub new_display_name: String
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UserRoleRequest {
+    pub id: i32,
+    pub user_role: i32
+}
