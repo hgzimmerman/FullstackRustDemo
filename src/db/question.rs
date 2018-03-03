@@ -2,7 +2,6 @@ use schema::questions;
 use error::*;
 use db::Conn;
 use std::ops::Deref;
-use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use db::user::User;
@@ -15,7 +14,6 @@ use rand::{thread_rng, seq};
 use db::Retrievable;
 use db::Deletable;
 use db::answer::AnswerData;
-use diesel::ExpressionMethods;
 use db::Creatable;
 use db::CRD;
 

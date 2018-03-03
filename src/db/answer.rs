@@ -7,12 +7,8 @@ use db::Deletable;
 use db::CRD;
 use db::Conn;
 use error::*;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel;
 use diesel::result::Error;
 use std::ops::Deref;
-use diesel::ExpressionMethods;
 
 
 

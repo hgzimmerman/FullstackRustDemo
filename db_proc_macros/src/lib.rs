@@ -29,9 +29,13 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
     let insertable: syn::Ident = get_value_from_attributes("insertable", &ast.attrs);
 
     quote! {
+
+
         impl Creatable<#insertable> for #name {
             fn create(insert: #insertable, conn: &Conn) -> Result<Self, WeekendAtJoesError> {
                 use schema::#table_name;
+                use diesel;
+                use diesel::RunQueryDsl;
 
                 diesel::insert_into(#table_name ::table)
                     .values(&insert)
@@ -44,6 +48,8 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         impl<'a> Retrievable<'a> for #name {
             fn get_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
                 use schema::#table_name::dsl::*;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
 
                 #table_name
                     .find(item_id)
@@ -55,6 +61,10 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         impl<'a> Deletable<'a> for #name {
             fn delete_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
                 use schema::#table_name::dsl::*;
+                use diesel::ExpressionMethods;
+                use diesel;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
 
                 let target = #table_name.filter(id.eq(item_id));
 

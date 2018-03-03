@@ -6,11 +6,8 @@ use db::Creatable;
 use db::Deletable;
 use db::CRD;
 use std::ops::Deref;
-use diesel;
 use diesel::RunQueryDsl;
-use diesel::QueryDsl;
 use diesel::result::Error;
-use diesel::ExpressionMethods;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd)]
 #[insertable = "NewForum"]
