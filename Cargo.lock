@@ -610,14 +610,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rocket-simpleauth"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "rocket 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "rocket_codegen"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -909,7 +901,6 @@ dependencies = [
  "rand 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "requests_and_responses 0.1.0",
  "rocket 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "rocket-simpleauth 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rocket_codegen 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "rocket_contrib 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust-crypto 0.2.36 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1010,7 +1001,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum regex-syntax 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ad890a5eef7953f55427c50575c680c42841653abd2b028b68cd223d157f62db"
 "checksum ring 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1f2a6dc7fc06a05e6de183c5b97058582e9da2de0c136eafe49609769c507724"
 "checksum rocket 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "531c93452333bc5a13d3cbd776a8cac299215ba23be1583fdb307fef75ae0516"
-"checksum rocket-simpleauth 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2d0de77c391c55d54bc538a69b09b00e3216df15a2e011bce00c007cb186590a"
 "checksum rocket_codegen 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "a7ad25afa7baa27347981fc4d450713d1d9f7533fd5a0c4664519fe661bcd827"
 "checksum rocket_contrib 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "f8c65e9bac3d41a9011adb4adccc819ab4a182657eb5cd478fd0e2a3c1eb7dfe"
 "checksum rust-crypto 0.2.36 (registry+https://github.com/rust-lang/crates.io-index)" = "f76d05d3993fd5f4af9434e8e436db163a12a9d40e1a58a726f27a01dfd12a2a"

@@ -60,6 +60,14 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .first::<#name>(conn.deref())
                     .map_err(#name::handle_error)
             }
+
+            fn get_all(conn: &Conn) -> Result<Vec<#name>, WeekendAtJoesError> {
+                use schema::#table_name::dsl::*;
+                use diesel::RunQueryDsl;
+                #table_name
+                    .load::<#name>(conn.deref())
+                    .map_err(#name::handle_error)
+            }
         }
 
         impl<'a> macro_Deletable<'a> for #name {

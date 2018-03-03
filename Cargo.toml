@@ -10,7 +10,7 @@ db_proc_macros = { path = "db_proc_macros"}
 rocket = "0.3.6"
 rocket_codegen = "0.3.6"
 rocket_contrib = "0.3.6"
-rocket-simpleauth = "0.3.0"
+#rocket-simpleauth = "0.3.0"
 
 diesel = { version = "1.0", features = ["postgres", "uuid", "chrono", "serde_json"] }
 #diesel_codegen = { version = "1.0", features = ["postgresql"] }

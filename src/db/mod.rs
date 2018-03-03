@@ -10,6 +10,7 @@ use std::ops::Deref;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
+use error::ErrorFormatter;
 // use diesel::Insertable;
 // use diesel::Queryable;
 
@@ -91,11 +92,17 @@ pub trait Retrievable<'a> {
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
+
+    fn get_all(conn: &Conn) -> Result<Vec<Self>,WeekendAtJoesError>
+        where
+            Self: 'a + Sized,
+            &'a Self: Identifiable;
 }
 
 pub trait Deletable<'a> {
     fn delete_by_id(id: i32, conn: &Conn) -> Result<Self, WeekendAtJoesError>
     where
+        Self: ErrorFormatter,
         Self: 'a + Sized,
         &'a Self: Identifiable;
 }
