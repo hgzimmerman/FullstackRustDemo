@@ -3,6 +3,8 @@ use rocket::http::Status;
 use rocket::request::Request;
 use diesel::result::Error;
 
+pub type JoeResult<T> = Result<T, WeekendAtJoesError>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum WeekendAtJoesError {
     DatabaseError(Option<String>),

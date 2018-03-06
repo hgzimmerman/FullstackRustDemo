@@ -2,8 +2,6 @@ use schema::answers;
 use db::user::User;
 use db::question::Question;
 use db::Conn;
-use error::*;
-use diesel::result::Error;
 use std::ops::Deref;
 
 

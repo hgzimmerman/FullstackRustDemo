@@ -1,9 +1,7 @@
 use schema::forums;
-use error::*;
 use db::Conn;
 use std::ops::Deref;
 // use diesel::RunQueryDsl;
-use diesel::result::Error;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewForum"]

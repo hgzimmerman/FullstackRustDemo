@@ -7,7 +7,6 @@ use diesel::QueryDsl;
 use db::user::User;
 use db::bucket::Bucket;
 use diesel::BelongingToDsl;
-use diesel::result::Error;
 use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
@@ -42,7 +41,7 @@ pub struct QuestionData {
 
 impl Question {
     /// Creates a new bucket
-    pub fn create_data(new_question: NewQuestion, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+    pub fn create_data(new_question: NewQuestion, conn: &Conn) -> JoeResult<QuestionData> {
 
         let question: Question = Question::create(new_question, conn)?;
         let user = User::get_by_id(question.author_id, conn)?;
@@ -56,7 +55,7 @@ impl Question {
     }
 
     /// Gets a list of all questions across all buckets.
-    pub fn get_questions(conn: &Conn) -> Result<Vec<QuestionData>, WeekendAtJoesError> {
+    pub fn get_questions(conn: &Conn) -> JoeResult<Vec<QuestionData>> {
         use schema::questions::dsl::*;
         use schema::users::dsl::*;
         let questions_and_users = questions
@@ -78,7 +77,7 @@ impl Question {
     }
 
     /// Gets a random question that may have already been answered
-    pub fn get_random_question(bucket_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+    pub fn get_random_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the bucket from which questions will be retrieved.
@@ -119,7 +118,7 @@ impl Question {
     }
 
     /// Gets a random question from the bucket that has not been answered yet.
-    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the bucket from which the questions will be retrieved.
@@ -163,7 +162,7 @@ impl Question {
         })
     }
 
-    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> Result<Vec<QuestionData>, WeekendAtJoesError> {
+    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> JoeResult<Vec<QuestionData>> {
         use schema::users::dsl::*;
         let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
 
@@ -213,7 +212,7 @@ impl Question {
 
 
 
-    pub fn get_full_question(q_id: i32, conn: &Conn) -> Result<QuestionData, WeekendAtJoesError> {
+    pub fn get_full_question(q_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the question

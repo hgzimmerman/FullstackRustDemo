@@ -9,8 +9,6 @@ use std::ops::Deref;
 use schema::users;
 
 use requests_and_responses::user::*;
-use error::*;
-use diesel::result::Error;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 // #[PgType = "Userrole"]
@@ -104,7 +102,7 @@ pub struct NewUser {
 
 impl User {
     /// Gets the user by their user name.
-    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> JoeResult<User> {
         use schema::users::dsl::*;
         info!("Getting user with Name: {}", name);
 
@@ -118,7 +116,7 @@ impl User {
 
     /// Gets a vector of users of length n.
     // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
-    pub fn get_users(num_users: i64, conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
+    pub fn get_users(num_users: i64, conn: &Conn) -> JoeResult<Vec<User>> {
         use schema::users::dsl::*;
         users
             .limit(num_users)
@@ -126,7 +124,7 @@ impl User {
             .map_err(User::handle_error)
     }
 
-    pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> Result<Vec<User>, WeekendAtJoesError> {
+    pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> JoeResult<Vec<User>> {
 
         let user_role_id: i32 = i32::from(user_role);
 
@@ -138,7 +136,7 @@ impl User {
         })
     }
 
-    pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+    pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> JoeResult<User> {
 
         use schema::users::dsl::*;
 
@@ -164,7 +162,7 @@ impl User {
 
 
     /// Updates the user's display name.
-    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> JoeResult<User> {
 
         use schema::users::dsl::*;
         let target = users.filter(
@@ -181,7 +179,7 @@ impl User {
     }
 
     /// Deletes the user by their name.
-    pub fn delete_user_by_name(name: String, conn: &Conn) -> Result<User, WeekendAtJoesError> {
+    pub fn delete_user_by_name(name: String, conn: &Conn) -> JoeResult<User> {
         use schema::users::dsl::*;
 
         let target = users.filter(user_name.eq(name));

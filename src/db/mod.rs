@@ -11,6 +11,8 @@ use rocket::http::Status;
 use rocket::request::{self, FromRequest};
 use rocket::{Request, State, Outcome};
 use error::ErrorFormatter;
+use error::JoeResult;
+use diesel::Identifiable;
 // use diesel::Insertable;
 // use diesel::Queryable;
 
@@ -78,29 +80,27 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
     }
 }
 
-use error::WeekendAtJoesError;
-use diesel::Identifiable;
 
 pub trait Creatable<T> {
-    fn create(insert: T, conn: &Conn) -> Result<Self, WeekendAtJoesError>
+    fn create(insert: T, conn: &Conn) -> JoeResult<Self>
     where
         Self: Sized;
 }
 
 pub trait Retrievable<'a> {
-    fn get_by_id(id: i32, conn: &Conn) -> Result<Self, WeekendAtJoesError>
+    fn get_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
 
-    fn get_all(conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
+    fn get_all(conn: &Conn) -> JoeResult<Vec<Self>>
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
 }
 
 pub trait Deletable<'a> {
-    fn delete_by_id(id: i32, conn: &Conn) -> Result<Self, WeekendAtJoesError>
+    fn delete_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
     where
         Self: ErrorFormatter,
         Self: 'a + Sized,
