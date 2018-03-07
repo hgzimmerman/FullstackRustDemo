@@ -59,28 +59,13 @@ pub struct MinimalThreadData {
 }
 
 impl Thread {
-    /// Locks the thread, preventing posting and editing
-    // TODO consolidate this function and unlock_thread(), by specifiying an additional bool value.
-    pub fn lock_thread(thread_id: i32, conn: &Conn) -> JoeResult<MinimalThreadData> {
+    /// Locks or unlocks the thread, preventing posting and editing if locked
+    pub fn set_lock_status(thread_id: i32, is_locked: bool, conn: &Conn) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
-            .set(locked.eq(true))
-            .get_result(conn.deref())
-            .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_id(thread.author_id, conn)?;
-
-        Ok(MinimalThreadData { thread, user })
-    }
-
-    /// Unlocks the thread, allowing posting and editing again.
-    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> JoeResult<MinimalThreadData> {
-        use schema::threads;
-        use schema::threads::dsl::*;
-        let thread: Thread = diesel::update(threads::table)
-            .filter(id.eq(thread_id))
-            .set(locked.eq(false))
+            .set(locked.eq(is_locked))
             .get_result(conn.deref())
             .map_err(Thread::handle_error)?;
         let user: User = User::get_by_id(thread.author_id, conn)?;
@@ -135,6 +120,7 @@ impl Thread {
     }
 
 
+    /// Creates a thread with an initial post.
     pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::create(new_thread, conn)?;
         let post_data: ChildlessPostData = Post::create_and_get_user(new_post, conn)?;

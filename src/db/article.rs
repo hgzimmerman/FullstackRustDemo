@@ -115,7 +115,9 @@ impl Article {
 
     }
 
-
+    /// Sets the date for the article's publish date.
+    /// If true, it will set the publish datetime to the current time, indicating it is published.
+    /// If false, it will set the publish column to Null, indicating that it has not been published.
     pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> JoeResult<Article> {
         use schema::articles::dsl::*;
         use schema::articles;

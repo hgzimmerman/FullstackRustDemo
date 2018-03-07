@@ -130,6 +130,7 @@ impl User {
             .map_err(User::handle_error)
     }
 
+    /// For the given role, get all users with the that role.
     pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> JoeResult<Vec<User>> {
 
         let user_role_id: i32 = i32::from(user_role);
@@ -142,6 +143,7 @@ impl User {
         })
     }
 
+    /// If the user has their banned flag set, this will return true.
     pub fn is_user_banned(user_id: i32, conn: &Conn) -> JoeResult<bool> {
         use schema::users::dsl::*;
         users
@@ -174,6 +176,8 @@ impl User {
         }
     }
 
+    /// Resets the login failure count to 0.
+    /// This should be called after the user logs in successfully.
     pub fn reset_login_failure_count(user_id: i32, conn: &Conn) -> JoeResult<()> {
         use schema::users::dsl::*;
         let target = users.filter(id.eq(user_id));
@@ -184,6 +188,9 @@ impl User {
         Ok(())
     }
 
+    /// This method is to be called after a user has failed to log in.
+    /// Based on the number of current failed login attempts in a row, it will calculate the locked period.
+    /// It will then store the datetime of unlock, along with an incremented failure count, so that next time it will take longer.
     pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &Conn) -> JoeResult<NaiveDateTime> {
         use schema::users::dsl::*;
 
@@ -207,6 +214,7 @@ impl User {
         return Ok(expire_datetime);
     }
 
+    /// Adds a role to the user.
     pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> JoeResult<User> {
 
         use schema::users::dsl::*;

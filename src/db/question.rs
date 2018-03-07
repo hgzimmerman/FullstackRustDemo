@@ -162,6 +162,7 @@ impl Question {
         })
     }
 
+    /// Gets groupings of questions, users, and answers for a given bucket id.
     pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> JoeResult<Vec<QuestionData>> {
         use schema::users::dsl::*;
         let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
@@ -211,17 +212,27 @@ impl Question {
     }
 
 
-
+    /// Given a question's id, get the question, its answers and user
     pub fn get_full_question(q_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the question
         let question: Question = Question::get_by_id(q_id, conn)?;
 
-        let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
+        // Get the answers and their associated users and format them into answer data.
+        let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
             .inner_join(users)
             .load::<(Answer, User)>(conn.deref())
-            .map_err(Answer::handle_error)?;
+            .map_err(Answer::handle_error)?
+            .into_iter()
+            .map(|x| {
+                AnswerData {
+                    answer: x.0,
+                    user: x.1,
+                }
+            })
+            .collect();
+
         // Get the matching user
         let user: User = users
             .find(question.author_id)
@@ -231,15 +242,7 @@ impl Question {
         Ok(QuestionData {
             question,
             user,
-            answers: answers_and_users
-                .into_iter()
-                .map(|x| {
-                    AnswerData {
-                        answer: x.0,
-                        user: x.1,
-                    }
-                })
-                .collect(),
+            answers: answer_data
         })
     }
 }
