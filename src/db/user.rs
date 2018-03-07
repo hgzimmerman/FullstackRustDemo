@@ -163,12 +163,10 @@ impl User {
                 // Remove the locked status
                 let target = users.filter(id.eq(self.id));
                 diesel::update(target)
-                    .set(
-                        locked.eq(None::<NaiveDateTime>),
-                    )
+                    .set(locked.eq(None::<NaiveDateTime>))
                     .execute(conn.deref())
                     .map_err(User::handle_error)?;
-                    Ok(false)
+                Ok(false)
             }
         } else {
             // No need to remove a lock status that isn't present.
@@ -179,10 +177,10 @@ impl User {
     pub fn reset_login_failure_count(user_id: i32, conn: &Conn) -> JoeResult<()> {
         use schema::users::dsl::*;
         let target = users.filter(id.eq(user_id));
-            diesel::update(target)
-                .set(failed_login_count.eq(0))
-                .execute(conn.deref())
-                .map_err(User::handle_error)?;
+        diesel::update(target)
+            .set(failed_login_count.eq(0))
+            .execute(conn.deref())
+            .map_err(User::handle_error)?;
         Ok(())
     }
 
@@ -198,7 +196,10 @@ impl User {
         let _ = diesel::update(target)
             .set((
                 locked.eq(expire_datetime),
-                failed_login_count.eq(current_failed_attempts + 1) // Increment the failed count
+                failed_login_count.eq(
+                    current_failed_attempts +
+                        1,
+                ), // Increment the failed count
             ))
             .execute(conn.deref())
             .map_err(User::handle_error)?;

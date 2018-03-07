@@ -61,8 +61,13 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 
     // Check if the user is locked.
     // This will clean up any locked status if the lock has already expired.
-    if user.check_if_locked(conn).map_err(|_| LoginError::OtherError("DB error"))? {
-        return Err(LoginError::AccountLocked)
+    if user.check_if_locked(conn).map_err(
+        |_| {
+            LoginError::OtherError("DB error")
+        },
+    )?
+    {
+        return Err(LoginError::AccountLocked);
     }
 
     info!("verifing password: {}", &login_request.password);
