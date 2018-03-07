@@ -5,7 +5,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use std::ops::Deref;
-// use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
 
 use requests_and_responses::user::*;
@@ -85,6 +85,12 @@ pub struct User {
     pub display_name: String,
     /// The stored hash of the password.
     pub password_hash: String,
+    /// If the user is locked, they cannot try to log in until the timer expires.
+    /// If the user fails a password attempt, lock them out for n seconds.
+    pub locked: Option<NaiveDateTime>,
+    pub failed_login_count: i32,
+    /// If the user is banned, they cannot log in without being unbanned.
+    pub banned: bool,
     /// The roles of the user.
     pub roles: Vec<i32>, // currently this is stored as an int. It would be better to store it as an enum, if diesel-enum serialization can be made to work.
 }
@@ -134,6 +140,70 @@ impl User {
                 .filter(|user| user.roles.contains(&user_role_id))
                 .collect()
         })
+    }
+
+    pub fn is_user_banned(user_id: i32, conn: &Conn) -> JoeResult<bool> {
+        use schema::users::dsl::*;
+        users
+            .find(user_id)
+            .select(banned)
+            .first::<bool>(conn.deref())
+            .map_err(User::handle_error)
+    }
+
+    // TODO, refactor this, only implement the db transaction, logic can go in the login method
+    pub fn check_if_locked(&self, conn: &Conn) -> JoeResult<bool> {
+        use schema::users::dsl::*;
+
+        if let Some(l) = self.locked {
+            let current_date = Utc::now().naive_utc();
+            if current_date > l {
+                Ok(true)
+            } else {
+                // Remove the locked status
+                let target = users.filter(id.eq(self.id));
+                diesel::update(target)
+                    .set(
+                        locked.eq(None::<NaiveDateTime>),
+                    )
+                    .execute(conn.deref())
+                    .map_err(User::handle_error)?;
+                    Ok(false)
+            }
+        } else {
+            // No need to remove a lock status that isn't present.
+            Ok(false)
+        }
+    }
+
+    pub fn reset_login_failure_count(user_id: i32, conn: &Conn) -> JoeResult<()> {
+        use schema::users::dsl::*;
+        let target = users.filter(id.eq(user_id));
+            diesel::update(target)
+                .set(failed_login_count.eq(0))
+                .execute(conn.deref())
+                .map_err(User::handle_error)?;
+        Ok(())
+    }
+
+    pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &Conn) -> JoeResult<NaiveDateTime> {
+        use schema::users::dsl::*;
+
+        info!("record_failed_login: setting the expire time and failure count");
+        let current_date = Utc::now().naive_utc();
+        let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
+        let expire_datetime = current_date + Duration::seconds(delay_seconds);
+
+        let target = users.filter(id.eq(user_id));
+        let _ = diesel::update(target)
+            .set((
+                locked.eq(expire_datetime),
+                failed_login_count.eq(current_failed_attempts + 1) // Increment the failed count
+            ))
+            .execute(conn.deref())
+            .map_err(User::handle_error)?;
+
+        return Ok(expire_datetime);
     }
 
     pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> JoeResult<User> {
