@@ -242,7 +242,7 @@ impl Question {
         Ok(QuestionData {
             question,
             user,
-            answers: answer_data
+            answers: answer_data,
         })
     }
 }
