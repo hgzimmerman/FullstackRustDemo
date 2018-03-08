@@ -2,7 +2,9 @@ use schema::messages;
 use db::Conn;
 use std::ops::Deref;
 use chrono::NaiveDateTime;
-// use diesel::RunQueryDsl;
+use diesel::RunQueryDsl;
+use diesel::ExpressionMethods;
+use diesel::QueryDsl;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewMessage"]
@@ -30,4 +32,15 @@ pub struct NewMessage {
     pub create_date: NaiveDateTime,
 }
 
-impl Message {}
+impl Message {
+
+    fn get_messages_for_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
+        use schema::messages::dsl::*;
+        messages
+            .filter(chat_id.eq(m_chat_id))
+            .order(create_date)
+            .load::<Message>(conn.deref())
+            .map_err(Message::handle_error)
+    }
+
+}
