@@ -48,14 +48,13 @@ pub struct NewJunctionChatUsers {
 }
 
 impl Chat {
-
     pub fn add_user_to_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<()> {
         // use schema::junction_chat_users::dsl::*;
         use schema::junction_chat_users;
 
         let junction = NewJunctionChatUsers {
             chat_id: m_chat_id,
-            user_id: m_user_id
+            user_id: m_user_id,
         };
 
         diesel::insert_into(junction_chat_users::table)
@@ -91,5 +90,4 @@ impl Chat {
             .load::<Chat>(conn.deref())
             .map_err(Chat::handle_error)
     }
-
 }

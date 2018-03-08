@@ -33,7 +33,6 @@ pub struct NewMessage {
 }
 
 impl Message {
-
     fn get_messages_for_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
         use schema::messages::dsl::*;
         messages
@@ -42,5 +41,4 @@ impl Message {
             .load::<Message>(conn.deref())
             .map_err(Message::handle_error)
     }
-
 }
