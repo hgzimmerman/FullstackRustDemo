@@ -12,3 +12,5 @@ pub mod thread;
 pub mod bucket;
 pub mod question;
 pub mod answer;
+pub mod chat;
+pub mod message;
