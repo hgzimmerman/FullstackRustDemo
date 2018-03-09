@@ -80,7 +80,7 @@ fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, _user: Norma
 #[get("/belonging_to_user")]
 fn get_chats_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MinimalChatResponse>>> {
     Chat::get_chats_user_is_in(user.user_id, &conn)
-        .convert_inner_vec::<MinimalChatResponse>()
+        .map_vec::<MinimalChatResponse>()
         .map(Json)
 }
 

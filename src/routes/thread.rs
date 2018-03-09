@@ -11,6 +11,7 @@ use requests_and_responses::thread::MinimalThreadResponse;
 use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
+use error::VectorMappable;
 
 use db::thread::{MinimalThreadData, ThreadData};
 
@@ -103,12 +104,13 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     // TODO move the 25 into a parameter
     // TODO make this more efficient by doing a join in the database method
     Thread::get_threads_in_forum(forum_id, 25, &conn)
-        .map(|threads| {
-            threads
-                .into_iter()
-                .map(MinimalThreadResponse::from)
-                .collect()
-        })
+        .map_vec::<MinimalThreadResponse>()
+        // .map(|threads| {
+        //     threads
+        //         .into_iter()
+        //         .map(MinimalThreadResponse::from)
+        //         .collect()
+        // })
         .map(Json)
 }
 

@@ -4,6 +4,7 @@ use rocket::Route;
 
 use db::question::*;
 use error::WeekendAtJoesError;
+use error::VectorMappable;
 use db::Conn;
 use requests_and_responses::question::*;
 use requests_and_responses::answer::*;
@@ -42,12 +43,7 @@ impl From<NewQuestionRequest> for NewQuestion {
 fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
 
     Question::get_questions_for_bucket(bucket_id, &conn)
-        .map(|questions| {
-            questions
-                .into_iter()
-                .map(QuestionResponse::from)
-                .collect()
-        })
+        .map_vec::<QuestionResponse>()
         .map(Json)
 }
 
