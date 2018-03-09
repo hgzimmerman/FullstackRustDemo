@@ -42,41 +42,42 @@ pub struct JunctionChatUsers {
 
 #[derive(Insertable, Debug)]
 #[table_name = "junction_chat_users"]
-pub struct NewJunctionChatUsers {
+pub struct ChatUserAssociation {
     pub chat_id: i32,
     pub user_id: i32,
 }
 
+pub struct ChatData {
+    pub chat: Chat,
+    pub leader: User,
+    pub members: Vec<User>,
+}
+
 impl Chat {
-    pub fn add_user_to_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<()> {
+    pub fn add_user_to_chat(association: ChatUserAssociation, conn: &Conn) -> JoeResult<()> {
         use schema::junction_chat_users;
 
-        let junction = NewJunctionChatUsers {
-            chat_id: m_chat_id,
-            user_id: m_user_id,
-        };
-
         diesel::insert_into(junction_chat_users::table)
-            .values(&junction)
+            .values(&association)
             .execute(conn.deref())
             .map_err(Chat::handle_error)?;
 
         Ok(())
     }
 
-    pub fn remove_user_from_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<()> {
+    pub fn remove_user_from_chat(association: ChatUserAssociation, conn: &Conn) -> JoeResult<()> {
         use schema::junction_chat_users::dsl::*;
         use schema::junction_chat_users;
 
         diesel::delete(junction_chat_users::table)
-            .filter(chat_id.eq(m_chat_id))
-            .filter(user_id.eq(m_user_id))
+            .filter(chat_id.eq(association.chat_id))
+            .filter(user_id.eq(association.user_id))
             .execute(conn.deref())
             .map_err(Chat::handle_error)?;
         Ok(())
     }
 
-    pub fn get_users_in_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<User>> {
+    fn get_users_in_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<User>> {
         use schema::junction_chat_users::dsl::*;
         // use schema::users::dsl::*;
         use schema::users;
@@ -87,6 +88,18 @@ impl Chat {
             .select(users::all_columns)
             .load::<User>(conn.deref())
             .map_err(Chat::handle_error)
+    }
+
+    pub fn get_full_chat(chat_id: i32, conn: &Conn) -> JoeResult<ChatData> {
+        let chat: Chat = Chat::get_by_id(chat_id, &conn)?;
+        let leader: User = User::get_by_id(chat.leader_id, &conn)?;
+        let chat_users: Vec<User> = Chat::get_users_in_chat(chat_id, &conn)?;
+
+        Ok(ChatData {
+            chat,
+            leader,
+            members: chat_users,
+        })
     }
 
     pub fn get_chats_user_is_in(m_user_id: i32, conn: &Conn) -> JoeResult<Vec<Chat>> {
