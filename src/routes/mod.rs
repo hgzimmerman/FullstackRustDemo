@@ -11,6 +11,7 @@ pub mod thread;
 pub mod bucket;
 pub mod question;
 pub mod answer;
+pub mod chat;
 
 pub use self::article::*;
 pub use self::static_file::*;
@@ -21,6 +22,7 @@ pub use self::forum::*;
 // pub use self::post::*;
 // pub use self::thread::*;
 pub use self::bucket::*;
+
 
 use rocket::Route;
 
