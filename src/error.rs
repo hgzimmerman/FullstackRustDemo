@@ -39,14 +39,14 @@ pub enum WeekendAtJoesError {
     IllegalToken,
     /// The expired field in the token is in the past
     ExpiredToken,
-    /// The request did not have a token
+    /// The request did not have a token.
     MissingToken,
 }
 
 pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) -> WeekendAtJoesError {
     match diesel_error {
         Error::NotFound => WeekendAtJoesError::NotFound { type_name },
-        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", diesel_error))),
+        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", diesel_error))) // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
     }
 }
 

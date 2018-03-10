@@ -109,6 +109,8 @@ pub trait Retrievable<'a> {
 }
 
 pub trait Deletable<'a> {
+    /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
+    /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
     fn delete_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
     where
         Self: ErrorFormatter,
