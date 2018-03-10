@@ -28,7 +28,7 @@ impl From<MessageData> for MessageResponse {
 
 #[get("/<chat_id>")]
 fn get_messages_for_chat(chat_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
-    if ! Chat::is_user_in_chat(chat_id, user.user_id, &conn)? {
+    if !Chat::is_user_in_chat(chat_id, user.user_id, &conn)? {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
