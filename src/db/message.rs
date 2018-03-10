@@ -9,6 +9,7 @@ use db::user::User;
 use diesel::BelongingToDsl;
 use db::chat::Chat;
 use diesel::GroupedBy;
+use db::diesel_extensions::pagination::*;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[belongs_to(Message, foreign_key = "reply_id")]
@@ -46,15 +47,53 @@ pub struct MessageData {
 }
 
 impl Message {
-    pub fn get_messages_for_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
-        use schema::messages::dsl::*;
-        use schema::users;
+    // pub fn get_paginated(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
+    //     use schema::messages::dsl::*;
+    //     use schema::messages;
+    //     use db::diesel_extensions::pagination::Paginate;
+    //     use diesel::query_builder::Query;
+    //     use diesel::prelude::*;
+    //     use schema::users::dsl::*;
+    //     use schema::users;
 
-        let messages_and_users: Vec<(Message, User)> = messages
+    //     messages::table
+    //         .inner_join(users::table)
+    //         .filter(chat_id.eq(m_chat_id))
+    //         // .filter(users::id.gt(0))
+    //         .select((messages::all_columns, users::all_columns))
+    //         .paginate(page_index.into())
+    //         .per_page(page_size.into())
+    //         .load_and_count_pages::<(Message, User)>(conn.deref())
+    //         .map_err(Message::handle_error);
+
+    //     // users::table
+    //     //     .inner_join(messages::table)
+    //     //     .filter(users::id.eq(m_chat_id))
+    //     //     // .filter(users::id.gt(0))
+    //     //     .select((users::all_columns, messages::all_columns))
+    //     //     .paginate(page_index.into())
+    //     //     .per_page(page_size.into())
+    //     //     .load_and_count_pages::<(User, Message)>(conn.deref())
+    //     //     .map_err(Message::handle_error);
+
+    //     unimplemented!()
+    // }
+
+    pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
+        use schema::messages::dsl::*;
+        use schema::messages;
+        use schema::users::dsl::*;
+        use schema::users;
+        use diesel::prelude::*;
+
+        let (messages_and_users, _count): (Vec<(Message, User)>, i64) = messages::table
             .inner_join(users::table)
+            .order(messages::create_date)
             .filter(chat_id.eq(m_chat_id))
-            .order(create_date)
-            .load::<(Message, User)>(conn.deref())
+            .select((messages::all_columns, users::all_columns))
+            .paginate(page_index.into())
+            .per_page(page_size.into())
+            .load_and_count_pages::<(Message, User)>(conn.deref()) // Apparently just `load` doesn't work, so we use this instead and throw away the count.
             .map_err(Message::handle_error)?;
 
         let collected_messages: Vec<Message> = messages_and_users

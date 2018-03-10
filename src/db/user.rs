@@ -239,7 +239,7 @@ impl User {
     }
 
 
-    fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> Result<(Vec<User>, i64), WeekendAtJoesError> {
+    fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<(Vec<User>, i64)> {
         use schema::users::dsl::*;
         use schema::users;
         use db::diesel_extensions::pagination::Paginate;
@@ -247,9 +247,10 @@ impl User {
 
 
         users::table
+            .filter(id.gt(0)) // NoOp filter to get the paginate function to work.
             .paginate(page_index.into())
             .per_page(page_size.into())
-            .load_and_count_pages(conn.deref())
+            .load_and_count_pages::<User>(conn.deref())
             .map_err(User::handle_error)
     }
 
