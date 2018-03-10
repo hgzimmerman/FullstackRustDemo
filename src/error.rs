@@ -46,7 +46,7 @@ pub enum WeekendAtJoesError {
 pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) -> WeekendAtJoesError {
     match diesel_error {
         Error::NotFound => WeekendAtJoesError::NotFound { type_name },
-        _ => WeekendAtJoesError::DatabaseError(None),
+        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", diesel_error))),
     }
 }
 

@@ -64,8 +64,8 @@ impl From<NewUserRequest> for NewUser {
             display_name: new_user_request.display_name,
             password_hash: hash_password(&new_user_request.plaintext_password)
                 .expect("Couldn't hash password"),
-            // token_key: None,
-            // token_expire_date: None,
+            failed_login_count: 0,
+            banned: false,
             roles: vec![1],
         }
     }
@@ -114,7 +114,10 @@ pub struct NewUser {
     pub user_name: String,
     pub display_name: String,
     pub password_hash: String,
+    pub failed_login_count: i32,
+    pub banned: bool,
     pub roles: Vec<i32>,
+    // pub locked: Option<NaiveDateTime>,
 }
 
 
@@ -319,13 +322,13 @@ mod test {
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into(),
         };
-        let response: UserResponse = User::create_user(new_user, &conn)
+        let response: UserResponse = User::create(new_user.into(), &conn)
             .unwrap()
             .into();
         assert_eq!(user_name.clone(), response.user_name);
 
         // Get User
-        let response: UserResponse = User::get_user(response.id, &conn)
+        let response: UserResponse = User::get_by_id(response.id, &conn)
             .unwrap()
             .into();
         assert_eq!(user_name.clone(), response.user_name);

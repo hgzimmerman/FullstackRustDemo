@@ -159,6 +159,7 @@ mod test {
     use rocket::http::Header;
     use rocket::http::ContentType;
     use init_rocket;
+    use db::Creatable;
     #[test]
     fn login_test() {
 
@@ -174,7 +175,7 @@ mod test {
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into(),
         };
-        let _: UserResponse = User::create_user(new_user, &conn)
+        let _: UserResponse = User::create(new_user.into(), &conn)
             .unwrap()
             .into();
 
@@ -209,7 +210,7 @@ mod test {
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into(),
         };
-        let _: UserResponse = User::create_user(new_user, &conn)
+        let _: UserResponse = User::create(new_user.into(), &conn)
             .unwrap()
             .into();
 
@@ -286,7 +287,7 @@ mod test {
 
         let jwt = Jwt {
             user_name: "name".to_string(),
-            token_key: "aoeuaoeu".to_string(),
+            user_id: 1,
             user_roles: vec![UserRole::Unprivileged],
             token_expire_date: Utc::now().naive_utc(),
         };
@@ -309,7 +310,7 @@ mod test {
         // create a normal jwt
         let jwt = Jwt {
             user_name: "name".to_string(),
-            token_key: "aoeuaoeu".to_string(),
+            user_id: 1,
             user_roles: vec![UserRole::Unprivileged],
             token_expire_date: Utc::now().naive_utc(),
         };
