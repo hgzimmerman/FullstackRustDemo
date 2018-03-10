@@ -7,14 +7,14 @@ CREATE TABLE buckets (
 
 CREATE TABLE questions (
     id SERIAL PRIMARY KEY,
-    bucket_id INTEGER REFERENCES buckets(id) NOT NULL,
-    author_id INTEGER REFERENCES users(id) NOT NULL,
+    bucket_id INTEGER NOT NULL REFERENCES buckets(id) ON DELETE CASCADE,
+    author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     question_text VARCHAR NOT NULL
 );
 
 CREATE TABLE answers (
     id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) NOT NULL,
-    author_id INTEGER REFERENCES users(id) NOT NULL,
-    answer_text VARCHAR
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    answer_text VARCHAR -- The "answer" entity doesn't actually need to contain text.
 );

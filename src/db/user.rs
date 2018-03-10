@@ -350,7 +350,7 @@ mod test {
     }
 
     #[test]
-    fn orphan_test() {
+    fn cascade_delete_test() {
         use db::article::{NewArticle, Article};
 
         let pool = db::init_pool();
@@ -358,11 +358,8 @@ mod test {
         let user_name: String = String::from("OrphanTest-UserName");
 
         let conn = Conn::new(pool.get().unwrap());
-        // Article::delete_by_id(2, &conn).unwrap();
-        // println!("{:?}", Article::get_all(&conn));
         let _ = User::delete_user_by_name(user_name.clone(), &conn);
 
-        // panic!("Expected fail");
         let new_user: NewUser = NewUserRequest {
             user_name: user_name.clone(),
             display_name: String::from("DisplayName"),
@@ -378,20 +375,16 @@ mod test {
             author_id: user.id,
         };
 
-        let child_article: Article = Article::create(new_article, &conn)
+        let _child_article: Article = Article::create(new_article, &conn)
             .unwrap();
 
-        // The user should not be able to be deleted because an article references it.
+        // Cascade delete should take care of the child article
         assert!(
             User::delete_by_id(user.id, &conn)
-                .is_err(),
+                .is_ok(),
             true
         );
 
-        Article::delete_by_id(child_article.id, &conn)
-            .expect("Expected to be able to delete article.");
-        User::delete_by_id(user.id, &conn)
-            .expect("Should be able to delete user after dependent article is deleted.");
     }
 
 }
