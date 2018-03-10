@@ -29,7 +29,7 @@ pub struct Message {
 }
 
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name = "messages"]
 pub struct NewMessage {
     pub author_id: i32,
@@ -40,6 +40,7 @@ pub struct NewMessage {
     pub create_date: NaiveDateTime,
 }
 
+#[derive(Debug, Clone)]
 pub struct MessageData {
     pub message: Message,
     pub author: User,
@@ -78,6 +79,48 @@ impl Message {
 
     //     unimplemented!()
     // }
+
+    pub fn create_message(new_message: NewMessage, conn: &Conn) -> JoeResult<MessageData> {
+        let message = Message::create(new_message, conn)?;
+        let author = User::get_by_id(message.author_id, conn)?;
+        // Get only the first reply in the possible chain of replies.
+        if message.reply_id.is_some() {
+            // The unwrap is safe because the if_some contition was checked above
+            let reply = Message::get_message(message.reply_id.unwrap(), false, conn)?;
+            Ok(MessageData {
+                message,
+                author,
+                reply: Some(Box::new(reply)),
+            })
+        } else {
+            Ok(MessageData {
+                message,
+                author,
+                reply: None,
+            })
+        }
+    }
+
+    fn get_message(id: i32, with_reply: bool, conn: &Conn) -> JoeResult<MessageData> {
+        let message = Message::get_by_id(id, conn)?;
+        let author = User::get_by_id(message.author_id, conn)?;
+        // If the parameter instructs to get the reply, and the reply id exists, get it.
+        if with_reply && message.reply_id.is_some() {
+            // The unwrap is safe because the if_some contition was checked above
+            let reply: MessageData = Message::get_message(message.reply_id.unwrap(), with_reply, conn)?;
+            Ok(MessageData {
+                message,
+                author,
+                reply: Some(Box::new(reply)),
+            })
+        } else {
+            Ok(MessageData {
+                message,
+                author,
+                reply: None,
+            })
+        }
+    }
 
     pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
