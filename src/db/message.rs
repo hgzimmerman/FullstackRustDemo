@@ -8,6 +8,7 @@ use diesel::QueryDsl;
 use db::user::User;
 use diesel::BelongingToDsl;
 use db::chat::Chat;
+use diesel::GroupedBy;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[belongs_to(Message, foreign_key = "reply_id")]
@@ -44,14 +45,9 @@ pub struct MessageData {
     pub reply: Option<Box<MessageData>>,
 }
 
-use diesel::JoinOnDsl;
-use diesel::query_dsl::InternalJoinDsl;
-use diesel::NullableExpressionMethods;
-use diesel::GroupedBy;
 impl Message {
     pub fn get_messages_for_chat(m_chat_id: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
-        use schema::messages;
         use schema::users;
 
         let messages_and_users: Vec<(Message, User)> = messages

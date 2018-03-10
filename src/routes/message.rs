@@ -3,14 +3,12 @@ use routes::Routable;
 use rocket::Route;
 
 use db::message::*;
-use db::user::User;
 use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::message::*;
 use auth::user_authorization::NormalUser;
-use db::Retrievable;
-use db::Creatable;
 use error::*;
+use db::chat::Chat;
 
 impl From<MessageData> for MessageResponse {
     fn from(data: MessageData) -> MessageResponse {
@@ -29,7 +27,11 @@ impl From<MessageData> for MessageResponse {
 
 
 #[get("/<chat_id>")]
-fn get_messages_for_chat(chat_id: i32, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
+fn get_messages_for_chat(chat_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
+    if ! Chat::is_user_in_chat(chat_id, user.user_id, &conn)? {
+        return Err(WeekendAtJoesError::BadRequest);
+    }
+
     Message::get_messages_for_chat(chat_id, &conn)
         .map_vec::<MessageResponse>()
         .map(Json)

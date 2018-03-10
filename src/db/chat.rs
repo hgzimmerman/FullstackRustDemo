@@ -90,7 +90,7 @@ impl Chat {
             .map_err(Chat::handle_error)
     }
 
-    fn is_user_in_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<bool> {
+    pub fn is_user_in_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<bool> {
         use schema::junction_chat_users::dsl::*;
         let junction = junction_chat_users
             .filter(user_id.eq(m_user_id))
