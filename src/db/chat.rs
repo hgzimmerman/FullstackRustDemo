@@ -90,6 +90,16 @@ impl Chat {
             .map_err(Chat::handle_error)
     }
 
+    fn is_user_in_chat(m_chat_id: i32, m_user_id: i32, conn: &Conn) -> JoeResult<bool> {
+        use schema::junction_chat_users::dsl::*;
+        let junction = junction_chat_users
+            .filter(user_id.eq(m_user_id))
+            .filter(chat_id.eq(m_chat_id))
+            .load::<JunctionChatUsers>(conn.deref())
+            .map_err(Chat::handle_error)?;
+        Ok(junction.get(0).is_some())
+    }
+
     pub fn get_full_chat(chat_id: i32, conn: &Conn) -> JoeResult<ChatData> {
         let chat: Chat = Chat::get_by_id(chat_id, &conn)?;
         let leader: User = User::get_by_id(chat.leader_id, &conn)?;

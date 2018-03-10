@@ -76,17 +76,21 @@ impl Message {
         let message_data = messages_and_users
             .into_iter()
             .zip(replied)
-            .map(|x: ((Message,User), Vec<(Message, User)>) |{
-                MessageData{
+            .map(|x: ((Message, User), Vec<(Message, User)>)| {
+                MessageData {
                     message: (x.0).0,
                     author: (x.0).1,
-                    reply: (x.1).get(0).cloned()
-                    .map(|y| MessageData{
-                        message: y.0,
-                        author: y.1,
-                        reply: None
-                    })
-                    .map(Box::new)
+                    reply: (x.1)
+                        .get(0)
+                        .cloned()
+                        .map(|y| {
+                            MessageData {
+                                message: y.0,
+                                author: y.1,
+                                reply: None,
+                            }
+                        })
+                        .map(Box::new),
                 }
             })
             .collect::<Vec<MessageData>>();
