@@ -18,7 +18,9 @@ CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
     thread_id INTEGER NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
     author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    parent_id INTEGER REFERENCES posts(id) ON DELETE SET NULL, -- Not all posts have a parent, if the parent is deleted, set this to null
+    -- Not all posts have a parent, if the parent is deleted, delete this as well,
+    -- as a null parent signifies the post is the OP for a thread.
+    parent_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
     created_date TIMESTAMP NOT NULL,
     modified_date TIMESTAMP,
     content VARCHAR NOT NULL,
