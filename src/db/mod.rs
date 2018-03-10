@@ -102,6 +102,10 @@ pub trait Retrievable<'a> {
         Self: 'a + Sized,
         &'a Self: Identifiable;
 
+    fn exists(id: i32, conn: &Conn) -> JoeResult<bool>
+    where
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
 
     // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
     //     where

@@ -70,6 +70,19 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .map_err(#name::handle_error)
             }
 
+            fn exists(item_id: i32, conn: &Conn) -> JoeResult<bool> {
+                use schema::#table_name;
+                use schema::#table_name::dsl::*;
+                use diesel::select;
+                use diesel::dsl::exists;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
+                use diesel::ExpressionMethods;
+
+                select(exists(#table_name.filter(#table_name::id.eq(item_id))))
+                    .get_result::<bool>(conn.deref())
+                    .map_err(#name::handle_error)
+            }
             // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<#name>, WeekendAtJoesError> {
             //     use schema::#table_name::dsl::*;
             //     use diesel::associations::HasTable;

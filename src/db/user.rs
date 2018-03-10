@@ -263,7 +263,6 @@ impl User {
         }
     }
 
-
     /// Gets a number of users at specified offsets.
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<(Vec<User>, i64)> {
         use schema::users::dsl::*;
