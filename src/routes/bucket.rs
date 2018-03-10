@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 use db::Retrievable;
 use db::bucket::*;
-use error::WeekendAtJoesError;
+use error::JoeResult;
 use db::Conn;
 use requests_and_responses::bucket::*;
 use auth::user_authorization::AdminUser;
@@ -25,16 +25,19 @@ impl From<NewBucketRequest> for NewBucket {
     }
 }
 
+/// Get all of the available buckets.
 #[get("/buckets")]
-fn get_buckets(conn: Conn) -> Result<Json<Vec<BucketResponse>>, WeekendAtJoesError> {
+fn get_buckets(conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
 
     Bucket::get_all(&conn)
         .map(convert_vector)
         .map(Json)
 }
 
+/// Creates a new bucket.
+/// The bucket represents a set of questions users can answer.
 #[post("/create", data = "<new_bucket>")]
-fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<BucketResponse>, WeekendAtJoesError> {
+fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: AdminUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
     Bucket::create(new_bucket.into_inner().into(), &conn)
         .map(BucketResponse::from)
         .map(Json)

@@ -23,13 +23,14 @@ impl From<Article> for ArticleResponse {
         }
     }
 }
-
+/// Gets an article by id.
 #[get("/<article_id>", rank = 0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     Article::get_by_id(article_id, &conn)
         .map(ArticleResponse::from)
         .map(Json)
 }
+
 
 #[get("/articles/<number_of_articles>", rank = 0)]
 fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
@@ -38,6 +39,7 @@ fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Ve
         .map(Json)
 }
 
+/// Gets the articles that haven't been published yet that are associated with the logged in user.
 #[get("/users_unpublished_articles")]
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
@@ -46,6 +48,8 @@ fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Res
         .map(Json)
 }
 
+/// Creates a new article.
+/// The user id of the user must match the author id of the article being created.
 #[post("/", data = "<new_article>")]
 fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     if new_article.author_id != user.user_id {
@@ -59,6 +63,8 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
         .map(Json)
 }
 
+/// Performs an update on an article.
+/// The user id of the user must match the article being updated.
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_by_id(update_article_request.id, &conn)?;
@@ -96,7 +102,7 @@ fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoCo
         .map(|_| NoContent)
 }
 
-// Given an article id, set the corresponding article's date_published colum to NULL.
+/// Given an article id, set the corresponding article's date_published colum to NULL.
 #[put("/unpublish/<article_id>")]
 fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_by_id(article_id, &conn)?;

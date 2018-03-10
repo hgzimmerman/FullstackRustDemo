@@ -14,7 +14,6 @@ use db::Creatable;
 use error::*;
 
 
-
 impl From<ChatUserAssociationRequest> for ChatUserAssociation {
     fn from(request: ChatUserAssociationRequest) -> ChatUserAssociation {
         ChatUserAssociation {
@@ -58,6 +57,8 @@ impl From<NewChatRequest> for NewChat {
 
 
 
+/// Creates a new chat.
+/// This operation is available to any user.
 #[post("/create", data = "<new_chat>")]
 fn create_chat(new_chat: Json<NewChatRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<MinimalChatResponse>> {
     Chat::create(new_chat.into_inner().into(), &conn)
@@ -65,18 +66,23 @@ fn create_chat(new_chat: Json<NewChatRequest>, _user: NormalUser, conn: Conn) ->
         .map(Json)
 }
 
+/// Adds the user to the chat.
+/// This operation is available to any user.
 #[put("/add_user", data = "<request>")]
 fn add_user_to_chat(request: Json<ChatUserAssociationRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
     Chat::add_user_to_chat(request.into_inner().into(), &conn)
         .map(Json)
 }
 
+/// Removes the user from the chat.
+/// This operation is available to any user.
 #[put("/remove_user", data = "<request>")]
 fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
     Chat::remove_user_from_chat(request.into_inner().into(), &conn)
         .map(Json)
 }
 
+/// Gets all of the chats (name and Id) that are associated with the user.
 #[get("/belonging_to_user")]
 fn get_chats_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MinimalChatResponse>>> {
     Chat::get_chats_user_is_in(user.user_id, &conn)
@@ -84,6 +90,7 @@ fn get_chats_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<Minima
         .map(Json)
 }
 
+/// Gets the full details of a chat for a user.
 #[get("/<chat_id>")]
 fn get_chat(chat_id: i32, _user: NormalUser, conn: Conn) -> JoeResult<Json<ChatResponse>> {
     Chat::get_full_chat(chat_id, &conn)

@@ -78,7 +78,7 @@ impl From<User> for FullUserResponse {
             display_name: user.display_name,
             id: user.id,
             banned: user.banned,
-            locked: user.locked.is_some()
+            locked: user.locked.is_some(),
         }
     }
 }

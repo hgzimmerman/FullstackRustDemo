@@ -35,6 +35,8 @@ impl From<NewAnswerRequest> for NewAnswer {
 }
 
 
+/// Answers a bucket question by attaching the answer to the existing question.
+/// This operation is available to any user.
 #[post("/create", data = "<new_answer>")]
 fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, WeekendAtJoesError> {
     let new_answer: NewAnswer = new_answer.into_inner().into();
