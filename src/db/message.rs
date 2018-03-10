@@ -67,7 +67,7 @@ impl Message {
             .collect();
 
         // not every message will have a corresponding reply, so this vec should be sparce
-        let replied = Message::belonging_to(&collected_messages)
+        let replied = Message::belonging_to(&collected_messages) // I'm not 100% sure that this gets the intended messages. Write a test to check.
             .inner_join(users::table)
             .load::<(Message, User)>(conn.deref())
             .map_err(Message::handle_error)?
@@ -76,7 +76,6 @@ impl Message {
         let message_data = messages_and_users
             .into_iter()
             .zip(replied)
-            // .collect::<Vec<((Message,User), Vec<Message>)>>(
             .map(|x: ((Message,User), Vec<(Message, User)>) |{
                 MessageData{
                     message: (x.0).0,

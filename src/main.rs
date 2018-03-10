@@ -59,6 +59,8 @@ use db::post::Post;
 use db::bucket::Bucket;
 use db::question::Question;
 use db::answer::Answer;
+use db::chat::Chat;
+use db::message::Message;
 
 extern crate requests_and_responses;
 
@@ -108,8 +110,8 @@ pub fn init_rocket() -> Rocket {
         .mount(&format_api(Bucket::PATH), Bucket::ROUTES())
         .mount(&format_api(Question::PATH), Question::ROUTES())
         .mount(&format_api(Answer::PATH), Answer::ROUTES())
-
-
+        .mount(&format_api(Chat::PATH), Chat::ROUTES())
+        .mount(&format_api(Message::PATH), Message::ROUTES())
 }
 
 
