@@ -239,12 +239,11 @@ impl User {
     }
 
 
-    fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<(Vec<User>, i64)> {
+    /// Gets a number of users at specified offsets.
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<(Vec<User>, i64)> {
         use schema::users::dsl::*;
         use schema::users;
         use db::diesel_extensions::pagination::Paginate;
-        use diesel::query_builder::Query;
-
 
         users::table
             .filter(id.gt(0)) // NoOp filter to get the paginate function to work.
@@ -283,9 +282,6 @@ impl User {
     }
 }
 
-use schema;
-use diesel::pg::Pg;
-// impl diesel::query_builder::QueryFragment<Pg> for schema::users::table {}
 
 #[cfg(test)]
 mod test {

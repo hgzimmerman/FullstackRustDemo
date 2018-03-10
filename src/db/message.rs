@@ -2,13 +2,13 @@ use schema::messages;
 use db::Conn;
 use std::ops::Deref;
 use chrono::NaiveDateTime;
-use diesel::RunQueryDsl;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
+// use diesel::RunQueryDsl;
+// use diesel::ExpressionMethods;
+// use diesel::QueryDsl;
 use db::user::User;
-use diesel::BelongingToDsl;
+// use diesel::BelongingToDsl;
 use db::chat::Chat;
-use diesel::GroupedBy;
+// use diesel::GroupedBy;
 use db::diesel_extensions::pagination::*;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
@@ -82,7 +82,6 @@ impl Message {
     pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
         use schema::messages;
-        use schema::users::dsl::*;
         use schema::users;
         use diesel::prelude::*;
 

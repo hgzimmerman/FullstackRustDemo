@@ -19,9 +19,10 @@ fn get_user(user_id: i32, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoe
 }
 
 // TODO Consider requiring admin access for this.
-#[get("/users/<num_users>")]
-fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
-    User::get_users(num_users, &conn)
+#[get("/users/<index>")]
+fn get_users(index: i32, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
+    User::get_paginated(index, 25, &conn)
+        .map(|x| x.0)
         .map(convert_vector)
         .map(Json)
 }
