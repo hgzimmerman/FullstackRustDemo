@@ -1,6 +1,7 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 #![feature(rand)]
+#![feature(test)]
 #![recursion_limit="128"]
 // #![feature(proc_macro)]
 
@@ -21,6 +22,8 @@ extern crate serde;
 #[macro_use]
 extern crate log;
 extern crate simplelog;
+
+extern crate test;
 
 extern crate frank_jwt;
 

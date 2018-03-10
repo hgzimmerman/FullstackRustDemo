@@ -14,7 +14,9 @@ CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
-    reply_id INTEGER REFERENCES messages(id), -- Not all messages are replies
+    -- If the message this message is replying to is deleted, then this message will still exist
+    -- only it won't point to anything.
+    reply_id INTEGER REFERENCES messages(id) ON DELETE SET NULL, -- Not all messages are replies
     message_content VARCHAR NOT NULL,
     read_flag BOOLEAN NOT NULL,
     create_date TIMESTAMP NOT NULL
