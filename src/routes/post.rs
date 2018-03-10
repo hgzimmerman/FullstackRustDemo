@@ -81,7 +81,8 @@ impl From<ChildlessPostData> for PostData {
     }
 }
 
-
+/// Creates a new post.
+/// This operation is available to any user.
 #[post("/create", data = "<new_post>")]
 fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // check if token user id matches the request user id.
@@ -94,7 +95,9 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
         .map(Json)
 }
 
-
+/// This edits posts.
+/// This operation is available to users.
+/// This will only work if the user is the author of the post.
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
@@ -111,6 +114,8 @@ fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, c
         .map(Json)
 }
 
+/// Censors a post, preventing it from being seen immediately.
+/// This operation is available to moderators.
 #[put("/censor/<post_id>")]
 fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     Post::censor_post(post_id, &conn)
@@ -118,16 +123,12 @@ fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Js
         .map(Json)
 }
 
+/// Gets the posts associated with a user.
+/// Anyone can perform this operation.
 #[get("/users_posts/<user_id>")]
 fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
     Post::get_posts_by_user(user_id, &conn)
         .map_vec::<PostResponse>()
-        // .map(|ok: Vec<ChildlessPostData>| {
-
-        //     ok.into_iter()
-        //         .map(PostResponse::from)
-        //         .collect::<Vec<PostResponse>>()
-        // })
         .map(Json)
 }
 

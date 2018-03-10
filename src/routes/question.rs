@@ -39,6 +39,7 @@ impl From<NewQuestionRequest> for NewQuestion {
     }
 }
 
+/// Get all questions in a given bucket.
 #[get("/questions_in_bucket/<bucket_id>")]
 fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
 
@@ -47,6 +48,7 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
         .map(Json)
 }
 
+/// Gets a random question from the bucket.
 #[get("/random_question/<bucket_id>")]
 fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_random_unanswered_question(bucket_id, &conn)
@@ -54,6 +56,7 @@ fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<Que
         .map(Json)
 }
 
+/// Gets a question from the bucket by id.
 #[get("/<question_id>")]
 fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     Question::get_full_question(question_id, &conn)
@@ -61,6 +64,8 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
         .map(Json)
 }
 
+/// Creates a question and puts it into the bucket.
+/// Any user can put a question into a bucket.
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();

@@ -71,6 +71,18 @@ impl From<NewUserRequest> for NewUser {
     }
 }
 
+impl From<User> for FullUserResponse {
+    fn from(user: User) -> FullUserResponse {
+        FullUserResponse {
+            user_name: user.user_name,
+            display_name: user.display_name,
+            id: user.id,
+            banned: user.banned,
+            locked: user.locked.is_some()
+        }
+    }
+}
+
 
 /// The database's representation of a user.
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]

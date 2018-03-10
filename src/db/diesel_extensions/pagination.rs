@@ -12,13 +12,15 @@ impl<T> Paginate for T {
     fn paginate(self, page: i64) -> Paginated<Self> {
         Paginated {
             query: self,
-            per_page: DEFAULT_PER_PAGE,
+            per_page: PAGINATION_PER_PAGE_DEFAULT,
             page,
         }
     }
 }
 
-const DEFAULT_PER_PAGE: i64 = 10;
+/// By default, a page will contain 10 entries
+pub const PAGINATION_PER_PAGE_DEFAULT: i64 = 10;
+
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct Paginated<T> {

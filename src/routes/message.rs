@@ -25,7 +25,9 @@ impl From<MessageData> for MessageResponse {
 }
 
 
-
+/// Gets messages for a given chat.
+/// This will paginate, returning 25 messages at a time.
+/// This operation is available to users who are part of the chat.
 #[get("/<chat_id>/<index>")]
 fn get_messages_for_chat(chat_id: i32, index: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
     if !Chat::is_user_in_chat(chat_id, user.user_id, &conn)? {
