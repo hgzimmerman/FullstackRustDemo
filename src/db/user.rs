@@ -366,7 +366,7 @@ mod test {
         let new_user: NewUser = NewUserRequest {
             user_name: user_name.clone(),
             display_name: String::from("DisplayName"),
-            plaintext_password: String::from("TestPassword")
+            plaintext_password: String::from("TestPassword"),
         }.into();
 
         let user = User::create(new_user, &conn).unwrap();
@@ -375,16 +375,23 @@ mod test {
             title: String::from("OrphanTest-ArticleTitle"),
             slug: String::from("aah"),
             body: String::from("body"),
-            author_id: user.id
+            author_id: user.id,
         };
 
-        let child_article: Article = Article::create(new_article, &conn).unwrap();
+        let child_article: Article = Article::create(new_article, &conn)
+            .unwrap();
 
         // The user should not be able to be deleted because an article references it.
-        assert!(User::delete_by_id(user.id, &conn).is_err(), true);
+        assert!(
+            User::delete_by_id(user.id, &conn)
+                .is_err(),
+            true
+        );
 
-        Article::delete_by_id(child_article.id, &conn).expect("Expected to be able to delete article.");
-        User::delete_by_id(user.id, &conn).expect("Should be able to delete user after dependent article is deleted.");
+        Article::delete_by_id(child_article.id, &conn)
+            .expect("Expected to be able to delete article.");
+        User::delete_by_id(user.id, &conn)
+            .expect("Should be able to delete user after dependent article is deleted.");
     }
 
 }
