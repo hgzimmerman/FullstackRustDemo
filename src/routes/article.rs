@@ -2,7 +2,6 @@ use rocket::Route;
 use rocket_contrib::Json;
 use super::{Routable, convert_vector};
 use db::Conn;
-use db::Deletable;
 use db::Retrievable;
 use db::Creatable;
 
@@ -79,16 +78,17 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 }
 
 /// Given an article id, delete the row that represents it.
-#[delete("/<article_id>")]
-fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
-    if article_to_update.author_id != user.user_id {
-        return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id." });
-    }
+// #[delete("/<article_id>")]
+// fn delete_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+//     let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
+//     if article_to_update.author_id != user.user_id {
+//         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being deleted does not match the user's id." });
+//     }
 
-    Article::delete_by_id(article_id, &conn)
-        .map(|_| NoContent)
-}
+//     unimplemented!()
+//     // Article::delete_by_id(article_id, &conn)
+//     //     .map(|_| NoContent)
+// }
 
 /// Given an article id, set the corresponding article's date_published column to contain the current date.
 #[put("/publish/<article_id>")]
@@ -122,7 +122,7 @@ impl Routable for Article {
             get_article,
             get_published_articles,
             get_users_unpublished_articles,
-            delete_article,
+            // delete_article
             publish_article,
             unpublish_article,
         ]

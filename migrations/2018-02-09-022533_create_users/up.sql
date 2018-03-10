@@ -9,4 +9,7 @@ CREATE TABLE users (
   failed_login_count Integer NOT NULL,
   banned BOOLEAN NOT NULL,
   roles Integer[] NOT NULL
-)
+  -- updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- SELECT diesel_manage_updated_at('users');

@@ -108,7 +108,7 @@ pub trait Retrievable<'a> {
     //         Self: Sized;
 }
 
-pub trait Deletable<'a> {
+trait Deletable<'a> {
     /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
     /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
     fn delete_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
@@ -120,7 +120,7 @@ pub trait Deletable<'a> {
 
 /// Type tag that indicates that the tagged type can be created, retrieved, and deleted.
 /// This collection of abilities means that it is safe to use in integration tests.
-pub trait CRD<'a, T>
+trait CRD<'a, T>
 where
     Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
 {

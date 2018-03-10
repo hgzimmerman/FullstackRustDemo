@@ -229,6 +229,16 @@ impl User {
         return Ok(expire_datetime);
     }
 
+    pub fn set_ban_status(user_id: i32, is_banned: bool, conn: &Conn) -> JoeResult<User> {
+        use schema::users::dsl::*;
+        let target = users.filter(id.eq(user_id));
+        diesel::update(target)
+            .set(banned.eq(is_banned))
+            .get_result(conn.deref())
+            .map_err(User::handle_error)
+
+    }
+
     /// Adds a role to the user.
     pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> JoeResult<User> {
 
