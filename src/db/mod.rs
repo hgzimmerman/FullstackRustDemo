@@ -126,18 +126,68 @@ where
 {
 }
 
-// Currently broken because I can't access the ids for the elements
-//
-// [cfg(test)]
-// pub fn create_upload_delete<'a, T: 'a, W>(insertable: W, conn: &Conn) -> Result<T, WeekendAtJoesError>
-//     where
-//         T: CRD<'a, W>,
-//         &'a T: Identifiable
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use db::user::*;
+    use db::article::*;
+    use requests_and_responses::user::*;
 
-// {
-//         let inserted: T = T::create(insertable, conn)?;
-//         T::get_by_id(inserted.id(), conn)?;
-//         T::delete_by_id(inserted.id(), conn)?;
 
-//         unimplemented!()
-// }
+    #[test]
+    fn cascade_delete_test() {
+
+        let pool = init_pool();
+
+        let user_name: String = String::from("CascadeDeleteTest-UserName");
+
+        let conn = Conn::new(pool.get().unwrap());
+        let _ = User::delete_user_by_name(user_name.clone(), &conn);
+
+        let new_user: NewUser = NewUserRequest {
+            user_name: user_name.clone(),
+            display_name: String::from("DisplayName"),
+            plaintext_password: String::from("TestPassword"),
+        }.into();
+
+        let user = User::create(new_user, &conn).unwrap();
+
+        let new_article: NewArticle = NewArticle {
+            title: String::from("CascadeDeleteTest-ArticleTitle"),
+            slug: String::from("aah"),
+            body: String::from("body"),
+            author_id: user.id,
+        };
+
+        let _child_article: Article = Article::create(new_article, &conn)
+            .unwrap();
+
+        // Cascade delete should take care of the child article
+        assert!(
+            User::delete_by_id(user.id, &conn)
+                .is_ok(),
+            true
+        );
+    }
+
+    #[test]
+    fn create_without_dependencies() {
+
+        let pool = init_pool();
+        let conn = Conn::new(pool.get().unwrap());
+
+        let new_article: NewArticle = NewArticle {
+            title: String::from("CreateTest-ArticleTitle"),
+            slug: String::from("aah"),
+            body: String::from("body"),
+            author_id: 420420, // non-existent id
+        };
+
+        // Because the id of the author does not exist, creating a new article will fail.
+        assert!(
+            Article::create(new_article, &conn)
+                .is_err()
+        );
+
+    }
+}

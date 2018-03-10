@@ -359,42 +359,6 @@ mod test {
         let _ = User::delete_user_by_name(user_name, &conn);
     }
 
-    #[test]
-    fn cascade_delete_test() {
-        use db::article::{NewArticle, Article};
 
-        let pool = db::init_pool();
-
-        let user_name: String = String::from("OrphanTest-UserName");
-
-        let conn = Conn::new(pool.get().unwrap());
-        let _ = User::delete_user_by_name(user_name.clone(), &conn);
-
-        let new_user: NewUser = NewUserRequest {
-            user_name: user_name.clone(),
-            display_name: String::from("DisplayName"),
-            plaintext_password: String::from("TestPassword"),
-        }.into();
-
-        let user = User::create(new_user, &conn).unwrap();
-
-        let new_article: NewArticle = NewArticle {
-            title: String::from("OrphanTest-ArticleTitle"),
-            slug: String::from("aah"),
-            body: String::from("body"),
-            author_id: user.id,
-        };
-
-        let _child_article: Article = Article::create(new_article, &conn)
-            .unwrap();
-
-        // Cascade delete should take care of the child article
-        assert!(
-            User::delete_by_id(user.id, &conn)
-                .is_ok(),
-            true
-        );
-
-    }
 
 }
