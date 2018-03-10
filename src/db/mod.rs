@@ -16,6 +16,8 @@ use diesel::Identifiable;
 // use diesel::Insertable;
 // use diesel::Queryable;
 
+mod diesel_extensions;
+
 pub mod user;
 pub mod article;
 pub mod forum;
@@ -99,6 +101,11 @@ pub trait Retrievable<'a> {
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
+
+
+    // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
+    //     where
+    //         Self: Sized;
 }
 
 pub trait Deletable<'a> {

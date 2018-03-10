@@ -26,13 +26,13 @@ impl From<MessageData> for MessageResponse {
 
 
 
-#[get("/<chat_id>")]
-fn get_messages_for_chat(chat_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
+#[get("/<chat_id>/<index>")]
+fn get_messages_for_chat(chat_id: i32, index: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
     if !Chat::is_user_in_chat(chat_id, user.user_id, &conn)? {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
-    Message::get_messages_for_chat(chat_id, &conn)
+    Message::get_messages_for_chat(chat_id, index, 25, &conn)
         .map_vec::<MessageResponse>()
         .map(Json)
 
