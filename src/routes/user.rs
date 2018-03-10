@@ -100,8 +100,7 @@ impl Routable for User {
             get_users_with_role,
             assign_role,
             ban_user,
-            unban_user
-            // delete_user_by_name,
+            unban_user // delete_user_by_name,
         ]
     };
     const PATH: &'static str = "/user/";

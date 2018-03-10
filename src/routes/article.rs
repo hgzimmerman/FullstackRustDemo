@@ -89,7 +89,6 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 //     // Article::delete_by_id(article_id, &conn)
 //     //     .map(|_| NoContent)
 // }
-
 /// Given an article id, set the corresponding article's date_published column to contain the current date.
 #[put("/publish/<article_id>")]
 fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
