@@ -11,6 +11,7 @@ use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use db::post::{PostData, ChildlessPostData};
+use error::VectorMappable;
 
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest) -> NewPost {
@@ -120,12 +121,13 @@ fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Js
 #[get("/users_posts/<user_id>")]
 fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
     Post::get_posts_by_user(user_id, &conn)
-        .map(|ok: Vec<ChildlessPostData>| {
+        .map_vec::<PostResponse>()
+        // .map(|ok: Vec<ChildlessPostData>| {
 
-            ok.into_iter()
-                .map(PostResponse::from)
-                .collect::<Vec<PostResponse>>()
-        })
+        //     ok.into_iter()
+        //         .map(PostResponse::from)
+        //         .collect::<Vec<PostResponse>>()
+        // })
         .map(Json)
 }
 

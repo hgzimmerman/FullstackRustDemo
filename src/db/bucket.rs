@@ -1,8 +1,7 @@
 use schema::buckets;
-use error::*;
 use db::Conn;
 use std::ops::Deref;
-use diesel::result::Error;
+
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewBucket"]

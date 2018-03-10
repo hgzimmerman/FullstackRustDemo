@@ -2,7 +2,6 @@ use schema::threads;
 use chrono::NaiveDateTime;
 use db::user::User;
 use db::forum::Forum;
-use error::*;
 use db::Conn;
 use std::ops::Deref;
 use diesel;
@@ -10,7 +9,6 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
-use diesel::result::Error;
 
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
@@ -61,28 +59,13 @@ pub struct MinimalThreadData {
 }
 
 impl Thread {
-    /// Locks the thread, preventing posting and editing
-    // TODO consolidate this function and unlock_thread(), by specifiying an additional bool value.
-    pub fn lock_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
+    /// Locks or unlocks the thread, preventing posting and editing if locked
+    pub fn set_lock_status(thread_id: i32, is_locked: bool, conn: &Conn) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
-            .set(locked.eq(true))
-            .get_result(conn.deref())
-            .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_id(thread.author_id, conn)?;
-
-        Ok(MinimalThreadData { thread, user })
-    }
-
-    /// Unlocks the thread, allowing posting and editing again.
-    pub fn unlock_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
-        use schema::threads;
-        use schema::threads::dsl::*;
-        let thread: Thread = diesel::update(threads::table)
-            .filter(id.eq(thread_id))
-            .set(locked.eq(false))
+            .set(locked.eq(is_locked))
             .get_result(conn.deref())
             .map_err(Thread::handle_error)?;
         let user: User = User::get_by_id(thread.author_id, conn)?;
@@ -91,7 +74,7 @@ impl Thread {
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
-    pub fn archive_thread(thread_id: i32, conn: &Conn) -> Result<MinimalThreadData, WeekendAtJoesError> {
+    pub fn archive_thread(thread_id: i32, conn: &Conn) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
@@ -107,7 +90,7 @@ impl Thread {
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
     // TODO add a step to enable pagination
-    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> Result<Vec<MinimalThreadData>, WeekendAtJoesError> {
+    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
         use schema::users::dsl::*;
@@ -137,7 +120,8 @@ impl Thread {
     }
 
 
-    pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> Result<ThreadData, WeekendAtJoesError> {
+    /// Creates a thread with an initial post.
+    pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::create(new_thread, conn)?;
         let post_data: ChildlessPostData = Post::create_and_get_user(new_post, conn)?;
         let user: User = post_data.user.clone();

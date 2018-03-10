@@ -81,7 +81,7 @@ impl From<NewArticleRequest> for NewArticle {
 impl Article {
     /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
     /// The the returned articles will only include ones with a publish date.
-    pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
+    pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
 
         let returned_articles: Result<Vec<Article>, Error> = articles
@@ -97,7 +97,7 @@ impl Article {
 
     /// Gets the unpublished articles for a given user
     // TODO, consiter switching this interface to take a user_id instead of a string
-    pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> Result<Vec<Article>, WeekendAtJoesError> {
+    pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
 
@@ -115,8 +115,10 @@ impl Article {
 
     }
 
-
-    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+    /// Sets the date for the article's publish date.
+    /// If true, it will set the publish datetime to the current time, indicating it is published.
+    /// If false, it will set the publish column to Null, indicating that it has not been published.
+    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> JoeResult<Article> {
         use schema::articles::dsl::*;
         use schema::articles;
 
@@ -135,7 +137,7 @@ impl Article {
 
 
     /// Applies the changeset to its corresponding article.
-    pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> Result<Article, WeekendAtJoesError> {
+    pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> JoeResult<Article> {
         use schema::articles;
         diesel::update(articles::table)
             .set(&changeset)

@@ -59,6 +59,16 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
         .map_err(|_| LoginError::UsernameDoesNotExist)?;
 
+    // Check if the user is locked.
+    // This will clean up any locked status if the lock has already expired.
+    if user.check_if_locked(conn).map_err(
+        |_| {
+            LoginError::OtherError("DB error")
+        },
+    )?
+    {
+        return Err(LoginError::AccountLocked);
+    }
 
     info!("verifing password: {}", &login_request.password);
     info!("against: {}", &user.password_hash);
@@ -66,9 +76,16 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         Ok(b) => {
             if !b {
                 info!("Wrong password entered for user: {}", &login_request.user_name);
+                User::record_failed_login(user.id, user.failed_login_count, &conn)
+                    .map_err(|_| LoginError::OtherError("Login failed, but could not set the login delay"))?;
                 return Err(LoginError::IncorrectPassword);
             } else {
                 info!("Password match verified");
+                if user.failed_login_count > 0 {
+                    info!("Resetting login count");
+                    User::reset_login_failure_count(user.id, &conn)
+                        .map_err(|_| LoginError::OtherError("DB error"))?;
+                }
             }
         }
         Err(e) => return Err(LoginError::PasswordHashingError(e)),
@@ -107,6 +124,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 pub enum LoginError {
     UsernameDoesNotExist,
     IncorrectPassword,
+    AccountLocked,
     PasswordHashingError(&'static str),
     JwtError(JwtError),
     OtherError(&'static str),
@@ -118,6 +136,7 @@ impl<'a> Responder<'a> for LoginError {
         info!("User login failed with error: {:?}", &self);
         match self {
             LoginError::IncorrectPassword => Err(Status::Unauthorized),
+            LoginError::AccountLocked => Err(Status::Unauthorized),
             LoginError::UsernameDoesNotExist => Err(Status::NotFound),
             LoginError::JwtError(_) => Err(Status::InternalServerError),
             LoginError::PasswordHashingError(_) => Err(Status::InternalServerError),

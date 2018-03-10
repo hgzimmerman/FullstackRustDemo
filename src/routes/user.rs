@@ -6,7 +6,7 @@ use db::Deletable;
 use db::Retrievable;
 use db::Creatable;
 use db::user::User;
-use requests_and_responses::user::{NewUserRequest, UpdateDisplayNameRequest, UserResponse};
+use requests_and_responses::user::*;
 use error::WeekendAtJoesError;
 use auth::user_authorization::*;
 
@@ -22,6 +22,13 @@ fn get_user(user_id: i32, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoe
 #[get("/users/<num_users>")]
 fn get_users(num_users: i64, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
     User::get_users(num_users, &conn)
+        .map(convert_vector)
+        .map(Json)
+}
+
+#[get("/users_with_role/<role_id>")]
+fn get_users_with_role(role_id: i32, conn: Conn) -> Result<Json<Vec<UserResponse>>, WeekendAtJoesError> {
+    User::get_users_with_role(role_id.into(), &conn)
         .map(convert_vector)
         .map(Json)
 }
@@ -44,7 +51,14 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalU
     User::update_user_display_name(request, &conn)
         .map(UserResponse::from)
         .map(Json)
+}
 
+#[put("/assign_role", data = "<data>")]
+fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
+
+    User::add_role_to_user(data.id, data.user_role.into(), &conn)
+        .map(UserResponse::from)
+        .map(Json)
 }
 
 
@@ -72,6 +86,8 @@ impl Routable for User {
             update_user_display_name,
             get_user,
             get_users,
+            get_users_with_role,
+            assign_role,
             delete_user,
             delete_user_by_name,
         ]

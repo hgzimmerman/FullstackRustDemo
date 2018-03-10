@@ -34,9 +34,10 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         use db::Retrievable as macro_Retrievable;
         use db::Creatable as macro_Creatable;
         use db::Deletable as macro_Deletable;
+        use error::JoeResult;
 
         impl macro_Creatable<#insertable> for #name {
-            fn create(insert: #insertable, conn: &Conn) -> Result<Self, WeekendAtJoesError> {
+            fn create(insert: #insertable, conn: &Conn) -> JoeResult<Self> {
                 use schema::#table_name;
                 use diesel;
                 use diesel::RunQueryDsl;
@@ -50,7 +51,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_Retrievable<'a> for #name {
-            fn get_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
+            fn get_by_id(item_id: i32, conn: &Conn) -> JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
@@ -61,7 +62,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .map_err(#name::handle_error)
             }
 
-            fn get_all(conn: &Conn) -> Result<Vec<#name>, WeekendAtJoesError> {
+            fn get_all(conn: &Conn) -> JoeResult<Vec<#name>> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 #table_name
@@ -87,7 +88,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_Deletable<'a> for #name {
-            fn delete_by_id(item_id: i32, conn: &Conn) -> Result<#name, WeekendAtJoesError> {
+            fn delete_by_id(item_id: i32, conn: &Conn) -> JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::ExpressionMethods;
                 use diesel;
@@ -125,9 +126,15 @@ fn impl_error_handler( ast: &syn::DeriveInput) -> quote::Tokens {
     // Convert the name of the class into a string, so that it may be used
     // to identify what DB method went wrong
     quote!(
+
+        use error::handle_diesel_error as macro_handle_diesel_error;
+        use error::WeekendAtJoesError as macro_WeekendAtJoesError;
+        use error::ErrorFormatter;
+        use diesel::result::Error as macro_Error;
+
         impl ErrorFormatter for #name {
-            fn handle_error(diesel_error: Error) -> WeekendAtJoesError {
-                handle_diesel_error(diesel_error, stringify!(#name))
+            fn handle_error(diesel_error: macro_Error) -> macro_WeekendAtJoesError {
+                macro_handle_diesel_error(diesel_error, stringify!(#name))
             }
         }
 

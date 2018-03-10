@@ -11,6 +11,7 @@ use requests_and_responses::thread::MinimalThreadResponse;
 use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
+use error::VectorMappable;
 
 use db::thread::{MinimalThreadData, ThreadData};
 
@@ -79,14 +80,14 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, _normal_user: Norma
 
 #[put("/lock/<thread_id>")]
 fn lock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<MinimalThreadResponse>, WeekendAtJoesError> {
-    Thread::lock_thread(thread_id, &conn)
+    Thread::set_lock_status(thread_id, true, &conn)
         .map(MinimalThreadResponse::from)
         .map(Json)
 }
 
 #[put("/unlock/<thread_id>")]
 fn unlock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<MinimalThreadResponse>, WeekendAtJoesError> {
-    Thread::unlock_thread(thread_id, &conn)
+    Thread::set_lock_status(thread_id, false, &conn)
         .map(MinimalThreadResponse::from)
         .map(Json)
 }
@@ -103,12 +104,13 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     // TODO move the 25 into a parameter
     // TODO make this more efficient by doing a join in the database method
     Thread::get_threads_in_forum(forum_id, 25, &conn)
-        .map(|threads| {
-            threads
-                .into_iter()
-                .map(MinimalThreadResponse::from)
-                .collect()
-        })
+        .map_vec::<MinimalThreadResponse>()
+        // .map(|threads| {
+        //     threads
+        //         .into_iter()
+        //         .map(MinimalThreadResponse::from)
+        //         .collect()
+        // })
         .map(Json)
 }
 

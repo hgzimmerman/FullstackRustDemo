@@ -5,5 +5,8 @@ CREATE TABLE users (
   user_name VARCHAR UNIQUE NOT NULL,
   display_name VARCHAR NOT NULL,
   password_hash VARCHAR NOT NULL,
+  locked TIMESTAMP,
+  failed_login_count Integer NOT NULL,
+  banned BOOLEAN NOT NULL,
   roles Integer[] NOT NULL
 )

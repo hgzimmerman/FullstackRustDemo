@@ -40,7 +40,6 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: 
     let new_answer: NewAnswer = new_answer.into_inner().into();
     let user: User = User::get_by_id(new_answer.author_id, &conn)?;
 
-    // unimplemented!(
     Answer::create(new_answer, &conn)
         .map(|answer| AnswerData { answer, user })
         .map(AnswerResponse::from)
