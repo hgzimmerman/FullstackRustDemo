@@ -11,17 +11,7 @@ use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
 use auth::user_authorization::NormalUser;
 
-impl From<Article> for ArticleResponse {
-    fn from(article: Article) -> ArticleResponse {
-        ArticleResponse {
-            id: article.id,
-            author_id: article.author_id,
-            title: article.title,
-            body: article.body,
-            publish_date: article.publish_date,
-        }
-    }
-}
+
 /// Gets an article by id.
 #[get("/<article_id>", rank = 0)]
 fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {

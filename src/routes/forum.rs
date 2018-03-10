@@ -4,32 +4,12 @@ use rocket::Route;
 use db::Retrievable;
 use db::Creatable;
 use db::forum::Forum;
-use db::forum::NewForum;
 use error::JoeResult;
 use db::Conn;
 use requests_and_responses::forum::ForumResponse;
 use requests_and_responses::forum::NewForumRequest;
 use auth::user_authorization::AdminUser;
 use routes::convert_vector;
-
-impl From<Forum> for ForumResponse {
-    fn from(forum: Forum) -> ForumResponse {
-        ForumResponse {
-            id: forum.id,
-            title: forum.title,
-            description: forum.description,
-        }
-    }
-}
-
-impl From<NewForumRequest> for NewForum {
-    fn from(new_forum_request: NewForumRequest) -> NewForum {
-        NewForum {
-            title: new_forum_request.title,
-            description: new_forum_request.description,
-        }
-    }
-}
 
 
 /// Gets all of the forums.

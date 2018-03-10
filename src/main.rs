@@ -45,6 +45,7 @@ extern crate rand;
 
 use rocket::Rocket;
 
+mod conversions;
 mod routes;
 use routes::*;
 mod db;

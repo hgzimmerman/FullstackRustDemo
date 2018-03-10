@@ -6,15 +6,11 @@ use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use requests_and_responses::article::NewArticleRequest;
 use error::*;
 use chrono::{NaiveDateTime, Utc};
-use requests_and_responses::article::*;
 use db::user::User;
 use diesel::BelongingToDsl;
-use slug;
-use rand;
-use rand::Rng;
+
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Crd, ErrorHandler, Debug, PartialEq)]
@@ -41,20 +37,12 @@ pub struct Article {
 #[derive(AsChangeset, Clone, PartialEq)]
 #[table_name = "articles"]
 pub struct ArticleChangeset {
-    id: i32,
-    title: Option<String>,
-    body: Option<String>,
+    pub id: i32,
+    pub title: Option<String>,
+    pub body: Option<String>,
 }
 
-impl From<UpdateArticleRequest> for ArticleChangeset {
-    fn from(request: UpdateArticleRequest) -> ArticleChangeset {
-        ArticleChangeset {
-            id: request.id,
-            title: request.title,
-            body: request.body,
-        }
-    }
-}
+
 
 /// Represents an article that will be inserted into the database.
 #[derive(Serialize, Deserialize, Insertable, Debug)]
@@ -66,16 +54,7 @@ pub struct NewArticle {
     pub author_id: i32,
 }
 
-impl From<NewArticleRequest> for NewArticle {
-    fn from(new_article_request: NewArticleRequest) -> NewArticle {
-        NewArticle {
-            title: new_article_request.title.clone(),
-            slug: slugify(&new_article_request.title),
-            body: new_article_request.body,
-            author_id: new_article_request.author_id,
-        }
-    }
-}
+
 
 
 impl Article {
@@ -144,26 +123,4 @@ impl Article {
             .get_result(conn.deref())
             .map_err(Article::handle_error)
     }
-}
-
-
-
-
-
-
-const SUFFIX_LEN: usize = 6;
-
-fn slugify(title: &str) -> String {
-    // if cfg!(feature = "random_suffix") {
-    format!("{}-{}", slug::slugify(title), generate_suffix(SUFFIX_LEN))
-    // } else {
-    // slug::slugify(title)
-    // }
-}
-
-fn generate_suffix(len: usize) -> String {
-    rand::thread_rng()
-        .gen_ascii_chars()
-        .take(len)
-        .collect::<String>()
 }

@@ -8,62 +8,10 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
 use requests_and_responses::thread::MinimalThreadResponse;
-use chrono::Utc;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use error::VectorMappable;
 
-use db::thread::{MinimalThreadData, ThreadData};
-
-
-impl From<NewThreadRequest> for NewThread {
-    fn from(request: NewThreadRequest) -> NewThread {
-        NewThread {
-            forum_id: request.forum_id,
-            author_id: request.author_id,
-            created_date: Utc::now().naive_utc(),
-            locked: false,
-            archived: false,
-            title: request.title,
-        }
-    }
-}
-
-impl From<NewThreadRequest> for NewPost {
-    fn from(request: NewThreadRequest) -> NewPost {
-        // Just grab the post field from the thread request.
-        NewPost::from(request.post)
-    }
-}
-
-
-
-impl From<ThreadData> for ThreadResponse {
-    fn from(data: ThreadData) -> ThreadResponse {
-        ThreadResponse {
-            id: data.thread.id,
-            title: data.thread.title,
-            author: data.user.into(),
-            posts: data.post.into(),
-            created_date: data.thread.created_date,
-            locked: data.thread.locked,
-        }
-    }
-}
-
-
-
-impl From<MinimalThreadData> for MinimalThreadResponse {
-    fn from(data: MinimalThreadData) -> MinimalThreadResponse {
-        MinimalThreadResponse {
-            id: data.thread.id,
-            title: data.thread.title,
-            author: data.user.into(),
-            created_date: data.thread.created_date,
-            locked: data.thread.locked,
-        }
-    }
-}
 
 /// Creates a new thread with an Original Post (OP).
 /// This operation is available to any logged in user.
