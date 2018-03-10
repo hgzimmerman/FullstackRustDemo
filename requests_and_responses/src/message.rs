@@ -9,6 +9,8 @@ pub struct MessageResponse {
     pub date: NaiveDateTime
 }
 
+
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewMessageRequest {
     pub author_id: i32,

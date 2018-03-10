@@ -12,6 +12,7 @@ pub mod bucket;
 pub mod question;
 pub mod answer;
 pub mod chat;
+pub mod message;
 
 pub use self::article::*;
 pub use self::static_file::*;
