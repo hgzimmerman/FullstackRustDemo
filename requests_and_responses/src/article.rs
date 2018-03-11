@@ -16,13 +16,22 @@ pub struct UpdateArticleRequest {
 }
 
 
-/// Deprecated
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct ArticleResponse {
+pub struct MinimalArticleResponse {
     pub id: i32,
     pub author_id: i32,
     pub title: String,
     pub body: String,
+    pub publish_date: Option<NaiveDateTime>
+}
+
+/// Doesn't have the body attached.
+/// This makes it ideal for returning many preview articles.
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct ArticlePreviewResponse {
+    pub id: i32,
+    pub author: UserResponse,
+    pub title: String,
     pub publish_date: Option<NaiveDateTime>
 }
 
@@ -33,15 +42,5 @@ pub struct FullArticleResponse {
     pub author: UserResponse,
     pub title: String,
     pub body: String,
-    pub publish_date: Option<NaiveDateTime>
-}
-
-/// Doesn't have the body attached.
-/// This makes it ideal for returning many preview articles.
-#[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct MinimalArticleResponse {
-    pub id: i32,
-    pub author: UserResponse,
-    pub title: String,
     pub publish_date: Option<NaiveDateTime>
 }

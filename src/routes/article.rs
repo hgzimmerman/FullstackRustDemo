@@ -14,15 +14,15 @@ use auth::user_authorization::NormalUser;
 
 /// Gets an article by id.
 #[get("/<article_id>", rank = 0)]
-fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
-    Article::get_by_id(article_id, &conn)
-        .map(ArticleResponse::from)
+fn get_article(article_id: i32, conn: Conn) -> Result<Json<FullArticleResponse>, WeekendAtJoesError> {
+    Article::get_article_data(article_id, &conn)
+        .map(FullArticleResponse::from)
         .map(Json)
 }
 
 
 #[get("/articles/<index>/<page_size>", rank = 0)]
-fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json<Vec<MinimalArticleResponse>>, WeekendAtJoesError> {
+fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json<Vec<ArticlePreviewResponse>>, WeekendAtJoesError> {
     Article::get_paginated(index, page_size, &conn)
         .map(convert_vector)
         .map(Json)
@@ -30,7 +30,7 @@ fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json
 
 /// Gets the articles that haven't been published yet that are associated with the logged in user.
 #[get("/users_unpublished_articles")]
-fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
+fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<MinimalArticleResponse>>, WeekendAtJoesError> {
     let name = logged_in_user.user_name; // extract the username from the jwt
     Article::get_unpublished_articles_for_username(name, &conn)
         .map(convert_vector)
@@ -40,7 +40,7 @@ fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Res
 /// Creates a new article.
 /// The user id of the user must match the author id of the article being created.
 #[post("/", data = "<new_article>")]
-fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
+fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<MinimalArticleResponse>, WeekendAtJoesError> {
     if new_article.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized {
             reason: "Article being created's user does not match the user's id.",
@@ -48,14 +48,14 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
     }
 
     Article::create(new_article.into_inner().into(), &conn)
-        .map(ArticleResponse::from)
+        .map(MinimalArticleResponse::from)
         .map(Json)
 }
 
 /// Performs an update on an article.
 /// The user id of the user must match the article being updated.
 #[put("/", data = "<update_article_request>")]
-fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<ArticleResponse>, WeekendAtJoesError> {
+fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<MinimalArticleResponse>, WeekendAtJoesError> {
     let article_to_update: Article = Article::get_by_id(update_article_request.id, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
@@ -63,7 +63,7 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 
     let update_article = update_article_request.into_inner();
     Article::update_article(update_article.into(), &conn)
-        .map(ArticleResponse::from)
+        .map(MinimalArticleResponse::from)
         .map(Json)
 }
 

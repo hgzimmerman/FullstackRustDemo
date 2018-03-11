@@ -1,12 +1,10 @@
 use schema::articles;
-use diesel::result::Error;
 use std::ops::Deref;
 use db::Conn;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use error::*;
 use chrono::{NaiveDateTime, Utc};
 use db::user::User;
 use diesel::BelongingToDsl;
@@ -61,20 +59,27 @@ pub struct ArticleData {
 
 
 impl Article {
-    /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
-    /// The the returned articles will only include ones with a publish date.
-    pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> JoeResult<Vec<Article>> {
-        use schema::articles::dsl::*;
+    // /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
+    // /// The the returned articles will only include ones with a publish date.
+    // pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> JoeResult<Vec<Article>> {
+    //     use schema::articles::dsl::*;
 
-        let returned_articles: Result<Vec<Article>, Error> = articles
-            .filter(publish_date.is_not_null())
-            .limit(number_of_articles)
-            .order(publish_date)
-            .load::<Article>(conn.deref());
+    //     let returned_articles: Result<Vec<Article>, Error> = articles
+    //         .filter(publish_date.is_not_null())
+    //         .limit(number_of_articles)
+    //         .order(publish_date)
+    //         .load::<Article>(conn.deref());
 
-        returned_articles.or(Err(
-            WeekendAtJoesError::DatabaseError(None),
-        ))
+    //     returned_articles.or(Err(
+    //         WeekendAtJoesError::DatabaseError(None),
+    //     ))
+    // }
+
+    pub fn get_article_data(article_id: i32, conn: &Conn) -> JoeResult<ArticleData> {
+
+        let article = Article::get_by_id(article_id, conn)?;
+        let user = User::get_by_id(article.author_id, conn)?;
+        Ok(ArticleData { article, user })
     }
 
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<ArticleData>> {

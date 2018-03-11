@@ -5,9 +5,9 @@ use slug;
 use rand;
 use rand::Rng;
 
-impl From<Article> for ArticleResponse {
-    fn from(article: Article) -> ArticleResponse {
-        ArticleResponse {
+impl From<Article> for MinimalArticleResponse {
+    fn from(article: Article) -> MinimalArticleResponse {
+        MinimalArticleResponse {
             id: article.id,
             author_id: article.author_id,
             title: article.title,
@@ -29,9 +29,9 @@ impl From<ArticleData> for FullArticleResponse {
     }
 }
 
-impl From<ArticleData> for MinimalArticleResponse {
-    fn from(data: ArticleData) -> MinimalArticleResponse {
-        MinimalArticleResponse {
+impl From<ArticleData> for ArticlePreviewResponse {
+    fn from(data: ArticleData) -> ArticlePreviewResponse {
+        ArticlePreviewResponse {
             id: data.article.id,
             author: data.user.into(),
             title: data.article.title,
