@@ -54,7 +54,10 @@ pub struct NewArticle {
     pub author_id: i32,
 }
 
-
+pub struct ArticleData {
+    pub article: Article,
+    pub user: User,
+}
 
 
 impl Article {
@@ -73,6 +76,36 @@ impl Article {
             WeekendAtJoesError::DatabaseError(None),
         ))
     }
+
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<ArticleData>> {
+        use schema::articles::dsl::*;
+        use db::diesel_extensions::pagination::*;
+        use schema::users;
+
+        let (articles_and_users, _count) = articles
+            .inner_join(users::table)
+            .filter(publish_date.is_not_null())
+            .order(publish_date)
+            .paginate(page_index.into())
+            .per_page(page_size.into())
+            .load_and_count_pages::<(Article, User)>(conn.deref())
+            .map_err(Article::handle_error)?;
+
+        let article_data = articles_and_users
+            .into_iter()
+            .map(|x| {
+                ArticleData {
+                    article: x.0,
+                    user: x.1,
+                }
+            })
+            .collect();
+
+        Ok(article_data)
+    }
+
+
+
 
     /// Gets the unpublished articles for a given user
     // TODO, consiter switching this interface to take a user_id instead of a string

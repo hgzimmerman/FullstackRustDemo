@@ -21,9 +21,9 @@ fn get_article(article_id: i32, conn: Conn) -> Result<Json<ArticleResponse>, Wee
 }
 
 
-#[get("/articles/<number_of_articles>", rank = 0)]
-fn get_published_articles(number_of_articles: i64, conn: Conn) -> Result<Json<Vec<ArticleResponse>>, WeekendAtJoesError> {
-    Article::get_recent_published_articles(number_of_articles, &conn)
+#[get("/articles/<index>/<page_size>", rank = 0)]
+fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json<Vec<MinimalArticleResponse>>, WeekendAtJoesError> {
+    Article::get_paginated(index, page_size, &conn)
         .map(convert_vector)
         .map(Json)
 }

@@ -17,6 +17,29 @@ impl From<Article> for ArticleResponse {
     }
 }
 
+impl From<ArticleData> for FullArticleResponse {
+    fn from(data: ArticleData) -> FullArticleResponse {
+        FullArticleResponse {
+            id: data.article.id,
+            author: data.user.into(),
+            title: data.article.title,
+            body: data.article.body,
+            publish_date: data.article.publish_date,
+        }
+    }
+}
+
+impl From<ArticleData> for MinimalArticleResponse {
+    fn from(data: ArticleData) -> MinimalArticleResponse {
+        MinimalArticleResponse {
+            id: data.article.id,
+            author: data.user.into(),
+            title: data.article.title,
+            publish_date: data.article.publish_date,
+        }
+    }
+}
+
 impl From<UpdateArticleRequest> for ArticleChangeset {
     fn from(request: UpdateArticleRequest) -> ArticleChangeset {
         ArticleChangeset {
