@@ -72,9 +72,14 @@ fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> Jo
 }
 
 
+use auth::BannedSet;
+use rocket::State;
 /// Ban the user.
 #[put("/ban/<user_id>")]
-fn ban_user(user_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn ban_user(user_id: i32, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
+
+    // Set the banned state so the JWT resolvers can check for bans without checking a DB.
+    banned_set.ban_user(user_id);
 
     User::set_ban_status(user_id, true, &conn)
         .map(UserResponse::from)
@@ -82,7 +87,9 @@ fn ban_user(user_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<UserR
 }
 
 #[put("/unban/<user_id>")]
-fn unban_user(user_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn unban_user(user_id: i32, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
+
+    banned_set.unban_user(&user_id);
 
     User::set_ban_status(user_id, false, &conn)
         .map(UserResponse::from)

@@ -54,7 +54,7 @@ use routes::*;
 mod db;
 mod auth;
 mod error;
-use auth::Secret;
+use auth::{Secret, BannedSet};
 use db::user::User;
 use db::article::Article;
 use db::forum::Forum;
@@ -91,10 +91,12 @@ fn main() {
 pub fn init_rocket() -> Rocket {
 
     let secret = Secret::generate();
+    let banned_set = BannedSet::new();
 
     rocket::ignite()
         .manage(db::init_pool())
         .manage(secret)
+        .manage(banned_set)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
         .mount(&format_api(User::PATH), User::ROUTES())
         .mount(&format_api(Article::PATH), Article::ROUTES())
