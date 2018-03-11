@@ -119,6 +119,38 @@ impl Thread {
         Ok(min_threads)
     }
 
+    pub fn get_paginated(requested_forum_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MinimalThreadData>> {
+        use schema::threads::dsl::*;
+        use db::forum::Forum;
+        use db::diesel_extensions::pagination::*;
+        use schema::users;
+
+        let forum: Forum = Forum::get_by_id(requested_forum_id, conn)?;
+
+        let (thread_users, _count) = Thread::belonging_to(&forum)
+            .inner_join(users::table)
+            .order(created_date)
+            .filter(archived.eq(false))
+            .paginate(page_index.into())
+            .per_page(page_size.into())
+            .load_and_count_pages::<(Thread, User)>(conn.deref())
+            .map_err(Thread::handle_error)?;
+
+        let minimal_threads = thread_users
+            .into_iter()
+            .map(|x| {
+                MinimalThreadData {
+                    thread: x.0,
+                    user: x.1,
+                }
+            })
+            .collect();
+
+        Ok(minimal_threads)
+
+
+    }
+
 
     /// Creates a thread with an initial post.
     pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> JoeResult<ThreadData> {

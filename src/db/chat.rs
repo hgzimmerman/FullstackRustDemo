@@ -40,7 +40,7 @@ pub struct JunctionChatUsers {
     pub user_id: i32,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name = "junction_chat_users"]
 pub struct ChatUserAssociation {
     pub chat_id: i32,

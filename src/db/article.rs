@@ -34,7 +34,7 @@ pub struct Article {
 }
 
 /// Specifies the attributes that can be changed for an article.
-#[derive(AsChangeset, Clone, PartialEq)]
+#[derive(AsChangeset, Clone, Debug, PartialEq)]
 #[table_name = "articles"]
 pub struct ArticleChangeset {
     pub id: i32,
@@ -45,7 +45,7 @@ pub struct ArticleChangeset {
 
 
 /// Represents an article that will be inserted into the database.
-#[derive(Serialize, Deserialize, Insertable, Debug)]
+#[derive(Serialize, Deserialize, Insertable, Debug, Clone)]
 #[table_name = "articles"]
 pub struct NewArticle {
     pub title: String,

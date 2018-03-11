@@ -13,7 +13,7 @@ pub struct Bucket {
     pub bucket_name: String,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name = "buckets"]
 pub struct NewBucket {
     pub bucket_name: String,

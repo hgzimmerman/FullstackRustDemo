@@ -77,7 +77,6 @@ pub use db::schema; // schema internals can be accessed via db::schema::, or via
 
 fn main() {
 
-
     const LOGFILE_NAME: &'static str = "weekend.log";
     CombinedLogger::init(vec![
         TermLogger::new(LogLevelFilter::Info, Config::default())
@@ -90,14 +89,6 @@ fn main() {
 
 ///Initialize the webserver
 pub fn init_rocket() -> Rocket {
-
-
-    // let mut bucket_sessions: BucketSessions = BucketSessions(HashMap::new());
-    // bucket_sessions.0.insert("bucket".to_string(), Bucket::new());
-    // let database_url = env::var("DATABASE_URL")
-    //     .expect("DATABASE_URL must be set");
-
-    // let mutexed_bucket_sessions = Mutex::new(bucket_sessions);
 
     let secret = Secret::generate();
 
