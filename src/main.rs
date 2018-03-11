@@ -90,7 +90,11 @@ fn main() {
 ///Initialize the webserver
 pub fn init_rocket() -> Rocket {
 
+    // The secret is used to generate and verify JWTs.
     let secret = Secret::generate();
+    // The banned set is a set of user ids that are kept in memory.
+    // This is done to prevent banned users with active JWTs from being authenticated, all without every
+    // authentication attempt having to check the database.
     let banned_set = BannedSet::new();
 
     rocket::ignite()
