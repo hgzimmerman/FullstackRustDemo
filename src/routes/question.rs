@@ -42,8 +42,11 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
 /// Creates a question and puts it into the bucket.
 /// Any user can put a question into a bucket.
 #[post("/create", data = "<new_question>")]
-fn create_question(new_question: Json<NewQuestionRequest>, _user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
+    if request.author_id != user.user_id {
+        return Err(WeekendAtJoesError::BadRequest);
+    }
     Question::create_data(request.into(), &conn)
         .map(QuestionResponse::from)
         .map(Json)

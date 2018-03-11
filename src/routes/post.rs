@@ -2,7 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 
-use db::post::{Post, EditPostChangeset};
+use db::post::*;
 use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
@@ -19,10 +19,11 @@ use error::VectorMappable;
 fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // check if token user id matches the request user id.
     // This prevents users from creating posts under other user's names.
-    if new_post.0.author_id != login_user.user_id {
+    let new_post: NewPost = new_post.into_inner().into();
+    if new_post.author_id != login_user.user_id {
         return Err(WeekendAtJoesError::BadRequest);
     }
-    Post::create_and_get_user(new_post.into_inner().into(), &conn)
+    Post::create_and_get_user(new_post, &conn)
         .map(PostResponse::from)
         .map(Json)
 }

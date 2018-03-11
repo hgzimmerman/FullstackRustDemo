@@ -16,12 +16,21 @@ use db::Creatable;
 /// Answers a bucket question by attaching the answer to the existing question.
 /// This operation is available to any user.
 #[post("/create", data = "<new_answer>")]
-fn answer_question(new_answer: Json<NewAnswerRequest>, _user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, WeekendAtJoesError> {
+fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, WeekendAtJoesError> {
     let new_answer: NewAnswer = new_answer.into_inner().into();
-    let user: User = User::get_by_id(new_answer.author_id, &conn)?;
+    let answer_user: User = User::get_by_id(new_answer.author_id, &conn)?;
+
+    if user.user_id != answer_user.id {
+        return Err(WeekendAtJoesError::BadRequest);
+    }
 
     Answer::create(new_answer, &conn)
-        .map(|answer| AnswerData { answer, user })
+        .map(|answer| {
+            AnswerData {
+                answer,
+                user: answer_user,
+            }
+        })
         .map(AnswerResponse::from)
         .map(Json)
 

@@ -34,6 +34,10 @@ fn send_message(new_message: Json<NewMessageRequest>, user: NormalUser, conn: Co
     if !Chat::is_user_in_chat(new_message.chat_id, user.user_id, &conn)? {
         return Err(WeekendAtJoesError::BadRequest);
     }
+    if new_message.author_id != user.user_id {
+        return Err(WeekendAtJoesError::BadRequest);
+    }
+
     Message::create_message(new_message, &conn)
         .map(MessageResponse::from)
         .map(Json)

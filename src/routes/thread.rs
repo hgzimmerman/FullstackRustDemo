@@ -63,12 +63,6 @@ fn get_threads_by_forum_id(forum_id: i32, conn: Conn) -> Result<Json<Vec<Minimal
     // TODO make this more efficient by doing a join in the database method
     Thread::get_threads_in_forum(forum_id, 25, &conn)
         .map_vec::<MinimalThreadResponse>()
-        // .map(|threads| {
-        //     threads
-        //         .into_iter()
-        //         .map(MinimalThreadResponse::from)
-        //         .collect()
-        // })
         .map(Json)
 }
 

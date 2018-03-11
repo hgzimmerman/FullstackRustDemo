@@ -3,25 +3,29 @@ use routes::Routable;
 use rocket::Route;
 
 use db::chat::*;
-// use db::user::User;
-// use error::WeekendAtJoesError;
 use db::Conn;
 use requests_and_responses::chat::*;
 use auth::user_authorization::NormalUser;
 use error::JoeResult;
 use db::Creatable;
 use error::*;
-
-
-
+use db::Retrievable;
 
 
 
 /// Creates a new chat.
 /// This operation is available to any user.
 #[post("/create", data = "<new_chat>")]
-fn create_chat(new_chat: Json<NewChatRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<MinimalChatResponse>> {
-    Chat::create(new_chat.into_inner().into(), &conn)
+fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<MinimalChatResponse>> {
+
+    let new_chat: NewChat = new_chat.into_inner().into();
+
+    if new_chat.leader_id != user.user_id {
+        info!("User tried to create a chat where they are not the leader");
+        return Err(WeekendAtJoesError::BadRequest);
+    }
+
+    Chat::create(new_chat, &conn)
         .map(MinimalChatResponse::from)
         .map(Json)
 }
@@ -29,16 +33,34 @@ fn create_chat(new_chat: Json<NewChatRequest>, _user: NormalUser, conn: Conn) ->
 /// Adds the user to the chat.
 /// This operation is available to any user.
 #[put("/add_user", data = "<request>")]
-fn add_user_to_chat(request: Json<ChatUserAssociationRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
-    Chat::add_user_to_chat(request.into_inner().into(), &conn)
+fn add_user_to_chat(request: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
+
+    let association: ChatUserAssociation = request.into_inner().into();
+
+    if !Chat::is_user_in_chat(association.chat_id, user.user_id, &conn)? {
+        info!("User not in a chat tried to add a user to that chat.");
+        return Err(WeekendAtJoesError::BadRequest);
+    }
+
+
+    Chat::add_user_to_chat(association, &conn)
         .map(Json)
 }
 
 /// Removes the user from the chat.
 /// This operation is available to any user.
 #[put("/remove_user", data = "<request>")]
-fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
-    Chat::remove_user_from_chat(request.into_inner().into(), &conn)
+fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
+
+    let association: ChatUserAssociation = request.into_inner().into();
+    let chat: Chat = Chat::get_by_id(association.chat_id, &conn)?;
+
+    if chat.leader_id != user.user_id {
+        info!("User without chat leader status tried to remove user");
+        return Err(WeekendAtJoesError::BadRequest);
+    }
+
+    Chat::remove_user_from_chat(association, &conn)
         .map(Json)
 }
 
