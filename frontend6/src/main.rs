@@ -13,10 +13,13 @@ use yew::services::console::ConsoleService;
 // use barrier::Barrier;
 mod datatypes;
 use datatypes::minimal_thread::MinimalThread;
-mod threadCardComponent;
+// mod threadCardComponent;
 use threadCardComponent::ThreadCard;
-mod header_component;
+//mod header_component;
 use header_component::Header;
+
+mod components;
+use components::*;
 
 
 struct Context {
@@ -29,11 +32,25 @@ struct Context {
 //         self.console.log(data);
 //     }
 // }
+//
+enum PageView {
+    ForumListView,
+    ThreadListView,
+    ThreadView,
+    ArticleView,
+    ArticleAuthoringView,
+    LoginView,
+    BucketSelectionView,
+    BucketView,
+    ChatView,
+    AllChatsView
+}
 
 struct Model {
-    title: String,
-    threads: Vec<MinimalThread>
+    page: PageView,
+    jwt: Option<String> // Its dumb to store it here, but for now, this is where the jwt will live. Instead it should use the localstorage api.
 }
+
 
 enum Msg {
     Repaint,
@@ -45,92 +62,34 @@ impl Component<Context> for Model {
 
     fn create(_: Self::Properties, _: &mut Env<Context, Self>) -> Self {
         Model {
-            title: "Joe".into(),
-            threads: vec!(
-                MinimalThread {
-                    id: 1,
-                    title: "Why Does The Whole Women's Team Hate Me?".into(),
-                    author: "Joe".into(),
-                    replies: 6,
-                    locked: false
-                },
-                MinimalThread {
-                    id: 2,
-                    title: "But I love him".into(),
-                    author: "Emma".into(),
-                    replies: 1,
-                    locked: false
-                },
-                MinimalThread {
-                    id: 4,
-                    title: "But I LOVE HIM".into(),
-                    author: "Emma".into(),
-                    replies: 0,
-                    locked: false
-                },
-            )
+            page: PageView::LoginView,
+            jwt: None
         }
     }
 
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Repaint => {
-                // self.color = Color::Blue;
                 true
             }
-            // Msg::Toggle => {
-            //     self.with_barrier = !self.with_barrier;
-            //     true
-            // }
-            // Msg::ChildClicked(value) => {
-            //     context.console.log(&format!("child clicked: {}", value));
-            //     false
-            // }
         }
     }
 }
 
 impl Renderable<Context, Model> for Model {
+
     fn view(&self) -> Html<Context, Self> {
-        // let counter = |_: | html! {
-        //     <div> { "hi" } </div>
-        //     // <Counter: initial=x, color=&self.color, onclick=Msg::ChildClicked,/>
-        // };
-        let thread_card = |x: &MinimalThread| html! {
-            <ThreadCard: thread = x.clone(),/>
-        };
 
         html! {
             <>
                 <Header: />
-                <div class="main-container",>
-                    <div class="thread-list", > 
-                        {for self.threads.iter().map(thread_card) }
-                    </div>
-                </div>
+                {"Not implemented!"}
             </>
-            // <div class="custom-components-example",>
-            //     <button onclick=|_| Msg::Toggle,>{ "Toggle" }</button>
-            //     { self.view_barrier() }
-            //     { for (1..1001).map(counter) }
-            // </div>
         }
     }
 }
 
-// impl Model {
-//     fn view_barrier(&self) -> Html<Context, Self> {
-//         // if self.with_barrier {
-//         //     html! {
-//         //         <Barrier: limit=10, onsignal=|_| Msg::Repaint, />
-//         //     }
-//         // } else {
-//         //     html! {
-//         //         <p>{ "Click \"toggle\"!" }</p>
-//         //     }
-//         // }
-//     }
-// }
+
 
 fn main() {
     yew::initialize();

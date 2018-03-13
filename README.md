@@ -1,5 +1,7 @@
 A novelty website written entirely in Rust.
 
+The Joooooooke is that I'm putting an exceptional amount of effort into creating a production-quality webapp just for Joe.
+
 The backend uses Rocket (WebServer) + Diesel (ORM).
 The frontend uses Yew (React-like framework).
 
