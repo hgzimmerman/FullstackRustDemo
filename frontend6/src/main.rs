@@ -54,6 +54,8 @@ struct Model {
 
 enum Msg {
     Repaint,
+    Login{ jwt: String },
+    Logout
 }
 
 impl Component<Context> for Model {
@@ -72,20 +74,49 @@ impl Component<Context> for Model {
             Msg::Repaint => {
                 true
             }
+            Msg::Login {jwt} => {
+                // Set the jwt
+                self.jwt = Some(jwt);
+                true
+            }
+            Msg::Logout => {
+                // Invalidate the JWT
+                self.jwt = None;
+                // Navigate elsewhere
+                self.page = PageView::LoginView;
+                true
+            }
         }
     }
 }
 
+use components::login_component;
+
+use components::login_component::Login;
 impl Renderable<Context, Model> for Model {
 
     fn view(&self) -> Html<Context, Self> {
 
-        html! {
-            <>
-                <Header: />
-                {"Not implemented!"}
-            </>
+        match self.page {
+            PageView::LoginView => {
+                html! {
+                    <>
+                        <Header: />
+                        <Login: />
+                    </>
+                }
+            },
+            _ => {
+                unimplemented!()
+            }
         }
+
+        //html! {
+        //    <>
+        //        <Header: />
+        //        {"Not implemented!"}
+        //    </>
+        //}
     }
 }
 
