@@ -86,6 +86,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "frontend6"
 version = "0.1.0"
 dependencies = [
+ "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "requests_and_responses 0.1.0",
  "yew 0.3.0 (git+https://github.com/DenisKolodin/yew?rev=6e7a5611c9a6d8ae4e2f2437d1c41a5bb28919af)",
 ]

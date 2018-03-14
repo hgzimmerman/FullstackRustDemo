@@ -38,7 +38,7 @@ impl<CTX: 'static> Component<CTX> for Button {
 
     fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
         Button {
-            title: "Button".into(),
+            title: props.title,
 //            color: Color::Primary,
             disabled: false,
             onclick: None,

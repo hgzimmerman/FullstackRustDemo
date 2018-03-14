@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate yew;
 extern crate requests_and_responses;
+extern crate failure;
 
 // mod counter;
 // mod button;
@@ -21,9 +22,12 @@ use header_component::Header;
 mod components;
 use components::*;
 
+use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+
 
 struct Context {
     // console: ConsoleService,
+    networking: FetchService
 }
 
 /// If you use `App` you should implement this for `AppContext<Context, Model, Msg>` struct.
@@ -97,26 +101,32 @@ impl Renderable<Context, Model> for Model {
 
     fn view(&self) -> Html<Context, Self> {
 
-        match self.page {
-            PageView::LoginView => {
-                html! {
-                    <>
-                        <Header: />
-                        <Login: />
-                    </>
-                }
-            },
-            _ => {
-                unimplemented!()
-            }
-        }
 
-        //html! {
-        //    <>
-        //        <Header: />
-        //        {"Not implemented!"}
-        //    </>
-        //}
+        let page = || {
+            match self.page {
+                PageView::LoginView => {
+                    html! {
+                        <>
+                            <Login: />
+                        </>
+                    }
+                }
+                _ => {
+                    html! {
+                        <>
+                            {"Not implemented"}
+                        </>
+                    }
+                }
+            }
+        };
+
+        html! {
+            <>
+                <Header: />
+                {page()}
+            </>
+        }
     }
 }
 
@@ -125,7 +135,7 @@ impl Renderable<Context, Model> for Model {
 fn main() {
     yew::initialize();
     let context = Context {
-        // console: ConsoleService,
+        networking: FetchService::new()
     };
     // We use `Scope` here for demonstration.
     // You can also use `App` here too.

@@ -1,17 +1,23 @@
 use yew::prelude::*;
 use Context;
+use components::button::*;
 
+use yew::format::{Json, Nothing};
+use yew::services::fetch::{FetchTask, Request, Response};
+use failure::Error;
 
 pub struct Login {
     user_name: String,
     password: String,
+    ft: Option<FetchTask>,
 }
 
 
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
-    Submit
+    Submit,
+    NoOp
 }
 
 
@@ -23,7 +29,8 @@ impl Component<Context> for Login {
     fn create(_: Self::Properties, _: &mut Env<Context, Self>) -> Self {
         Login {
             user_name: String::from(""),
-            password: String::from("")
+            password: String::from(""),
+            ft: None
         }
     }
 
@@ -31,6 +38,15 @@ impl Component<Context> for Login {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Submit => {
+                println!("Logging in with user name: {}", self.user_name);
+                let callback = context.send_back(|response: Response<Json<Result<String, ()>>>| {
+                    let (meta, Json(data)) = response.into_parts();
+                    println!("META: {:?}, {:?}", meta, data);
+                    Msg::NoOp
+                });
+                let request = Request::get("/data.json").body(Nothing).unwrap();
+                let task = context.networking.fetch(request, callback);
+                self.ft = Some(task);
                 false
             },
             Msg::UpdatePassword(p) => {
@@ -41,6 +57,7 @@ impl Component<Context> for Login {
                 self.user_name = u;
                 true
             }
+            Msg::NoOp => false
         }
     }
 }
@@ -48,9 +65,31 @@ impl Component<Context> for Login {
 impl Renderable<Context, Login> for Login {
     fn view(&self) -> Html<Context, Self> {
         html!{
-            <>
-                {"Dis da login page, user name, password, and social security number pls..."}
-            </>
+            <div>
+                <input
+                    class="form-control",
+                //    disabled=self.disabled,
+                    placeholder="User Name",
+                    value=&self.user_name,
+                    oninput=|e: InputData| Msg::UpdateUserName(e.value),
+                    onkeypress=|e: KeyData| {
+                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                    },
+                />
+                <input
+                    class="form-control",
+                //    disabled=self.disabled,
+                    placeholder="Password",
+                    value=&self.password,
+                    oninput=|e: InputData| Msg::UpdatePassword(e.value),
+                    onkeypress=|e: KeyData| {
+                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                    },
+                />
+
+                <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+//                <Button: title=&self.button_title, color=Color::Success, disabled=self.disabled, onclick=|_| Msg::Submit, />
+            <div/>
         }
 
     }
