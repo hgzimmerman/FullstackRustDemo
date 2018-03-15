@@ -2,6 +2,8 @@
 extern crate yew;
 extern crate requests_and_responses;
 extern crate failure;
+extern crate serde;
+#[macro_use] extern crate serde_json;
 
 // mod counter;
 // mod button;

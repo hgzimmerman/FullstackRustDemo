@@ -5,6 +5,8 @@ use components::button::*;
 use yew::format::{Json, Nothing};
 use yew::services::fetch::{FetchTask, Request, Response};
 use failure::Error;
+use requests_and_responses::login::*;
+use serde_json;
 
 pub struct Login {
     user_name: String,
@@ -44,7 +46,15 @@ impl Component<Context> for Login {
                     println!("META: {:?}, {:?}", meta, data);
                     Msg::NoOp
                 });
-                let request = Request::get("/data.json").body(Nothing).unwrap();
+                let login_request: LoginRequest = LoginRequest {
+                    user_name: self.user_name.clone(),
+                    password: self.password.clone()
+                };
+                let body = serde_json::to_string(&login_request).unwrap();
+                let request = Request::post("http://localhost:8001/api/auth/login")
+                     .header("Content-Type", "application/json")
+                    .body(body)
+                    .unwrap();
                 let task = context.networking.fetch(request, callback);
                 self.ft = Some(task);
                 false
@@ -66,6 +76,7 @@ impl Renderable<Context, Login> for Login {
     fn view(&self) -> Html<Context, Self> {
         html!{
             <div>
+                {"Login"}
                 <input
                     class="form-control",
                 //    disabled=self.disabled,

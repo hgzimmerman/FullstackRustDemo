@@ -38,3 +38,5 @@ frank_jwt = "3.0.0"
 rust-crypto = "0.2.36"
 
 slug = "0.1.2"
+
+rocket_cors = "0.2.3"

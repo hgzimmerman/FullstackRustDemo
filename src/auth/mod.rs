@@ -28,6 +28,8 @@ use rocket::response::Responder;
 use db::user::User;
 use db::Conn;
 
+use requests_and_responses::login::*;
+
 
 /// The secret contains a random string that is generated at startup.
 /// This will be different every time the server restarts.
@@ -47,11 +49,7 @@ impl Secret {
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct LoginRequest {
-    pub user_name: String,
-    pub password: String,
-}
+
 pub type LoginResult = Result<String, LoginError>;
 
 /// Logs the user in by validating their password and returning a jwt.

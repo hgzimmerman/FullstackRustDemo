@@ -44,6 +44,8 @@ extern crate slug;
 // extern crate bcrypt;
 extern crate crypto;
 
+extern crate rocket_cors;
+
 extern crate rand;
 
 use rocket::Rocket;
@@ -74,6 +76,8 @@ use std::fs::File;
 
 pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
 
+use rocket::http::Method;
+use rocket_cors::{AllowedHeaders, AllowedOrigins};
 
 fn main() {
 
@@ -89,6 +93,21 @@ fn main() {
 
 ///Initialize the webserver
 pub fn init_rocket() -> Rocket {
+
+    // Set up CORS for local development using `cargo web start`
+    let (allowed_origins, _failed_origins) = AllowedOrigins::some(&["http://[::1]:8000"]);
+    assert!(failed_origins.is_empty());
+
+    let options = rocket_cors::Cors {
+        allowed_origins: allowed_origins,
+        allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
+            .into_iter()
+            .map(From::from)
+            .collect(),
+        //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
+        allow_credentials: true,
+        ..Default::default()
+    };
 
     // The secret is used to generate and verify JWTs.
     let secret = Secret::generate();
@@ -113,6 +132,7 @@ pub fn init_rocket() -> Rocket {
         .mount(&format_api(Answer::PATH), Answer::ROUTES())
         .mount(&format_api(Chat::PATH), Chat::ROUTES())
         .mount(&format_api(Message::PATH), Message::ROUTES())
+        .attach(options)
 }
 
 
