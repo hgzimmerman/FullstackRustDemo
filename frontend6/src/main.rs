@@ -4,10 +4,8 @@ extern crate requests_and_responses;
 extern crate failure;
 extern crate serde;
 #[macro_use] extern crate serde_json;
+extern crate stdweb;
 
-// mod counter;
-// mod button;
-// mod barrier;
 
 use yew::prelude::*;
 use yew::html::Scope;
@@ -24,12 +22,16 @@ use header_component::Header;
 mod components;
 use components::*;
 
+mod services;
+
 use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 
+use services::route_service::RouteService;
 
-struct Context {
+pub struct Context {
     // console: ConsoleService,
-    networking: FetchService
+    networking: FetchService,
+    routing: RouteService
 }
 
 /// If you use `App` you should implement this for `AppContext<Context, Model, Msg>` struct.
@@ -39,17 +41,16 @@ struct Context {
 //     }
 // }
 //
-enum PageView {
-    ForumListView,
-    ThreadListView,
-    ThreadView,
+pub enum PageView {
+    ForumView,
     ArticleView,
-    ArticleAuthoringView,
-    LoginView,
-    BucketSelectionView,
+    AuthView,
     BucketView,
-    ChatView,
-    AllChatsView
+}
+
+pub trait Routable<T> {
+    fn route(context: &mut Context) -> T;
+
 }
 
 struct Model {
@@ -59,27 +60,42 @@ struct Model {
 
 
 enum Msg {
-    Repaint,
     Login{ jwt: String },
-    Logout
+    Logout,
+    NoOp,
+    Navigate(PageView)
+}
+
+impl Routable<PageView> for Model {
+    fn route(context: &mut Context) -> PageView {
+        match context.routing.route.as_ref() {
+            "auth" => PageView::AuthView,
+            "forum" => PageView::ForumView,
+            "article" => PageView::ArticleView,
+            "bucket" => PageView::BucketView,
+            _ => PageView::BucketView // default to bucket questions
+        }
+    }
 }
 
 impl Component<Context> for Model {
     type Msg = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _: &mut Env<Context, Self>) -> Self {
+    fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         Model {
-            page: PageView::LoginView,
+            page: Model::route(context),
             jwt: None
         }
     }
 
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+
+        self.page = Model::route(context);
+        println!("updating model");
+
+
         match msg {
-            Msg::Repaint => {
-                true
-            }
             Msg::Login {jwt} => {
                 // Set the jwt
                 self.jwt = Some(jwt);
@@ -89,16 +105,27 @@ impl Component<Context> for Model {
                 // Invalidate the JWT
                 self.jwt = None;
                 // Navigate elsewhere
-                self.page = PageView::LoginView;
+                self.page = PageView::AuthView;
+                true
+            }
+            Msg::NoOp => {
+                true
+            }
+            Msg::Navigate(page) => {
+                match page {
+                    _ => {
+                        println!("Setting page")
+                    }
+                };
+                self.page = page;
                 true
             }
         }
     }
 }
 
-use components::login_component;
+use components::auth::Auth;
 
-use components::login_component::Login;
 impl Renderable<Context, Model> for Model {
 
     fn view(&self) -> Html<Context, Self> {
@@ -106,26 +133,32 @@ impl Renderable<Context, Model> for Model {
 
         let page = || {
             match self.page {
-                PageView::LoginView => {
+                PageView::AuthView => {
                     html! {
                         <>
-                            <Login: />
+                            <Auth: callback=|_| Msg::Navigate(PageView::ForumView), />
                         </>
                     }
                 }
                 _ => {
                     html! {
                         <>
-                            {"Not implemented"}
+                            {"Main routing Not implemented"}
                         </>
                     }
                 }
             }
         };
 
+        use link::Link;
         html! {
             <>
-                <Header: />
+                <div class="header",>
+                    { "WeekendAtJoe dot com" }
+
+                    <Link: name="login", callback=|_| Msg::Navigate(PageView::AuthView), />
+                    <Link: name="Threads", callback=|_| Msg::Navigate(PageView::ForumView), />
+                </div>
                 {page()}
             </>
         }
@@ -136,8 +169,10 @@ impl Renderable<Context, Model> for Model {
 
 fn main() {
     yew::initialize();
+    stdweb::initialize(); // I need this in order to use my route service
     let context = Context {
-        networking: FetchService::new()
+        networking: FetchService::new(),
+        routing: RouteService::new()
     };
     // We use `Scope` here for demonstration.
     // You can also use `App` here too.

@@ -8,31 +8,57 @@ use failure::Error;
 use requests_and_responses::login::*;
 use serde_json;
 
-pub struct Login {
-    user_name: String,
-    password: String,
-    ft: Option<FetchTask>,
-}
+use PageView;
 
 
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
     Submit,
+    NavToCreateAccount,
+    NavToLanding,
     NoOp
+}
+
+pub struct Login {
+    user_name: String,
+    password: String,
+    ft: Option<FetchTask>,
+    create_account_nav_cb: Option<Callback<()>>,
+    login_nav_cb: Option<Callback<()>>
+}
+
+
+#[derive(PartialEq, Clone)]
+pub struct Props {
+    pub login_nav_cb: Option<Callback<()>>,
+    pub create_account_nav_cb: Option<Callback<()>>
+}
+
+impl Default for Props {
+    fn default() -> Self {
+        Props {
+            login_nav_cb: None,
+            create_account_nav_cb: None,
+        }
+    }
 }
 
 
 impl Component<Context> for Login {
 
     type Msg = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_: Self::Properties, _: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+        context.routing.set_route("login".to_string());
+
         Login {
             user_name: String::from(""),
             password: String::from(""),
-            ft: None
+            ft: None,
+            create_account_nav_cb: props.create_account_nav_cb,
+            login_nav_cb: props.login_nav_cb,
         }
     }
 
@@ -44,7 +70,7 @@ impl Component<Context> for Login {
                 let callback = context.send_back(|response: Response<Json<Result<String, ()>>>| {
                     let (meta, Json(data)) = response.into_parts();
                     println!("META: {:?}, {:?}", meta, data);
-                    Msg::NoOp
+                    Msg::NavToLanding
                 });
                 let login_request: LoginRequest = LoginRequest {
                     user_name: self.user_name.clone(),
@@ -52,13 +78,21 @@ impl Component<Context> for Login {
                 };
                 let body = serde_json::to_string(&login_request).unwrap();
                 let request = Request::post("http://localhost:8001/api/auth/login")
-                     .header("Content-Type", "application/json")
+                    .header("Content-Type", "application/json")
                     .body(body)
                     .unwrap();
                 let task = context.networking.fetch(request, callback);
                 self.ft = Some(task);
+
                 false
             },
+            Msg::NavToCreateAccount => {
+                println!("Hi mom");
+                if let Some(ref mut cb) = self.create_account_nav_cb {
+                    cb.emit(())
+                }
+                true
+            }
             Msg::UpdatePassword(p) => {
                 self.password = p;
                 true
@@ -67,9 +101,20 @@ impl Component<Context> for Login {
                 self.user_name = u;
                 true
             }
+            Msg::NavToLanding => {
+                if let Some(ref mut cb) = self.login_nav_cb {
+                    cb.emit(())
+                }
+                true
+            }
             Msg::NoOp => false
         }
     }
+
+//    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+//        self.nav_cb = props.nav_cb;
+//        true
+//    }
 }
 
 impl Renderable<Context, Login> for Login {
@@ -99,6 +144,7 @@ impl Renderable<Context, Login> for Login {
                 />
 
                 <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
 //                <Button: title=&self.button_title, color=Color::Success, disabled=self.disabled, onclick=|_| Msg::Submit, />
             <div/>
         }

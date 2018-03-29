@@ -11,3 +11,5 @@ failure = "0.1"
 serde = "1"
 serde_derive = "1"
 serde_json = "*"
+
+stdweb = "0.4.2"

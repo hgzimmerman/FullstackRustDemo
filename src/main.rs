@@ -95,7 +95,7 @@ fn main() {
 pub fn init_rocket() -> Rocket {
 
     // Set up CORS for local development using `cargo web start`
-    let (allowed_origins, _failed_origins) = AllowedOrigins::some(&["http://[::1]:8000"]);
+    let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000"]);
     assert!(failed_origins.is_empty());
 
     let options = rocket_cors::Cors {
