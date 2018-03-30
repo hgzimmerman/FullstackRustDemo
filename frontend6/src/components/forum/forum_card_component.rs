@@ -72,7 +72,7 @@ impl Renderable<Context, ForumCardComponent> for ForumCardComponent {
         return html! {
             <>
                 <div>
-                    <Link: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="", />
+                    <Link<()>: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="", />
                     {&self.forum_data.title}
                     {&self.forum_data.description}
                 </div>

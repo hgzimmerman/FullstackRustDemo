@@ -48,11 +48,18 @@ pub struct Context {
 //     }
 // }
 //
+#[derive(Clone, PartialEq)]
 pub enum PageView {
     ForumView,
     ArticleView,
     AuthView(AuthPage),
     BucketView,
+}
+
+impl Default for PageView {
+    fn default() -> Self {
+        PageView::ForumView
+    }
 }
 
 pub trait Routable<T> {
@@ -166,8 +173,8 @@ impl Renderable<Context, Model> for Model {
                 <div class="header",>
                     { "WeekendAtJoe's dot com" }
 
-                    <Link: name="login", callback=|_| Msg::Navigate(PageView::AuthView(AuthPage::Login)), />
-                    <Link: name="Forum", callback=|_| Msg::Navigate(PageView::ForumView), />
+                    <Link<()>: name="login", callback=|_| Msg::Navigate(PageView::AuthView(AuthPage::Login)), />
+                    <Link<()>: name="Forum", callback=|_| Msg::Navigate(PageView::ForumView), />
                 </div>
                 {page()}
             </>

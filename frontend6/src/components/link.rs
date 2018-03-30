@@ -2,8 +2,9 @@ use yew::prelude::*;
 
 
 
-pub struct Link {
-    pub callback: Option<Callback<()>>,
+pub struct Link<T> {
+    pub callback: Option<Callback<T>>,
+    cb_value: T,
     pub name: String,
     pub classes: String,
 }
@@ -14,29 +15,32 @@ pub enum Msg {
 }
 
 #[derive(Clone, PartialEq)]
-pub struct Props {
-    pub callback:  Option<Callback<()>>,
+pub struct Props<T> {
+    pub callback:  Option<Callback<T>>,
+    pub cb_value: T,
     pub name: String,
     pub classes: String,
 }
 
-impl Default for Props {
+impl <T: Default> Default for Props<T> {
     fn default() -> Self {
         Props {
             callback: None,
+            cb_value: T::default(),
             name: "".to_string(),
             classes: "".to_string()
         }
     }
 }
 
-impl<CTX: 'static> Component<CTX> for Link {
+impl<CTX: 'static, T> Component<CTX> for Link<T> where T: 'static + Clone + PartialEq + Default {
     type Msg = Msg;
-    type Properties = Props;
+    type Properties = Props<T>;
 
     fn create(props: Self::Properties, _:&mut Env<CTX, Self>) -> Self {
         Link {
             callback: props.callback,
+            cb_value: props.cb_value,
             name: props.name,
             classes: props.classes
         }
@@ -46,7 +50,7 @@ impl<CTX: 'static> Component<CTX> for Link {
         match msg {
             Msg::Clicked => {
                 if let Some(ref mut cb) = self.callback {
-                    cb.emit(())
+                    cb.emit(self.cb_value.clone())
                 }
             }
         }
@@ -62,7 +66,7 @@ impl<CTX: 'static> Component<CTX> for Link {
     }
 }
 
-impl<CTX: 'static> Renderable<CTX, Link> for Link {
+impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T> where T: 'static + Clone + PartialEq + Default {
 
     fn view(&self) -> Html<CTX, Self> {
         html!{

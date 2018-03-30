@@ -2,11 +2,11 @@ use yew::prelude::*;
 // use button::Button;
 use datatypes::minimal_thread::MinimalThread;
 
-
+use PageView;
 
 #[derive(Clone, PartialEq)]
 pub struct HeaderLink {
-    pub link: Callback<()>,
+    pub link: PageView,
     pub name: String,
     pub id: usize
 
@@ -14,22 +14,25 @@ pub struct HeaderLink {
 
 #[derive(Clone, PartialEq)]
 pub struct Header {
-    pub links: Vec<HeaderLink>
+    pub links: Vec<HeaderLink>,
+    pub callback: Option<Callback<PageView>>
 }
 
 pub enum Msg {
-    CallLink(usize)
+    CallLink(PageView)
 }
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
-    links: Vec<HeaderLink>
+    links: Vec<HeaderLink>,
+    callback: Option<Callback<PageView>>
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            links: vec![]
+            links: vec![],
+            callback: None
         }
     }
 }
@@ -41,14 +44,17 @@ impl<CTX: 'static> Component<CTX> for Header {
 
     fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
         Header {
-            links: props.links 
+            links: props.links,
+            callback: props.callback
         }
     }
 
     fn update(&mut self, msg: Self::Msg, _: &mut Env<CTX, Self>) -> ShouldRender {
         match msg {
-            Msg::CallLink(link_number) => {
-
+            Msg::CallLink(page_view) => {
+                if let Some(ref cb) = self.callback {
+                    cb.emit(page_view)
+                }
             }
         }
         true
@@ -66,7 +72,7 @@ impl<CTX: 'static> Renderable<CTX, Header> for Header {
         use link;
 
         let link = |x: &HeaderLink| html! {
-            <Link: name=&x.name, callback=|_| Msg::CallLink(1), classes="", />
+            <Link<PageView>: name=&x.name, callback=|pv| Msg::CallLink(pv), classes="", />
         };
 
         html! {
