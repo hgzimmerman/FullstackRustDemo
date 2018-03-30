@@ -7,7 +7,7 @@ use self::create_account_component::CreateAccount;
 use Context;
 
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum AuthPage {
     Login,
     Create

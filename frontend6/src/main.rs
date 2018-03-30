@@ -48,7 +48,7 @@ pub struct Context {
 //     }
 // }
 //
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum PageView {
     ForumView,
     ArticleView,
@@ -126,7 +126,8 @@ impl Component<Context> for Model {
                 true
             }
             Msg::Navigate(page) => {
-                context.routing.set_route("");
+//                context.routing.set_route("");
+                println!("MainNav: navigating to {:?}", page);
                 self.page = page;
                 true
             }
@@ -135,6 +136,9 @@ impl Component<Context> for Model {
 }
 
 use components::auth::Auth;
+
+use components::header_component::*;
+
 
 impl Renderable<Context, Model> for Model {
 
@@ -167,15 +171,20 @@ impl Renderable<Context, Model> for Model {
             }
         };
 
+        let header_links = vec![
+            HeaderLink {
+                name: "Login".into(),
+                link: PageView::AuthView(AuthPage::Login)
+            },
+            HeaderLink {
+                name: "Forum".into(),
+                link: PageView::ForumView
+            }
+        ];
         use link::Link;
         html! {
             <>
-                <div class="header",>
-                    { "WeekendAtJoe's dot com" }
-
-                    <Link<()>: name="login", callback=|_| Msg::Navigate(PageView::AuthView(AuthPage::Login)), />
-                    <Link<()>: name="Forum", callback=|_| Msg::Navigate(PageView::ForumView), />
-                </div>
+                <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />
                 {page()}
             </>
         }

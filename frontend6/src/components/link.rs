@@ -33,7 +33,8 @@ impl <T: Default> Default for Props<T> {
     }
 }
 
-impl<CTX: 'static, T> Component<CTX> for Link<T> where T: 'static + Clone + PartialEq + Default {
+impl<CTX: 'static, T> Component<CTX> for Link<T>
+    where T: 'static + Clone + PartialEq + Default {
     type Msg = Msg;
     type Properties = Props<T>;
 
@@ -66,7 +67,8 @@ impl<CTX: 'static, T> Component<CTX> for Link<T> where T: 'static + Clone + Part
     }
 }
 
-impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T> where T: 'static + Clone + PartialEq + Default {
+impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T>
+    where T: 'static + Clone + PartialEq + Default {
 
     fn view(&self) -> Html<CTX, Self> {
         html!{

@@ -8,8 +8,6 @@ use PageView;
 pub struct HeaderLink {
     pub link: PageView,
     pub name: String,
-    pub id: usize
-
 }
 
 #[derive(Clone, PartialEq)]
@@ -24,8 +22,8 @@ pub enum Msg {
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
-    links: Vec<HeaderLink>,
-    callback: Option<Callback<PageView>>
+    pub links: Vec<HeaderLink>,
+    pub callback: Option<Callback<PageView>>
 }
 
 impl Default for Props {
@@ -72,13 +70,12 @@ impl<CTX: 'static> Renderable<CTX, Header> for Header {
         use link;
 
         let link = |x: &HeaderLink| html! {
-            <Link<PageView>: name=&x.name, callback=|pv| Msg::CallLink(pv), classes="", />
+            <Link<PageView>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="", />
         };
 
         html! {
             <div class="header",>
                 { "WeekendAtJoes.com" }
-
                 { for self.links.iter().map(link)}
             </div>
         }
