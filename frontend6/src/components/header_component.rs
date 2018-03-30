@@ -70,13 +70,17 @@ impl<CTX: 'static> Renderable<CTX, Header> for Header {
         use link;
 
         let link = |x: &HeaderLink| html! {
-            <Link<PageView>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="", />
+            <Link<PageView>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
         };
 
         html! {
             <div class="header",>
-                { "WeekendAtJoes.com" }
-                { for self.links.iter().map(link)}
+                <div class="nav-title",>
+                    { "WeekendAtJoe's.com" }
+                </div>
+                <div class="nav-links",>
+                    { for self.links.iter().map(link)}
+                </div>
             </div>
         }
     }

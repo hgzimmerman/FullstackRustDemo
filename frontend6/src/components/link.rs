@@ -6,7 +6,7 @@ pub struct Link<T> {
     pub callback: Option<Callback<T>>,
     cb_value: T,
     pub name: String,
-    pub classes: String,
+    pub classes: &'static str,
 }
 
 
@@ -19,7 +19,7 @@ pub struct Props<T> {
     pub callback:  Option<Callback<T>>,
     pub cb_value: T,
     pub name: String,
-    pub classes: String,
+    pub classes: &'static str,
 }
 
 impl <T: Default> Default for Props<T> {
@@ -28,7 +28,7 @@ impl <T: Default> Default for Props<T> {
             callback: None,
             cb_value: T::default(),
             name: "".to_string(),
-            classes: "".to_string()
+            classes: ""
         }
     }
 }
@@ -72,7 +72,7 @@ impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T>
 
     fn view(&self) -> Html<CTX, Self> {
         html!{
-            <a onclick= |_| Msg::Clicked, >
+            <a onclick= |_| Msg::Clicked, class={self.classes}, >
                 {&self.name}
             </a>
         }

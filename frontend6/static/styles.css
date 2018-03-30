@@ -3,12 +3,7 @@ body {
     margin: 0;
     height: 100vh;
 }
-.header {
-    width: 100%;
-    height: 70px;
-    background-color: orangered;
-    font-size: 20px;
-}
+
 
 .thread-card {
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
@@ -41,4 +36,30 @@ body {
 
 .thread-card-author-link {
     font-size: 14px;
+}
+
+/* Header */
+.header {
+    width: 100%;
+    height: 40px;
+    background-color: orangered;
+    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Vertically center the content*/
+}
+
+.nav-title {
+    margin-left: 10px;
+    flex: 1;
+}
+
+.nav-links {
+    flex: 0;
+}
+
+.nav-link {
+    font-size: 18px;
+    margin: 5px;
+    color: blue;
 }
