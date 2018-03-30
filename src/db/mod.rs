@@ -52,7 +52,7 @@ pub fn init_pool() -> Pool {
 pub struct Conn(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
 
 impl Conn {
-    #[cfg(test)]
+//    #[cfg(test)]
     pub(crate) fn new(pooled_connection: r2d2::PooledConnection<ConnectionManager<PgConnection>>) -> Conn {
         Conn(pooled_connection)
     }
@@ -128,6 +128,70 @@ trait CRD<'a, T>
 where
     Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
 {
+}
+
+pub mod testing {
+
+    use super::*;
+    use chrono::Utc;
+    use error::WeekendAtJoesError;
+    use db::user::*;
+    use db::forum::*;
+    use db::thread::*;
+    use requests_and_responses::user::*;
+    /// Create a bunch of entries for every data type in the backend.
+    pub fn generate_test_fixtures(conn: &Conn) -> Result<(), WeekendAtJoesError> {
+
+        // Create User
+        let mut user: NewUser = NewUserRequest {
+            user_name: "Admin".into(),
+            display_name: "Admin".into(),
+            plaintext_password: "12345".into()
+        }.into();
+        user.roles.push(UserRole::Admin.into());
+        user.roles.push(UserRole::Moderator.into());
+        let user: User = User::create(user, conn)?;
+
+        // Create forums
+        let forum1: NewForum = NewForum {
+            title: "Joe Forum".to_string(),
+            description: "A Forum for All Things Joe.".to_string(),
+        };
+        let forum1: Forum = Forum::create(forum1, conn)?;
+        let forum2: NewForum = NewForum {
+            title: "Off Topic".to_string(),
+            description: "A Forum for All Things Not Related to Joe.".to_string(),
+        };
+        let forum2: Forum = Forum::create(forum2, conn)?;
+        let forums: Vec<Forum> = vec![forum1, forum2];
+
+        // Create Threads
+        let create_thread_fn = |forum: &Forum, user: &User, title: &str| {
+            let thread1: NewThread = NewThread {
+                forum_id: forum.id,
+                author_id: user.id,
+                created_date: Utc::now().naive_utc(),
+                locked: false,
+                archived: false,
+                title: title.to_string(),
+            };
+            Thread::create(thread1, &conn)
+        };
+
+        let thread_titles: Vec<&'static str> = vec!["Thread Title", "Another Thread", "Yet Another Thread"];
+
+        let mut threads: Vec<Thread> = vec![];
+        for forum in forums {
+            for thread_title in thread_titles.clone() {
+                threads.push(create_thread_fn(&forum, &user, thread_title)?)
+            }
+        }
+        let threads = threads; // remove mutability
+
+        return Ok(())
+    }
+
+
 }
 
 

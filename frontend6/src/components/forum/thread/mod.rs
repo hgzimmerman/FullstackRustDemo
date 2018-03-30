@@ -10,6 +10,8 @@ use requests_and_responses::thread::MinimalThreadResponse;
 use datatypes::forum::ForumData;
 use datatypes::thread::MinimalThreadData;
 
+use yew::services::fetch::FetchTask;
+
 mod thread_card_component;
 use self::thread_card_component::ThreadCardComponent;
 
@@ -21,8 +23,9 @@ pub enum Child {
 }
 
 pub struct Threads {
-    pub child: Option<Child>,
-    pub threads: Vec<MinimalThreadData>
+    child: Option<Child>,
+    threads: Vec<MinimalThreadData>,
+    ft: Option<FetchTask>
 }
 
 
@@ -33,7 +36,7 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq, Default)]
 pub struct Props {
-    forum_data: ForumData
+    pub forum_data: ForumData
 }
 
 impl Component<Context> for Threads {
@@ -56,7 +59,8 @@ impl Component<Context> for Threads {
 
         Threads {
             child: None,
-            threads: vec!()
+            threads: vec!(),
+            ft: Some(task)
         }
     }
 
@@ -109,7 +113,6 @@ impl Renderable<Context, Threads> for Threads {
             return html! {
                 <>
                     {for self.threads.iter().map(thread_card) }
-                    {"There should be a list of threads here."}
                 </>
             }
         }

@@ -116,8 +116,20 @@ pub fn init_rocket() -> Rocket {
     // authentication attempt having to check the database.
     let banned_set = BannedSet::new();
 
+    let db_pool = db::init_pool();
+
+    // TODO, add some config value for this.
+    // Protect this by not allowing it to run in release mode, or querying for user input if this flag is enabled, just to confirm.34
+    let testing = false;
+    if testing {
+        warn!("=================");
+        warn!("Launched with testing enabled. This means that Default Entries have been added to the database, compromising security.");
+        warn!("=================");
+        db::testing::generate_test_fixtures(&db::Conn::new(db_pool.get().unwrap())).expect("A test fixture with a unique name already exists, preventing the suite from running");
+    }
+
     rocket::ignite()
-        .manage(db::init_pool())
+        .manage(db_pool)
         .manage(secret)
         .manage(banned_set)
         .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])

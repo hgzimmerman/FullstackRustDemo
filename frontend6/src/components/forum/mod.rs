@@ -11,11 +11,15 @@ use datatypes::forum::ForumData;
 
 mod forum_card_component;
 mod thread;
+use self::thread::Threads;
 use self::forum_card_component::ForumCardComponent;
+
+use yew::services::fetch::FetchTask;
 
 pub struct Forum {
     pub child: Option<ForumData>,
-    pub forums: Vec<ForumData>
+    pub forums: Vec<ForumData>,
+    ft: Option<FetchTask>
 }
 
 
@@ -44,7 +48,7 @@ impl Component<Context> for Forum {
         let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, ()>>>| {
             let (meta, Json(data)) = response.into_parts();
             println!("META: {:?}, {:?}", meta, data);
-            Msg::ContentReady(data.unwrap().into_iter().map(ForumData::from).collect())
+            Msg::ContentReady(data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect())
         });
         let request = Request::get("http://localhost:8001/api/forum/forums")
             .header("Content-Type", "application/json")
@@ -54,13 +58,16 @@ impl Component<Context> for Forum {
 
         Forum {
             child: None,
-            forums: vec!()
+            forums: vec!(),
+            ft: Some(task)
         }
     }
 
     fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::SetChild(fd) => {
+                println!("Setting child");
+                self.child = Some(fd);
                 true
             }
             Msg::ContentReady(forums) => {
@@ -78,24 +85,23 @@ impl Component<Context> for Forum {
 impl Renderable<Context, Forum> for Forum {
 
     fn view(&self) -> Html<Context, Self> {
-
-        let forum_card = |x: &ForumData| html! {
-            <ForumCardComponent: forum_data=x, callback=|fd| Msg::SetChild(fd), />
+        let forum_card = |x: &ForumData| {
+            html! {
+                <ForumCardComponent: forum_data=x, callback=|fd| Msg::SetChild(fd), />
+            }
         };
 
         let page = || {
             if let Some(ref child) = self.child {
                 html!{
                     <>
-                        {"I am the forum view"}
-                    <>
+                        <Threads: forum_data=child, />
+                    </>
                 }
-
             } else {
                 html!{
                     <>
-                        {for self.forums.iter().map(forum_card) }
-                        {"There should be a list of forums here."}
+                        { for self.forums.iter().map(forum_card) }
                     </>
                 }
             }

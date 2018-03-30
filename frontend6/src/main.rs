@@ -69,7 +69,7 @@ pub trait Routable<T> {
 
 struct Model {
     page: PageView,
-    jwt: Option<String> // Its dumb to store it here, but for now, this is where the jwt will live. Instead it should use the localstorage api.
+//    jwt: Option<String> // Its dumb to store it here, but for now, this is where the jwt will live. Instead it should use the localstorage api.
 }
 
 
@@ -99,7 +99,7 @@ impl Component<Context> for Model {
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         Model {
             page: Model::route(context),
-            jwt: None
+//            jwt: None
         }
     }
 
@@ -112,12 +112,12 @@ impl Component<Context> for Model {
         match msg {
             Msg::Login {jwt} => {
                 // Set the jwt
-                self.jwt = Some(jwt);
+//                self.jwt = Some(jwt);
                 true
             }
             Msg::Logout => {
                 // Invalidate the JWT
-                self.jwt = None;
+//                self.jwt = None;
                 // Navigate elsewhere
                 self.page = PageView::AuthView(AuthPage::Login);
                 true
