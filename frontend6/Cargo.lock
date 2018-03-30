@@ -91,6 +91,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "frontend6"
 version = "0.1.0"
 dependencies = [
+ "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "requests_and_responses 0.1.0",
  "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",

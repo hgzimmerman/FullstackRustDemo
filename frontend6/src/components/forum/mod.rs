@@ -10,6 +10,7 @@ use requests_and_responses::forum::ForumResponse;
 use datatypes::forum::ForumData;
 
 mod forum_card_component;
+mod thread;
 use self::forum_card_component::ForumCardComponent;
 
 pub struct Forum {

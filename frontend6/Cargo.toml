@@ -13,3 +13,5 @@ serde_derive = "1"
 serde_json = "*"
 
 stdweb = "0.4.2"
+
+chrono = { version = "0.4", features = ["serde"] }

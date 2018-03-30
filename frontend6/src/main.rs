@@ -8,6 +8,8 @@ extern crate failure;
 extern crate serde;
 #[macro_use] extern crate serde_json;
 
+extern crate chrono;
+
 #[macro_use] extern crate stdweb;
 
 
@@ -18,8 +20,6 @@ use yew::services::console::ConsoleService;
 // use barrier::Barrier;
 mod datatypes;
 use datatypes::minimal_thread::MinimalThread;
-// mod threadCardComponent;
-use threadCardComponent::ThreadCard;
 //mod header_component;
 use header_component::Header;
 
@@ -164,10 +164,10 @@ impl Renderable<Context, Model> for Model {
         html! {
             <>
                 <div class="header",>
-                    { "WeekendAtJoe dot com" }
+                    { "WeekendAtJoe's dot com" }
 
                     <Link: name="login", callback=|_| Msg::Navigate(PageView::AuthView(AuthPage::Login)), />
-                    <Link: name="ForumView", callback=|_| Msg::Navigate(PageView::ForumView), />
+                    <Link: name="Forum", callback=|_| Msg::Navigate(PageView::ForumView), />
                 </div>
                 {page()}
             </>
