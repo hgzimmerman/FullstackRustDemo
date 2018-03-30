@@ -43,14 +43,22 @@ impl Component<Context> for Auth {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _:&mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, context:&mut Env<Context, Self>) -> Self {
+        let route = context.routing.get_route();
+//        let child = match route.as_ref() {
+//           "auth/login" => AuthPage::Login,
+//           "auth/create" => AuthPage::Create,
+//            _ => props.child
+//        };
+        context.routing.set_route("/auth");
         Auth {
             child: props.child,
             callback: props.callback
         }
+
     }
 
-    fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Callback => {
                 if let Some(ref mut cb) = self.callback {
@@ -59,16 +67,16 @@ impl Component<Context> for Auth {
                 false
             }
             Msg::SetChild(child) => {
+//                context.routing.pop_route();
                 self.child = child;
                 true
             }
         }
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
         self.callback = props.callback;
         self.child = props.child;
-
         true
     }
 }

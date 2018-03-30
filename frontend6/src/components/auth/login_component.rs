@@ -51,7 +51,7 @@ impl Component<Context> for Login {
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        context.routing.set_route("login".to_string());
+        context.routing.set_route("/auth/login");
 
         Login {
             user_name: String::from(""),
@@ -87,7 +87,7 @@ impl Component<Context> for Login {
                 false
             },
             Msg::NavToCreateAccount => {
-                println!("Hi mom");
+                println!("LoginComponent: navigating to create account");
                 if let Some(ref mut cb) = self.create_account_nav_cb {
                     cb.emit(())
                 }

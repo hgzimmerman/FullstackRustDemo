@@ -1,10 +1,14 @@
+#![feature(try_from)]
+
+
 #[macro_use]
 extern crate yew;
 extern crate requests_and_responses;
 extern crate failure;
 extern crate serde;
 #[macro_use] extern crate serde_json;
-extern crate stdweb;
+
+#[macro_use] extern crate stdweb;
 
 
 use yew::prelude::*;
@@ -28,6 +32,9 @@ use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 
 use services::route_service::RouteService;
 
+use auth::AuthPage;
+use components::forum::Forum;
+
 pub struct Context {
     // console: ConsoleService,
     networking: FetchService,
@@ -44,7 +51,7 @@ pub struct Context {
 pub enum PageView {
     ForumView,
     ArticleView,
-    AuthView,
+    AuthView(AuthPage),
     BucketView,
 }
 
@@ -68,8 +75,8 @@ enum Msg {
 
 impl Routable<PageView> for Model {
     fn route(context: &mut Context) -> PageView {
-        match context.routing.route.as_ref() {
-            "auth" => PageView::AuthView,
+        match context.routing.get_route().as_ref() {
+//            "auth" => PageView::AuthView(AuthPage::Undetermined),
             "forum" => PageView::ForumView,
             "article" => PageView::ArticleView,
             "bucket" => PageView::BucketView,
@@ -105,18 +112,14 @@ impl Component<Context> for Model {
                 // Invalidate the JWT
                 self.jwt = None;
                 // Navigate elsewhere
-                self.page = PageView::AuthView;
+                self.page = PageView::AuthView(AuthPage::Login);
                 true
             }
             Msg::NoOp => {
                 true
             }
             Msg::Navigate(page) => {
-                match page {
-                    _ => {
-                        println!("Setting page")
-                    }
-                };
+                context.routing.set_route("");
                 self.page = page;
                 true
             }
@@ -133,10 +136,17 @@ impl Renderable<Context, Model> for Model {
 
         let page = || {
             match self.page {
-                PageView::AuthView => {
+                PageView::AuthView(ref auth_page) => {
                     html! {
                         <>
-                            <Auth: callback=|_| Msg::Navigate(PageView::ForumView), />
+                            <Auth: child=auth_page, callback=|_| Msg::Navigate(PageView::ForumView), />
+                        </>
+                    }
+                }
+                PageView::ForumView => {
+                    html! {
+                        <>
+                            <Forum: />
                         </>
                     }
                 }
@@ -156,8 +166,8 @@ impl Renderable<Context, Model> for Model {
                 <div class="header",>
                     { "WeekendAtJoe dot com" }
 
-                    <Link: name="login", callback=|_| Msg::Navigate(PageView::AuthView), />
-                    <Link: name="Threads", callback=|_| Msg::Navigate(PageView::ForumView), />
+                    <Link: name="login", callback=|_| Msg::Navigate(PageView::AuthView(AuthPage::Login)), />
+                    <Link: name="ForumView", callback=|_| Msg::Navigate(PageView::ForumView), />
                 </div>
                 {page()}
             </>
