@@ -157,7 +157,7 @@ impl Renderable<Context, Model> for Model {
                 PageView::ForumView => {
                     html! {
                         <>
-                            <Forum: />
+                            <Forum: child=None, />
                         </>
                     }
                 }

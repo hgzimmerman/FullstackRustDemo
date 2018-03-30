@@ -71,6 +71,7 @@ impl Component<Context> for Threads {
             }
             Msg::ContentReady(threads) => {
                 self.threads = threads;
+                self.ft = None;
                 true
             }
         }
@@ -111,9 +112,9 @@ impl Renderable<Context, Threads> for Threads {
         // No children, just show the threads for the current forum.
         else {
             return html! {
-                <>
+                <div> // For loops need to be wrapped by <div>. <> will introduce bugs when navigating away.
                     {for self.threads.iter().map(thread_card) }
-                </>
+                </div>
             }
         }
 

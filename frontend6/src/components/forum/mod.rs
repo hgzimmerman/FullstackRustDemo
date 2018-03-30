@@ -30,11 +30,13 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
+    pub child: Option<ForumData>
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
+            child: None
         }
     }
 }
@@ -72,12 +74,15 @@ impl Component<Context> for Forum {
             }
             Msg::ContentReady(forums) => {
                 self.forums = forums;
+                self.ft = None;
                 true
             }
         }
     }
 
     fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+        println!("Forum container change() called");
+        self.child = props.child;
         true
     }
 }
@@ -91,26 +96,19 @@ impl Renderable<Context, Forum> for Forum {
             }
         };
 
-        let page = || {
-            if let Some(ref child) = self.child {
-                html!{
-                    <>
-                        <Threads: forum_data=child, />
-                    </>
-                }
-            } else {
-                html!{
-                    <>
-                        { for self.forums.iter().map(forum_card) }
-                    </>
-                }
+        return if let Some(ref child) = self.child {
+            html!{
+                <>
+                    <Threads: forum_data=child, />
+                </>
             }
-        };
-
-        return html! {
-            <>
-                {page()}
-            </>
+        } else {
+            html!{
+                <div>
+                    { for self.forums.iter().map(forum_card) }
+                </div>
+            }
         }
+
     }
 }

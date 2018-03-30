@@ -102,6 +102,7 @@ impl Component<Context> for Login {
                 true
             }
             Msg::NavToLanding => {
+                self.ft = None;
                 if let Some(ref mut cb) = self.login_nav_cb {
                     cb.emit(())
                 }
