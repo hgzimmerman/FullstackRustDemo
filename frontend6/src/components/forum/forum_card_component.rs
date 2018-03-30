@@ -70,11 +70,14 @@ impl Renderable<Context, ForumCardComponent> for ForumCardComponent {
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
-            <div>
-                <Link<()>: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="", />
-                {&self.forum_data.title}
-                {&self.forum_data.description}
-            </div>
+            <li>
+                <div>
+                    <Link<()>: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="", />
+                </div>
+                <div>
+                    {&self.forum_data.description}
+                </div>
+            </li>
         }
     }
 }

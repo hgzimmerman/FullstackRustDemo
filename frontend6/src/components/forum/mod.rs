@@ -104,8 +104,10 @@ impl Renderable<Context, Forum> for Forum {
             }
         } else {
             html!{
-                <div>
-                    { for self.forums.iter().map(forum_card) }
+                <div class="centered", >
+                    <ul class="forum-list",>
+                        { for self.forums.iter().map(forum_card) }
+                    </ul>
                 </div>
             }
         }

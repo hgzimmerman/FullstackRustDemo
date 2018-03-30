@@ -173,13 +173,13 @@ impl Renderable<Context, Model> for Model {
 
         let header_links = vec![
             HeaderLink {
+                name: "Forum".into(),
+                link: PageView::ForumView
+            },
+            HeaderLink {
                 name: "Login".into(),
                 link: PageView::AuthView(AuthPage::Login)
             },
-            HeaderLink {
-                name: "Forum".into(),
-                link: PageView::ForumView
-            }
         ];
         use link::Link;
         html! {

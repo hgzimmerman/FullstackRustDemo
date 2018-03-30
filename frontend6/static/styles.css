@@ -63,3 +63,18 @@ body {
     margin: 5px;
     color: blue;
 }
+
+/* Forum */
+
+.forum-list {
+    list-style-type: none;
+    width: 100%;
+    border-left: solid 1px black;
+    border-right: solid 1px black;
+}
+
+.centered {
+   height: 100%;
+   margin: 40px; /* Come up with a better centering method */
+   background-color: aqua;
+}
