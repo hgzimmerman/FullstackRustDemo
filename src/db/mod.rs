@@ -52,7 +52,7 @@ pub fn init_pool() -> Pool {
 pub struct Conn(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
 
 impl Conn {
-//    #[cfg(test)]
+    //    #[cfg(test)]
     pub(crate) fn new(pooled_connection: r2d2::PooledConnection<ConnectionManager<PgConnection>>) -> Conn {
         Conn(pooled_connection)
     }
@@ -146,21 +146,25 @@ pub mod testing {
         let mut user: NewUser = NewUserRequest {
             user_name: "Admin".into(),
             display_name: "Admin".into(),
-            plaintext_password: "12345".into()
+            plaintext_password: "12345".into(),
         }.into();
         user.roles.push(UserRole::Admin.into());
-        user.roles.push(UserRole::Moderator.into());
+        user.roles.push(
+            UserRole::Moderator.into(),
+        );
         let user: User = User::create(user, conn)?;
 
         // Create forums
         let forum1: NewForum = NewForum {
             title: "Joe Forum".to_string(),
-            description: "A Forum for All Things Joe.".to_string(),
+            description: "A Forum for All Things Joe."
+                .to_string(),
         };
         let forum1: Forum = Forum::create(forum1, conn)?;
         let forum2: NewForum = NewForum {
             title: "Off Topic".to_string(),
-            description: "A Forum for All Things Not Related to Joe.".to_string(),
+            description: "A Forum for All Things Not Related to Joe."
+                .to_string(),
         };
         let forum2: Forum = Forum::create(forum2, conn)?;
         let forums: Vec<Forum> = vec![forum1, forum2];
@@ -183,12 +187,16 @@ pub mod testing {
         let mut threads: Vec<Thread> = vec![];
         for forum in forums {
             for thread_title in thread_titles.clone() {
-                threads.push(create_thread_fn(&forum, &user, thread_title)?)
+                threads.push(create_thread_fn(
+                    &forum,
+                    &user,
+                    thread_title,
+                )?)
             }
         }
         let threads = threads; // remove mutability
 
-        return Ok(())
+        return Ok(());
     }
 
 

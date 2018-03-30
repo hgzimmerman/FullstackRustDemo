@@ -125,7 +125,8 @@ pub fn init_rocket() -> Rocket {
         warn!("=================");
         warn!("Launched with testing enabled. This means that Default Entries have been added to the database, compromising security.");
         warn!("=================");
-        db::testing::generate_test_fixtures(&db::Conn::new(db_pool.get().unwrap())).expect("A test fixture with a unique name already exists, preventing the suite from running");
+        db::testing::generate_test_fixtures(&db::Conn::new(db_pool.get().unwrap()))
+            .expect("A test fixture with a unique name already exists, preventing the suite from running");
     }
 
     rocket::ignite()
