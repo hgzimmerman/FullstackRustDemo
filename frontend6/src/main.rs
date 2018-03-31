@@ -12,6 +12,8 @@ extern crate chrono;
 
 #[macro_use] extern crate stdweb;
 
+extern crate pulldown_cmark;
+
 
 use yew::prelude::*;
 use yew::html::Scope;

@@ -11,6 +11,7 @@ use serde_json;
 use PageView;
 
 
+
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
@@ -67,7 +68,7 @@ impl Component<Context> for Login {
         match msg {
             Msg::Submit => {
                 println!("Logging in with user name: {}", self.user_name);
-                let callback = context.send_back(|response: Response<Json<Result<String, ()>>>| {
+                let callback = context.send_back(|response: Response<Json<Result<String, Error>>>| {
                     let (meta, Json(data)) = response.into_parts();
                     println!("META: {:?}, {:?}", meta, data);
                     Msg::NavToLanding

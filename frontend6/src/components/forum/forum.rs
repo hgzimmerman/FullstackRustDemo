@@ -11,6 +11,7 @@ use datatypes::forum::ForumData;
 use datatypes::thread::MinimalThreadData;
 
 use yew::services::fetch::FetchTask;
+use failure::Error;
 
 
 use components::forum::thread::thread_list_element::ThreadListElement;
@@ -45,7 +46,7 @@ impl Component<Context> for Forum {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        let callback = context.send_back(|response: Response<Json<Result<Vec<MinimalThreadResponse>, ()>>>| {
+        let callback = context.send_back(|response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
             let (meta, Json(data)) = response.into_parts();
             println!("META: {:?}, {:?}", meta, data);
             Msg::ContentReady(data.unwrap().into_iter().map(MinimalThreadData::from).collect())
@@ -123,9 +124,6 @@ impl Renderable<Context, Forum> for Forum {
                         </ul>
                     </div>
                 </div>
-//                <div> // For loops need to be wrapped by <div>. <> will introduce bugs when navigating away.
-//                    {for self.threads.iter().map(thread_card) }
-//                </div>
             }
         }
 

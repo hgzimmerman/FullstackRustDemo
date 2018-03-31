@@ -14,6 +14,7 @@ use components::forum::forum_list_element::ForumListElement;
 
 
 use yew::services::fetch::FetchTask;
+use failure::Error;
 
 pub struct ForumList {
     pub child: Option<ForumData>,
@@ -46,7 +47,7 @@ impl Component<Context> for ForumList {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, ()>>>| {
+        let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
             let (meta, Json(data)) = response.into_parts();
             println!("META: {:?}, {:?}", meta, data);
             Msg::ContentReady(data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect())

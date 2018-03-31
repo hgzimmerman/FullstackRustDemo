@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-yew = { git = "https://github.com/DenisKolodin/yew", rev = "6e7a5611c9a6d8ae4e2f2437d1c41a5bb28919af" }
+#yew = { git = "https://github.com/DenisKolodin/yew", rev = "6e7a5611c9a6d8ae4e2f2437d1c41a5bb28919af" }
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "e80d8d564f4b5c8239408f32ec2301e8c629fefa" }
 requests_and_responses = {path = "../requests_and_responses"}
 failure = "0.1"
 
@@ -15,3 +16,6 @@ serde_json = "*"
 stdweb = "0.4.2"
 
 chrono = { version = "0.4", features = ["serde"] }
+
+# For parsing rendering markdown
+pulldown-cmark = { git = "https://github.com/google/pulldown-cmark", rev = "c1ac9123f1653dc774403634696f848ffecbb01c" }
