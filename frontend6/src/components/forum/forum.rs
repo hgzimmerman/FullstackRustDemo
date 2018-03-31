@@ -15,6 +15,8 @@ use failure::Error;
 
 
 use components::forum::thread::thread_list_element::ThreadListElement;
+use components::button::Button;
+use components::forum::thread::new_thread::NewThread;
 
 #[derive(Clone, PartialEq)]
 pub enum Child {
@@ -68,7 +70,8 @@ impl Component<Context> for Forum {
 
     fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
-            Msg::SetChild(td) => {
+            Msg::SetChild(child) => {
+                self.child = Some(child);
                 true
             }
             Msg::ContentReady(threads) => {
@@ -79,7 +82,7 @@ impl Component<Context> for Forum {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
         true
     }
 }
@@ -92,18 +95,27 @@ impl Renderable<Context, Forum> for Forum {
             <ThreadListElement: thread_data=x, callback=|td| Msg::SetChild(Child::ThreadContents(td)), />
         };
 
-        if let Some(ref child) = self.child {
+        // Only show the button if there is no child element
+        let create_thread_button = || {
+            if let None = self.child {
+               html! {
+                    <Button: onclick=|_| Msg::SetChild(Child::CreateThread), title="Create Thread", />
+                }
+            } else {
+                html! {<></>}
+            }
+        };
+
+        let inner_content = || if let Some(ref child) = self.child {
             match child {
                 &Child::CreateThread => {
-                    return html! {
-                        <>
-                            {"Create Thread component"}
-                        </>
+                    html! {
+                        <NewThread: />
                     }
 
                 },
                 &Child::ThreadContents(ref _minimal_thread_data) => {
-                    return html! {
+                    html! {
                         <>
                             {"Inside of thread, a bunch of posts and stuff"}
                         </>
@@ -113,18 +125,24 @@ impl Renderable<Context, Forum> for Forum {
         }
         // No children, just show the threads for the current forum.
         else {
-            return html! {
-                <div class="vertical-flexbox", >
-                    <div class="centered",>
-                        <div class="forum-title",>
-                            <span class="forum-title-span", >{&self.parent.title} </span>
-                        </div>
-                        <ul class=("forum-list"),>
-                            { for self.threads.iter().map(thread_element) }
-                        </ul>
-                    </div>
-                </div>
+            html! {
+                <ul class=("forum-list"),>
+                    { for self.threads.iter().map(thread_element) }
+                </ul>
             }
+        };
+
+        html! {
+            <div class="vertical-flexbox", >
+                <div class="centered",>
+                    <div class="forum-title",>
+                        <span class="forum-title-span", >{&self.parent.title} </span>
+                        {create_thread_button()}
+                    </div>
+                    {inner_content()}
+                </div>
+            </div>
+
         }
 
     }

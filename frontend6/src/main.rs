@@ -76,9 +76,8 @@ struct Model {
 
 
 enum Msg {
-    Login{ jwt: String },
-    Logout,
-    NoOp,
+//    Login{ jwt: String },
+//    Logout,
     Navigate(PageView)
 }
 
@@ -112,21 +111,21 @@ impl Component<Context> for Model {
 
 
         match msg {
-            Msg::Login {jwt} => {
-                // Set the jwt
-//                self.jwt = Some(jwt);
-                true
-            }
-            Msg::Logout => {
-                // Invalidate the JWT
-//                self.jwt = None;
-                // Navigate elsewhere
-                self.page = PageView::AuthView(AuthPage::Login);
-                true
-            }
-            Msg::NoOp => {
-                true
-            }
+//            Msg::Login {jwt} => {
+//                // Set the jwt
+////                self.jwt = Some(jwt);
+//                true
+//            }
+//            Msg::Logout => {
+//                // Invalidate the JWT
+////                self.jwt = None;
+//                // Navigate elsewhere
+//                self.page = PageView::AuthView(AuthPage::Login);
+//                true
+//            }
+//            Msg::NoOp => {
+//                true
+//            }
             Msg::Navigate(page) => {
 //                context.routing.set_route("");
                 println!("MainNav: navigating to {:?}", page);
@@ -183,7 +182,6 @@ impl Renderable<Context, Model> for Model {
                 link: PageView::AuthView(AuthPage::Login)
             },
         ];
-        use link::Link;
         html! {
             <div class="main-container", >
                 <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />

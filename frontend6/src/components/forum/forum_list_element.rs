@@ -1,9 +1,5 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json, Nothing};
-
-use yew::services::fetch::Response;
-use yew::services::fetch::Request;
 
 use requests_and_responses::forum::ForumResponse;
 
@@ -40,7 +36,7 @@ impl Component<Context> for ForumListElement {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
         ForumListElement {
             forum_data: props.forum_data,
@@ -60,7 +56,7 @@ impl Component<Context> for ForumListElement {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
         true
     }
 }

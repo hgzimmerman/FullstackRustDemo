@@ -59,7 +59,7 @@ impl Component<Context> for ForumList {
         let task = context.networking.fetch(request, callback);
 
         ForumList {
-            child: None,
+            child: props.child,
             forums: vec!(),
             ft: Some(task)
         }

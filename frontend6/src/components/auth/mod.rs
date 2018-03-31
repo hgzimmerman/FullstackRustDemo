@@ -43,7 +43,7 @@ impl Component<Context> for Auth {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context:&mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         let route = context.routing.get_route();
 //        let child = match route.as_ref() {
 //           "auth/login" => AuthPage::Login,
@@ -58,7 +58,7 @@ impl Component<Context> for Auth {
 
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Callback => {
                 if let Some(ref mut cb) = self.callback {
@@ -74,7 +74,7 @@ impl Component<Context> for Auth {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
         self.callback = props.callback;
         self.child = props.child;
         true

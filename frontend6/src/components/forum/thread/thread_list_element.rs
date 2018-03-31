@@ -41,13 +41,14 @@ impl Component<Context> for ThreadListElement {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
         ThreadListElement {
             thread_data: props.thread_data,
             callback: props.callback
         }
     }
+
 
     fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
@@ -61,7 +62,7 @@ impl Component<Context> for ThreadListElement {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
         true
     }
 }
