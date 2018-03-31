@@ -13,7 +13,7 @@ use datatypes::thread::MinimalThreadData;
 use yew::services::fetch::FetchTask;
 
 
-use components::forum::thread::thread_card_component::ThreadCardComponent;
+use components::forum::thread::thread_list_element::ThreadListElement;
 
 #[derive(Clone, PartialEq)]
 pub enum Child {
@@ -87,8 +87,8 @@ impl Renderable<Context, Forum> for Forum {
 
     fn view(&self) -> Html<Context, Self> {
 
-        let thread_card = |x: &MinimalThreadData| html! {
-            <ThreadCardComponent: thread_data=x, callback=|td| Msg::SetChild(Child::ThreadContents(td)), />
+        let thread_element = |x: &MinimalThreadData| html! {
+            <ThreadListElement: thread_data=x, callback=|td| Msg::SetChild(Child::ThreadContents(td)), />
         };
 
         if let Some(ref child) = self.child {
@@ -118,9 +118,9 @@ impl Renderable<Context, Forum> for Forum {
                         <div class="forum-title",>
                             <span class="forum-title-span", >{&self.parent.title} </span>
                         </div>
-                            <ul class=("forum-list"),>
-                                { for self.threads.iter().map(thread_card) }
-                            </ul>
+                        <ul class=("forum-list"),>
+                            { for self.threads.iter().map(thread_element) }
+                        </ul>
                     </div>
                 </div>
 //                <div> // For loops need to be wrapped by <div>. <> will introduce bugs when navigating away.

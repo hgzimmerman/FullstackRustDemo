@@ -1,3 +1,3 @@
 
-pub mod thread_card_component;
+pub mod thread_list_element;
 

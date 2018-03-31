@@ -12,7 +12,7 @@ use datatypes::thread::MinimalThreadData;
 use components::link::Link;
 
 
-pub struct ThreadCardComponent {
+pub struct ThreadListElement {
     thread_data: MinimalThreadData,
     callback: Option<Callback<MinimalThreadData>>
 }
@@ -37,13 +37,13 @@ impl Default for Props {
     }
 }
 
-impl Component<Context> for ThreadCardComponent {
+impl Component<Context> for ThreadListElement {
     type Msg = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        ThreadCardComponent {
+        ThreadListElement {
             thread_data: props.thread_data,
             callback: props.callback
         }
@@ -66,7 +66,7 @@ impl Component<Context> for ThreadCardComponent {
     }
 }
 
-impl Renderable<Context, ThreadCardComponent> for ThreadCardComponent {
+impl Renderable<Context, ThreadListElement> for ThreadListElement {
 
     fn view(&self) -> Html<Context, Self> {
 
@@ -79,17 +79,6 @@ impl Renderable<Context, ThreadCardComponent> for ThreadCardComponent {
                     {format!("By: {}", &self.thread_data.author.display_name)}
                 </div>
             </li>
-//            <div class="thread-card",>
-//                <div class="thread-card-title",>
-//                    {&self.thread_data.title}
-//                </div>
-//                <div class="thread-card-author-link",>
-//                    {format!("By: {}", &self.thread_data.author.display_name)}
-//                </div>
-//                <div class="thread-card-author-link",>
-////                    { format!("Replies: {}",self.thread_dat.replies) }
-//                </div>
-//            </div>
         }
     }
 }
