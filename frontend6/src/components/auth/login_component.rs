@@ -144,6 +144,7 @@ impl Renderable<Context, Login> for Login {
                 <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
                 <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
 //                <Button: title=&self.button_title, color=Color::Success, disabled=self.disabled, onclick=|_| Msg::Submit, />
+
             <div/>
         }
 

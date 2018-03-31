@@ -1,4 +1,5 @@
 pub mod author_markdown_toggle;
+pub mod author_markdown_side_by_side;
 
 
 /// Original author of this code is [Nathan Ringo](https://github.com/remexre)

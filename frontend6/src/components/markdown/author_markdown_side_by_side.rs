@@ -1,23 +1,14 @@
 use yew::prelude::*;
 use Context;
 
-use components::button::Button;
-
-pub enum State {
-    Editing,
-    RenderingMarkdown
-}
-
-pub struct AuthorMarkdownToggle {
+pub struct AuthorMarkdownSideBySide {
     text: String,
-    editor_state: State,
     callback: Option<Callback<String>>
 }
 
 
 pub enum Msg {
     UpdateText(String),
-    ChangeState(State)
 }
 
 #[derive(Clone, PartialEq)]
@@ -35,15 +26,14 @@ impl Default for Props {
     }
 }
 
-impl Component<Context> for AuthorMarkdownToggle {
+impl Component<Context> for AuthorMarkdownSideBySide {
     type Msg = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
-        AuthorMarkdownToggle {
+        AuthorMarkdownSideBySide {
             text: props.text,
-            editor_state: State::Editing,
             callback: props.callback
         }
     }
@@ -57,10 +47,6 @@ impl Component<Context> for AuthorMarkdownToggle {
                 }
                 true
             }
-            Msg::ChangeState(state) => {
-                self.editor_state = state;
-                true
-            }
         }
     }
 
@@ -69,42 +55,23 @@ impl Component<Context> for AuthorMarkdownToggle {
     }
 }
 
-impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
+impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide {
 
 
     fn view(&self) -> Html<Context, Self> {
 
-
-        let view = || match self.editor_state {
-            State::Editing => html! {
-                <>
+        return html! {
+            <div class="edit-markdown-side-by-side-wrapper", >
+                <div class=("edit-markdown-half", "border-right"),>
                     <textarea
                         class=("markdown-textarea","form-control"),
                         value=&self.text,
                         oninput=|e: InputData| Msg::UpdateText(e.value),
                     />
-                </>
-            },
-            State::RenderingMarkdown => html! {
-               <div class="view-markdown-content",>
+                </div>
+                <div class="edit-markdown-half",>
                     {super::render_markdown::<Context, Self>(&self.text)}
-               </div>
-            }
-        };
-
-        return html! {
-            <div class="edit-markdown-toggle-box", >
-                <div class="edit-markdown-bar",>
-                    <Button: title="Edit", onclick=|_| Msg::ChangeState(State::Editing), />
-                    <Button: title="View", onclick=|_| Msg::ChangeState(State::RenderingMarkdown), />
                 </div>
-                <div class="markdown-min-height",>
-                    {view()}
-                </div>
-
-//                <div class="edit-markdown-bar",>
-//                    <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-//                </div>
             </div>
         }
     }

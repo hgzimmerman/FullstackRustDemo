@@ -187,3 +187,18 @@ button {
 .markdown-min-height {
     min-height: 200px;
 }
+
+.edit-markdown-side-by-side-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+.edit-markdown-half {
+    flex: 1;
+    height: 100%;
+    padding: 20px; /*Is there a better way here?*/
+}
+
+.border-right {
+    border-right: 2px solid black;
+}
