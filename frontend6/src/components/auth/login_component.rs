@@ -10,8 +10,6 @@ use serde_json;
 
 use PageView;
 
-
-
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),

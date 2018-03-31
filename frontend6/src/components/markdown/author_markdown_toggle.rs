@@ -28,7 +28,8 @@ pub struct AuthorMarkdownToggle {
 
 pub enum Msg {
     Submit,
-    UpdateText(String)
+    UpdateText(String),
+    ChangeState(State)
 }
 
 #[derive(Clone, PartialEq)]
@@ -75,6 +76,10 @@ impl Component<Context> for AuthorMarkdownToggle {
                 self.text = t;
                 true
             }
+            Msg::ChangeState(state) => {
+                self.editor_state = state;
+                true
+            }
         }
     }
 
@@ -88,7 +93,7 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
 
     fn view(&self) -> Html<Context, Self> {
 
-//        use components::markdown::markdown;
+        use components::markdown::markdown;
 
         let view = || match self.editor_state {
             State::Editing => html! {
@@ -102,15 +107,17 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
             },
             State::RenderingMarkdown => html! {
                <>
-                    {"Rendering markdown not implemented, here's the plain text instead:"}
-                    {&self.text}
-                    //{markdown::render_markdown::<Context, Self>(&self.text)}
+                    {markdown::render_markdown::<Context, Self>(&self.text)}
                </>
             }
         };
 
         return html! {
             <div>
+                <div>
+                    <Button: title="Edit", onclick=|_| Msg::ChangeState(State::Editing), />
+                    <Button: title="View", onclick=|_| Msg::ChangeState(State::RenderingMarkdown), />
+                </div>
                 {view()}
                 <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
             </div>

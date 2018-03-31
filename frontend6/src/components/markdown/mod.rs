@@ -6,5 +6,5 @@ pub mod author_markdown_toggle;
 // * fork yew
 // * make vtag enum variant public
 // * fix any other errors in the markdown rendering code caused by updating.
-//pub mod markdown;
+pub mod markdown;
 
