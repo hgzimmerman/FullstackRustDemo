@@ -2,13 +2,11 @@ use yew::prelude::*;
 use Context;
 use components::button::*;
 
-use yew::format::{Json, Nothing};
+use yew::format::{Json};
 use yew::services::fetch::{FetchTask, Request, Response};
 use failure::Error;
 use requests_and_responses::login::*;
 use serde_json;
-
-use PageView;
 
 pub enum Msg {
     UpdatePassword(String),

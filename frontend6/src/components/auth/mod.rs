@@ -44,7 +44,7 @@ impl Component<Context> for Auth {
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        let route = context.routing.get_route();
+//        let route = context.routing.get_route();
 //        let child = match route.as_ref() {
 //           "auth/login" => AuthPage::Login,
 //           "auth/create" => AuthPage::Create,

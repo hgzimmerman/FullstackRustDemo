@@ -5,10 +5,7 @@ use yew::format::{Json, Nothing};
 use yew::services::fetch::Response;
 use yew::services::fetch::Request;
 
-use requests_and_responses::forum::ForumResponse;
 
-
-use components::link::Link;
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
 

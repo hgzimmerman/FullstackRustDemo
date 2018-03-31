@@ -1,15 +1,15 @@
 use stdweb::web::History;
 use stdweb::web::Location;
 use stdweb::web::window;
-use stdweb::web::Window;
-use stdweb;
+//use stdweb::web::Window;
+//use stdweb;
 use stdweb::Value;
-use stdweb::Once;
+//use stdweb::Once;
 use stdweb::web::EventListenerHandle;
 use stdweb::web::event::PopStateEvent;
 use stdweb::web::IEventTarget;
 //use std::convert::TryInto;
-use std::collections::BTreeMap;
+//use std::collections::BTreeMap;
 use stdweb::unstable::TryInto;
 
 pub struct RouteService {
@@ -18,7 +18,7 @@ pub struct RouteService {
     location: Location,
 //    callback: UrlChangedCbHandle
     event_listener: Option<EventListenerHandle>,
-    callbacks: Vec<usize>
+//    callbacks: Vec<usize>
 }
 
 
@@ -30,7 +30,7 @@ impl RouteService {
             history: window().history(),
             location: window().location().unwrap(),
             event_listener: None,
-            callbacks: vec![]
+//            callbacks: vec![]
         };
 
 

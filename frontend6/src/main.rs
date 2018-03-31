@@ -6,7 +6,8 @@ extern crate yew;
 extern crate requests_and_responses;
 extern crate failure;
 extern crate serde;
-#[macro_use] extern crate serde_json;
+//#[macro_use]
+extern crate serde_json;
 
 extern crate chrono;
 
@@ -17,11 +18,10 @@ extern crate pulldown_cmark;
 
 use yew::prelude::*;
 use yew::html::Scope;
-use yew::services::console::ConsoleService;
+//use yew::services::console::ConsoleService;
 // use counter::{Counter, Color};
 // use barrier::Barrier;
 mod datatypes;
-use datatypes::minimal_thread::MinimalThread;
 //mod header_component;
 use header_component::Header;
 
@@ -30,8 +30,8 @@ use components::*;
 
 mod services;
 
-use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-
+//use yew::services::fetch::{FetchService, FetchTask, Request, Response};
+use yew::services::fetch::FetchService;
 use services::route_service::RouteService;
 
 use auth::AuthPage;

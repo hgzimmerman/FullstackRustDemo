@@ -1,10 +1,6 @@
 use yew::prelude::*;
 use Context;
-use requests_and_responses::forum::ForumResponse;
 
-use datatypes::forum::ForumData;
-use datatypes::post::MinimalNewPostData;
-use components::link::Link;
 use components::button::Button;
 
 pub enum State {

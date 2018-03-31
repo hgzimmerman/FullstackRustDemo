@@ -1,12 +1,5 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json, Nothing};
-
-use yew::services::fetch::Response;
-use yew::services::fetch::Request;
-
-use requests_and_responses::forum::ForumResponse;
-
 
 use datatypes::thread::MinimalThreadData;
 use components::link::Link;

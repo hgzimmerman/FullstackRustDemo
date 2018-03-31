@@ -1,6 +1,6 @@
 use yew::prelude::*;
 // use button::Button;
-use datatypes::minimal_thread::MinimalThread;
+use link::Link;
 
 use PageView;
 
@@ -66,8 +66,6 @@ impl<CTX: 'static> Component<CTX> for Header {
 
 impl<CTX: 'static> Renderable<CTX, Header> for Header {
     fn view(&self) -> Html<CTX, Self> {
-        use link::Link;
-        use link;
 
         let link = |x: &HeaderLink| html! {
             <Link<PageView>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />

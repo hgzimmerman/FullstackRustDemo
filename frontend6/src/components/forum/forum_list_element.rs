@@ -1,8 +1,6 @@
 use yew::prelude::*;
 use Context;
 
-use requests_and_responses::forum::ForumResponse;
-
 use datatypes::forum::ForumData;
 use components::link::Link;
 
