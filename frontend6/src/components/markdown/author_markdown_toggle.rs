@@ -93,7 +93,6 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
 
     fn view(&self) -> Html<Context, Self> {
 
-        use components::markdown::markdown;
 
         let view = || match self.editor_state {
             State::Editing => html! {
@@ -107,19 +106,23 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
             },
             State::RenderingMarkdown => html! {
                <>
-                    {markdown::render_markdown::<Context, Self>(&self.text)}
+                    {super::render_markdown::<Context, Self>(&self.text)}
                </>
             }
         };
 
         return html! {
-            <div>
-                <div>
+            <div class="edit-markdown-toggle-box", >
+                <div class="edit-markdown-bar",>
                     <Button: title="Edit", onclick=|_| Msg::ChangeState(State::Editing), />
                     <Button: title="View", onclick=|_| Msg::ChangeState(State::RenderingMarkdown), />
                 </div>
-                {view()}
-                <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                <div class="edit-markdown-content",>
+                    {view()}
+                </div>
+                <div class="edit-markdown-bar",>
+                    <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                </div>
             </div>
         }
     }
