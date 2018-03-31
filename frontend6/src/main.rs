@@ -33,7 +33,7 @@ use yew::services::fetch::{FetchService, FetchTask, Request, Response};
 use services::route_service::RouteService;
 
 use auth::AuthPage;
-use components::forum::Forum;
+use components::forum::forum_list::ForumList;
 
 pub struct Context {
     // console: ConsoleService,
@@ -157,7 +157,7 @@ impl Renderable<Context, Model> for Model {
                 PageView::ForumView => {
                     html! {
                         <>
-                            <Forum: child=None, />
+                            <ForumList: child=None, />
                         </>
                     }
                 }
@@ -183,10 +183,12 @@ impl Renderable<Context, Model> for Model {
         ];
         use link::Link;
         html! {
-            <>
+            <div class="main-container", >
                 <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />
-                {page()}
-            </>
+                <div class="main-content", >
+                    {page()}
+                </div>
+            <div/>
         }
     }
 }

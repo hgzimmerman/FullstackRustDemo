@@ -71,17 +71,25 @@ impl Renderable<Context, ThreadCardComponent> for ThreadCardComponent {
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
-            <div class="thread-card",>
-                <div class="thread-card-title",>
-                    {&self.thread_data.title}
+            <li class="forum-list-element",>
+                <div>
+                    <Link<()>: name=&self.thread_data.title, callback=|_| Msg::Clicked, classes="forum-link", />
                 </div>
-                <div class="thread-card-author-link",>
+                <div>
                     {format!("By: {}", &self.thread_data.author.display_name)}
                 </div>
-                <div class="thread-card-author-link",>
-//                    { format!("Replies: {}",self.thread_dat.replies) }
-                </div>
-            </div>
+            </li>
+//            <div class="thread-card",>
+//                <div class="thread-card-title",>
+//                    {&self.thread_data.title}
+//                </div>
+//                <div class="thread-card-author-link",>
+//                    {format!("By: {}", &self.thread_data.author.display_name)}
+//                </div>
+//                <div class="thread-card-author-link",>
+////                    { format!("Replies: {}",self.thread_dat.replies) }
+//                </div>
+//            </div>
         }
     }
 }

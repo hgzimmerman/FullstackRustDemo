@@ -1,8 +1,29 @@
 body {
     padding: 0;
     margin: 0;
-    height: 100vh;
+    font-family: sans-serif;
+    overflow: hidden;
 }
+
+.main-container {
+    margin: 0;
+    min-height: 100%;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: inherit;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: visible;
+}
+
 
 
 .thread-card {
@@ -11,13 +32,6 @@ body {
     border-radius: 5px; /* 5px rounded corners */
     margin: 20px;
     padding: 20px;
-}
-
-.main-container {
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    padding: 0;
 }
 
 .thread-list {
@@ -41,9 +55,10 @@ body {
 /* Header */
 .header {
     width: 100%;
-    height: 40px;
+    min-height: 40px;
     background-color: orangered;
     font-size: 20px;
+    flex: 0;
     display: flex;
     flex-direction: row;
     align-items: center; /* Vertically center the content*/
@@ -68,13 +83,58 @@ body {
 
 .forum-list {
     list-style-type: none;
+    padding: 0;
+    margin: 0px;
     width: 100%;
-    border-left: solid 1px black;
+    background-color: gray;
+    /*border-left: solid 1px black;
+    border-right: solid 1px black; */
+}
+
+.forum-list-element {
+    padding: 10px;
+    border-top: solid 1px black;
     border-right: solid 1px black;
+    border-left: solid 1px black;
+    background-color: lightgray;
+    transition: all .3s ease-out;
+}
+.forum-list-element:last-child {
+    border-bottom: solid 1px black;
+}
+
+.forum-list-element:hover{
+   box-shadow: 0px 5px 5px gray;
+   position: relative;
+}
+
+.forum-title {
+    width: 100%;
+    background-color: gray;
+    font-size: 22pt;
+    height: 50px;
+}
+
+.forum-title-span {
+    padding: 10px;
+}
+
+.forum-link {
+   font-size: 18pt;
+   display: inline-block;
+}
+
+
+.vertical-flexbox {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: sepia;
 }
 
 .centered {
-   height: 100%;
-   margin: 40px; /* Come up with a better centering method */
-   background-color: aqua;
+    width: 65%;
+    height: 100%;
+    align-self: center;
 }

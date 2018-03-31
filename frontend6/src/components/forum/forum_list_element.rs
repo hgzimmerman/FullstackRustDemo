@@ -11,7 +11,7 @@ use datatypes::forum::ForumData;
 use components::link::Link;
 
 
-pub struct ForumCardComponent {
+pub struct ForumListElement {
     forum_data: ForumData,
     callback: Option<Callback<ForumData>>
 }
@@ -36,13 +36,13 @@ impl Default for Props {
     }
 }
 
-impl Component<Context> for ForumCardComponent {
+impl Component<Context> for ForumListElement {
     type Msg = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        ForumCardComponent {
+        ForumListElement {
             forum_data: props.forum_data,
             callback: props.callback
         }
@@ -65,14 +65,14 @@ impl Component<Context> for ForumCardComponent {
     }
 }
 
-impl Renderable<Context, ForumCardComponent> for ForumCardComponent {
+impl Renderable<Context, ForumListElement> for ForumListElement {
 
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
-            <li>
+            <li class="forum-list-element",>
                 <div>
-                    <Link<()>: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="", />
+                    <Link<()>: name=&self.forum_data.title, callback=|_| Msg::Clicked, classes="forum-link", />
                 </div>
                 <div>
                     {&self.forum_data.description}
