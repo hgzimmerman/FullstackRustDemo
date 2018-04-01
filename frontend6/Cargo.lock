@@ -108,6 +108,7 @@ dependencies = [
  "base64 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "pulldown-cmark 0.1.0 (git+https://github.com/google/pulldown-cmark?rev=c1ac9123f1653dc774403634696f848ffecbb01c)",
  "requests_and_responses 0.1.0",
  "serde 1.0.27 (registry+https://github.com/rust-lang/crates.io-index)",

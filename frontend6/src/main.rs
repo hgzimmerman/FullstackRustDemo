@@ -4,6 +4,7 @@
 #[macro_use]
 extern crate yew;
 extern crate requests_and_responses;
+#[macro_use] extern crate failure_derive;
 extern crate failure;
 extern crate serde;
 //#[macro_use]

@@ -1,7 +1,7 @@
 use super::Context;
 
 
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 
 use base64::decode_config as b64_dec;
 use serde_json::Value as JsonValue;
@@ -29,18 +29,32 @@ pub enum UserRole {
     Publisher,
 }
 
-    fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, String> {
-        let payload_segment: &str = jwt_string.split('.').collect::<Vec<&str>>().get(1).ok_or_else(||"JWT should have 3 distinct sections".to_string())?;
-        let payload_json: JsonValue = decode_payload(payload_segment).map_err(|_| "JWT payload could not be decoded from base64".to_string())?;
-        serde_json::from_value(payload_json).map_err(|_|"JWT payload could not be decoded from JSON".to_string())
-    }
 
-    // Taken from frank_jwt source
-    fn decode_payload(payload_segment: &str) -> Result<JsonValue, Error> {
-    serde_json::from_slice(b64_dec(payload_segment, base64::URL_SAFE)?
-        .as_slice())
-        .map_err(Error::from)
-    }
+#[derive(Fail, Debug)]
+enum JwtError {
+    #[fail(display = "JWT should have 3 distinct sections")]
+    UnexpectedNumberOfSections,
+    #[fail(display = "JWT JSON payload could not be converted from Base64")]
+    Base64DecodeFailure,
+    #[fail(display = "Value representing JWT could not be converted from json")]
+    JsonDecodeFailure
+}
+
+fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, Error> {
+    let payload_segment: &str = jwt_string.split('.').collect::<Vec<&str>>()
+        .get(1)
+        .ok_or_else(|| Error::from(JwtError::UnexpectedNumberOfSections))?;
+    let payload_json: JsonValue = decode_payload(payload_segment)
+        .map_err(|_| Error::from(JwtError::Base64DecodeFailure))?;
+    serde_json::from_value(payload_json).map_err(|_| Error::from(JwtError::JsonDecodeFailure))
+}
+
+// Taken from frank_jwt source
+fn decode_payload(payload_segment: &str) -> Result<JsonValue, Error> {
+serde_json::from_slice(b64_dec(payload_segment, base64::URL_SAFE)?
+    .as_slice())
+    .map_err(Error::from)
+}
 
 
 
@@ -76,33 +90,41 @@ impl Context {
     }
 
 
-    pub fn user_id(&mut self) -> Result<i32, ()> {
-        if let Ok(token) = self.restore_jwt() {
-            match extract_payload_from_jwt(token) {
-                Ok(payload) => Ok(payload.user_id),
-                Err(e) => {
-                    println!("{}", e);
-                    Err(())
-                }
-            }
-        }
-        else {
-            Err(())
-        }
+    pub fn user_id(&mut self) -> Result<i32, Error> {
+        let token = self.restore_jwt()?;
+        let payload = extract_payload_from_jwt(token)?;
+        Ok(payload.user_id)
     }
 
-    pub fn user_name(&mut self) -> Result<String, ()> {
-        if let Ok(token) = self.restore_jwt() {
-            match extract_payload_from_jwt(token) {
-                Ok(payload) => Ok(payload.user_name),
-                Err(e) => {
-                    println!("{}", e);
-                    Err(())
+    pub fn user_name(&mut self) -> Result<String, Error> {
+        let token = self.restore_jwt()?;
+        let payload = extract_payload_from_jwt(token)?;
+        Ok(payload.user_name)
+    }
+
+    fn user_auth_expire_date(&mut self) -> Result<NaiveDateTime, Error> {
+        let token = self.restore_jwt()?;
+        let payload = extract_payload_from_jwt(token)?;
+        Ok(payload.token_expire_date)
+    }
+
+    pub fn has_token_expired(&mut self) -> bool {
+        match self.user_auth_expire_date() {
+            Ok(expire_date) => {
+                let now = Utc::now().naive_utc();
+                if expire_date < now {
+                    true
+                }
+                else {
+                    false
                 }
             }
+            Err(e) => {
+                eprintln!("Indicating token has expired for an error: {}", e);
+                true
+            }
         }
-        else {
-            Err(())
-        }
+
+
     }
 }

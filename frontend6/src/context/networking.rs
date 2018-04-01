@@ -91,8 +91,7 @@ impl Context {
             Err(e) => {
                 match auth_requirement {
                     Auth::Required => {
-                        // TODO: This should be logged as an error
-                        println!("JWT was not found for a request that requires it: '{}'", url);
+                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
                         Err(e)
                     }
                     // If the auth wasn't required in the first place
@@ -121,8 +120,7 @@ impl Context {
             Err(e) => {
                 match auth_requirement {
                     Auth::Required => {
-                        // TODO: This should be logged as an error
-                        println!("JWT was not found for a request that requires it: '{}'", url);
+                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
                         Err(e)
                     }
                     // If the auth wasn't required in the first place
