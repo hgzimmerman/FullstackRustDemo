@@ -62,11 +62,11 @@ impl Context {
     }
 
     pub fn is_logged_in(&mut self) -> bool {
-        return false;
+        self.restore_jwt().is_ok()
     }
 
     /// Functionally logs the user out
     pub fn remove_jwt(&mut self) {
-        unimplemented!()
+        self.local_storage.remove("JWT")
     }
 }

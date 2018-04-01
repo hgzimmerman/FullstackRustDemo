@@ -13,7 +13,8 @@ mod password;
 mod banned_set;
 
 pub use self::jwt::user_authorization;
-pub use self::jwt::{Jwt, JwtError};
+//pub use self::jwt::{Jwt, JwtError};
+
 
 pub use self::password::{hash_password, verify_hash};
 
@@ -29,6 +30,8 @@ use db::user::User;
 use db::Conn;
 
 use requests_and_responses::login::*;
+
+use common_auth::{Jwt, JwtError};
 
 
 /// The secret contains a random string that is generated at startup.

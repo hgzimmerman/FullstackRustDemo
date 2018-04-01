@@ -10,9 +10,9 @@
 
 #[macro_use]
 extern crate db_proc_macros;
+extern crate common_auth;
 
 extern crate rocket;
-#[macro_use]
 extern crate rocket_contrib;
 extern crate uuid;
 extern crate serde_json;
@@ -25,7 +25,7 @@ extern crate simplelog;
 
 extern crate test;
 
-extern crate frank_jwt;
+//extern crate frank_jwt;
 
 #[macro_use]
 extern crate diesel;

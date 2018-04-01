@@ -139,6 +139,7 @@ pub mod testing {
     use db::forum::*;
     use db::thread::*;
     use requests_and_responses::user::*;
+    use common_auth::UserRole;
     /// Create a bunch of entries for every data type in the backend.
     pub fn generate_test_fixtures(conn: &Conn) -> Result<(), WeekendAtJoesError> {
 

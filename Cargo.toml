@@ -6,6 +6,7 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 [dependencies]
 requests_and_responses = { path = "requests_and_responses"}
 db_proc_macros = { path = "db_proc_macros"}
+common_auth = {path = "common_auth" }
 
 rocket = "0.3.6"
 rocket_codegen = "0.3.6"
@@ -33,7 +34,6 @@ log = "0.3.8"
 simplelog = "^0.4.2"
 
 rand = "0.4.1"
-frank_jwt = "3.0.0"
 
 rust-crypto = "0.2.36"
 
