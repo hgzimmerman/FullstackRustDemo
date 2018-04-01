@@ -1,9 +1,8 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json, Nothing};
+use yew::format::{Json};
 
 use yew::services::fetch::Response;
-use yew::services::fetch::Request;
 
 use requests_and_responses::thread::MinimalThreadResponse;
 
@@ -13,10 +12,12 @@ use datatypes::thread::MinimalThreadData;
 use yew::services::fetch::FetchTask;
 use failure::Error;
 
+use context::networking::*;
 
 use components::forum::thread::thread_list_element::ThreadListElement;
 use components::button::Button;
 use components::forum::thread::new_thread::NewThread;
+
 
 #[derive(Clone, PartialEq)]
 pub enum Child {
@@ -54,17 +55,13 @@ impl Component<Context> for Forum {
             Msg::ContentReady(data.unwrap().into_iter().map(MinimalThreadData::from).collect())
         });
 
-        let request = Request::get(format!("http://localhost:8001/api/thread/get/{}/{}", props.forum_data.id, 1).as_str())
-            .header("Content-Type", "application/json")
-            .body(Nothing)
-            .unwrap();
-        let task = context.networking.fetch(request, callback);
+        let task = context.make_request(RequestWrapper::GetThreads{forum_id: props.forum_data.id, page_index: 1}, callback);
 
         Forum {
             parent: props.forum_data,
             child: None,
             threads: vec!(),
-            ft: Some(task)
+            ft: task.ok()
         }
     }
 

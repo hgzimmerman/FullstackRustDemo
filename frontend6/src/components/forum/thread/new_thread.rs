@@ -2,7 +2,7 @@ use yew::prelude::*;
 use Context;
 use yew::format::{Json};
 
-use yew::services::fetch::{FetchTask, Request, Response};
+use yew::services::fetch::{FetchTask, Response};
 
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
@@ -11,9 +11,8 @@ use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
 use requests_and_responses::post::NewPostRequest;
 
 use failure::Error;
-use serde_json;
 
-
+use context::networking::*;
 
 pub struct NewThread {
     title: String,
@@ -76,13 +75,10 @@ impl Component<Context> for NewThread {
                         content: self.post_content.clone(),
                     }
                 };
-                let body = serde_json::to_string(&new_thread_request).unwrap();
-                let request = Request::post("http://localhost:8001/api/thread/create")
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .unwrap();
-                let task = context.networking.fetch(request, callback);
-                self.ft = Some(task);
+
+                let task = context.make_request(RequestWrapper::CreateThread(new_thread_request), callback);
+                // TODO: Redirect to login on error
+                self.ft = task.ok();
 
 
                 if let Some(ref cb) = self.callback {

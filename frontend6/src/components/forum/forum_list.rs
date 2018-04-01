@@ -1,10 +1,8 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json, Nothing};
+use yew::format::{Json };
 
 use yew::services::fetch::Response;
-use yew::services::fetch::Request;
-
 use requests_and_responses::forum::ForumResponse;
 
 use datatypes::forum::ForumData;
@@ -12,6 +10,7 @@ use datatypes::forum::ForumData;
 use components::forum::forum::Forum;
 use components::forum::forum_list_element::ForumListElement;
 
+use context::networking::*;
 
 use yew::services::fetch::FetchTask;
 use failure::Error;
@@ -52,16 +51,13 @@ impl Component<Context> for ForumList {
             println!("META: {:?}, {:?}", meta, data);
             Msg::ContentReady(data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect())
         });
-        let request = Request::get("http://localhost:8001/api/forum/forums")
-            .header("Content-Type", "application/json")
-            .body(Nothing)
-            .unwrap();
-        let task = context.networking.fetch(request, callback);
 
+
+        let task = context.make_request(RequestWrapper::GetForums, callback);
         ForumList {
             child: props.child,
             forums: vec!(),
-            ft: Some(task)
+            ft: task.ok()
         }
     }
 

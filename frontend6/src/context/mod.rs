@@ -7,10 +7,11 @@ use yew::services::fetch::FetchService;
 use yew::services::storage::{StorageService, Area};
 
 pub struct Context {
-    // console: ConsoleService,
-    pub networking: FetchService,
+    // Don't expose networking field. Make implementation use the Context's networking module instead.
+    networking: FetchService,
     pub routing: RouteService,
-    pub local_storage: StorageService
+    pub local_storage: StorageService,
+    // console: ConsoleService,
 }
 
 impl Context {

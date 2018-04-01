@@ -6,6 +6,7 @@ use yew::html::Callback;
 
 
 use requests_and_responses::user::*;
+use requests_and_responses::thread::*;
 use requests_and_responses::login::*;
 use failure::Error;
 use serde_json;
@@ -22,7 +23,10 @@ enum Auth {
 #[derive(Serialize)]
 pub enum RequestWrapper {
     Login(LoginRequest),
-    CreateUser(NewUserRequest)
+    CreateUser(NewUserRequest),
+    CreateThread(NewThreadRequest),
+    GetThreads{ forum_id: i32, page_index: usize },
+    GetForums
 }
 
 impl RequestWrapper {
@@ -31,12 +35,11 @@ impl RequestWrapper {
 
         use self::RequestWrapper::*;
         match *request {
-            Login(_) => {
-                format!("{}/auth/login", api_base)
-            }
-            CreateUser(_) => {
-                format!("{}/user/", api_base)
-            }
+            Login(_) => format!("{}/auth/login", api_base),
+            CreateUser(_) =>  format!("{}/user/", api_base),
+            CreateThread(_) => format!("{}/thread/create", api_base),
+            GetThreads{ forum_id, page_index } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
+            GetForums => format!("{}/forum/forums", api_base),
         }
     }
 }
@@ -51,12 +54,24 @@ impl Context {
 
         use self::RequestWrapper::*;
         match request {
-            Login(ref o) => {
-                let request = self.prepare_post_request(o, url, Auth::NotRequired)?;
+            Login(ref r) => {
+                let request = self.prepare_post_request(r, url, Auth::NotRequired)?;
                 Ok(self.networking.fetch(request, callback))
             }
-            CreateUser(ref o) => {
-                let request = self.prepare_post_request(o, url, Auth::NotRequired)?;
+            CreateUser(ref r) => {
+                let request = self.prepare_post_request(r, url, Auth::NotRequired)?;
+                Ok(self.networking.fetch(request, callback))
+            }
+            CreateThread(ref r) => {
+                let request = self.prepare_post_request(r, url, Auth::Required)?;
+                Ok(self.networking.fetch(request, callback))
+            }
+            GetThreads{..} => {
+                let request = self.prepare_get_request(url, Auth::NotRequired)?;
+                Ok(self.networking.fetch(request, callback))
+            }
+            GetForums => {
+                let request = self.prepare_get_request(url, Auth::NotRequired)?;
                 Ok(self.networking.fetch(request, callback))
             }
         }
@@ -93,7 +108,7 @@ impl Context {
         }
     }
 
-    fn prepare_get_request<T: Serialize>(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
+    fn prepare_get_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
         match self.restore_jwt() {
             Ok(jwt_string) => {
                 // TODO: possibly check if the jwt is outdated here before sending
