@@ -8,6 +8,8 @@ extern crate failure;
 extern crate serde;
 //#[macro_use]
 extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 extern crate chrono;
 
@@ -18,7 +20,7 @@ extern crate pulldown_cmark;
 
 use yew::prelude::*;
 use yew::html::Scope;
-//use yew::services::console::ConsoleService;
+//use yew::context::console::ConsoleService;
 // use counter::{Counter, Color};
 // use barrier::Barrier;
 mod datatypes;
@@ -28,20 +30,14 @@ use header_component::Header;
 mod components;
 use components::*;
 
-mod services;
+mod context;
+pub use context::Context;
 
-//use yew::services::fetch::{FetchService, FetchTask, Request, Response};
-use yew::services::fetch::FetchService;
-use services::route_service::RouteService;
+//use yew::context::fetch::{FetchService, FetchTask, Request, Response};
 
 use auth::AuthPage;
 use components::forum::forum_list::ForumList;
 
-pub struct Context {
-    // console: ConsoleService,
-    networking: FetchService,
-    routing: RouteService
-}
 
 /// If you use `App` you should implement this for `AppContext<Context, Model, Msg>` struct.
 // impl counter::Printer for Context {
@@ -198,10 +194,7 @@ impl Renderable<Context, Model> for Model {
 fn main() {
     yew::initialize();
     stdweb::initialize(); // I need this in order to use my route service
-    let context = Context {
-        networking: FetchService::new(),
-        routing: RouteService::new()
-    };
+    let context = Context::new();
     // We use `Scope` here for demonstration.
     // You can also use `App` here too.
     let app: Scope<Context, Model> = Scope::new(context);

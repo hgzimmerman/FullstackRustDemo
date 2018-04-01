@@ -3,11 +3,11 @@ use Context;
 use components::button::*;
 
 use yew::format::Json;
-use yew::services::fetch::{FetchTask, Request, Response};
+use yew::services::fetch::{FetchTask, Response};
 use failure::Error;
 use requests_and_responses::user::*;
-use serde_json;
 
+use context::networking::*;
 
 pub enum Msg {
     UpdatePassword(String),
@@ -76,13 +76,10 @@ impl Component<Context> for CreateAccount {
                     display_name: self.display_name.clone(),
                     plaintext_password: self.password.clone()
                 };
-                let body = serde_json::to_string(&new_user_request).unwrap();
-                let request = Request::post("http://localhost:8001/api/user")
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .unwrap();
-                let task = context.networking.fetch(request, callback);
-                self.ft = Some(task);
+                let task = context.make_request(RequestWrapper::CreateUser(new_user_request), callback);
+
+                // This conversion of Err to Some is ok here because make_request will not fail with these parameters
+                self.ft = task.ok();
                 false
             },
             Msg::UpdatePassword(p) => {

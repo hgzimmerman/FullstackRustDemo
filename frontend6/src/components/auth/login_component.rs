@@ -2,19 +2,20 @@ use yew::prelude::*;
 use Context;
 use components::button::*;
 
-use yew::format::{Json};
-use yew::services::fetch::{FetchTask, Request, Response};
+use yew::services::fetch::{FetchTask, Response};
 use failure::Error;
 use requests_and_responses::login::*;
-use serde_json;
+use context::networking::*;
+
 
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
     Submit,
     NavToCreateAccount,
-    NavToLanding,
-    NoOp
+    LoginSuccess(String),
+    NoOp,
+    LoginError
 }
 
 pub struct Login {
@@ -64,22 +65,24 @@ impl Component<Context> for Login {
         match msg {
             Msg::Submit => {
                 println!("Logging in with user name: {}", self.user_name);
-                let callback = context.send_back(|response: Response<Json<Result<String, Error>>>| {
-                    let (meta, Json(data)) = response.into_parts();
-                    println!("META: {:?}, {:?}", meta, data);
-                    Msg::NavToLanding
+                let callback = context.send_back(|response: Response<Result<String, Error>>| {
+                    let (meta, jwt) = response.into_parts();
+                    println!("META: {:?}, JWT: {:?}", meta, jwt);
+                    if let Ok(j) = jwt {
+                        // TODO This Result doesn't appear to indicate for errors
+                        Msg::LoginSuccess(j)
+                    } else {
+                        Msg::LoginError
+                    }
                 });
                 let login_request: LoginRequest = LoginRequest {
                     user_name: self.user_name.clone(),
                     password: self.password.clone()
                 };
-                let body = serde_json::to_string(&login_request).unwrap();
-                let request = Request::post("http://localhost:8001/api/auth/login")
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .unwrap();
-                let task = context.networking.fetch(request, callback);
-                self.ft = Some(task);
+
+                let task = context.make_request(RequestWrapper::Login(login_request), callback);
+                // This conversion of Err to Some is ok here because make_request will not fail with these parameters
+                self.ft = task.ok();
 
                 false
             },
@@ -98,11 +101,15 @@ impl Component<Context> for Login {
                 self.user_name = u;
                 true
             }
-            Msg::NavToLanding => {
-                self.ft = None;
+            Msg::LoginSuccess(jwt) => {
+                context.store_jwt(jwt);
                 if let Some(ref mut cb) = self.login_nav_cb {
                     cb.emit(())
                 }
+                true
+            }
+            Msg::LoginError => {
+                //TODO, add an element indicating that the login failed
                 true
             }
             Msg::NoOp => false
