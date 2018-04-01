@@ -25,7 +25,7 @@ impl From<(Thread, String)> for NewPost {
             parent_id: None,
             created_date: Utc::now().naive_utc(),
             content: content.1,
-            censored: false
+            censored: false,
         }
     }
 }

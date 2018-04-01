@@ -4,7 +4,7 @@ use rocket::http::Status;
 use serde_json;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
-use chrono::{Utc};
+use chrono::Utc;
 
 use auth::Secret;
 use auth::BannedSet;
