@@ -116,10 +116,10 @@ impl Component<Context> for Login {
         }
     }
 
-//    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
 //        self.nav_cb = props.nav_cb;
-//        true
-//    }
+        true
+    }
 }
 
 impl Renderable<Context, Login> for Login {

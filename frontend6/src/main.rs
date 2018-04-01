@@ -50,85 +50,81 @@ use components::forum::forum_list::ForumList;
 // }
 //
 #[derive(Clone, PartialEq, Debug)]
-pub enum PageView {
+pub enum Route {
     ForumView,
     ArticleView,
     AuthView(AuthPage),
     BucketView,
 }
 
-impl Default for PageView {
+impl Default for Route {
     fn default() -> Self {
-        PageView::ForumView
+        Route::ForumView
     }
 }
 
 pub trait Routable<T> {
-    fn route(context: &mut Context) -> T;
-
+    fn route(path_components: Vec<String>) -> T;
 }
 
 struct Model {
-    page: PageView,
-//    jwt: Option<String> // Its dumb to store it here, but for now, this is where the jwt will live. Instead it should use the localstorage api.
+    page: Route,
 }
 
 
 enum Msg {
-//    Login{ jwt: String },
-//    Logout,
-    Navigate(PageView)
+    Navigate(Route),
 }
 
-impl Routable<PageView> for Model {
-    fn route(context: &mut Context) -> PageView {
-        match context.routing.get_route().as_ref() {
-//            "auth" => PageView::AuthView(AuthPage::Undetermined),
-            "forum" => PageView::ForumView,
-            "article" => PageView::ArticleView,
-            "bucket" => PageView::BucketView,
-            _ => PageView::BucketView // default to bucket questions
+impl Routable<Route> for Model {
+    fn route(path_components: Vec<String>) -> Route {
+
+        // The route is given in the form "/path/path/path"
+        // The string at index 0 is "" because of the first "/", so get at index 1 here
+        if let Some(first) = path_components.get(1) {
+            println!("First path component is: {}", first);
+            match first.as_str() {
+                "auth" => Route::AuthView(AuthPage::Login),
+                "forum" => Route::ForumView,
+                "article" => Route::ArticleView,
+                "bucket" => Route::BucketView,
+                _ => Route::BucketView // default to bucket questions
+            }
+        } else {
+            Route::default()
         }
     }
 }
+
 
 impl Component<Context> for Model {
     type Msg = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+
+        let cb = context.send_back(|path: String| {
+            println!("Callback path changed {}", path);
+            let path_components = path.split('/').collect::<Vec<&str>>().into_iter().map(str::to_string).collect::<Vec<String>>();
+            Msg::Navigate(Self::route(path_components))
+        });
+
+        context.routing.register_callback(cb);
+
+
         Model {
-            page: Model::route(context),
-//            jwt: None
+            page: Route::default(),
         }
     }
 
-    fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
 
-        self.page = Model::route(context);
         println!("updating model");
-
-
         match msg {
-//            Msg::Login {jwt} => {
-//                // Set the jwt
-////                self.jwt = Some(jwt);
-//                true
-//            }
-//            Msg::Logout => {
-//                // Invalidate the JWT
-////                self.jwt = None;
-//                // Navigate elsewhere
-//                self.page = PageView::AuthView(AuthPage::Login);
-//                true
-//            }
-//            Msg::NoOp => {
-//                true
-//            }
-            Msg::Navigate(page) => {
+            Msg::Navigate(route) => {
 //                context.routing.set_route("");
-                println!("MainNav: navigating to {:?}", page);
-                self.page = page;
+                println!("MainNav: navigating to {:?}", route);
+                self.page = route;
                 true
             }
         }
@@ -147,14 +143,14 @@ impl Renderable<Context, Model> for Model {
 
         let page = || {
             match self.page {
-                PageView::AuthView(ref auth_page) => {
+                Route::AuthView(ref auth_page) => {
                     html! {
                         <>
-                            <Auth: child=auth_page, callback=|_| Msg::Navigate(PageView::ForumView), />
+                            <Auth: child=auth_page, callback=|_| Msg::Navigate(Route::ForumView), />
                         </>
                     }
                 }
-                PageView::ForumView => {
+                Route::ForumView => {
                     html! {
                         <>
                             <ForumList: child=None, />
@@ -174,11 +170,11 @@ impl Renderable<Context, Model> for Model {
         let header_links = vec![
             HeaderLink {
                 name: "Forum".into(),
-                link: PageView::ForumView
+                link: Route::ForumView
             },
             HeaderLink {
                 name: "Login".into(),
-                link: PageView::AuthView(AuthPage::Login)
+                link: Route::AuthView(AuthPage::Login)
             },
         ];
         html! {

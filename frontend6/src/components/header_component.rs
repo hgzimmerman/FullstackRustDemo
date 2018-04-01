@@ -2,28 +2,28 @@ use yew::prelude::*;
 // use button::Button;
 use link::Link;
 
-use PageView;
+use Route;
 
 #[derive(Clone, PartialEq)]
 pub struct HeaderLink {
-    pub link: PageView,
+    pub link: Route,
     pub name: String,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Header {
     pub links: Vec<HeaderLink>,
-    pub callback: Option<Callback<PageView>>
+    pub callback: Option<Callback<Route>>
 }
 
 pub enum Msg {
-    CallLink(PageView)
+    CallLink(Route)
 }
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
     pub links: Vec<HeaderLink>,
-    pub callback: Option<Callback<PageView>>
+    pub callback: Option<Callback<Route>>
 }
 
 impl Default for Props {
@@ -68,7 +68,7 @@ impl<CTX: 'static> Renderable<CTX, Header> for Header {
     fn view(&self) -> Html<CTX, Self> {
 
         let link = |x: &HeaderLink| html! {
-            <Link<PageView>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
+            <Link<Route>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
         };
 
         html! {

@@ -50,7 +50,7 @@ impl Component<Context> for Auth {
 //           "auth/create" => AuthPage::Create,
 //            _ => props.child
 //        };
-        context.routing.set_route("/auth");
+//        context.routing.set_route("/auth");
         Auth {
             child: props.child,
             callback: props.callback
