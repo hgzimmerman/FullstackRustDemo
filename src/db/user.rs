@@ -9,7 +9,16 @@ use schema::users;
 
 use requests_and_responses::user::*;
 
-use common_auth::UserRole;
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+// #[PgType = "Userrole"]
+pub enum UserRole {
+    Unprivileged,
+    Moderator,
+    Admin,
+    Publisher,
+}
+
+
 
 /// The database's representation of a user.
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]

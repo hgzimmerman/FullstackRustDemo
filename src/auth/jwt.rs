@@ -1,14 +1,62 @@
+use frank_jwt::{Algorithm, encode, decode};
 use rocket::State;
 use rocket::http::Status;
-use common_auth::{UserRole, Jwt};
+use serde_json;
+use db::user::UserRole;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
-use chrono::{Utc};
+use chrono::{NaiveDateTime, Utc};
 
 use auth::Secret;
 use auth::BannedSet;
 
 use error::WeekendAtJoesError;
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Jwt {
+    pub user_name: String,
+    pub user_id: i32,
+    pub user_roles: Vec<UserRole>,
+    pub token_expire_date: NaiveDateTime,
+}
+
+impl Jwt {
+    pub fn encode_jwt_string(&self, secret: &String) -> Result<String, JwtError> {
+        let header = json!({});
+        use rocket_contrib::Value;
+
+        let payload: Value = match serde_json::to_value(self) {
+            Ok(x) => x,
+            Err(_) => return Err(JwtError::SerializeError),
+        };
+        match encode(header, secret, &payload, Algorithm::HS256) {
+            Ok(x) => return Ok(x),
+            Err(_) => return Err(JwtError::EncodeError),
+        }
+    }
+
+    pub fn decode_jwt_string(jwt_str: String, secret: &String) -> Result<Jwt, JwtError> {
+        let (_header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
+            Ok(x) => x,
+            Err(_) => return Err(JwtError::DecodeError),
+        };
+        let jwt: Jwt = match serde_json::from_value(payload) {
+            Ok(x) => x,
+            Err(_) => return Err(JwtError::DeserializeError),
+        };
+        Ok(jwt)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum JwtError {
+    DecodeError,
+    EncodeError,
+    DeserializeError,
+    SerializeError,
+}
+
 
 
 pub mod user_authorization {
