@@ -153,8 +153,11 @@ impl Thread {
 
 
     /// Creates a thread with an initial post.
-    pub fn create_thread_with_initial_post(new_thread: NewThread, new_post: NewPost, conn: &Conn) -> JoeResult<ThreadData> {
+    pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &Conn) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::create(new_thread, conn)?;
+
+        let new_post: NewPost = NewPost::from((thread.clone(), post_content));
+
         let post_data: ChildlessPostData = Post::create_and_get_user(new_post, conn)?;
         let user: User = post_data.user.clone();
         Ok(ThreadData {

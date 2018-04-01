@@ -18,8 +18,8 @@ pub struct NewPostRequest {
     pub thread_id: i32,
     pub parent_id: Option<i32>,
     pub content: String,
-
 }
+
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EditPostRequest {

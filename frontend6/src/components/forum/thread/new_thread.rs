@@ -9,7 +9,7 @@ use components::button::Button;
 
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
 use requests_and_responses::post::NewPostRequest;
-
+use datatypes::forum::ForumData;
 use failure::Error;
 
 use context::networking::*;
@@ -17,6 +17,7 @@ use context::networking::*;
 pub struct NewThread {
     title: String,
     post_content: String,
+    forum: ForumData,
     callback: Option<Callback<()>>,
     ft: Option<FetchTask>
 }
@@ -31,13 +32,15 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
-    pub callback: Option<Callback<()>>
+    pub callback: Option<Callback<()>>,
+    pub forum: ForumData
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            callback: None
+            callback: None,
+            forum: ForumData::default() // I don't like this, possibly make it optional and set it to none by default
         }
     }
 }
@@ -46,10 +49,11 @@ impl Component<Context> for NewThread {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
         NewThread {
             title: String::default(),
+            forum: props.forum,
             post_content: String::default(),
             callback: props.callback,
             ft: None
@@ -64,25 +68,25 @@ impl Component<Context> for NewThread {
                     println!("META: {:?}, {:?}", meta, data);
                     Msg::NoOp
                 });
-                let new_thread_request = NewThreadRequest {
-                    forum_id: 0,
-                    author_id: 0,
-                    title: self.title.clone(),
-                    post: NewPostRequest {
-                        author_id: 0,
-                        thread_id: 0,
-                        parent_id: None,
-                        content: self.post_content.clone(),
+
+                if let Ok(user_id) = context.user_id() {
+                    let new_thread_request = NewThreadRequest {
+                        forum_id: self.forum.id,
+                        author_id: user_id,
+                        title: self.title.clone(),
+                        post_content: self.post_content.clone()
+                    };
+
+                    let task = context.make_request(RequestWrapper::CreateThread(new_thread_request), callback);
+                    // TODO: Redirect to login on error
+                    self.ft = task.ok();
+
+
+                    if let Some(ref cb) = self.callback {
+                        cb.emit(());
                     }
-                };
-
-                let task = context.make_request(RequestWrapper::CreateThread(new_thread_request), callback);
-                // TODO: Redirect to login on error
-                self.ft = task.ok();
-
-
-                if let Some(ref cb) = self.callback {
-                    cb.emit(());
+                } else {
+                    eprintln!("Couldn't get user id required for request")
                 }
                 false
             }

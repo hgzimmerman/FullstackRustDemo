@@ -1,6 +1,5 @@
 use db::thread::*;
 use requests_and_responses::thread::*;
-use db::post::NewPost;
 use chrono::Utc;
 
 impl From<NewThreadRequest> for NewThread {
@@ -13,13 +12,6 @@ impl From<NewThreadRequest> for NewThread {
             archived: false,
             title: request.title,
         }
-    }
-}
-
-impl From<NewThreadRequest> for NewPost {
-    fn from(request: NewThreadRequest) -> NewPost {
-        // Just grab the post field from the thread request.
-        NewPost::from(request.post)
     }
 }
 

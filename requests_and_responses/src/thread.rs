@@ -1,7 +1,6 @@
 use user::UserResponse;
 use post::PostResponse;
 use chrono::NaiveDateTime;
-use post::NewPostRequest;
 
 
 /// Used when requesting that a thread be created.
@@ -10,7 +9,7 @@ pub struct NewThreadRequest {
     pub forum_id: i32,
     pub author_id: i32,
     pub title: String,
-    pub post: NewPostRequest
+    pub post_content: String
 }
 
 /// Used when viewing an individual thread.

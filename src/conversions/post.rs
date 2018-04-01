@@ -1,6 +1,7 @@
 use db::post::*;
 use requests_and_responses::post::*;
 use chrono::Utc;
+use db::thread::Thread;
 
 
 impl From<NewPostRequest> for NewPost {
@@ -15,6 +16,20 @@ impl From<NewPostRequest> for NewPost {
         }
     }
 }
+
+impl From<(Thread, String)> for NewPost {
+    fn from(content: (Thread, String)) -> NewPost {
+        NewPost {
+            thread_id: content.0.id,
+            author_id: content.0.author_id,
+            parent_id: None,
+            created_date: Utc::now().naive_utc(),
+            content: content.1,
+            censored: false
+        }
+    }
+}
+
 
 impl From<EditPostRequest> for EditPostChangeset {
     fn from(request: EditPostRequest) -> EditPostChangeset {

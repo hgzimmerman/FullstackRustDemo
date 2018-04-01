@@ -107,7 +107,7 @@ impl Renderable<Context, Forum> for Forum {
             match child {
                 &Child::CreateThread => {
                     html! {
-                        <NewThread: />
+                        <NewThread: forum={self.parent.clone()}, />
                     }
 
                 },

@@ -3,7 +3,6 @@ use routes::Routable;
 use rocket::Route;
 
 use db::thread::{Thread, NewThread};
-use db::post::NewPost;
 use db::Conn;
 use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
 use requests_and_responses::thread::MinimalThreadResponse;
@@ -17,18 +16,15 @@ use error::*;
 #[post("/create", data = "<new_thread_request>")]
 fn create_thread(new_thread_request: Json<NewThreadRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
     let new_thread_request = new_thread_request.into_inner();
+    if new_thread_request.author_id != user.user_id {
+        return Err(WeekendAtJoesError::BadRequest);
+    }
 
     let new_thread: NewThread = new_thread_request.clone().into();
-    let new_original_post: NewPost = new_thread_request.into();
+    let post_content: String = new_thread_request.post_content;
 
-    if new_thread.author_id != user.user_id {
-        return Err(WeekendAtJoesError::BadRequest);
-    }
-    if new_original_post.author_id != user.user_id {
-        return Err(WeekendAtJoesError::BadRequest);
-    }
 
-    Thread::create_thread_with_initial_post(new_thread, new_original_post, &conn)
+    Thread::create_thread_with_initial_post(new_thread, post_content, &conn)
         .map(ThreadResponse::from)
         .map(Json)
 }
