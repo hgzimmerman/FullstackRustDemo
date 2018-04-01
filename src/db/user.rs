@@ -9,14 +9,14 @@ use schema::users;
 
 use requests_and_responses::user::*;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-// #[PgType = "Userrole"]
-pub enum UserRole {
-    Unprivileged,
-    Moderator,
-    Admin,
-    Publisher,
-}
+//#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+//// #[PgType = "Userrole"]
+//pub enum UserRole {
+//    Unprivileged,
+//    Moderator,
+//    Admin,
+//    Publisher,
+//}
 
 
 

@@ -9,25 +9,7 @@ use serde_json;
 use failure::Error;
 use base64;
 
-//// This type is pegged to the server implementation
-//// It might make sense to move this into the requests and responses crate.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Jwt {
-    pub user_name: String,
-    pub user_id: i32,
-    pub user_roles: Vec<UserRole>,
-    pub token_expire_date: NaiveDateTime,
-}
-
-// This type is pegged to the server implementation
-// It might make sense to move this into the requests and responses crate.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub enum UserRole {
-    Unprivileged,
-    Moderator,
-    Admin,
-    Publisher,
-}
+use requests_and_responses::user::{UserRole, Jwt};
 
 
 #[derive(Fail, Debug)]

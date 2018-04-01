@@ -2,7 +2,6 @@ use frank_jwt::{Algorithm, encode, decode};
 use rocket::State;
 use rocket::http::Status;
 use serde_json;
-use db::user::UserRole;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
 use chrono::{NaiveDateTime, Utc};
@@ -12,21 +11,24 @@ use auth::BannedSet;
 
 use error::WeekendAtJoesError;
 
+use requests_and_responses::user::{Jwt, UserRole};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Jwt {
-    pub user_name: String,
-    pub user_id: i32,
-    pub user_roles: Vec<UserRole>,
-    pub token_expire_date: NaiveDateTime,
-}
+pub struct ServerJwt(pub Jwt);
 
-impl Jwt {
+//#[derive(Clone, Debug, Serialize, Deserialize)]
+//pub struct Jwt {
+//    pub user_name: String,
+//    pub user_id: i32,
+//    pub user_roles: Vec<UserRole>,
+//    pub token_expire_date: NaiveDateTime,
+//}
+
+impl ServerJwt {
     pub fn encode_jwt_string(&self, secret: &String) -> Result<String, JwtError> {
         let header = json!({});
         use rocket_contrib::Value;
 
-        let payload: Value = match serde_json::to_value(self) {
+        let payload: Value = match serde_json::to_value(&self.0) {
             Ok(x) => x,
             Err(_) => return Err(JwtError::SerializeError),
         };
@@ -188,7 +190,7 @@ pub mod user_authorization {
         };
 
         let key = keys[0];
-        let jwt: Jwt = match Jwt::decode_jwt_string(key.to_string(), &secret) {
+        let jwt: Jwt = match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
             Ok(token) => {
                 if token.token_expire_date < Utc::now().naive_utc() {
                     info!("Token expired.");

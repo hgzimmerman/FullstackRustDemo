@@ -13,7 +13,7 @@ mod password;
 mod banned_set;
 
 pub use self::jwt::user_authorization;
-pub use self::jwt::{Jwt, JwtError};
+pub use self::jwt::{ServerJwt, JwtError};
 
 pub use self::password::{hash_password, verify_hash};
 
@@ -29,6 +29,7 @@ use db::user::User;
 use db::Conn;
 
 use requests_and_responses::login::*;
+use requests_and_responses::user::Jwt;
 
 
 /// The secret contains a random string that is generated at startup.
@@ -110,6 +111,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
             .collect(),
         token_expire_date: new_expire_date,
     };
+    let jwt = ServerJwt(jwt);
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {
         Ok(s) => s,
         Err(e) => return Err(LoginError::JwtError(e)),
