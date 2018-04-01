@@ -2,6 +2,7 @@ pub mod route_service;
 use self::route_service::RouteService;
 pub mod networking;
 pub mod storage;
+pub mod user;
 
 use yew::services::fetch::FetchService;
 use yew::services::storage::{StorageService, Area};
@@ -10,7 +11,7 @@ pub struct Context {
     // Don't expose networking field. Make implementation use the Context's networking module instead.
     networking: FetchService,
     pub routing: RouteService,
-    pub local_storage: StorageService,
+    local_storage: StorageService,
     // console: ConsoleService,
 }
 

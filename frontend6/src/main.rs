@@ -17,6 +17,8 @@ extern crate chrono;
 
 extern crate pulldown_cmark;
 
+extern crate base64;
+
 
 use yew::prelude::*;
 use yew::html::Scope;
