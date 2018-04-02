@@ -63,8 +63,22 @@ impl Default for Route {
     }
 }
 
-pub trait Routable<T> {
-    fn route(path_components: Vec<String>) -> T;
+pub enum Router<T: Routable> {
+    Route(T),
+    Path(Vec<String>)
+}
+
+impl<T: Routable> Router<T> {
+    fn resolve_route(self) -> T {
+        match self {
+            Router::Route(route) => route,
+            Router::Path(path_components) => T::route(path_components)
+        }
+    }
+}
+
+pub trait Routable {
+    fn route(path_components: Vec<String>) -> Self;
 }
 
 struct Model {
@@ -76,7 +90,7 @@ enum Msg {
     Navigate(Route),
 }
 
-impl Routable<Route> for Model {
+impl Routable for Route {
     fn route(path_components: Vec<String>) -> Route {
 
         // The route is given in the form "/path/path/path"
@@ -106,7 +120,7 @@ impl Component<Context> for Model {
         let cb = context.send_back(|path: String| {
             println!("Callback path changed {}", path);
             let path_components = path.split('/').collect::<Vec<&str>>().into_iter().map(str::to_string).collect::<Vec<String>>();
-            Msg::Navigate(Self::route(path_components))
+            Msg::Navigate(Route::route(path_components))
         });
 
         context.routing.register_callback(cb);
