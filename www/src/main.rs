@@ -35,17 +35,17 @@ use yew::services::fetch::FetchService;
 
 // commenting this out in the hopes that RLS will be able to offer better suggestions.
 
-// fn main() {
-//     let model = Model {
-//         page: Page::News(NewsModel{
-//             link_id: "article1".to_string() , // Needed???
-//             article: Loadable::Loaded(Article::temp())
-//         })
-//     };
-//     let mut app = App::new();
-//     let mut context = Context {
-//         fetch_service: FetchService::new(app.sender()),
-//     };
-//     app.mount(context, model, update, views::view);
-//     yew::run_loop();
-// }
+fn main() {
+    let model = Model {
+        page: Page::News(NewsModel{
+            link_id: "article1".to_string() , // Needed???
+            article: Loadable::Loaded(Article::temp())
+        })
+    };
+    let mut app = App::new();
+    let mut context = Context {
+        fetch_service: FetchService::new(app.sender()),
+    };
+    app.mount(context, model, update, views::view);
+    yew::run_loop();
+ }

@@ -16,6 +16,8 @@ stdenv.mkDerivation rec {
     zlib
     # used for compiling the frontend to js
     emscripten
+    llvm
+    lld
   ];
   shellHook = ''
     export PGDATA='pgsql'

@@ -1,4 +1,4 @@
-#![feature(try_from)]
+//#![feature(try_from)]
 
 
 #[macro_use]
@@ -20,7 +20,6 @@ extern crate pulldown_cmark;
 
 extern crate base64;
 
-
 use yew::prelude::*;
 use yew::html::Scope;
 //use yew::context::console::ConsoleService;
@@ -35,6 +34,10 @@ use components::*;
 
 mod context;
 pub use context::Context;
+
+mod routing;
+use routing::*;
+
 
 //use yew::context::fetch::{FetchService, FetchTask, Request, Response};
 
@@ -53,7 +56,7 @@ use components::forum::forum_list::ForumList;
 pub enum Route {
     ForumView,
     ArticleView,
-    AuthView(AuthPage),
+    AuthView(Router<AuthPage>),
     BucketView,
 }
 
@@ -63,23 +66,6 @@ impl Default for Route {
     }
 }
 
-pub enum Router<T: Routable> {
-    Route(T),
-    Path(Vec<String>)
-}
-
-impl<T: Routable> Router<T> {
-    fn resolve_route(self) -> T {
-        match self {
-            Router::Route(route) => route,
-            Router::Path(path_components) => T::route(path_components)
-        }
-    }
-}
-
-pub trait Routable {
-    fn route(path_components: Vec<String>) -> Self;
-}
 
 struct Model {
     page: Route,
@@ -96,9 +82,9 @@ impl Routable for Route {
         // The route is given in the form "/path/path/path"
         // The string at index 0 is "" because of the first "/", so get at index 1 here
         if let Some(first) = path_components.get(1) {
-            println!("First path component is: {}", first);
+            println!("Routing Main: path is '{}'", first);
             match first.as_str() {
-                "auth" => Route::AuthView(AuthPage::Login),
+                "auth" => Route::AuthView(Router::Path(path_components[2..].to_vec())),
                 "forum" => Route::ForumView,
                 "article" => Route::ArticleView,
                 "bucket" => Route::BucketView,
@@ -188,7 +174,7 @@ impl Renderable<Context, Model> for Model {
             },
             HeaderLink {
                 name: "Login".into(),
-                link: Route::AuthView(AuthPage::Login)
+                link: Route::AuthView(Router::Route(AuthPage::Login))
             },
         ];
         html! {

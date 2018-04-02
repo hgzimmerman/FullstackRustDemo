@@ -6,11 +6,27 @@ use self::login_component::Login;
 use self::create_account_component::CreateAccount;
 use Context;
 
+use routing::*;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum AuthPage {
     Login,
     Create
+}
+
+impl Routable for AuthPage {
+    fn route(path_components: Vec<String>) -> AuthPage {
+        if let Some(first) = path_components.get(0) {
+            println!("Routing Auth: path is '{}'", first);
+            match first.as_str() {
+                "login" => AuthPage::Login,
+                "create" => AuthPage::Create,
+                _ => AuthPage::Login // default to bucket questions
+            }
+        } else {
+            AuthPage::Login
+        }
+    }
 }
 
 pub struct Auth {
@@ -26,14 +42,14 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
-    pub child: AuthPage,
+    pub child: Router<AuthPage>,
     pub callback: Option<Callback<()>>
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            child: AuthPage::Login,
+            child: Router::Route(AuthPage::Login),
             callback: None
         }
     }
@@ -44,15 +60,8 @@ impl Component<Context> for Auth {
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-//        let route = context.routing.get_route();
-//        let child = match route.as_ref() {
-//           "auth/login" => AuthPage::Login,
-//           "auth/create" => AuthPage::Create,
-//            _ => props.child
-//        };
-//        context.routing.set_route("/auth");
         Auth {
-            child: props.child,
+            child: props.child.resolve_route(),
             callback: props.callback
         }
 
@@ -76,7 +85,7 @@ impl Component<Context> for Auth {
 
     fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
         self.callback = props.callback;
-        self.child = props.child;
+        self.child = props.child.resolve_route();
         true
     }
 }
