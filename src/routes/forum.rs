@@ -21,6 +21,12 @@ fn get_forums(conn: Conn) -> JoeResult<Json<Vec<ForumResponse>>> {
         .map(convert_vector)
         .map(Json)
 }
+#[get("/<forum_id>")]
+fn get_forum(forum_id: i32, conn: Conn) -> JoeResult<Json<ForumResponse>> {
+    Forum::get_by_id(forum_id, &conn)
+        .map(ForumResponse::from)
+        .map(Json)
+}
 
 /// Creates a new forum.
 /// This operation is available to admins.
@@ -34,6 +40,6 @@ fn create_forum(new_forum: Json<NewForumRequest>, _admin: AdminUser, conn: Conn)
 
 
 impl Routable for Forum {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_forums, create_forum];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_forums, create_forum, get_forum];
     const PATH: &'static str = "/forum/";
 }

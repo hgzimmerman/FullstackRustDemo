@@ -49,7 +49,7 @@ impl Component<Context> for NewThread {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
         NewThread {
             title: String::default(),

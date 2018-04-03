@@ -73,7 +73,6 @@ impl Component<Context> for Forum {
             }
             Msg::ContentReady(threads) => {
                 self.threads = threads;
-                self.ft = None;
                 true
             }
         }

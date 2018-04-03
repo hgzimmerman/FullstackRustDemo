@@ -71,7 +71,7 @@ use db::message::Message;
 extern crate requests_and_responses;
 
 
-use simplelog::{Config, TermLogger, WriteLogger, CombinedLogger, LogLevelFilter};
+use simplelog::*;
 use std::fs::File;
 
 pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
@@ -83,10 +83,9 @@ fn main() {
 
     const LOGFILE_NAME: &'static str = "weekend.log";
     CombinedLogger::init(vec![
-        TermLogger::new(LogLevelFilter::Info, Config::default())
-            .unwrap(),
-        WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
-    ]).unwrap();
+        TermLogger::new(LevelFilter::Info, Config::default()).expect("Couldn't get terminal logger"),
+        WriteLogger::new(LevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).expect("Couldn't create logfile")),
+    ]).expect("Cant get logger.");
 
     init_rocket().launch();
 }
@@ -165,9 +164,9 @@ pub fn test_setup() {
 
         const LOGFILE_NAME: &'static str = "weekend_test.log";
         CombinedLogger::init(vec![
-            TermLogger::new(LogLevelFilter::Info, Config::default())
+            TermLogger::new(LevelFilter::Info, Config::default())
                 .unwrap(),
-            WriteLogger::new(LogLevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
+            WriteLogger::new(LevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
         ]).unwrap();
     });
 }

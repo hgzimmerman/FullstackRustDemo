@@ -48,8 +48,8 @@ impl Component<Context> for Login {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        context.routing.set_route("/auth/login");
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+//        context.routing.set_route("/auth/login");
 
         Login {
             user_name: String::from(""),

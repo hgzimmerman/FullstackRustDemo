@@ -60,14 +60,16 @@ impl Component<Context> for Auth {
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        Auth {
-            child: props.child.resolve_route(),
+        let mut auth = Auth {
+            child: AuthPage::Login,
             callback: props.callback
-        }
+        };
+        auth.update(Msg::SetChild(props.child.resolve_route()), context);
+        auth
 
     }
 
-    fn update(&mut self, msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Callback => {
                 if let Some(ref mut cb) = self.callback {
@@ -77,6 +79,10 @@ impl Component<Context> for Auth {
             }
             Msg::SetChild(child) => {
 //                context.routing.pop_route();
+                match child {
+                    AuthPage::Create => context.routing.set_route("/auth/create"),
+                    AuthPage::Login => context.routing.set_route("/auth/login")
+                }
                 self.child = child;
                 true
             }

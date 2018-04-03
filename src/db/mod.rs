@@ -41,9 +41,9 @@ pub const DATABASE_FILE: &'static str = env!("DATABASE_URL");
 
 /// Initializes the pool.
 pub fn init_pool() -> Pool {
-    let config = r2d2::Config::default();
+//    let config = r2d2::Config::default();
     let manager = ConnectionManager::<PgConnection>::new(DATABASE_FILE);
-    r2d2::Pool::new(config, manager)
+    r2d2::Pool::new(manager)
         .expect("db pool")
 }
 

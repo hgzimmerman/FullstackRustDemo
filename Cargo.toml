@@ -30,7 +30,7 @@ uuid = {version = "0.5", features = ["serde", "v4"] }
 #bcrypt = "0.1"
 
 log = "0.3.8"
-simplelog = "^0.4.2"
+simplelog = "^0.5.0"
 
 rand = "0.4.1"
 frank_jwt = "3.0.0"

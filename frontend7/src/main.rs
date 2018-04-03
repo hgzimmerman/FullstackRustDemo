@@ -42,8 +42,10 @@ use routing::*;
 //use yew::context::fetch::{FetchService, FetchTask, Request, Response};
 
 use auth::AuthPage;
+use components::forum::forum_list::ForumListRoute;
 use components::forum::forum_list::ForumList;
-
+use components::auth::Auth;
+use components::header_component::*;
 
 /// If you use `App` you should implement this for `AppContext<Context, Model, Msg>` struct.
 // impl counter::Printer for Context {
@@ -54,7 +56,7 @@ use components::forum::forum_list::ForumList;
 //
 #[derive(Clone, PartialEq, Debug)]
 pub enum Route {
-    ForumView,
+    ForumView(Router<ForumListRoute>),
     ArticleView,
     AuthView(Router<AuthPage>),
     BucketView,
@@ -62,7 +64,7 @@ pub enum Route {
 
 impl Default for Route {
     fn default() -> Self {
-        Route::ForumView
+        Route::ForumView(Router::Route(ForumListRoute::List))
     }
 }
 
@@ -79,18 +81,20 @@ enum Msg {
 impl Routable for Route {
     fn route(path_components: Vec<String>) -> Route {
 
+        println!("Routing Main: Routing with following path: {:?}", path_components);
         // The route is given in the form "/path/path/path"
         // The string at index 0 is "" because of the first "/", so get at index 1 here
         if let Some(first) = path_components.get(1) {
             println!("Routing Main: path is '{}'", first);
             match first.as_str() {
                 "auth" => Route::AuthView(Router::Path(path_components[2..].to_vec())),
-                "forum" => Route::ForumView,
+                "forum" => Route::ForumView(Router::Path(path_components[2..].to_vec())),
                 "article" => Route::ArticleView,
                 "bucket" => Route::BucketView,
                 _ => Route::BucketView // default to bucket questions
             }
         } else {
+            println!("Main router couldn't resolve route, setting default route");
             Route::default()
         }
     }
@@ -122,7 +126,6 @@ impl Component<Context> for Model {
         println!("updating model");
         match msg {
             Msg::Navigate(route) => {
-//                context.routing.set_route("");
                 println!("MainNav: navigating to {:?}", route);
                 self.page = route;
                 true
@@ -131,29 +134,28 @@ impl Component<Context> for Model {
     }
 }
 
-use components::auth::Auth;
 
-use components::header_component::*;
 
 
 impl Renderable<Context, Model> for Model {
 
     fn view(&self) -> Html<Context, Self> {
+        println!("Rendering main");
 
-
-        let page = || {
-            match self.page {
+        let page = |page: &Route| {
+            match page {
                 Route::AuthView(ref auth_page) => {
                     html! {
                         <>
-                            <Auth: child=auth_page, callback=|_| Msg::Navigate(Route::ForumView), />
+                            <Auth: child=auth_page, callback=|_| Msg::Navigate(Route::ForumView(Router::Route(ForumListRoute::List))), />
                         </>
                     }
                 }
-                Route::ForumView => {
+                Route::ForumView(ref forum_list_route) => {
+                    println!("ForumView chosen to render by main with parameters {:?}", forum_list_route);
                     html! {
                         <>
-                            <ForumList: child=None, />
+                            <ForumList: route=forum_list_route.clone(), />
                         </>
                     }
                 }
@@ -170,7 +172,7 @@ impl Renderable<Context, Model> for Model {
         let header_links = vec![
             HeaderLink {
                 name: "Forum".into(),
-                link: Route::ForumView
+                link: Route::ForumView(Router::Route(ForumListRoute::List))
             },
             HeaderLink {
                 name: "Login".into(),
@@ -181,7 +183,7 @@ impl Renderable<Context, Model> for Model {
             <div class="main-container", >
                 <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />
                 <div class="main-content", >
-                    {page()}
+                    {page(&self.page)}
                 </div>
             <div/>
         }

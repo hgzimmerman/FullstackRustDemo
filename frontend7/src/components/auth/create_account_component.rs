@@ -48,7 +48,7 @@ impl Component<Context> for CreateAccount {
     type Properties = Props;
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        context.routing.set_route("/auth/create");
+//        context.routing.set_route("/auth/create");
         println!("location: {}",context.routing.get_location());
 
         CreateAccount {
