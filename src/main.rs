@@ -83,8 +83,15 @@ fn main() {
 
     const LOGFILE_NAME: &'static str = "weekend.log";
     CombinedLogger::init(vec![
-        TermLogger::new(LevelFilter::Info, Config::default()).expect("Couldn't get terminal logger"),
-        WriteLogger::new(LevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).expect("Couldn't create logfile")),
+        TermLogger::new(LevelFilter::Info, Config::default())
+            .expect("Couldn't get terminal logger"),
+        WriteLogger::new(
+            LevelFilter::Trace,
+            Config::default(),
+            File::create(LOGFILE_NAME).expect(
+                "Couldn't create logfile",
+            )
+        ),
     ]).expect("Cant get logger.");
 
     init_rocket().launch();

@@ -40,6 +40,7 @@ impl RouteService {
             let state_value: Value = event.state();
             if let Ok(prior_route) = state_value.try_into() {
                 println!("url changed: {}", prior_route);
+                println!("{}", window().location().unwrap().href().unwrap());
                 callback.emit(prior_route)
             } else {
                eprintln!("Nothing farther back in history, not calling routing callback.");

@@ -60,8 +60,8 @@ pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
                     for c in top.childs.iter_mut() {
                         if let &mut VNode::VTag (ref mut vtag) = c {
                             // TODO
-                            // vtag.tag = "th".into();
-                            vtag.add_attribute("scope", "col");
+//                            vtag.tag = "th".into();
+                            vtag.add_attribute("scope", &"col");
                         }
                     }
                 }
@@ -112,7 +112,7 @@ fn make_tag<CTX, M>(t: Tag) -> VTag<CTX,M>
         }
         Tag::List(None) => VTag::new("ul"),
         Tag::List(Some(1)) => VTag::new("ol"),
-        Tag::List(Some(start)) => {
+        Tag::List(Some(ref start)) => {
             let mut el = VTag::new("ol");
             el.add_attribute("start", start);
             el
@@ -137,7 +137,7 @@ fn make_tag<CTX, M>(t: Tag) -> VTag<CTX,M>
             el
         }
         Tag::Code => VTag::new("code"),
-        Tag::Link(href, title) => {
+        Tag::Link(ref href, ref title) => {
             let mut el = VTag::new("a");
             el.add_attribute("href", href);
             if title != "" {
@@ -145,7 +145,7 @@ fn make_tag<CTX, M>(t: Tag) -> VTag<CTX,M>
             }
             el
         }
-        Tag::Image(src, title) => {
+        Tag::Image(ref src, ref title) => {
             let mut el = VTag::new("img");
             el.add_attribute("src", src);
             if title != "" {
