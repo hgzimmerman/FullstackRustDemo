@@ -49,7 +49,7 @@ impl Component<Context> for CreateAccount {
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 //        context.routing.set_route("/auth/create");
-        println!("location: {}",context.routing.get_location());
+//        println!("location: {}",context.routing.get_location());
 
         CreateAccount {
             user_name: String::from(""),

@@ -35,13 +35,16 @@ use components::*;
 mod context;
 pub use context::Context;
 
-mod routing;
-use routing::*;
+
+use yew::services::route::*;
+
+//mod routing;
+//use routing::*;
 
 
 //use yew::context::fetch::{FetchService, FetchTask, Request, Response};
 
-use auth::AuthPage;
+use auth::AuthRoute;
 use components::forum::forum_list::ForumListRoute;
 use components::forum::forum_list::ForumList;
 use components::auth::Auth;
@@ -56,21 +59,62 @@ use components::header_component::*;
 //
 #[derive(Clone, PartialEq, Debug)]
 pub enum Route {
-    ForumView(Router<ForumListRoute>),
-    ArticleView,
-    AuthView(Router<AuthPage>),
-    BucketView,
+    Forums(ForumListRoute),
+//    ArticleView,
+    Auth(AuthRoute),
+//    BucketView,
+    PageNotFound
+}
+
+
+impl <'a> From<&'a RouteInfo> for Route {
+    fn from(route_info: &RouteInfo) -> Self {
+        println!("Converting from url");
+        if let Some(first_segment) = route_info.get_segment_at_index(0) {
+            println!("matching: {}", first_segment);
+            match first_segment {
+                "forum" => return Route::Forums(ForumListRoute::from(route_info)),
+                "auth" => return Route::Auth(AuthRoute::from(route_info)),
+                _ => return Route::PageNotFound
+            }
+        }
+        Route::PageNotFound
+    }
+}
+
+impl Into<RouteInfo> for Route {
+    fn into(self) -> RouteInfo {
+        match self {
+            Route::Forums(forum_list_route)=> RouteInfo::parse("/forum").unwrap() + forum_list_route.into(),
+            Route::Auth(auth_route) => RouteInfo::parse("/auth").unwrap() + auth_route.into(),
+            Route::PageNotFound => RouteInfo::parse("/pagenotfound").unwrap()
+        }
+    }
+}
+impl From<RouteResult> for Msg {
+    fn from( result: RouteResult) -> Self {
+        match result {
+            Ok(route_info) => {
+               Msg::Navigate(Route::from(&route_info))
+            }
+            Err(e) => {
+                eprintln!("Couldn't route: {:?}", e);
+                Msg::Navigate(Route::PageNotFound)
+            }
+        }
+    }
+
 }
 
 impl Default for Route {
     fn default() -> Self {
-        Route::ForumView(Router::Route(ForumListRoute::List))
+        Route::Forums(ForumListRoute::default())
     }
 }
 
 
 struct Model {
-    page: Route,
+    route: Route,
 }
 
 
@@ -78,27 +122,7 @@ enum Msg {
     Navigate(Route),
 }
 
-impl Routable for Route {
-    fn route(path_components: Vec<String>) -> Route {
 
-        println!("Routing Main: Routing with following path: {:?}", path_components);
-        // The route is given in the form "/path/path/path"
-        // The string at index 0 is "" because of the first "/", so get at index 1 here
-        if let Some(first) = path_components.get(1) {
-            println!("Routing Main: path is '{}'", first);
-            match first.as_str() {
-                "auth" => Route::AuthView(Router::Path(path_components[2..].to_vec())),
-                "forum" => Route::ForumView(Router::Path(path_components[2..].to_vec())),
-                "article" => Route::ArticleView,
-                "bucket" => Route::BucketView,
-                _ => Route::BucketView // default to bucket questions
-            }
-        } else {
-            println!("Main router couldn't resolve route, setting default route");
-            Route::default()
-        }
-    }
-}
 
 
 impl Component<Context> for Model {
@@ -107,17 +131,25 @@ impl Component<Context> for Model {
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        let cb = context.send_back(|path: String| {
-            println!("Callback path changed {}", path);
-            let path_components = path.split('/').collect::<Vec<&str>>().into_iter().map(str::to_string).collect::<Vec<String>>();
-            Msg::Navigate(Route::route(path_components))
+//        let cb = context.send_back(|path: String| {
+//            println!("Callback path changed {}", path);
+//            let path_components = path.split('/').collect::<Vec<&str>>().into_iter().map(str::to_string).collect::<Vec<String>>();
+//            Msg::Navigate(Route::route(path_components))
+//        });
+//
+//        context.routing.register_callback(cb);
+
+        let callback = context.send_back(|route_result: RouteResult| {
+            Msg::from(route_result)
         });
+        context.routing.register_router(callback);
 
-        context.routing.register_callback(cb);
 
+        let route: Route = (&context.routing.get_current_route_info()).into();
+        context.routing.replace_url(route.clone()); // sets the url to be dependent on what the route_info was resolved to
 
         Model {
-            page: Route::default(),
+            route
         }
     }
 
@@ -127,7 +159,7 @@ impl Component<Context> for Model {
         match msg {
             Msg::Navigate(route) => {
                 println!("MainNav: navigating to {:?}", route);
-                self.page = route;
+                self.route = route;
                 true
             }
         }
@@ -142,20 +174,20 @@ impl Renderable<Context, Model> for Model {
     fn view(&self) -> Html<Context, Self> {
         println!("Rendering main");
 
-        let page = |page: &Route| {
-            match page {
-                Route::AuthView(ref auth_page) => {
+        let page = |route: &Route| {
+            match route {
+                Route::Auth(ref auth_page) => {
                     html! {
                         <>
-                            <Auth: child=auth_page, callback=|_| Msg::Navigate(Route::ForumView(Router::Route(ForumListRoute::List))), />
+                            <Auth: child=auth_page, />
                         </>
                     }
                 }
-                Route::ForumView(ref forum_list_route) => {
+                Route::Forums(ref forum_list_route) => {
                     println!("ForumView chosen to render by main with parameters {:?}", forum_list_route);
                     html! {
                         <>
-                            <ForumList: route=forum_list_route.clone(), />
+                            <ForumList: route=forum_list_route, />
                         </>
                     }
                 }
@@ -170,20 +202,20 @@ impl Renderable<Context, Model> for Model {
         };
 
         let header_links = vec![
-            HeaderLink {
-                name: "Forum".into(),
-                link: Route::ForumView(Router::Route(ForumListRoute::List))
-            },
-            HeaderLink {
-                name: "Login".into(),
-                link: Route::AuthView(Router::Route(AuthPage::Login))
-            },
+//            HeaderLink {
+//                name: "Forum".into(),
+//                link: Route::Forums(ForumListRoute::List)
+//            },
+//            HeaderLink {
+//                name: "Login".into(),
+//                link: Route::Auth(AuthRoute::Login)
+//            },
         ];
         html! {
             <div class="main-container", >
                 <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />
                 <div class="main-content", >
-                    {page(&self.page)}
+                    {page(&self.route)}
                 </div>
             <div/>
         }

@@ -19,17 +19,57 @@ use components::button::Button;
 use components::forum::thread::new_thread::NewThread;
 
 
+use yew::services::route::RouteInfo;
+
+
 #[derive(Clone, PartialEq)]
 pub enum Child {
     CreateThread,
     ThreadContents(MinimalThreadData)
 }
 
+#[derive(Clone, PartialEq, Debug)]
+pub enum ForumRoute {
+    Forum(i32), // forum id used to get forum data
+//    CreateThread(ThreadRoute),
+    ThreadContents
+
+}
+
+impl <'a> From<&'a RouteInfo> for ForumRoute {
+    fn from(route_info: &RouteInfo) -> Self {
+        println!("Converting from url");
+//        if let Some(segment) = route_info.get_segment_at_index(2) {
+//            println!("matching: {}", segment);
+//            match segment {
+//                 => forum_id.to_string().as_str(),
+//            }
+//        }
+        ForumRoute::default()
+    }
+}
+
+impl Into<RouteInfo> for ForumRoute {
+    fn into(self) -> RouteInfo {
+        match self {
+            ForumRoute::Forum(route) => RouteInfo::parse("/hello").unwrap(),
+            ForumRoute::ThreadContents => RouteInfo::parse("/thread").unwrap(),
+        }
+    }
+}
+
+
+impl Default for ForumRoute {
+    fn default() -> Self {
+        ForumRoute::Forum(0)
+    }
+}
+
 pub struct Forum {
     parent: ForumData,
     child: Option<Child>,
     threads: Vec<MinimalThreadData>,
-    ft: Option<FetchTask>
+    threads_ft: Option<FetchTask>
 }
 
 
@@ -40,7 +80,7 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq, Default)]
 pub struct Props {
-    pub forum_data: ForumData
+    pub route: ForumRoute,
 }
 
 impl Component<Context> for Forum {
@@ -49,20 +89,34 @@ impl Component<Context> for Forum {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        let callback = context.send_back(|response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
-            let (meta, Json(data)) = response.into_parts();
-            println!("META: {:?}, {:?}", meta, data);
-            Msg::ContentReady(data.unwrap().into_iter().map(MinimalThreadData::from).collect())
-        });
+        if let ForumRoute::Forum(forum_id) = props.route {
+             let threads_callback = context.send_back(|response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                Msg::ContentReady(data.unwrap().into_iter().map(MinimalThreadData::from).collect())
+            });
 
-        let task = context.make_request(RequestWrapper::GetThreads{forum_id: props.forum_data.id, page_index: 1}, callback);
+            let threads_task = context.make_request(RequestWrapper::GetThreads{forum_id, page_index: 1}, threads_callback);
 
-        Forum {
-            parent: props.forum_data,
-            child: None,
-            threads: vec!(),
-            ft: task.ok()
+
+            // TODO get the parent via the network
+
+
+            Forum {
+                parent: ForumData::default() ,
+                child: None,
+                threads: vec!(),
+                threads_ft: threads_task.ok()
+            }
+        } else {
+            Forum {
+                parent: ForumData::default() ,
+                child: None,
+                threads: vec!(),
+                threads_ft: None
+            }
         }
+
     }
 
     fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
@@ -106,7 +160,7 @@ impl Renderable<Context, Forum> for Forum {
             match child {
                 &Child::CreateThread => {
                     html! {
-                        <NewThread: forum={self.parent.clone()}, />
+//                        <NewThread: forum={self.parent.clone()}, />
                     }
 
                 },
@@ -132,7 +186,7 @@ impl Renderable<Context, Forum> for Forum {
             <div class="vertical-flexbox", >
                 <div class="centered",>
                     <div class="forum-title",>
-                        <span class="forum-title-span", >{&self.parent.title} </span>
+//                        <span class="forum-title-span", >{&self.parent.title} </span>
                         {create_thread_button()}
                     </div>
                     {inner_content()}

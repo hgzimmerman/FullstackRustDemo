@@ -6,51 +6,57 @@ use self::login_component::Login;
 use self::create_account_component::CreateAccount;
 use Context;
 
-use routing::*;
+use yew::services::route::*;
 
 #[derive(Clone, PartialEq, Debug)]
-pub enum AuthPage {
+pub enum AuthRoute {
     Login,
     Create
 }
 
-impl Routable for AuthPage {
-    fn route(path_components: Vec<String>) -> AuthPage {
-        if let Some(first) = path_components.get(0) {
-            println!("Routing Auth: path is '{}'", first);
-            match first.as_str() {
-                "login" => AuthPage::Login,
-                "create" => AuthPage::Create,
-                _ => AuthPage::Login // default to bucket questions
+
+impl <'a> From<&'a RouteInfo> for AuthRoute {
+    fn from(route_info: &RouteInfo) -> Self {
+        println!("Converting from url");
+        if let Some(segment) = route_info.get_segment_at_index(1) {
+            println!("matching: {}", segment);
+            match segment {
+                "login" => return AuthRoute::Login,
+                "create" => return AuthRoute::Create,
+                _ => return AuthRoute::Login
             }
-        } else {
-            AuthPage::Login
+        }
+        AuthRoute::Login
+    }
+}
+
+impl Into<RouteInfo> for AuthRoute {
+    fn into(self) -> RouteInfo {
+        match self {
+            AuthRoute::Login => RouteInfo::parse("/login").unwrap(),
+            AuthRoute::Create => RouteInfo::parse("/create").unwrap(),
         }
     }
 }
 
 pub struct Auth {
-    pub child: AuthPage,
-    pub callback: Option<Callback<()>>
+    pub child: AuthRoute,
 }
 
 
 pub enum Msg {
-    Callback,
-    SetChild(AuthPage)
+    SetChild(AuthRoute)
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
-    pub child: Router<AuthPage>,
-    pub callback: Option<Callback<()>>
+    pub child: AuthRoute,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            child: Router::Route(AuthPage::Login),
-            callback: None
+            child: AuthRoute::Login
         }
     }
 }
@@ -61,28 +67,20 @@ impl Component<Context> for Auth {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         let mut auth = Auth {
-            child: AuthPage::Login,
-            callback: props.callback
+            child: props.child,
         };
-        auth.update(Msg::SetChild(props.child.resolve_route()), context);
+//        auth.update(Msg::SetChild(props.child.resolve_route()), context);
         auth
 
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
-            Msg::Callback => {
-                if let Some(ref mut cb) = self.callback {
-                    cb.emit(())
-                }
-                false
-            }
             Msg::SetChild(child) => {
-//                context.routing.pop_route();
-                match child {
-                    AuthPage::Create => context.routing.set_route("/auth/create"),
-                    AuthPage::Login => context.routing.set_route("/auth/login")
-                }
+//                match child {
+//                    AuthRoute::Create => context.routing.set_route("/auth/create"),
+//                    AuthRoute::Login => context.routing.set_route("/auth/login")
+//                }
                 self.child = child;
                 true
             }
@@ -90,8 +88,7 @@ impl Component<Context> for Auth {
     }
 
     fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
-        self.callback = props.callback;
-        self.child = props.child.resolve_route();
+        self.child = props.child;
         true
     }
 }
@@ -102,17 +99,17 @@ impl Renderable<Context, Auth> for Auth{
 
         let page = || {
             match &self.child {
-                &AuthPage::Login => {
+                &AuthRoute::Login => {
                     html! {
                         <>
-                            <Login: login_nav_cb=|_| Msg::Callback, create_account_nav_cb=|_| Msg::SetChild(AuthPage::Create), />
+                            <Login: />
                         </>
                     }
                 }
-                &AuthPage::Create => {
+                &AuthRoute::Create => {
                     html! {
                         <>
-                            <CreateAccount: nav_cb=|_| Msg::SetChild(AuthPage::Login), />
+                            <CreateAccount:  />
                         </>
                     }
                 }
