@@ -5,8 +5,8 @@
 /frontend7/target/
 /backend/target/
 **/*.rs.bk
-weekend.log
+/backend/weekend.log
 **.log
 .idea
-db.logfile
-backend/pgsql
+/backend/db.logfile
+/backend/pgsql
