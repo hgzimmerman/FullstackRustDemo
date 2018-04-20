@@ -1,6 +1,7 @@
 use yew::prelude::*;
 // use button::Button;
 use link::Link;
+use context::Context;
 
 use Route;
 
@@ -13,7 +14,7 @@ pub struct HeaderLink {
 #[derive(Clone, PartialEq)]
 pub struct Header {
     pub links: Vec<HeaderLink>,
-    pub callback: Option<Callback<Route>>
+//    pub callback: Option<Callback<Route>>
 }
 
 pub enum Msg {
@@ -23,49 +24,50 @@ pub enum Msg {
 #[derive(PartialEq, Clone)]
 pub struct Props {
     pub links: Vec<HeaderLink>,
-    pub callback: Option<Callback<Route>>
+//    pub callback: Option<Callback<Route>>
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             links: vec![],
-            callback: None
+//            callback: None
         }
     }
 }
 
 
-impl<CTX: 'static> Component<CTX> for Header {
+impl Component<Context> for Header {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
+    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         Header {
             links: props.links,
-            callback: props.callback
+//            callback: props.callback
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
-            Msg::CallLink(page_view) => {
-                if let Some(ref cb) = self.callback {
-                    cb.emit(page_view)
-                }
+            Msg::CallLink(route) => {
+//                if let Some(ref cb) = self.callback {
+//                    cb.emit(page_view)
+//                }
+                context.routing.set_route(route);
             }
         }
         true
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
         self.links = props.links;
         true
     }
 }
 
-impl<CTX: 'static> Renderable<CTX, Header> for Header {
-    fn view(&self) -> Html<CTX, Self> {
+impl Renderable<Context, Header> for Header {
+    fn view(&self) -> Html<Context, Self> {
 
         let link = |x: &HeaderLink| html! {
             <Link<Route>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />

@@ -202,18 +202,18 @@ impl Renderable<Context, Model> for Model {
         };
 
         let header_links = vec![
-//            HeaderLink {
-//                name: "Forum".into(),
-//                link: Route::Forums(ForumListRoute::List)
-//            },
-//            HeaderLink {
-//                name: "Login".into(),
-//                link: Route::Auth(AuthRoute::Login)
-//            },
+            HeaderLink {
+                name: "Forum".into(),
+                link: Route::Forums(ForumListRoute::default())
+            },
+            HeaderLink {
+                name: "Login".into(),
+                link: Route::Auth(AuthRoute::Login)
+            },
         ];
         html! {
             <div class="main-container", >
-                <Header: links=header_links, callback=|pv| Msg::Navigate(pv), />
+                <Header: links=header_links, />
                 <div class="main-content", >
                     {page(&self.route)}
                 </div>

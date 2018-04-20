@@ -3,6 +3,7 @@
 /requests_and_responses/target/
 /db_proc_macros/target
 /frontend7/target/
+/backend/target/
 **/*.rs.bk
 weekend.log
 **.log

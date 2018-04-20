@@ -5,7 +5,8 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
 #yew = { git = "https://github.com/DenisKolodin/yew", rev = "e80d8d564f4b5c8239408f32ec2301e8c629fefa" }
-yew = { git = "https://github.com/hgzimmerman/yew", rev = "93d759fa171acc301a1c736da7cac4dbdb97b7b3" }
+#yew = { git = "https://github.com/hgzimmerman/yew", rev = "93d759fa171acc301a1c736da7cac4dbdb97b7b3" }
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "afbdbf2b291ae17beed5a4d7ca77bd86b56f4850" }
 requests_and_responses = {path = "../requests_and_responses"}
 failure = "0.1"
 failure_derive = "0.1.1"

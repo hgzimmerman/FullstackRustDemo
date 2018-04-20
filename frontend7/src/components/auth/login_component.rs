@@ -6,6 +6,8 @@ use yew::services::fetch::{FetchTask, Response};
 use failure::Error;
 use requests_and_responses::login::*;
 use context::networking::*;
+use super::AuthRoute;
+use Route;
 
 
 pub enum Msg {
@@ -69,7 +71,7 @@ impl Component<Context> for Login {
                     let (meta, jwt) = response.into_parts();
                     println!("META: {:?}, JWT: {:?}", meta, jwt);
                     if let Ok(j) = jwt {
-                        // TODO This Result doesn't appear to indicate for errors
+                        // TODO This Result doesn't appear to indicate for errors, use meta instead
                         Msg::LoginSuccess(j)
                     } else {
                         Msg::LoginError
@@ -91,6 +93,8 @@ impl Component<Context> for Login {
                 if let Some(ref mut cb) = self.create_account_nav_cb {
                     cb.emit(())
                 }
+                context.routing.set_route(Route::Auth(AuthRoute::Create));
+
                 true
             }
             Msg::UpdatePassword(p) => {
@@ -117,7 +121,7 @@ impl Component<Context> for Login {
     }
 
     fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
-//        self.nav_cb = props.nav_cb;
+//        self.nav_cb = props.nav_cb;33
         true
     }
 }

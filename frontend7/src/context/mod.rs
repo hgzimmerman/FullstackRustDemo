@@ -13,7 +13,6 @@ pub struct Context {
     networking: FetchService,
     pub routing: RouteService,
     local_storage: StorageService,
-    // console: ConsoleService,
 }
 
 impl Context {

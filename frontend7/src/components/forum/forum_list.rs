@@ -22,13 +22,13 @@ use forum::forum::ForumRoute;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum ForumListRoute {
-    List(Vec<ForumData>),
+    List,
     Forum(ForumRoute)
 }
 
 impl Default for ForumListRoute {
     fn default() -> Self {
-        ForumListRoute::List(vec!())
+        ForumListRoute::List
     }
 }
 
@@ -39,7 +39,7 @@ impl <'a> From<&'a RouteInfo> for ForumListRoute {
         if let Some(segment) = route_info.get_segment_at_index(1) {
             println!("matching: {}", segment);
             match segment {
-                "" => return ForumListRoute::List(vec!()),
+                "" => return ForumListRoute::List,
                 "id" => return ForumListRoute::Forum(route_info.into()),
                 _ => return ForumListRoute::default()
             }
@@ -51,8 +51,8 @@ impl <'a> From<&'a RouteInfo> for ForumListRoute {
 impl Into<RouteInfo> for ForumListRoute {
     fn into(self) -> RouteInfo {
         match self {
-            ForumListRoute::List(_) => RouteInfo::parse("/").unwrap(),
-            ForumListRoute::Forum(route) => RouteInfo::parse("/create").unwrap() + route.into(),
+            ForumListRoute::List => RouteInfo::parse("/").unwrap(),
+            ForumListRoute::Forum(route) => RouteInfo::parse("/forum").unwrap() + route.into(),
         }
     }
 }
@@ -74,10 +74,13 @@ impl Into<RouteInfo> for ForumListRoute {
 
 pub struct ForumList {
     pub route: ForumListRoute,
+    pub ft: Option<FetchTask>,
+    pub forum_list: Vec<ForumData>
 }
 
 
 pub enum Msg {
+    ContentReady(Vec<ForumData>)
 }
 
 #[derive(Clone, PartialEq)]
@@ -88,7 +91,7 @@ pub struct Props {
 impl Default for Props {
     fn default() -> Self {
         Props {
-            route: ForumListRoute::List(vec!())
+            route: ForumListRoute::List
         }
     }
 }
@@ -128,13 +131,35 @@ impl Component<Context> for ForumList {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         println!("Creating forum list");
+
+        let ft = if let ForumListRoute::List = props.route {
+            let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect();
+
+                Msg::ContentReady(forum_data_list)
+            });
+
+            context.make_request(RequestWrapper::GetForums, callback).ok()
+        } else {
+            None
+        };
+
         ForumList {
             route: props.route,
+            ft,
+            forum_list: vec!()
         }
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
+            Msg::ContentReady(list) => {
+
+                self.forum_list = list;
+                true
+            }
         }
     }
 
@@ -161,15 +186,14 @@ impl Renderable<Context, ForumList> for ForumList {
                     <Forum: route=route, />
                 </>
             },
-            ForumListRoute::List(ref list_of_forums) => html!{
+            ForumListRoute::List => html!{
                 <div class="vertical-flexbox", >
                     <div class="centered",>
                         <div class="forum-title",>
                             <span class="forum-title-span", >{"Forums"} </span>
                         </div>
-                        // TODO this should be its own component
                         <ul class=("forum-list"),>
-                            { for list_of_forums.iter().map(forum_element) }
+                            { for self.forum_list.iter().map(forum_element) }
                         </ul>
                     </div>
                 </div>
