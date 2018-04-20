@@ -1,6 +1,6 @@
 use super::Context;
 
-use yew::format::{Nothing};
+use yew::format::Nothing;
 use yew::services::fetch::{FetchTask, Request, Response};
 use yew::html::Callback;
 
@@ -16,7 +16,7 @@ use serde::Serialize;
 
 enum Auth {
     Required,
-    NotRequired
+    NotRequired,
 }
 
 
@@ -25,9 +25,9 @@ pub enum RequestWrapper {
     Login(LoginRequest),
     CreateUser(NewUserRequest),
     CreateThread(NewThreadRequest),
-    GetThreads{ forum_id: i32, page_index: usize },
+    GetThreads { forum_id: i32, page_index: usize },
     GetForums,
-    GetForum{forum_id: i32}
+    GetForum { forum_id: i32 },
 }
 
 impl RequestWrapper {
@@ -37,11 +37,14 @@ impl RequestWrapper {
         use self::RequestWrapper::*;
         match *request {
             Login(_) => format!("{}/auth/login", api_base),
-            CreateUser(_) =>  format!("{}/user/", api_base),
+            CreateUser(_) => format!("{}/user/", api_base),
             CreateThread(_) => format!("{}/thread/create", api_base),
-            GetThreads{ forum_id, page_index } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
+            GetThreads {
+                forum_id,
+                page_index,
+            } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
             GetForums => format!("{}/forum/forums", api_base),
-            GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id)
+            GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id),
         }
     }
 }
@@ -49,7 +52,8 @@ impl RequestWrapper {
 
 impl Context {
     pub fn make_request<W>(&mut self, request: RequestWrapper, callback: Callback<Response<W>>) -> Result<FetchTask, Error>
-    where W: From<Result<String, Error>> + 'static
+    where
+        W: From<Result<String, Error>> + 'static,
     {
 
         let url = RequestWrapper::resolve_url(&request);
@@ -57,42 +61,66 @@ impl Context {
         use self::RequestWrapper::*;
         match request {
             Login(ref r) => {
-                let request = self.prepare_post_request(r, url, Auth::NotRequired)?;
+                let request = self.prepare_post_request(
+                    r,
+                    url,
+                    Auth::NotRequired,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
             CreateUser(ref r) => {
-                let request = self.prepare_post_request(r, url, Auth::NotRequired)?;
+                let request = self.prepare_post_request(
+                    r,
+                    url,
+                    Auth::NotRequired,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
             CreateThread(ref r) => {
-                let request = self.prepare_post_request(r, url, Auth::Required)?;
+                let request = self.prepare_post_request(
+                    r,
+                    url,
+                    Auth::Required,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
-            GetThreads{..} => {
-                let request = self.prepare_get_request(url, Auth::NotRequired)?;
+            GetThreads { .. } => {
+                let request = self.prepare_get_request(
+                    url,
+                    Auth::NotRequired,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
             GetForums => {
-                let request = self.prepare_get_request(url, Auth::NotRequired)?;
+                let request = self.prepare_get_request(
+                    url,
+                    Auth::NotRequired,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
-            GetForum{..} => {
-                let request = self.prepare_get_request(url, Auth::NotRequired)?;
+            GetForum { .. } => {
+                let request = self.prepare_get_request(
+                    url,
+                    Auth::NotRequired,
+                )?;
                 Ok(self.networking.fetch(request, callback))
             }
         }
     }
 
     fn prepare_post_request<T: Serialize>(&mut self, request_object: T, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
-        let body = serde_json::to_string(&request_object).unwrap();
+        let body = serde_json::to_string(&request_object)
+            .unwrap();
         match self.restore_jwt() {
             Ok(jwt_string) => {
                 // TODO: possibly check if the jwt is outdated here before sending
-                Ok(Request::post(url.as_str())
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", jwt_string.as_str())
-                    .body(body)
-                    .unwrap())
+                Ok(
+                    Request::post(url.as_str())
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", jwt_string.as_str())
+                        .body(body)
+                        .unwrap(),
+                )
             }
             Err(e) => {
                 match auth_requirement {
@@ -102,10 +130,12 @@ impl Context {
                     }
                     // If the auth wasn't required in the first place
                     Auth::NotRequired => {
-                        Ok(Request::post(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .body(body)
-                            .unwrap())
+                        Ok(
+                            Request::post(url.as_str())
+                                .header("Content-Type", "application/json")
+                                .body(body)
+                                .unwrap(),
+                        )
                     }
                 }
 
@@ -117,11 +147,13 @@ impl Context {
         match self.restore_jwt() {
             Ok(jwt_string) => {
                 // TODO: possibly check if the jwt is outdated here before sending
-                Ok(Request::get(url.as_str())
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", jwt_string.as_str())
-                    .body(Nothing)
-                    .unwrap())
+                Ok(
+                    Request::get(url.as_str())
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", jwt_string.as_str())
+                        .body(Nothing)
+                        .unwrap(),
+                )
             }
             Err(e) => {
                 match auth_requirement {
@@ -131,10 +163,12 @@ impl Context {
                     }
                     // If the auth wasn't required in the first place
                     Auth::NotRequired => {
-                        Ok(Request::get(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .body(Nothing)
-                            .unwrap())
+                        Ok(
+                            Request::get(url.as_str())
+                                .header("Content-Type", "application/json")
+                                .body(Nothing)
+                                .unwrap(),
+                        )
                     }
                 }
 

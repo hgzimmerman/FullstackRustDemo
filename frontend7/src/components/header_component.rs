@@ -18,7 +18,7 @@ pub struct Header {
 }
 
 pub enum Msg {
-    CallLink(Route)
+    CallLink(Route),
 }
 
 #[derive(PartialEq, Clone)]
@@ -51,9 +51,9 @@ impl Component<Context> for Header {
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::CallLink(route) => {
-//                if let Some(ref cb) = self.callback {
-//                    cb.emit(page_view)
-//                }
+                //                if let Some(ref cb) = self.callback {
+                //                    cb.emit(page_view)
+                //                }
                 context.routing.set_route(route);
             }
         }
@@ -69,8 +69,10 @@ impl Component<Context> for Header {
 impl Renderable<Context, Header> for Header {
     fn view(&self) -> Html<Context, Self> {
 
-        let link = |x: &HeaderLink| html! {
+        let link = |x: &HeaderLink| {
+            html! {
             <Link<Route>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
+        }
         };
 
         html! {

@@ -13,7 +13,7 @@ impl From<UserResponse> for UserData {
         UserData {
             user_name: response.user_name,
             display_name: response.display_name,
-            id: response.id
+            id: response.id,
         }
     }
 }

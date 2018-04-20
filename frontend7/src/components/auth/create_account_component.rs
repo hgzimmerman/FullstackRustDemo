@@ -15,7 +15,7 @@ pub enum Msg {
     UpdateUserName(String),
     UpdateDisplayName(String),
     Submit,
-    NoOp
+    NoOp,
 }
 
 pub struct CreateAccount {
@@ -24,32 +24,29 @@ pub struct CreateAccount {
     password: String,
     confirm_password: String,
     ft: Option<FetchTask>,
-    nav_cb: Option<Callback<()>>
+    nav_cb: Option<Callback<()>>,
 }
 
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
-    pub nav_cb: Option<Callback<()>>
+    pub nav_cb: Option<Callback<()>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
-        Props {
-            nav_cb: None
-        }
+        Props { nav_cb: None }
     }
 }
 
 
 impl Component<Context> for CreateAccount {
-
     type Msg = Msg;
     type Properties = Props;
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-//        context.routing.set_route("/auth/create");
-//        println!("location: {}",context.routing.get_location());
+        //        context.routing.set_route("/auth/create");
+        //        println!("location: {}",context.routing.get_location());
 
         CreateAccount {
             user_name: String::from(""),
@@ -57,7 +54,7 @@ impl Component<Context> for CreateAccount {
             password: String::from(""),
             confirm_password: String::from(""),
             ft: None,
-            nav_cb: None
+            nav_cb: None,
         }
     }
 
@@ -66,22 +63,29 @@ impl Component<Context> for CreateAccount {
         match msg {
             Msg::Submit => {
                 println!("Logging in with user name: {}", self.user_name);
-                let callback = context.send_back(|response: Response<Json<Result<String, Error>>>| {
-                    let (meta, Json(data)) = response.into_parts();
-                    println!("META: {:?}, {:?}", meta, data);
-                    Msg::NoOp
-                });
-                let new_user_request =  NewUserRequest {
+                let callback = context.send_back(
+                    |response: Response<Json<Result<String, Error>>>| {
+                        let (meta, Json(data)) = response.into_parts();
+                        println!("META: {:?}, {:?}", meta, data);
+                        Msg::NoOp
+                    },
+                );
+                let new_user_request = NewUserRequest {
                     user_name: self.user_name.clone(),
                     display_name: self.display_name.clone(),
-                    plaintext_password: self.password.clone()
+                    plaintext_password: self.password.clone(),
                 };
-                let task = context.make_request(RequestWrapper::CreateUser(new_user_request), callback);
+                let task = context.make_request(
+                    RequestWrapper::CreateUser(
+                        new_user_request,
+                    ),
+                    callback,
+                );
 
                 // This conversion of Err to Some is ok here because make_request will not fail with these parameters
                 self.ft = task.ok();
                 false
-            },
+            }
             Msg::UpdatePassword(p) => {
                 self.password = p;
                 true
@@ -98,7 +102,7 @@ impl Component<Context> for CreateAccount {
                 self.display_name = u;
                 true
             }
-            Msg::NoOp => false
+            Msg::NoOp => false,
         }
     }
 
@@ -161,5 +165,4 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
         }
 
     }
-
 }

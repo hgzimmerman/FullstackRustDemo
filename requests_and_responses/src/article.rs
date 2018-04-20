@@ -5,14 +5,14 @@ use user::UserResponse;
 pub struct NewArticleRequest {
     pub title: String,
     pub body: String,
-    pub author_id: i32
+    pub author_id: i32,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UpdateArticleRequest {
     pub title: Option<String>,
     pub body: Option<String>,
-    pub id: i32
+    pub id: i32,
 }
 
 
@@ -22,7 +22,7 @@ pub struct MinimalArticleResponse {
     pub author_id: i32,
     pub title: String,
     pub body: String,
-    pub publish_date: Option<NaiveDateTime>
+    pub publish_date: Option<NaiveDateTime>,
 }
 
 /// Doesn't have the body attached.
@@ -32,7 +32,7 @@ pub struct ArticlePreviewResponse {
     pub id: i32,
     pub author: UserResponse,
     pub title: String,
-    pub publish_date: Option<NaiveDateTime>
+    pub publish_date: Option<NaiveDateTime>,
 }
 
 /// All relevant information is attached.
@@ -42,5 +42,5 @@ pub struct FullArticleResponse {
     pub author: UserResponse,
     pub title: String,
     pub body: String,
-    pub publish_date: Option<NaiveDateTime>
+    pub publish_date: Option<NaiveDateTime>,
 }

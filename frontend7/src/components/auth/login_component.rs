@@ -17,7 +17,7 @@ pub enum Msg {
     NavToCreateAccount,
     LoginSuccess(String),
     NoOp,
-    LoginError
+    LoginError,
 }
 
 pub struct Login {
@@ -25,14 +25,14 @@ pub struct Login {
     password: String,
     ft: Option<FetchTask>,
     create_account_nav_cb: Option<Callback<()>>,
-    login_nav_cb: Option<Callback<()>>
+    login_nav_cb: Option<Callback<()>>,
 }
 
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
     pub login_nav_cb: Option<Callback<()>>,
-    pub create_account_nav_cb: Option<Callback<()>>
+    pub create_account_nav_cb: Option<Callback<()>>,
 }
 
 impl Default for Props {
@@ -46,12 +46,11 @@ impl Default for Props {
 
 
 impl Component<Context> for Login {
-
     type Msg = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
-//        context.routing.set_route("/auth/login");
+        //        context.routing.set_route("/auth/login");
 
         Login {
             user_name: String::from(""),
@@ -67,33 +66,42 @@ impl Component<Context> for Login {
         match msg {
             Msg::Submit => {
                 println!("Logging in with user name: {}", self.user_name);
-                let callback = context.send_back(|response: Response<Result<String, Error>>| {
-                    let (meta, jwt) = response.into_parts();
-                    println!("META: {:?}, JWT: {:?}", meta, jwt);
-                    if let Ok(j) = jwt {
-                        // TODO This Result doesn't appear to indicate for errors, use meta instead
-                        Msg::LoginSuccess(j)
-                    } else {
-                        Msg::LoginError
-                    }
-                });
+                let callback = context.send_back(
+                    |response: Response<Result<String, Error>>| {
+                        let (meta, jwt) = response.into_parts();
+                        println!("META: {:?}, JWT: {:?}", meta, jwt);
+                        if let Ok(j) = jwt {
+                            // TODO This Result doesn't appear to indicate for errors, use meta instead
+                            Msg::LoginSuccess(j)
+                        } else {
+                            Msg::LoginError
+                        }
+                    },
+                );
                 let login_request: LoginRequest = LoginRequest {
                     user_name: self.user_name.clone(),
-                    password: self.password.clone()
+                    password: self.password.clone(),
                 };
 
-                let task = context.make_request(RequestWrapper::Login(login_request), callback);
+                let task = context.make_request(
+                    RequestWrapper::Login(
+                        login_request,
+                    ),
+                    callback,
+                );
                 // This conversion of Err to Some is ok here because make_request will not fail with these parameters
                 self.ft = task.ok();
 
                 false
-            },
+            }
             Msg::NavToCreateAccount => {
                 println!("LoginComponent: navigating to create account");
                 if let Some(ref mut cb) = self.create_account_nav_cb {
                     cb.emit(())
                 }
-                context.routing.set_route(Route::Auth(AuthRoute::Create));
+                context.routing.set_route(Route::Auth(
+                    AuthRoute::Create,
+                ));
 
                 true
             }
@@ -116,12 +124,12 @@ impl Component<Context> for Login {
                 //TODO, add an element indicating that the login failed
                 true
             }
-            Msg::NoOp => false
+            Msg::NoOp => false,
         }
     }
 
     fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
-//        self.nav_cb = props.nav_cb;33
+        //        self.nav_cb = props.nav_cb;33
         true
     }
 }
@@ -160,5 +168,4 @@ impl Renderable<Context, Login> for Login {
         }
 
     }
-
 }

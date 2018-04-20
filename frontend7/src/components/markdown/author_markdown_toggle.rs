@@ -5,32 +5,32 @@ use components::button::Button;
 
 pub enum State {
     Editing,
-    RenderingMarkdown
+    RenderingMarkdown,
 }
 
 pub struct AuthorMarkdownToggle {
     text: String,
     editor_state: State,
-    callback: Option<Callback<String>>
+    callback: Option<Callback<String>>,
 }
 
 
 pub enum Msg {
     UpdateText(String),
-    ChangeState(State)
+    ChangeState(State),
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
     pub text: String,
-    pub callback: Option<Callback<String>>
+    pub callback: Option<Callback<String>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             text: String::default(),
-            callback: None
+            callback: None,
         }
     }
 }
@@ -44,7 +44,7 @@ impl Component<Context> for AuthorMarkdownToggle {
         AuthorMarkdownToggle {
             text: props.text,
             editor_state: State::Editing,
-            callback: props.callback
+            callback: props.callback,
         }
     }
 
@@ -70,13 +70,12 @@ impl Component<Context> for AuthorMarkdownToggle {
 }
 
 impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
-
-
     fn view(&self) -> Html<Context, Self> {
 
 
         let view = || match self.editor_state {
-            State::Editing => html! {
+            State::Editing => {
+                html! {
                 <>
                     <textarea
                         class=("markdown-textarea","form-control"),
@@ -84,11 +83,14 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
                         oninput=|e: InputData| Msg::UpdateText(e.value),
                     />
                 </>
-            },
-            State::RenderingMarkdown => html! {
+            }
+            }
+            State::RenderingMarkdown => {
+                html! {
                <div class="view-markdown-content",>
                     {super::render_markdown::<Context, Self>(&self.text)}
                </div>
+            }
             }
         };
 
@@ -106,6 +108,6 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
 //                    <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
 //                </div>
             </div>
-        }
+        };
     }
 }

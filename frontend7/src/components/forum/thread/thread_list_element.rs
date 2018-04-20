@@ -7,25 +7,25 @@ use components::link::Link;
 
 pub struct ThreadListElement {
     thread_data: MinimalThreadData,
-    callback: Option<Callback<MinimalThreadData>>
+    callback: Option<Callback<MinimalThreadData>>,
 }
 
 
 pub enum Msg {
-    Clicked
+    Clicked,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
     pub thread_data: MinimalThreadData,
-    pub callback: Option<Callback<MinimalThreadData>>
+    pub callback: Option<Callback<MinimalThreadData>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             thread_data: MinimalThreadData::default(),
-            callback: None
+            callback: None,
         }
     }
 }
@@ -38,7 +38,7 @@ impl Component<Context> for ThreadListElement {
 
         ThreadListElement {
             thread_data: props.thread_data,
-            callback: props.callback
+            callback: props.callback,
         }
     }
 
@@ -61,7 +61,6 @@ impl Component<Context> for ThreadListElement {
 }
 
 impl Renderable<Context, ThreadListElement> for ThreadListElement {
-
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
@@ -73,6 +72,6 @@ impl Renderable<Context, ThreadListElement> for ThreadListElement {
                     {format!("By: {}", &self.thread_data.author.display_name)}
                 </div>
             </li>
-        }
+        };
     }
 }

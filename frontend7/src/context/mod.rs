@@ -20,7 +20,7 @@ impl Context {
         Context {
             networking: FetchService::new(),
             routing: RouteService::new(),
-            local_storage: StorageService::new(Area::Local)
+            local_storage: StorageService::new(Area::Local),
         }
     }
 }

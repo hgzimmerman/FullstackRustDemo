@@ -11,39 +11,41 @@ pub struct Link<T> {
 
 
 pub enum Msg {
-    Clicked
+    Clicked,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props<T> {
-    pub callback:  Option<Callback<T>>,
+    pub callback: Option<Callback<T>>,
     pub cb_value: T,
     pub name: String,
     pub classes: &'static str,
 }
 
-impl <T: Default> Default for Props<T> {
+impl<T: Default> Default for Props<T> {
     fn default() -> Self {
         Props {
             callback: None,
             cb_value: T::default(),
             name: "".to_string(),
-            classes: ""
+            classes: "",
         }
     }
 }
 
 impl<CTX: 'static, T> Component<CTX> for Link<T>
-    where T: 'static + Clone + PartialEq + Default {
+where
+    T: 'static + Clone + PartialEq + Default,
+{
     type Msg = Msg;
     type Properties = Props<T>;
 
-    fn create(props: Self::Properties, _:&mut Env<CTX, Self>) -> Self {
+    fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
         Link {
             callback: props.callback,
             cb_value: props.cb_value,
             name: props.name,
-            classes: props.classes
+            classes: props.classes,
         }
     }
 
@@ -68,8 +70,9 @@ impl<CTX: 'static, T> Component<CTX> for Link<T>
 }
 
 impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T>
-    where T: 'static + Clone + PartialEq + Default {
-
+where
+    T: 'static + Clone + PartialEq + Default,
+{
     fn view(&self) -> Html<CTX, Self> {
         html!{
             <a onclick= |_| Msg::Clicked, class={self.classes}, >
@@ -78,7 +81,3 @@ impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T>
         }
     }
 }
-
-
-
-

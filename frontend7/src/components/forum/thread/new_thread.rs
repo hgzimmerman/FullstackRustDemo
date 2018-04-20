@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json};
+use yew::format::Json;
 
 use yew::services::fetch::{FetchTask, Response};
 
@@ -19,7 +19,7 @@ pub struct NewThread {
     post_content: String,
     forum: ForumData,
     callback: Option<Callback<()>>,
-    ft: Option<FetchTask>
+    ft: Option<FetchTask>,
 }
 
 
@@ -27,20 +27,20 @@ pub enum Msg {
     CreateNewThread,
     UpdatePostContent(String),
     UpdateThreadTitle(String),
-    NoOp
+    NoOp,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
     pub callback: Option<Callback<()>>,
-    pub forum: ForumData
+    pub forum: ForumData,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             callback: None,
-            forum: ForumData::default() // I don't like this, possibly make it optional and set it to none by default
+            forum: ForumData::default(), // I don't like this, possibly make it optional and set it to none by default
         }
     }
 }
@@ -56,28 +56,35 @@ impl Component<Context> for NewThread {
             forum: props.forum,
             post_content: String::default(),
             callback: props.callback,
-            ft: None
+            ft: None,
         }
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::CreateNewThread => {
-                let callback = context.send_back(|response: Response<Json<Result<ThreadResponse, Error>>>| {
-                    let (meta, Json(data)) = response.into_parts();
-                    println!("META: {:?}, {:?}", meta, data);
-                    Msg::NoOp
-                });
+                let callback = context.send_back(
+                    |response: Response<Json<Result<ThreadResponse, Error>>>| {
+                        let (meta, Json(data)) = response.into_parts();
+                        println!("META: {:?}, {:?}", meta, data);
+                        Msg::NoOp
+                    },
+                );
 
                 if let Ok(user_id) = context.user_id() {
                     let new_thread_request = NewThreadRequest {
                         forum_id: self.forum.id,
                         author_id: user_id,
                         title: self.title.clone(),
-                        post_content: self.post_content.clone()
+                        post_content: self.post_content.clone(),
                     };
 
-                    let task = context.make_request(RequestWrapper::CreateThread(new_thread_request), callback);
+                    let task = context.make_request(
+                        RequestWrapper::CreateThread(
+                            new_thread_request,
+                        ),
+                        callback,
+                    );
                     // TODO: Redirect to login on error
                     self.ft = task.ok();
 
@@ -98,9 +105,7 @@ impl Component<Context> for NewThread {
                 self.post_content = text;
                 true
             }
-            Msg:: NoOp => {
-                false
-            }
+            Msg::NoOp => false,
 
         }
     }
@@ -111,7 +116,6 @@ impl Component<Context> for NewThread {
 }
 
 impl Renderable<Context, NewThread> for NewThread {
-
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
@@ -130,6 +134,6 @@ impl Renderable<Context, NewThread> for NewThread {
                  <Button: onclick=|_| Msg::CreateNewThread, />
 
             </div>
-        }
+        };
     }
 }

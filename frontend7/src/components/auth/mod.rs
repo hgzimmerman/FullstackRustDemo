@@ -11,11 +11,11 @@ use yew::services::route::*;
 #[derive(Clone, PartialEq, Debug)]
 pub enum AuthRoute {
     Login,
-    Create
+    Create,
 }
 
 
-impl <'a> From<&'a RouteInfo> for AuthRoute {
+impl<'a> From<&'a RouteInfo> for AuthRoute {
     fn from(route_info: &RouteInfo) -> Self {
         println!("Converting from url");
         if let Some(segment) = route_info.get_segment_at_index(1) {
@@ -23,7 +23,7 @@ impl <'a> From<&'a RouteInfo> for AuthRoute {
             match segment {
                 "login" => return AuthRoute::Login,
                 "create" => return AuthRoute::Create,
-                _ => return AuthRoute::Login
+                _ => return AuthRoute::Login,
             }
         }
         AuthRoute::Login
@@ -45,7 +45,7 @@ pub struct Auth {
 
 
 pub enum Msg {
-    SetChild(AuthRoute)
+    SetChild(AuthRoute),
 }
 
 #[derive(Clone, PartialEq)]
@@ -55,9 +55,7 @@ pub struct Props {
 
 impl Default for Props {
     fn default() -> Self {
-        Props {
-            child: AuthRoute::Login
-        }
+        Props { child: AuthRoute::Login }
     }
 }
 
@@ -66,10 +64,8 @@ impl Component<Context> for Auth {
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        let mut auth = Auth {
-            child: props.child,
-        };
-//        auth.update(Msg::SetChild(props.child.resolve_route()), context);
+        let mut auth = Auth { child: props.child };
+        //        auth.update(Msg::SetChild(props.child.resolve_route()), context);
         auth
 
     }
@@ -77,10 +73,10 @@ impl Component<Context> for Auth {
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::SetChild(child) => {
-//                match child {
-//                    AuthRoute::Create => context.routing.set_route("/auth/create"),
-//                    AuthRoute::Login => context.routing.set_route("/auth/login")
-//                }
+                //                match child {
+                //                    AuthRoute::Create => context.routing.set_route("/auth/create"),
+                //                    AuthRoute::Login => context.routing.set_route("/auth/login")
+                //                }
                 self.child = child;
                 true
             }
@@ -93,26 +89,23 @@ impl Component<Context> for Auth {
     }
 }
 
-impl Renderable<Context, Auth> for Auth{
-
+impl Renderable<Context, Auth> for Auth {
     fn view(&self) -> Html<Context, Self> {
 
-        let page = || {
-            match &self.child {
-                &AuthRoute::Login => {
-                    html! {
+        let page = || match &self.child {
+            &AuthRoute::Login => {
+                html! {
                         <>
                             <Login: />
                         </>
                     }
-                }
-                &AuthRoute::Create => {
-                    html! {
+            }
+            &AuthRoute::Create => {
+                html! {
                         <>
                             <CreateAccount:  />
                         </>
                     }
-                }
             }
         };
 
@@ -120,9 +113,6 @@ impl Renderable<Context, Auth> for Auth{
             <>
                 {page()}
             </>
-        }
+        };
     }
 }
-
-
-

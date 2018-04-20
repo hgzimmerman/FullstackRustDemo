@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use Context;
-use yew::format::{Json };
+use yew::format::Json;
 
 use yew::services::fetch::Response;
 use requests_and_responses::forum::ForumResponse;
@@ -23,7 +23,7 @@ use forum::forum::ForumRoute;
 #[derive(Clone, PartialEq, Debug)]
 pub enum ForumListRoute {
     List,
-    Forum(ForumRoute)
+    Forum(ForumRoute),
 }
 
 impl Default for ForumListRoute {
@@ -33,7 +33,7 @@ impl Default for ForumListRoute {
 }
 
 
-impl <'a> From<&'a RouteInfo> for ForumListRoute {
+impl<'a> From<&'a RouteInfo> for ForumListRoute {
     fn from(route_info: &RouteInfo) -> Self {
         println!("Converting from url");
         if let Some(segment) = route_info.get_segment_at_index(1) {
@@ -41,7 +41,7 @@ impl <'a> From<&'a RouteInfo> for ForumListRoute {
             match segment {
                 "" => return ForumListRoute::List,
                 "id" => return ForumListRoute::Forum(route_info.into()),
-                _ => return ForumListRoute::default()
+                _ => return ForumListRoute::default(),
             }
         }
         ForumListRoute::default()
@@ -75,12 +75,12 @@ impl Into<RouteInfo> for ForumListRoute {
 pub struct ForumList {
     pub route: ForumListRoute,
     pub ft: Option<FetchTask>,
-    pub forum_list: Vec<ForumData>
+    pub forum_list: Vec<ForumData>,
 }
 
 
 pub enum Msg {
-    ContentReady(Vec<ForumData>)
+    ContentReady(Vec<ForumData>),
 }
 
 #[derive(Clone, PartialEq)]
@@ -90,9 +90,7 @@ pub struct Props {
 
 impl Default for Props {
     fn default() -> Self {
-        Props {
-            route: ForumListRoute::List
-        }
+        Props { route: ForumListRoute::List }
     }
 }
 
@@ -133,15 +131,22 @@ impl Component<Context> for ForumList {
         println!("Creating forum list");
 
         let ft = if let ForumListRoute::List = props.route {
-            let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
-                let (meta, Json(data)) = response.into_parts();
-                println!("META: {:?}, {:?}", meta, data);
-                let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect();
+            let callback = context.send_back(
+                |response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
+                    let (meta, Json(data)) = response.into_parts();
+                    println!("META: {:?}, {:?}", meta, data);
+                    let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid")
+                        .into_iter()
+                        .map(ForumData::from)
+                        .collect();
 
-                Msg::ContentReady(forum_data_list)
-            });
+                    Msg::ContentReady(forum_data_list)
+                },
+            );
 
-            context.make_request(RequestWrapper::GetForums, callback).ok()
+            context
+                .make_request(RequestWrapper::GetForums, callback)
+                .ok()
         } else {
             None
         };
@@ -149,7 +154,7 @@ impl Component<Context> for ForumList {
         ForumList {
             route: props.route,
             ft,
-            forum_list: vec!()
+            forum_list: vec![],
         }
     }
 
@@ -165,13 +170,12 @@ impl Component<Context> for ForumList {
 
     fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
         println!("Forum container change() called");
-//        self.ft = ForumList::handle_route(props.route.resolve_route(), context);
+        //        self.ft = ForumList::handle_route(props.route.resolve_route(), context);
         true
     }
 }
 
 impl Renderable<Context, ForumList> for ForumList {
-
     fn view(&self) -> Html<Context, Self> {
 
         let forum_element = |x: &ForumData| {
@@ -181,12 +185,15 @@ impl Renderable<Context, ForumList> for ForumList {
         };
 
         match self.route {
-            ForumListRoute::Forum(ref route) => html!{
+            ForumListRoute::Forum(ref route) => {
+                html!{
                 <>
                     <Forum: route=route, />
                 </>
-            },
-            ForumListRoute::List => html!{
+            }
+            }
+            ForumListRoute::List => {
+                html!{
                 <div class="vertical-flexbox", >
                     <div class="centered",>
                         <div class="forum-title",>
@@ -197,7 +204,8 @@ impl Renderable<Context, ForumList> for ForumList {
                         </ul>
                     </div>
                 </div>
-            },
+            }
+            }
         }
 
 

@@ -7,25 +7,25 @@ use components::link::Link;
 
 pub struct ForumListElement {
     forum_data: ForumData,
-    callback: Option<Callback<ForumData>>
+    callback: Option<Callback<ForumData>>,
 }
 
 
 pub enum Msg {
-    Clicked
+    Clicked,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
     pub forum_data: ForumData,
-    pub callback: Option<Callback<ForumData>>
+    pub callback: Option<Callback<ForumData>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             forum_data: ForumData::default(),
-            callback: None
+            callback: None,
         }
     }
 }
@@ -38,7 +38,7 @@ impl Component<Context> for ForumListElement {
 
         ForumListElement {
             forum_data: props.forum_data,
-            callback: props.callback
+            callback: props.callback,
         }
     }
 
@@ -60,7 +60,6 @@ impl Component<Context> for ForumListElement {
 }
 
 impl Renderable<Context, ForumListElement> for ForumListElement {
-
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
@@ -72,6 +71,6 @@ impl Renderable<Context, ForumListElement> for ForumListElement {
                     {&self.forum_data.description}
                 </div>
             </li>
-        }
+        };
     }
 }

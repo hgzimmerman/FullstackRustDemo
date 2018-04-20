@@ -39,7 +39,7 @@ impl<CTX: 'static> Component<CTX> for Button {
     fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
         Button {
             title: props.title,
-//            color: Color::Primary,
+            //            color: Color::Primary,
             disabled: false,
             onclick: props.onclick,
         }
@@ -68,7 +68,7 @@ impl<CTX: 'static> Component<CTX> for Button {
 impl<CTX: 'static> Renderable<CTX, Button> for Button {
     fn view(&self) -> Html<CTX, Self> {
 
-    //<button class=("btn", &self.color.to_button_class()), disabled=self.disabled, onclick=|_| Msg::Clicked,>{ &self.title }</button>
+        //<button class=("btn", &self.color.to_button_class()), disabled=self.disabled, onclick=|_| Msg::Clicked,>{ &self.title }</button>
         html! {
             <button class=("btn", "green"), disabled=self.disabled, onclick=|_| Msg::Clicked,>{ &self.title }</button>
         }

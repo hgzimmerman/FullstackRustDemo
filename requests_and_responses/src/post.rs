@@ -9,7 +9,7 @@ pub struct PostResponse {
     pub modified_date: Option<NaiveDateTime>,
     pub content: String,
     pub censored: bool,
-    pub children: Vec<PostResponse>
+    pub children: Vec<PostResponse>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

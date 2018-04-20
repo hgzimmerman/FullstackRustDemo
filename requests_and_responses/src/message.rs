@@ -6,7 +6,7 @@ pub struct MessageResponse {
     pub author: UserResponse,
     pub reply: Option<Box<MessageResponse>>,
     pub content: String,
-    pub date: NaiveDateTime
+    pub date: NaiveDateTime,
 }
 
 
@@ -16,5 +16,5 @@ pub struct NewMessageRequest {
     pub author_id: i32,
     pub chat_id: i32,
     pub reply_id: Option<i32>,
-    pub content: String
+    pub content: String,
 }

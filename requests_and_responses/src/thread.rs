@@ -9,7 +9,7 @@ pub struct NewThreadRequest {
     pub forum_id: i32,
     pub author_id: i32,
     pub title: String,
-    pub post_content: String
+    pub post_content: String,
 }
 
 /// Used when viewing an individual thread.
@@ -23,7 +23,7 @@ pub struct ThreadResponse {
     pub locked: bool,
 }
 
-/// Used when returning a list of threads for perusing 
+/// Used when returning a list of threads for perusing
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MinimalThreadResponse {
     pub id: i32,

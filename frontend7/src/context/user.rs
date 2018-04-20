@@ -19,30 +19,33 @@ enum JwtError {
     #[fail(display = "JWT JSON payload could not be converted from Base64")]
     Base64DecodeFailure,
     #[fail(display = "Value representing JWT could not be converted from json")]
-    JsonDecodeFailure
+    JsonDecodeFailure,
 }
 
 fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, Error> {
-    let payload_segment: &str = jwt_string.split('.').collect::<Vec<&str>>()
+    let payload_segment: &str = jwt_string
+        .split('.')
+        .collect::<Vec<&str>>()
         .get(1)
         .ok_or_else(|| Error::from(JwtError::UnexpectedNumberOfSections))?;
     let payload_json: JsonValue = decode_payload(payload_segment)
         .map_err(|_| Error::from(JwtError::Base64DecodeFailure))?;
-    serde_json::from_value(payload_json).map_err(|_| Error::from(JwtError::JsonDecodeFailure))
+    serde_json::from_value(payload_json)
+        .map_err(|_| Error::from(JwtError::JsonDecodeFailure))
 }
 
 // Taken from frank_jwt source
 fn decode_payload(payload_segment: &str) -> Result<JsonValue, Error> {
-serde_json::from_slice(b64_dec(payload_segment, base64::URL_SAFE)?
-    .as_slice())
-    .map_err(Error::from)
+    serde_json::from_slice(
+        b64_dec(payload_segment, base64::URL_SAFE)?
+            .as_slice(),
+    ).map_err(Error::from)
 }
 
 
 
 
 impl Context {
-
     fn user_has_role(&mut self, role: &UserRole) -> bool {
         if let Ok(token) = self.restore_jwt() {
             match extract_payload_from_jwt(token) {
@@ -52,14 +55,15 @@ impl Context {
                     false
                 }
             }
-        }
-        else {
+        } else {
             false
         }
     }
 
     pub fn user_is_unprivileged(&mut self) -> bool {
-        self.user_has_role(&UserRole::Unprivileged)
+        self.user_has_role(
+            &UserRole::Unprivileged,
+        )
     }
     pub fn user_is_moderator(&mut self) -> bool {
         self.user_has_role(&UserRole::Moderator)
@@ -94,12 +98,7 @@ impl Context {
         match self.user_auth_expire_date() {
             Ok(expire_date) => {
                 let now = Utc::now().naive_utc();
-                if expire_date < now {
-                    true
-                }
-                else {
-                    false
-                }
+                if expire_date < now { true } else { false }
             }
             Err(e) => {
                 eprintln!("Indicating token has expired for an error: {}", e);

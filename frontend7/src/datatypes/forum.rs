@@ -4,7 +4,7 @@ use requests_and_responses::forum::ForumResponse;
 pub struct ForumData {
     pub title: String,
     pub description: String,
-    pub id: i32
+    pub id: i32,
 }
 
 impl From<ForumResponse> for ForumData {
@@ -12,7 +12,7 @@ impl From<ForumResponse> for ForumData {
         ForumData {
             title: response.title,
             description: response.description,
-            id: response.id
+            id: response.id,
         }
     }
 }

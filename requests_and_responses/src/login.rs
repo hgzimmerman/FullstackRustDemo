@@ -9,5 +9,5 @@ pub struct LoginRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginResponse {
     pub jwt: String,
-    pub user: UserResponse
+    pub user: UserResponse,
 }

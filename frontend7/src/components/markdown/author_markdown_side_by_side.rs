@@ -3,7 +3,7 @@ use Context;
 
 pub struct AuthorMarkdownSideBySide {
     text: String,
-    callback: Option<Callback<String>>
+    callback: Option<Callback<String>>,
 }
 
 
@@ -14,14 +14,14 @@ pub enum Msg {
 #[derive(Clone, PartialEq)]
 pub struct Props {
     pub text: String,
-    pub callback: Option<Callback<String>>
+    pub callback: Option<Callback<String>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             text: String::default(),
-            callback: None
+            callback: None,
         }
     }
 }
@@ -34,7 +34,7 @@ impl Component<Context> for AuthorMarkdownSideBySide {
 
         AuthorMarkdownSideBySide {
             text: props.text,
-            callback: props.callback
+            callback: props.callback,
         }
     }
 
@@ -56,8 +56,6 @@ impl Component<Context> for AuthorMarkdownSideBySide {
 }
 
 impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide {
-
-
     fn view(&self) -> Html<Context, Self> {
 
         return html! {
@@ -73,6 +71,6 @@ impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide 
                     {super::render_markdown::<Context, Self>(&self.text)}
                 </div>
             </div>
-        }
+        };
     }
 }

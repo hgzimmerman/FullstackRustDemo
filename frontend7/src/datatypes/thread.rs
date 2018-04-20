@@ -9,7 +9,7 @@ pub struct MinimalThreadData {
     pub title: String,
     pub author: UserData,
     pub created_date: NaiveDateTime,
-//    pub replies: i32,
+    //    pub replies: i32,
     pub locked: bool,
 }
 
@@ -20,7 +20,7 @@ impl Default for MinimalThreadData {
             title: "".into(),
             author: UserData::default(),
             created_date: Utc::now().naive_utc(),
-            locked: false
+            locked: false,
         }
     }
 }
@@ -32,7 +32,7 @@ impl From<MinimalThreadResponse> for MinimalThreadData {
             title: response.title,
             author: response.author.into(),
             created_date: response.created_date,
-            locked: response.locked
+            locked: response.locked,
         }
     }
 }

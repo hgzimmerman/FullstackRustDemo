@@ -13,8 +13,9 @@ use yew::virtual_dom::{VNode, VTag, VText};
 /// Renders a string of Markdown to HTML with the default options (footnotes
 /// disabled, tables enabled).
 pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
-    where M: Component<CTX>,
-          CTX: 'static
+where
+    M: Component<CTX>,
+    CTX: 'static,
 {
     let mut elems = vec![];
     let mut spine = vec![];
@@ -43,9 +44,9 @@ pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
                     top = pre;
                 } else if let Tag::Table(aligns) = tag {
                     for r in top.childs.iter_mut() {
-                        if let &mut VNode::VTag (ref mut vtag) = r {
+                        if let &mut VNode::VTag(ref mut vtag) = r {
                             for (i, c) in vtag.childs.iter_mut().enumerate() {
-                                if let &mut VNode::VTag ( ref mut vtag ) = c {
+                                if let &mut VNode::VTag(ref mut vtag) = c {
                                     match aligns[i] {
                                         Alignment::None => {}
                                         Alignment::Left => vtag.add_classes("text-left"),
@@ -58,9 +59,9 @@ pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
                     }
                 } else if let Tag::TableHead = tag {
                     for c in top.childs.iter_mut() {
-                        if let &mut VNode::VTag (ref mut vtag) = c {
+                        if let &mut VNode::VTag(ref mut vtag) = c {
                             // TODO
-//                            vtag.tag = "th".into();
+                            //                            vtag.tag = "th".into();
                             vtag.add_attribute("scope", &"col");
                         }
                     }
@@ -78,17 +79,18 @@ pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
         }
     }
 
-//    if elems.len() == 1 {
-//        elems.pop().unwrap()
-//    } else {
-        html! {
+    //    if elems.len() == 1 {
+    //        elems.pop().unwrap()
+    //    } else {
+    html! {
             <div>{ for elems.into_iter() }</div>
         }
-//    }
+    //    }
 }
 
-fn make_tag<CTX, M>(t: Tag) -> VTag<CTX,M>
-    where M: Component<CTX>
+fn make_tag<CTX, M>(t: Tag) -> VTag<CTX, M>
+where
+    M: Component<CTX>,
 {
     match t {
         Tag::Paragraph => VTag::new("p"),
@@ -156,5 +158,3 @@ fn make_tag<CTX, M>(t: Tag) -> VTag<CTX,M>
         _ => unimplemented!("tag {:?}", t),
     }
 }
-
-

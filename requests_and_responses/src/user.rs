@@ -23,19 +23,19 @@ pub struct FullUserResponse {
 pub struct NewUserRequest {
     pub user_name: String,
     pub display_name: String,
-    pub plaintext_password: String
+    pub plaintext_password: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UpdateDisplayNameRequest {
     pub user_name: String,
-    pub new_display_name: String
+    pub new_display_name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserRoleRequest {
     pub id: i32,
-    pub user_role: i32
+    pub user_role: i32,
 }
 
 

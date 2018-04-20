@@ -6,7 +6,7 @@ pub struct QuestionResponse {
     pub bucket_id: i32,
     pub question_text: String,
     pub author: UserResponse,
-    pub answers: Vec<AnswerResponse>
+    pub answers: Vec<AnswerResponse>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -15,4 +15,3 @@ pub struct NewQuestionRequest {
     pub author_id: i32,
     pub question_text: String,
 }
-
