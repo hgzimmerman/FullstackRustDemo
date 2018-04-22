@@ -7,7 +7,6 @@ use requests_and_responses::forum::ForumResponse;
 
 use datatypes::forum::ForumData;
 
-use components::forum::forum::Forum;
 use components::forum::forum_list_element::ForumListElement;
 
 use context::networking::*;
@@ -17,63 +16,12 @@ use context::networking::*;
 use yew::services::route::*;
 use yew::services::fetch::FetchTask;
 use failure::Error;
+use Route;
+use forum::ForumRoute;
+use forum::forum::ForumRoute as InnerForumRoute;
 
-use forum::forum::ForumRoute;
-
-#[derive(Clone, PartialEq, Debug)]
-pub enum ForumListRoute {
-    List,
-    Forum(ForumRoute),
-}
-
-impl Default for ForumListRoute {
-    fn default() -> Self {
-        ForumListRoute::List
-    }
-}
-
-
-impl<'a> From<&'a RouteInfo> for ForumListRoute {
-    fn from(route_info: &RouteInfo) -> Self {
-        println!("Converting from url");
-        if let Some(segment) = route_info.get_segment_at_index(1) {
-            println!("matching: {}", segment);
-            match segment {
-                "" => return ForumListRoute::List,
-                "id" => return ForumListRoute::Forum(route_info.into()),
-                _ => return ForumListRoute::default(),
-            }
-        }
-        ForumListRoute::default()
-    }
-}
-
-impl Into<RouteInfo> for ForumListRoute {
-    fn into(self) -> RouteInfo {
-        match self {
-            ForumListRoute::List => RouteInfo::parse("/").unwrap(),
-            ForumListRoute::Forum(route) => RouteInfo::parse("/forum").unwrap() + route.into(),
-        }
-    }
-}
-
-//impl Routable for ForumListRoute {
-//    fn route(path_components: Vec<String>) -> ForumListRoute {
-//        if let Some(first) = path_components.get(0) {
-//            println!("Routing ForumList: path is '{}'", first);
-//            if let Ok(id) = first.parse::<i32>() {
-//                ForumListRoute::Forum(id)
-//            } else {
-//                ForumListRoute::List
-//            }
-//        } else {
-//            ForumListRoute::List
-//        }
-//    }
-//}
 
 pub struct ForumList {
-    pub route: ForumListRoute,
     pub ft: Option<FetchTask>,
     pub forum_list: Vec<ForumData>,
 }
@@ -81,20 +29,9 @@ pub struct ForumList {
 
 pub enum Msg {
     ContentReady(Vec<ForumData>),
+    NavigateToSpecificForum(ForumData)
 }
 
-#[derive(Clone, PartialEq)]
-pub struct Props {
-    pub route: ForumListRoute,
-}
-
-impl Default for Props {
-    fn default() -> Self {
-        Props { route: ForumListRoute::List }
-    }
-}
-
-//
 //impl ForumList {
 //    fn handle_route(route: ForumListRoute, context: &mut Env<Context, Self>) -> Option<FetchTask> {
 //        let task = match route {
@@ -104,17 +41,17 @@ impl Default for Props {
 //                    println!("META: {:?}, {:?}", meta, data);
 //                    let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect();
 //
-//                    Msg::SetChild(Child::List(forum_data_list))
+//                    Msg::ContentReady(Child::List(forum_data_list))
 //                });
 //                context.make_request(RequestWrapper::GetForums, callback)
 //            }
-//            ForumListRoute::Forum(id) => {
+//            ForumListRoute::Forum(id, route) => {
 //                let callback = context.send_back(|response: Response<Json<Result<ForumResponse, Error>>>| {
 //                    let (meta, Json(data)) = response.into_parts();
 //                    println!("META: {:?}, {:?}", meta, data);
 //                    let forum_data = data.map(ForumData::from).expect("Forum Data invalid");
 //
-//                    Msg::SetChild(Child::Forum(forum_data))
+//                    Msg::ContentReady(Child::Forum(forum_data))
 //                });
 //                context.make_request(RequestWrapper::GetForum{forum_id: id}, callback)
 //            }
@@ -125,34 +62,29 @@ impl Default for Props {
 
 impl Component<Context> for ForumList {
     type Msg = Msg;
-    type Properties = Props;
+    type Properties = ();
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         println!("Creating forum list");
 
-        let ft = if let ForumListRoute::List = props.route {
-            let callback = context.send_back(
-                |response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
-                    let (meta, Json(data)) = response.into_parts();
-                    println!("META: {:?}, {:?}", meta, data);
-                    let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid")
-                        .into_iter()
-                        .map(ForumData::from)
-                        .collect();
+        let callback = context.send_back(
+            |response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid")
+                    .into_iter()
+                    .map(ForumData::from)
+                    .collect();
 
-                    Msg::ContentReady(forum_data_list)
-                },
-            );
+                Msg::ContentReady(forum_data_list)
+            },
+        );
 
-            context
-                .make_request(RequestWrapper::GetForums, callback)
-                .ok()
-        } else {
-            None
-        };
+        let ft = context
+            .make_request(RequestWrapper::GetForums, callback)
+            .ok();
 
         ForumList {
-            route: props.route,
             ft,
             forum_list: vec![],
         }
@@ -165,12 +97,15 @@ impl Component<Context> for ForumList {
                 self.forum_list = list;
                 true
             }
+            Msg::NavigateToSpecificForum(forum_data) => {
+                context.routing.set_route(Route::Forums(ForumRoute::Forum(forum_data.id, InnerForumRoute::Forum)));
+                false
+            }
         }
     }
 
     fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
         println!("Forum container change() called");
-        //        self.ft = ForumList::handle_route(props.route.resolve_route(), context);
         true
     }
 }
@@ -180,34 +115,21 @@ impl Renderable<Context, ForumList> for ForumList {
 
         let forum_element = |x: &ForumData| {
             html! {
-                <ForumListElement: forum_data=x, />
+                <ForumListElement: forum_data=x, callback=|fd| Msg::NavigateToSpecificForum(fd),/>
             }
         };
 
-        match self.route {
-            ForumListRoute::Forum(ref route) => {
-                html!{
-                <>
-                    <Forum: route=route, />
-                </>
-            }
-            }
-            ForumListRoute::List => {
-                html!{
-                <div class="vertical-flexbox", >
-                    <div class="centered",>
-                        <div class="forum-title",>
-                            <span class="forum-title-span", >{"Forums"} </span>
-                        </div>
-                        <ul class=("forum-list"),>
-                            { for self.forum_list.iter().map(forum_element) }
-                        </ul>
+        html!{
+            <div class="vertical-flexbox", >
+                <div class="centered",>
+                    <div class="forum-title",>
+                        <span class="forum-title-span", >{"Forums"} </span>
                     </div>
+                    <ul class=("forum-list"),>
+                        { for self.forum_list.iter().map(forum_element) }
+                    </ul>
                 </div>
-            }
-            }
+            </div>
         }
-
-
     }
 }

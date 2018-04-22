@@ -297,7 +297,7 @@ dependencies = [
  "serde_derive 1.0.41 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "stdweb 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=afbdbf2b291ae17beed5a4d7ca77bd86b56f4850)",
+ "yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=ad750e481746b1eaa8853b1575580a856c277bf2)",
 ]
 
 [[package]]
@@ -1233,7 +1233,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "yew"
 version = "0.3.0"
-source = "git+https://github.com/hgzimmerman/yew?rev=afbdbf2b291ae17beed5a4d7ca77bd86b56f4850#afbdbf2b291ae17beed5a4d7ca77bd86b56f4850"
+source = "git+https://github.com/hgzimmerman/yew?rev=ad750e481746b1eaa8853b1575580a856c277bf2#ad750e481746b1eaa8853b1575580a856c277bf2"
 dependencies = [
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "http 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1391,4 +1391,4 @@ dependencies = [
 "checksum winapi-i686-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 "checksum yansi 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d60c3b48c9cdec42fb06b3b84b5b087405e1fa1c644a1af3930e4dfafe93de48"
-"checksum yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=afbdbf2b291ae17beed5a4d7ca77bd86b56f4850)" = "<none>"
+"checksum yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=ad750e481746b1eaa8853b1575580a856c277bf2)" = "<none>"

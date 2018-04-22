@@ -15,26 +15,46 @@ pub enum AuthRoute {
 }
 
 
-impl<'a> From<&'a RouteInfo> for AuthRoute {
-    fn from(route_info: &RouteInfo) -> Self {
-        println!("Converting from url");
-        if let Some(segment) = route_info.get_segment_at_index(1) {
-            println!("matching: {}", segment);
-            match segment {
-                "login" => return AuthRoute::Login,
-                "create" => return AuthRoute::Create,
-                _ => return AuthRoute::Login,
-            }
-        }
-        AuthRoute::Login
-    }
-}
+//impl<'a> From<&'a RouteInfo> for AuthRoute {
+//    fn from(route_info: &RouteInfo) -> Self {
+//        println!("Converting from url");
+//        if let Some(segment) = route_info.get_segment_at_index(1) {
+//            println!("matching: {}", segment);
+//            match segment {
+//                "login" => return AuthRoute::Login,
+//                "create" => return AuthRoute::Create,
+//                _ => return AuthRoute::Login,
+//            }
+//        }
+//        AuthRoute::Login
+//    }
+//}
+//
+//impl Into<RouteInfo> for AuthRoute {
+//    fn into(self) -> RouteInfo {
+//        match self {
+//            AuthRoute::Login => RouteInfo::parse("/login").unwrap(),
+//            AuthRoute::Create => RouteInfo::parse("/create").unwrap(),
+//        }
+//    }
+//}
 
-impl Into<RouteInfo> for AuthRoute {
-    fn into(self) -> RouteInfo {
-        match self {
+impl Router for AuthRoute {
+    fn to_route(&self) -> RouteInfo {
+        match *self {
             AuthRoute::Login => RouteInfo::parse("/login").unwrap(),
             AuthRoute::Create => RouteInfo::parse("/create").unwrap(),
+        }
+    }
+    fn from_route(route: &mut RouteInfo) -> Option<Self> {
+        if let Some(RouteSection::Node{segment}) = route.next() {
+            match segment.as_str() {
+                "login" => Some(AuthRoute::Login),
+                "create" => Some(AuthRoute::Create),
+                _ => None
+            }
+        } else {
+            None
         }
     }
 }

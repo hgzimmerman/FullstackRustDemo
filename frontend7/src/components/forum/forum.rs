@@ -20,6 +20,8 @@ use components::forum::thread::new_thread::NewThread;
 
 
 use yew::services::route::RouteInfo;
+use yew::services::route::Router;
+use yew::services::route::RouteSection;
 
 
 #[derive(Clone, PartialEq)]
@@ -28,44 +30,46 @@ pub enum Child {
     ThreadContents(MinimalThreadData),
 }
 
+
+
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum ForumRoute {
-    Forum(i32), // forum id used to get forum data
+    Forum,
     //    CreateThread(ThreadRoute),
     ThreadContents,
 }
 
-impl<'a> From<&'a RouteInfo> for ForumRoute {
-    fn from(route_info: &RouteInfo) -> Self {
-        println!("Converting from url");
-        //        if let Some(segment) = route_info.get_segment_at_index(2) {
-        //            println!("matching: {}", segment);
-        //            match segment {
-        //                 => forum_id.to_string().as_str(),
-        //            }
-        //        }
-        ForumRoute::default()
+impl Default for ForumRoute {
+    fn default() -> Self {
+        ForumRoute::Forum
     }
 }
 
-impl Into<RouteInfo> for ForumRoute {
-    fn into(self) -> RouteInfo {
-        match self {
-            ForumRoute::Forum(route) => RouteInfo::parse("/hello").unwrap(),
+
+impl Router for ForumRoute {
+    fn to_route(&self) -> RouteInfo {
+        match *self {
+            ForumRoute::Forum => RouteInfo::parse("/").unwrap(),
             ForumRoute::ThreadContents => RouteInfo::parse("/thread").unwrap(),
+        }
+    }
+    fn from_route(route: &mut RouteInfo) -> Option<Self> {
+        if let Some(RouteSection::Node{segment}) = route.next() {
+            match segment.as_str() {
+                _ => Some(ForumRoute::Forum)
+            }
+        } else {
+            None
         }
     }
 }
 
 
-impl Default for ForumRoute {
-    fn default() -> Self {
-        ForumRoute::Forum(0)
-    }
-}
+
 
 pub struct Forum {
-    parent: ForumData,
+    forum_data: ForumData,
     child: Option<Child>,
     threads: Vec<MinimalThreadData>,
     threads_ft: Option<FetchTask>,
@@ -80,6 +84,7 @@ pub enum Msg {
 #[derive(Clone, PartialEq, Default)]
 pub struct Props {
     pub route: ForumRoute,
+    pub forum_id: i32
 }
 
 impl Component<Context> for Forum {
@@ -88,7 +93,8 @@ impl Component<Context> for Forum {
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        if let ForumRoute::Forum(forum_id) = props.route {
+
+        if let ForumRoute::Forum = props.route {
             let threads_callback = context.send_back(
                 |response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
                     let (meta, Json(data)) = response.into_parts();
@@ -104,7 +110,7 @@ impl Component<Context> for Forum {
 
             let threads_task = context.make_request(
                 RequestWrapper::GetThreads {
-                    forum_id,
+                    forum_id: props.forum_id,
                     page_index: 1,
                 },
                 threads_callback,
@@ -115,14 +121,14 @@ impl Component<Context> for Forum {
 
 
             Forum {
-                parent: ForumData::default(),
+                forum_data: ForumData::default(),
                 child: None,
                 threads: vec![],
                 threads_ft: threads_task.ok(),
             }
         } else {
             Forum {
-                parent: ForumData::default(),
+                forum_data: ForumData::default(),
                 child: None,
                 threads: vec![],
                 threads_ft: None,
@@ -154,8 +160,8 @@ impl Renderable<Context, Forum> for Forum {
 
         let thread_element = |x: &MinimalThreadData| {
             html! {
-            <ThreadListElement: thread_data=x, callback=|td| Msg::SetChild(Child::ThreadContents(td)), />
-        }
+                <ThreadListElement: thread_data=x, callback=|td| Msg::SetChild(Child::ThreadContents(td)), />
+            }
         };
 
         // Only show the button if there is no child element
@@ -171,7 +177,7 @@ impl Renderable<Context, Forum> for Forum {
             match child {
                 &Child::CreateThread => {
                     html! {
-//                        <NewThread: forum={self.parent.clone()}, />
+                        <NewThread: forum={self.forum_data.clone()}, />
                     }
 
                 }

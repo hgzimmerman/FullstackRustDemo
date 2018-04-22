@@ -15,7 +15,7 @@ extern crate serde_derive;
 
 extern crate chrono;
 
-#[macro_use]
+//#[macro_use]
 extern crate stdweb;
 
 extern crate pulldown_cmark;
@@ -23,12 +23,7 @@ extern crate pulldown_cmark;
 extern crate base64;
 
 use yew::prelude::*;
-use yew::html::Scope;
-//use yew::context::console::ConsoleService;
-// use counter::{Counter, Color};
-// use barrier::Barrier;
 mod datatypes;
-//mod header_component;
 use header_component::Header;
 
 mod components;
@@ -40,28 +35,17 @@ pub use context::Context;
 
 use yew::services::route::*;
 
-//mod routing;
-//use routing::*;
 
-
-//use yew::context::fetch::{FetchService, FetchTask, Request, Response};
-
-use auth::AuthRoute;
-use components::forum::forum_list::ForumListRoute;
+use components::auth::AuthRoute;
+use components::forum::ForumRoute;
 use components::forum::forum_list::ForumList;
 use components::auth::Auth;
 use components::header_component::*;
 
-/// If you use `App` you should implement this for `AppContext<Context, Model, Msg>` struct.
-// impl counter::Printer for Context {
-//     fn print(&mut self, data: &str) {
-//         self.console.log(data);
-//     }
-// }
-//
+
 #[derive(Clone, PartialEq, Debug)]
 pub enum Route {
-    Forums(ForumListRoute),
+    Forums(ForumRoute),
     //    ArticleView,
     Auth(AuthRoute),
     //    BucketView,
@@ -69,37 +53,53 @@ pub enum Route {
 }
 
 
-impl<'a> From<&'a RouteInfo> for Route {
-    fn from(route_info: &RouteInfo) -> Self {
-        println!("Converting from url");
-        if let Some(first_segment) = route_info.get_segment_at_index(0) {
-            println!("matching: {}", first_segment);
-            match first_segment {
-                "forum" => return Route::Forums(ForumListRoute::from(route_info)),
-                "auth" => return Route::Auth(AuthRoute::from(route_info)),
-                _ => return Route::PageNotFound,
-            }
-        }
-        Route::PageNotFound
-    }
-}
-
-impl Into<RouteInfo> for Route {
-    fn into(self) -> RouteInfo {
-        match self {
-            Route::Forums(forum_list_route) => RouteInfo::parse("/forum").unwrap() + forum_list_route.into(),
-            Route::Auth(auth_route) => RouteInfo::parse("/auth").unwrap() + auth_route.into(),
+impl Router for Route {
+    fn to_route(&self) -> RouteInfo {
+        match *self {
+            Route::Forums(ref forum_list_route) => RouteInfo::parse("/forum").unwrap() + forum_list_route.to_route(),
+            Route::Auth(ref auth_route) => RouteInfo::parse("/auth").unwrap() + auth_route.to_route(),
             Route::PageNotFound => {
                 RouteInfo::parse("/pagenotfound")
                     .unwrap()
             }
         }
     }
+    fn from_route(route: &mut RouteInfo) -> Option<Self> {
+        Some(Self::from_route_main(route))
+    }
 }
+
+impl MainRouter for Route {
+    fn from_route_main(route: &mut RouteInfo) -> Self {
+        if let Some(RouteSection::Node{segment}) = route.next() {
+            match segment.as_str() {
+                "forum" => {
+                    if let Some(child) = ForumRoute::from_route(route) {
+                        Route::Forums(child)
+                    } else {
+                        Route::PageNotFound
+                    }
+                },
+                "auth" => {
+                    if let Some(child) = AuthRoute::from_route(route)  {
+                        Route::Auth(child)
+                    } else {
+                        Route::PageNotFound
+                    }
+                },
+                _ => Route::PageNotFound,
+            }
+        } else {
+            Route::PageNotFound
+        }
+    }
+}
+
+
 impl From<RouteResult> for Msg {
     fn from(result: RouteResult) -> Self {
         match result {
-            Ok(route_info) => Msg::Navigate(Route::from(&route_info)),
+            Ok(mut route_info) => Msg::Navigate(Route::from_route_main(&mut route_info)),
             Err(e) => {
                 eprintln!("Couldn't route: {:?}", e);
                 Msg::Navigate(Route::PageNotFound)
@@ -110,7 +110,7 @@ impl From<RouteResult> for Msg {
 
 impl Default for Route {
     fn default() -> Self {
-        Route::Forums(ForumListRoute::default())
+        Route::Forums(ForumRoute::List)
     }
 }
 
@@ -133,14 +133,6 @@ impl Component<Context> for Model {
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
 
-        //        let cb = context.send_back(|path: String| {
-        //            println!("Callback path changed {}", path);
-        //            let path_components = path.split('/').collect::<Vec<&str>>().into_iter().map(str::to_string).collect::<Vec<String>>();
-        //            Msg::Navigate(Route::route(path_components))
-        //        });
-        //
-        //        context.routing.register_callback(cb);
-
         let callback = context.send_back(
             |route_result: RouteResult| {
                 Msg::from(route_result)
@@ -151,8 +143,7 @@ impl Component<Context> for Model {
         );
 
 
-        let route: Route = (&context.routing.get_current_route_info())
-            .into();
+        let route: Route = Route::from_route_main(&mut context.routing.get_current_route_info());
         context.routing.replace_url(
             route.clone(),
         ); // sets the url to be dependent on what the route_info was resolved to
@@ -192,7 +183,7 @@ impl Renderable<Context, Model> for Model {
                 println!("ForumView chosen to render by main with parameters {:?}", forum_list_route);
                 html! {
                         <>
-                            <ForumList: route=forum_list_route, />
+                            {forum_list_route.view() }
                         </>
                     }
             }
@@ -208,7 +199,7 @@ impl Renderable<Context, Model> for Model {
         let header_links = vec![
             HeaderLink {
                 name: "Forum".into(),
-                link: Route::Forums(ForumListRoute::default()),
+                link: Route::Forums(ForumRoute::List),
             },
             HeaderLink {
                 name: "Login".into(),
@@ -232,9 +223,8 @@ fn main() {
     yew::initialize();
     stdweb::initialize(); // I need this in order to use my route service
     let context = Context::new();
-    // We use `Scope` here for demonstration.
-    // You can also use `App` here too.
-    let app: Scope<Context, Model> = Scope::new(context);
+
+    let app: App<Context, Model> = App::new(context);
     app.mount_to_body();
     yew::run_loop();
 }

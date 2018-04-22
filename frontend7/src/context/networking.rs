@@ -2,7 +2,7 @@ use super::Context;
 
 use yew::format::Nothing;
 use yew::services::fetch::{FetchTask, Request, Response};
-use yew::html::Callback;
+use yew::callback::Callback;
 
 
 use requests_and_responses::user::*;
