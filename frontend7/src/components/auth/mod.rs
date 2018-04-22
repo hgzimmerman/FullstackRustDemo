@@ -47,11 +47,11 @@ impl Router for AuthRoute {
         }
     }
     fn from_route(route: &mut RouteInfo) -> Option<Self> {
-        if let Some(RouteSection::Node{segment}) = route.next() {
+        if let Some(RouteSection::Node { segment }) = route.next() {
             match segment.as_str() {
                 "login" => Some(AuthRoute::Login),
                 "create" => Some(AuthRoute::Create),
-                _ => None
+                _ => None,
             }
         } else {
             None

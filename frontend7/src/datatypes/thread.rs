@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use chrono::Utc;
 use requests_and_responses::thread::MinimalThreadResponse;
+use requests_and_responses::thread::NewThreadRequest;
 use datatypes::user::UserData;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -33,6 +34,22 @@ impl From<MinimalThreadResponse> for MinimalThreadData {
             author: response.author.into(),
             created_date: response.created_date,
             locked: response.locked,
+        }
+    }
+}
+
+pub struct PartialNewThreadData {
+    pub title: String,
+    pub post_content: String,
+    pub author_id: i32,
+}
+impl PartialNewThreadData {
+    pub fn attach_forum_id(self, forum_id: i32) -> NewThreadRequest{
+        NewThreadRequest {
+            forum_id,
+            author_id: self.author_id,
+            title: self.title,
+            post_content: self.post_content,
         }
     }
 }

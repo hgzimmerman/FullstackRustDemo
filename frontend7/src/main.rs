@@ -71,7 +71,7 @@ impl Router for Route {
 
 impl MainRouter for Route {
     fn from_route_main(route: &mut RouteInfo) -> Self {
-        if let Some(RouteSection::Node{segment}) = route.next() {
+        if let Some(RouteSection::Node { segment }) = route.next() {
             match segment.as_str() {
                 "forum" => {
                     if let Some(child) = ForumRoute::from_route(route) {
@@ -79,14 +79,14 @@ impl MainRouter for Route {
                     } else {
                         Route::PageNotFound
                     }
-                },
+                }
                 "auth" => {
-                    if let Some(child) = AuthRoute::from_route(route)  {
+                    if let Some(child) = AuthRoute::from_route(route) {
                         Route::Auth(child)
                     } else {
                         Route::PageNotFound
                     }
-                },
+                }
                 _ => Route::PageNotFound,
             }
         } else {

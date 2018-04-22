@@ -8,5 +8,5 @@
 /backend/weekend.log
 **.log
 .idea
-/backend/db.logfile
-/backend/pgsql
+db.logfile
+pgsql

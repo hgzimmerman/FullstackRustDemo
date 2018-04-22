@@ -29,36 +29,9 @@ pub struct ForumList {
 
 pub enum Msg {
     ContentReady(Vec<ForumData>),
-    NavigateToSpecificForum(ForumData)
+    NavigateToSpecificForum(ForumData),
 }
 
-//impl ForumList {
-//    fn handle_route(route: ForumListRoute, context: &mut Env<Context, Self>) -> Option<FetchTask> {
-//        let task = match route {
-//            ForumListRoute::List => {
-//                let callback = context.send_back(|response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
-//                    let (meta, Json(data)) = response.into_parts();
-//                    println!("META: {:?}, {:?}", meta, data);
-//                    let forum_data_list: Vec<ForumData> = data.expect("Forum Data invalid").into_iter().map(ForumData::from).collect();
-//
-//                    Msg::ContentReady(Child::List(forum_data_list))
-//                });
-//                context.make_request(RequestWrapper::GetForums, callback)
-//            }
-//            ForumListRoute::Forum(id, route) => {
-//                let callback = context.send_back(|response: Response<Json<Result<ForumResponse, Error>>>| {
-//                    let (meta, Json(data)) = response.into_parts();
-//                    println!("META: {:?}, {:?}", meta, data);
-//                    let forum_data = data.map(ForumData::from).expect("Forum Data invalid");
-//
-//                    Msg::ContentReady(Child::Forum(forum_data))
-//                });
-//                context.make_request(RequestWrapper::GetForum{forum_id: id}, callback)
-//            }
-//        };
-//        task.ok()
-//    }
-//}
 
 impl Component<Context> for ForumList {
     type Msg = Msg;
@@ -98,7 +71,14 @@ impl Component<Context> for ForumList {
                 true
             }
             Msg::NavigateToSpecificForum(forum_data) => {
-                context.routing.set_route(Route::Forums(ForumRoute::Forum(forum_data.id, InnerForumRoute::Forum)));
+                context.routing.set_route(
+                    Route::Forums(
+                        ForumRoute::Forum(
+                            forum_data.id,
+                            InnerForumRoute::Forum,
+                        ),
+                    ),
+                );
                 false
             }
         }

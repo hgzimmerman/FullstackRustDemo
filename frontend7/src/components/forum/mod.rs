@@ -22,7 +22,7 @@ mod forum;
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForumRoute {
     List,
-    Forum(i32, InnerForumRoute) //forum id
+    Forum(i32, InnerForumRoute), //forum id
 }
 
 impl Default for ForumRoute {
@@ -35,11 +35,14 @@ impl Router for ForumRoute {
     fn to_route(&self) -> RouteInfo {
         match *self {
             ForumRoute::List => RouteInfo::parse("/").unwrap(),
-            ForumRoute::Forum(forum_id, ref route) => RouteInfo::parse(&format!("/{}",forum_id)).unwrap() + route.to_route(),
+            ForumRoute::Forum(forum_id, ref route) => {
+                RouteInfo::parse(&format!("/{}", forum_id))
+                    .unwrap() + route.to_route()
+            }
         }
     }
     fn from_route(route: &mut RouteInfo) -> Option<Self> {
-        if let Some(RouteSection::Node{segment}) = route.next() {
+        if let Some(RouteSection::Node { segment }) = route.next() {
             if let Ok(id) = segment.parse::<i32>() {
                 Some(ForumRoute::Forum(id, InnerForumRoute::from_route(route)?))
             } else {
@@ -65,6 +68,7 @@ impl Renderable<Context, Model> for ForumRoute {
                     <Forum: route=route, forum_id=id, />
                 </>
             }
+
         }
     }
 }

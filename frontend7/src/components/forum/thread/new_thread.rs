@@ -13,13 +13,12 @@ use datatypes::forum::ForumData;
 use failure::Error;
 
 use context::networking::*;
+use datatypes::thread::PartialNewThreadData;
 
 pub struct NewThread {
     title: String,
     post_content: String,
-    forum: ForumData,
-    callback: Option<Callback<()>>,
-    ft: Option<FetchTask>,
+    callback: Option<Callback<PartialNewThreadData>>,
 }
 
 
@@ -32,15 +31,13 @@ pub enum Msg {
 
 #[derive(Clone, PartialEq)]
 pub struct Props {
-    pub callback: Option<Callback<()>>,
-    pub forum: ForumData,
+    pub callback: Option<Callback<PartialNewThreadData>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             callback: None,
-            forum: ForumData::default(), // I don't like this, possibly make it optional and set it to none by default
         }
     }
 }
@@ -53,44 +50,27 @@ impl Component<Context> for NewThread {
 
         NewThread {
             title: String::default(),
-            forum: props.forum,
             post_content: String::default(),
             callback: props.callback,
-            ft: None,
         }
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::CreateNewThread => {
-                let callback = context.send_back(
-                    |response: Response<Json<Result<ThreadResponse, Error>>>| {
-                        let (meta, Json(data)) = response.into_parts();
-                        println!("META: {:?}, {:?}", meta, data);
-                        Msg::NoOp
-                    },
-                );
-
                 if let Ok(user_id) = context.user_id() {
-                    let new_thread_request = NewThreadRequest {
-                        forum_id: self.forum.id,
+                    let new_thread_data = PartialNewThreadData {
                         author_id: user_id,
                         title: self.title.clone(),
                         post_content: self.post_content.clone(),
                     };
 
-                    let task = context.make_request(
-                        RequestWrapper::CreateThread(
-                            new_thread_request,
-                        ),
-                        callback,
-                    );
+
                     // TODO: Redirect to login on error
-                    self.ft = task.ok();
 
 
                     if let Some(ref cb) = self.callback {
-                        cb.emit(());
+                        cb.emit((new_thread_data));
                     }
                 } else {
                     eprintln!("Couldn't get user id required for request")
