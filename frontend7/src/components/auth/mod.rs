@@ -15,30 +15,6 @@ pub enum AuthRoute {
 }
 
 
-//impl<'a> From<&'a RouteInfo> for AuthRoute {
-//    fn from(route_info: &RouteInfo) -> Self {
-//        println!("Converting from url");
-//        if let Some(segment) = route_info.get_segment_at_index(1) {
-//            println!("matching: {}", segment);
-//            match segment {
-//                "login" => return AuthRoute::Login,
-//                "create" => return AuthRoute::Create,
-//                _ => return AuthRoute::Login,
-//            }
-//        }
-//        AuthRoute::Login
-//    }
-//}
-//
-//impl Into<RouteInfo> for AuthRoute {
-//    fn into(self) -> RouteInfo {
-//        match self {
-//            AuthRoute::Login => RouteInfo::parse("/login").unwrap(),
-//            AuthRoute::Create => RouteInfo::parse("/create").unwrap(),
-//        }
-//    }
-//}
-
 impl Router for AuthRoute {
     fn to_route(&self) -> RouteInfo {
         match *self {
@@ -65,7 +41,6 @@ pub struct Auth {
 
 
 pub enum Msg {
-    SetChild(AuthRoute),
 }
 
 #[derive(Clone, PartialEq)]
@@ -79,28 +54,31 @@ impl Default for Props {
     }
 }
 
+
+// TODO, remove the component here, it doesn't offer anything
 impl Component<Context> for Auth {
     type Msg = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-        let mut auth = Auth { child: props.child };
+        let auth = Auth { child: props.child };
         //        auth.update(Msg::SetChild(props.child.resolve_route()), context);
         auth
 
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
-        match msg {
-            Msg::SetChild(child) => {
-                //                match child {
-                //                    AuthRoute::Create => context.routing.set_route("/auth/create"),
-                //                    AuthRoute::Login => context.routing.set_route("/auth/login")
-                //                }
-                self.child = child;
-                true
-            }
-        }
+//        match msg {
+//            Msg::SetChild(child) => {
+//                //                match child {
+//                //                    AuthRoute::Create => context.routing.set_route("/auth/create"),
+//                //                    AuthRoute::Login => context.routing.set_route("/auth/login")
+//                //                }
+//                self.child = child;
+//                true
+//            }
+//        }
+        true
     }
 
     fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {

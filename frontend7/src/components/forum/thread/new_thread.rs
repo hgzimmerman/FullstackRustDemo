@@ -1,8 +1,6 @@
 use yew::prelude::*;
 use Context;
-use yew::format::Json;
 
-use yew::services::fetch::{FetchTask, Response};
 
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
@@ -26,7 +24,6 @@ pub enum Msg {
     CreateNewThread,
     UpdatePostContent(String),
     UpdateThreadTitle(String),
-    NoOp,
 }
 
 #[derive(Clone, PartialEq)]
@@ -36,9 +33,7 @@ pub struct Props {
 
 impl Default for Props {
     fn default() -> Self {
-        Props {
-            callback: None,
-        }
+        Props { callback: None }
     }
 }
 
@@ -85,8 +80,6 @@ impl Component<Context> for NewThread {
                 self.post_content = text;
                 true
             }
-            Msg::NoOp => false,
-
         }
     }
 

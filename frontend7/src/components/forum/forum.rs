@@ -5,7 +5,6 @@ use yew::format::Json;
 use yew::services::fetch::Response;
 
 use requests_and_responses::thread::MinimalThreadResponse;
-
 use requests_and_responses::forum::ForumResponse;
 
 use datatypes::forum::ForumData;
@@ -71,7 +70,7 @@ pub struct Forum {
     threads: Vec<MinimalThreadData>,
     threads_ft: Option<FetchTask>,
     forum_ft: Option<FetchTask>,
-    create_thread_ft: Option<FetchTask>
+    create_thread_ft: Option<FetchTask>,
 }
 
 
@@ -79,7 +78,7 @@ pub enum Msg {
     ContentReady(Vec<MinimalThreadData>),
     Navigate(ForumRoute),
     ForumReady(ForumData),
-    CreateThread(PartialNewThreadData)
+    CreateThread(PartialNewThreadData),
 }
 
 #[derive(Clone, PartialEq, Default)]
@@ -94,14 +93,12 @@ impl Forum {
             |response: Response<Json<Result<ForumResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
-                Msg::ForumReady(
-                    data.unwrap().into()
-                )
+                Msg::ForumReady(data.unwrap().into())
             },
         );
 
         let forum_task = context.make_request(
-            RequestWrapper::GetForum  {
+            RequestWrapper::GetForum {
                 forum_id,
             },
             forum_callback,
@@ -153,7 +150,7 @@ impl Component<Context> for Forum {
                 threads: vec![],
                 threads_ft: Some(threads_ft),
                 forum_ft: Some(forum_ft),
-                create_thread_ft: None
+                create_thread_ft: None,
             }
         } else {
             Forum {
@@ -162,7 +159,7 @@ impl Component<Context> for Forum {
                 threads: vec![],
                 threads_ft: None,
                 forum_ft: Some(forum_ft),
-                create_thread_ft: None
+                create_thread_ft: None,
             }
         }
 
@@ -191,7 +188,9 @@ impl Component<Context> for Forum {
                     },
                 );
 
-                let new_thread_request = new_thread_data.attach_forum_id(self.forum_data.id);
+                let new_thread_request = new_thread_data.attach_forum_id(
+                    self.forum_data.id,
+                );
 
                 let task = context.make_request(
                     RequestWrapper::CreateThread(
@@ -231,7 +230,6 @@ impl Renderable<Context, Forum> for Forum {
         // Only show the button if there is no child element
         let create_thread_button = || if let ForumRoute::Forum = self.route {
             html! {
-                // TODO Make a special Msg:: for going to create thread page
                 <Button: onclick=|_| Msg::Navigate(ForumRoute::Thread(ThreadRoute::CreateThread)), title="Create Thread", />
             }
         } else {
@@ -239,20 +237,21 @@ impl Renderable<Context, Forum> for Forum {
         };
 
 
-        let inner_content = || {
-            match self.route{
-                ForumRoute::Forum => html! {
+        let inner_content = || match self.route {
+            ForumRoute::Forum => {
+                html! {
                     <ul class=("forum-list"),>
                         { for self.threads.iter().map(thread_element) }
                     </ul>
-                },
-                ForumRoute::Thread(ref thread_route) => html! {
+                }
+            }
+            ForumRoute::Thread(ref thread_route) => {
+                html! {
                     <div>
                         {thread_route.view()}
                     </div>
                 }
             }
-
         };
 
         html! {

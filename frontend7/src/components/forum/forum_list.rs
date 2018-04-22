@@ -11,8 +11,6 @@ use components::forum::forum_list_element::ForumListElement;
 
 use context::networking::*;
 
-//use routing::*;
-//use routing::Routable;
 use yew::services::route::*;
 use yew::services::fetch::FetchTask;
 use failure::Error;
@@ -37,7 +35,7 @@ impl Component<Context> for ForumList {
     type Msg = Msg;
     type Properties = ();
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(_props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         println!("Creating forum list");
 
         let callback = context.send_back(
@@ -84,7 +82,7 @@ impl Component<Context> for ForumList {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
         println!("Forum container change() called");
         true
     }

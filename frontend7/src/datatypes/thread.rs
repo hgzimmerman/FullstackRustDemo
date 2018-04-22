@@ -44,7 +44,7 @@ pub struct PartialNewThreadData {
     pub author_id: i32,
 }
 impl PartialNewThreadData {
-    pub fn attach_forum_id(self, forum_id: i32) -> NewThreadRequest{
+    pub fn attach_forum_id(self, forum_id: i32) -> NewThreadRequest {
         NewThreadRequest {
             forum_id,
             author_id: self.author_id,

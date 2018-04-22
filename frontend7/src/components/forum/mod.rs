@@ -58,15 +58,19 @@ impl Router for ForumRoute {
 impl Renderable<Context, Model> for ForumRoute {
     fn view(&self) -> Html<Context, Model> {
         match *self {
-            ForumRoute::List => html! {
+            ForumRoute::List => {
+                html! {
                 <>
                     <ForumList: />
                 </>
-            },
-            ForumRoute::Forum(id, ref route) => html! {
+            }
+            }
+            ForumRoute::Forum(id, ref route) => {
+                html! {
                 <>
                     <Forum: route=route, forum_id=id, />
                 </>
+            }
             }
 
         }

@@ -38,7 +38,6 @@ use yew::services::route::*;
 
 use components::auth::AuthRoute;
 use components::forum::ForumRoute;
-use components::forum::forum_list::ForumList;
 use components::auth::Auth;
 use components::header_component::*;
 
