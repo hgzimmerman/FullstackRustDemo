@@ -114,12 +114,13 @@ impl Article {
 
     /// Gets the unpublished articles for a given user
     // TODO, consiter switching this interface to take a user_id instead of a string
-    pub fn get_unpublished_articles_for_username(username: String, conn: &Conn) -> JoeResult<Vec<Article>> {
+    pub fn get_unpublished_articles_for_user(user_id: i32, conn: &Conn) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
+        use schema::users;
 
         let user: User = users
-            .filter(user_name.eq(username))
+            .filter(users::id.eq(user_id))
             .get_result::<User>(conn.deref())
             .map_err(User::handle_error)?;
 

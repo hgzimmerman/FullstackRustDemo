@@ -19,7 +19,7 @@ pub struct ThreadResponse {
     pub title: String,
     pub author: UserResponse,
     pub posts: PostResponse,
-    pub created_date: u64,
+    pub created_date: i64,
     pub locked: bool,
 }
 
@@ -29,6 +29,6 @@ pub struct MinimalThreadResponse {
     pub id: i32,
     pub title: String,
     pub author: UserResponse,
-    pub created_date: u64,
+    pub created_date: i64,
     pub locked: bool,
 }

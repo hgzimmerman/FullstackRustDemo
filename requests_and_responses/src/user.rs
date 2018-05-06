@@ -45,7 +45,7 @@ pub struct Jwt {
     pub sub: i32,
     pub user_roles: Vec<UserRole>,
     /// exp is the Expiration date, in unix timestamp form
-    pub exp: u64,
+    pub exp: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

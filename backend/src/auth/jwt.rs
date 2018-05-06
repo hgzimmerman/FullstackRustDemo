@@ -4,7 +4,7 @@ use rocket::http::Status;
 use serde_json;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
-use chrono::Utc;
+use chrono::{NaiveDateTime, Utc};
 
 use auth::Secret;
 use auth::BannedSet;
@@ -76,7 +76,7 @@ pub mod user_authorization {
     }
 
     pub struct NormalUser {
-        pub user_name: String,
+        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for NormalUser {
@@ -86,8 +86,8 @@ pub mod user_authorization {
             )
             {
                 Ok(NormalUser {
-                    user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id,
+                    //                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.sub,
                 })
             } else {
                 Err(RoleError::InsufficientRights)
@@ -106,7 +106,7 @@ pub mod user_authorization {
     }
 
     pub struct AdminUser {
-        pub user_name: String,
+        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for AdminUser {
@@ -116,8 +116,8 @@ pub mod user_authorization {
             )
             {
                 Ok(AdminUser {
-                    user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id,
+                    //                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.sub,
                 })
             } else {
                 Err(RoleError::InsufficientRights)
@@ -136,7 +136,7 @@ pub mod user_authorization {
     }
 
     pub struct ModeratorUser {
-        pub user_name: String,
+        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for ModeratorUser {
@@ -146,8 +146,8 @@ pub mod user_authorization {
             )
             {
                 Ok(ModeratorUser {
-                    user_name: jwt.user_name.clone(),
-                    user_id: jwt.user_id,
+                    //                    user_name: jwt.user_name.clone(),
+                    user_id: jwt.sub,
                 })
             } else {
                 Err(RoleError::InsufficientRights)
@@ -192,7 +192,7 @@ pub mod user_authorization {
         let key = keys[0];
         let jwt: Jwt = match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
             Ok(token) => {
-                if token.token_expire_date < Utc::now().naive_utc() {
+                if NaiveDateTime::from_timestamp(token.exp, 0) < Utc::now().naive_utc() {
                     info!("Token expired.");
                     return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
                 }

@@ -9,7 +9,7 @@ pub struct MinimalThreadData {
     pub id: i32,
     pub title: String,
     pub author: UserData,
-    pub created_date: u64,
+    pub created_date: i64,
     //    pub replies: i32,
     pub locked: bool,
 }

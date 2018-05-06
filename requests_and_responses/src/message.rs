@@ -6,7 +6,7 @@ pub struct MessageResponse {
     pub author: UserResponse,
     pub reply: Option<Box<MessageResponse>>,
     pub content: String,
-    pub date: u64,
+    pub date: i64,
 }
 
 

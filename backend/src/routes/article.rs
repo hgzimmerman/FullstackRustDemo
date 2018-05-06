@@ -31,8 +31,9 @@ fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json
 /// Gets the articles that haven't been published yet that are associated with the logged in user.
 #[get("/users_unpublished_articles")]
 fn get_users_unpublished_articles(logged_in_user: NormalUser, conn: Conn) -> Result<Json<Vec<MinimalArticleResponse>>, WeekendAtJoesError> {
-    let name = logged_in_user.user_name; // extract the username from the jwt
-    Article::get_unpublished_articles_for_username(name, &conn)
+    //    let name = logged_in_user.user_name; // extract the username from the jwt
+
+    Article::get_unpublished_articles_for_user(logged_in_user.user_id, &conn)
         .map(convert_vector)
         .map(Json)
 }

@@ -24,7 +24,7 @@ impl From<ThreadData> for ThreadResponse {
             title: data.thread.title,
             author: data.user.into(),
             posts: data.post.into(),
-            created_date: data.thread.created_date,
+            created_date: data.thread.created_date.timestamp(),
             locked: data.thread.locked,
         }
     }
@@ -38,7 +38,7 @@ impl From<MinimalThreadData> for MinimalThreadResponse {
             id: data.thread.id,
             title: data.thread.title,
             author: data.user.into(),
-            created_date: data.thread.created_date,
+            created_date: data.thread.created_date.timestamp(),
             locked: data.thread.locked,
         }
     }

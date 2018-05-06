@@ -1,10 +1,9 @@
 [workspace]
 members = [
     "backend/",
-#    "frontend7",
     "db_proc_macros/",
     "requests_and_responses/"
 ]
 exclude = [
-    "frontend7"
+    "frontend7" # The frontend needs to be excluded because it can't compile some of the crates in the workspace context for wasm
 ]

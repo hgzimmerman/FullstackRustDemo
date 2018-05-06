@@ -11,7 +11,7 @@ impl From<MessageData> for MessageResponse {
                 .map(|x| MessageResponse::from(*x))
                 .map(Box::new),
             content: data.message.message_content,
-            date: data.message.create_date,
+            date: data.message.create_date.timestamp(),
         }
     }
 }

@@ -88,7 +88,7 @@ impl Context {
         Ok(payload.user_name)
     }*/
 
-    fn user_auth_expire_date(&mut self) -> Result<u64, Error> {
+    fn user_auth_expire_date(&mut self) -> Result<i64, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
         Ok(payload.exp)
