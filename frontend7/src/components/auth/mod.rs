@@ -68,16 +68,16 @@ impl Component<Context> for Auth {
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
-//        match msg {
-//            Msg::SetChild(child) => {
-//                //                match child {
-//                //                    AuthRoute::Create => context.routing.set_route("/auth/create"),
-//                //                    AuthRoute::Login => context.routing.set_route("/auth/login")
-//                //                }
-//                self.child = child;
-//                true
-//            }
-//        }
+        //        match msg {
+        //            Msg::SetChild(child) => {
+        //                //                match child {
+        //                //                    AuthRoute::Create => context.routing.set_route("/auth/create"),
+        //                //                    AuthRoute::Login => context.routing.set_route("/auth/login")
+        //                //                }
+        //                self.child = child;
+        //                true
+        //            }
+        //        }
         true
     }
 

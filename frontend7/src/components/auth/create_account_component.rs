@@ -62,11 +62,11 @@ impl Component<Context> for CreateAccount {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Submit => {
-                println!("Logging in with user name: {}", self.user_name);
+//                println!("Logging in with user name: {}", self.user_name);
                 let callback = context.send_back(
                     |response: Response<Json<Result<String, Error>>>| {
                         let (meta, Json(data)) = response.into_parts();
-                        println!("META: {:?}, {:?}", meta, data);
+//                        println!("META: {:?}, {:?}", meta, data);
                         Msg::NoOp
                     },
                 );

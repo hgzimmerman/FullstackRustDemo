@@ -13,7 +13,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 
-extern crate chrono;
+//extern crate chrono;
 
 //#[macro_use]
 extern crate stdweb;
@@ -100,7 +100,7 @@ impl From<RouteResult> for Msg {
         match result {
             Ok(mut route_info) => Msg::Navigate(Route::from_route_main(&mut route_info)),
             Err(e) => {
-                eprintln!("Couldn't route: {:?}", e);
+//                eprintln!("Couldn't route: {:?}", e);
                 Msg::Navigate(Route::PageNotFound)
             }
         }
@@ -152,10 +152,8 @@ impl Component<Context> for Model {
 
     fn update(&mut self, msg: Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
 
-        println!("updating model");
         match msg {
             Msg::Navigate(route) => {
-                println!("MainNav: navigating to {:?}", route);
                 self.route = route;
                 true
             }
@@ -168,7 +166,6 @@ impl Component<Context> for Model {
 
 impl Renderable<Context, Model> for Model {
     fn view(&self) -> Html<Context, Self> {
-        println!("Rendering main");
 
         let page = |route: &Route| match route {
             Route::Auth(ref auth_page) => {
@@ -179,7 +176,6 @@ impl Renderable<Context, Model> for Model {
                     }
             }
             Route::Forums(ref forum_list_route) => {
-                println!("ForumView chosen to render by main with parameters {:?}", forum_list_route);
                 html! {
                         <>
                             {forum_list_route.view() }

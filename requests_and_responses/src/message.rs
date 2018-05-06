@@ -1,12 +1,12 @@
 use user::UserResponse;
-use chrono::NaiveDateTime;
+//use chrono::NaiveDateTime;
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MessageResponse {
     pub id: i32,
     pub author: UserResponse,
     pub reply: Option<Box<MessageResponse>>,
     pub content: String,
-    pub date: NaiveDateTime,
+    pub date: u64,
 }
 
 

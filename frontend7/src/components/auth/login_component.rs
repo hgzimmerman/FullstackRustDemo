@@ -50,7 +50,6 @@ impl Component<Context> for Login {
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
-        //        context.routing.set_route("/auth/login");
 
         Login {
             user_name: String::from(""),
@@ -65,11 +64,10 @@ impl Component<Context> for Login {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Submit => {
-                println!("Logging in with user name: {}", self.user_name);
                 let callback = context.send_back(
                     |response: Response<Result<String, Error>>| {
                         let (meta, jwt) = response.into_parts();
-                        println!("META: {:?}, JWT: {:?}", meta, jwt);
+//                        println!("META: {:?}, JWT: {:?}", meta, jwt);
                         if let Ok(j) = jwt {
                             // TODO This Result doesn't appear to indicate for errors, use meta instead
                             Msg::LoginSuccess(j)
@@ -95,7 +93,7 @@ impl Component<Context> for Login {
                 false
             }
             Msg::NavToCreateAccount => {
-                println!("LoginComponent: navigating to create account");
+//                println!("LoginComponent: navigating to create account");
                 if let Some(ref mut cb) = self.create_account_nav_cb {
                     cb.emit(())
                 }

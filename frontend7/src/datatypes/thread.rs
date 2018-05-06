@@ -1,5 +1,5 @@
-use chrono::NaiveDateTime;
-use chrono::Utc;
+//use chrono::NaiveDateTime;
+//use chrono::Utc;
 use requests_and_responses::thread::MinimalThreadResponse;
 use requests_and_responses::thread::NewThreadRequest;
 use datatypes::user::UserData;
@@ -9,7 +9,7 @@ pub struct MinimalThreadData {
     pub id: i32,
     pub title: String,
     pub author: UserData,
-    pub created_date: NaiveDateTime,
+    pub created_date: u64,
     //    pub replies: i32,
     pub locked: bool,
 }
@@ -20,7 +20,7 @@ impl Default for MinimalThreadData {
             id: 0,
             title: "".into(),
             author: UserData::default(),
-            created_date: Utc::now().naive_utc(),
+            created_date: 0,
             locked: false,
         }
     }

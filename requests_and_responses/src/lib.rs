@@ -2,7 +2,7 @@
 //! This allows both the frontend and the backend to use the same types.
 #[macro_use]
 extern crate serde_derive;
-extern crate chrono;
+//extern crate chrono;
 
 pub mod user;
 pub mod article;

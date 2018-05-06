@@ -1,6 +1,6 @@
 use user::UserResponse;
 use post::PostResponse;
-use chrono::NaiveDateTime;
+//use chrono::NaiveDateTime;
 
 
 /// Used when requesting that a thread be created.
@@ -19,7 +19,7 @@ pub struct ThreadResponse {
     pub title: String,
     pub author: UserResponse,
     pub posts: PostResponse,
-    pub created_date: NaiveDateTime,
+    pub created_date: u64,
     pub locked: bool,
 }
 
@@ -29,6 +29,6 @@ pub struct MinimalThreadResponse {
     pub id: i32,
     pub title: String,
     pub author: UserResponse,
-    pub created_date: NaiveDateTime,
+    pub created_date: u64,
     pub locked: bool,
 }

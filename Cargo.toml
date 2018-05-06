@@ -1,7 +1,10 @@
 [workspace]
 members = [
     "backend/",
-    "frontend7",
+#    "frontend7",
     "db_proc_macros/",
     "requests_and_responses/"
+]
+exclude = [
+    "frontend7"
 ]

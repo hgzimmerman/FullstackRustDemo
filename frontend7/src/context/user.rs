@@ -1,7 +1,7 @@
 use super::Context;
 
 
-use chrono::{NaiveDateTime, Utc};
+//use chrono::{NaiveDateTime, Utc};
 
 use base64::decode_config as b64_dec;
 use serde_json::Value as JsonValue;
@@ -79,23 +79,23 @@ impl Context {
     pub fn user_id(&mut self) -> Result<i32, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
-        Ok(payload.user_id)
+        Ok(payload.sub)
     }
 
-    pub fn user_name(&mut self) -> Result<String, Error> {
+/*    pub fn user_name(&mut self) -> Result<String, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
         Ok(payload.user_name)
-    }
+    }*/
 
-    fn user_auth_expire_date(&mut self) -> Result<NaiveDateTime, Error> {
+    fn user_auth_expire_date(&mut self) -> Result<u64, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
-        Ok(payload.token_expire_date)
+        Ok(payload.exp)
     }
 
     pub fn has_token_expired(&mut self) -> bool {
-        match self.user_auth_expire_date() {
+        /*match self.user_auth_expire_date() {
             Ok(expire_date) => {
                 let now = Utc::now().naive_utc();
                 if expire_date < now { true } else { false }
@@ -104,8 +104,9 @@ impl Context {
                 eprintln!("Indicating token has expired for an error: {}", e);
                 true
             }
-        }
-
+        }*/
+        // TODO, handle dates intelligently in frontend.
+        false
 
     }
 }

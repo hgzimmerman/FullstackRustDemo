@@ -1,7 +1,6 @@
 use yew::prelude::*;
 use Context;
 
-
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
 

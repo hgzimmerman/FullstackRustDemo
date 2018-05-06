@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+//use chrono::NaiveDateTime;
 use user::UserResponse;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -22,7 +22,7 @@ pub struct MinimalArticleResponse {
     pub author_id: i32,
     pub title: String,
     pub body: String,
-    pub publish_date: Option<NaiveDateTime>,
+    pub publish_date: Option<u64>,
 }
 
 /// Doesn't have the body attached.
@@ -32,7 +32,7 @@ pub struct ArticlePreviewResponse {
     pub id: i32,
     pub author: UserResponse,
     pub title: String,
-    pub publish_date: Option<NaiveDateTime>,
+    pub publish_date: Option<u64>,
 }
 
 /// All relevant information is attached.
@@ -42,5 +42,5 @@ pub struct FullArticleResponse {
     pub author: UserResponse,
     pub title: String,
     pub body: String,
-    pub publish_date: Option<NaiveDateTime>,
+    pub publish_date: Option<u64>,
 }
