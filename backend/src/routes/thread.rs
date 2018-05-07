@@ -83,7 +83,7 @@ impl Routable for Thread {
             unlock_thread,
             archive_thread,
             get_threads_by_forum_id,
-            get_thread_contents
+            get_thread_contents,
         ]
     };
     const PATH: &'static str = "/thread/";

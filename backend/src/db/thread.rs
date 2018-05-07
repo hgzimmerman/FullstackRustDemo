@@ -173,12 +173,6 @@ impl Thread {
         let root_post: Post = Post::get_root_post(thread_id, conn)?;
         let post: PostData = root_post.get_post_data(conn)?;
         let user = User::get_by_id(thread.author_id, conn)?;
-        Ok(
-            ThreadData {
-                thread,
-                post,
-                user
-            }
-        )
+        Ok(ThreadData { thread, post, user })
     }
 }
