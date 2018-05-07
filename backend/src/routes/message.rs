@@ -5,7 +5,7 @@ use rocket::Route;
 use db::message::*;
 use error::WeekendAtJoesError;
 use db::Conn;
-use requests_and_responses::message::*;
+use wire::message::*;
 use auth::user_authorization::NormalUser;
 use error::*;
 use db::chat::Chat;

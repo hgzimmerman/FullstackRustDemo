@@ -4,8 +4,8 @@ use yew::format::Json;
 
 use yew::services::fetch::Response;
 
-use requests_and_responses::thread::MinimalThreadResponse;
-use requests_and_responses::forum::ForumResponse;
+use wire::thread::MinimalThreadResponse;
+use wire::forum::ForumResponse;
 
 use datatypes::forum::ForumData;
 use datatypes::thread::MinimalThreadData;
@@ -26,8 +26,8 @@ use yew::services::route::Router;
 use yew::services::route::RouteSection;
 
 use forum::thread;
-use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
-use requests_and_responses::post::NewPostRequest;
+use wire::thread::{NewThreadRequest, ThreadResponse};
+use wire::post::NewPostRequest;
 use datatypes::thread::PartialNewThreadData;
 
 #[derive(Clone, PartialEq, Debug)]

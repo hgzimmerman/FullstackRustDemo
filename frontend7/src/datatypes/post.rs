@@ -1,4 +1,4 @@
-use requests_and_responses::post::PostResponse;
+use wire::post::PostResponse;
 use datatypes::user::UserData;
 
 #[derive(Clone, Debug, PartialEq, Default)]

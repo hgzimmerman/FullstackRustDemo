@@ -5,7 +5,7 @@ use components::button::*;
 use yew::format::Json;
 use yew::services::fetch::{FetchTask, Response};
 use failure::Error;
-use requests_and_responses::user::*;
+use wire::user::*;
 
 use context::networking::*;
 

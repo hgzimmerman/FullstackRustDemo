@@ -139,7 +139,7 @@ pub mod testing {
     use db::user::*;
     use db::forum::*;
     use db::thread::*;
-    use requests_and_responses::user::*;
+    use wire::user::*;
     /// Create a bunch of entries for every data type in the backend.
     pub fn generate_test_fixtures(conn: &Conn) -> Result<(), WeekendAtJoesError> {
 
@@ -209,7 +209,7 @@ mod tests {
     use super::*;
     use db::user::*;
     use db::article::*;
-    use requests_and_responses::user::*;
+    use wire::user::*;
 
 
     #[test]

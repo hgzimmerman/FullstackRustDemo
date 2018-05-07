@@ -68,7 +68,7 @@ use db::answer::Answer;
 use db::chat::Chat;
 use db::message::Message;
 
-extern crate requests_and_responses;
+extern crate wire;
 
 
 use simplelog::*;

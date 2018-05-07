@@ -5,7 +5,7 @@ use db::Retrievable;
 use db::bucket::*;
 use error::JoeResult;
 use db::Conn;
-use requests_and_responses::bucket::*;
+use wire::bucket::*;
 use auth::user_authorization::AdminUser;
 use routes::convert_vector;
 use db::Creatable;

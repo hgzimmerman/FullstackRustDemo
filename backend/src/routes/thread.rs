@@ -4,8 +4,8 @@ use rocket::Route;
 
 use db::thread::{Thread, NewThread};
 use db::Conn;
-use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
-use requests_and_responses::thread::MinimalThreadResponse;
+use wire::thread::{NewThreadRequest, ThreadResponse};
+use wire::thread::MinimalThreadResponse;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use error::*;

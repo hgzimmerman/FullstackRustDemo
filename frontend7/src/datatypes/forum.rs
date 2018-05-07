@@ -1,4 +1,4 @@
-use requests_and_responses::forum::ForumResponse;
+use wire::forum::ForumResponse;
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct ForumData {

@@ -8,7 +8,8 @@ use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
 use error::JoeResult;
 
-use requests_and_responses::user::*;
+// TODO, I don't think that this file should have wire types
+use wire::user::*;
 
 //#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 //// #[PgType = "Userrole"]

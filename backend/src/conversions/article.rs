@@ -1,5 +1,5 @@
 use db::article::*;
-use requests_and_responses::article::*;
+use wire::article::*;
 use chrono::NaiveDateTime;
 
 use slug;

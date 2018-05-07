@@ -6,7 +6,7 @@ use db::post::*;
 use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
-use requests_and_responses::post::{PostResponse, NewPostRequest, EditPostRequest};
+use wire::post::{PostResponse, NewPostRequest, EditPostRequest};
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use error::VectorMappable;

@@ -1,6 +1,6 @@
 use db::chat::*;
-use requests_and_responses::chat::*;
-use requests_and_responses::user::UserResponse;
+use wire::chat::*;
+use wire::user::UserResponse;
 
 
 impl From<ChatUserAssociationRequest> for ChatUserAssociation {

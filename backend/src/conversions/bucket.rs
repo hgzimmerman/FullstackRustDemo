@@ -1,5 +1,5 @@
 use db::bucket::*;
-use requests_and_responses::bucket::*;
+use wire::bucket::*;
 
 
 impl From<Bucket> for BucketResponse {

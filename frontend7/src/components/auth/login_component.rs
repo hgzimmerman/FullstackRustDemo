@@ -4,7 +4,7 @@ use components::button::*;
 
 use yew::services::fetch::{FetchTask, Response};
 use failure::Error;
-use requests_and_responses::login::*;
+use wire::login::*;
 use context::networking::*;
 use super::AuthRoute;
 use Route;

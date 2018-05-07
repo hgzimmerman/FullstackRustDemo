@@ -1,5 +1,5 @@
 use db::message::*;
-use requests_and_responses::message::*;
+use wire::message::*;
 use chrono::Utc;
 
 impl From<MessageData> for MessageResponse {

@@ -1,5 +1,5 @@
 use db::answer::*;
-use requests_and_responses::answer::*;
+use wire::answer::*;
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {

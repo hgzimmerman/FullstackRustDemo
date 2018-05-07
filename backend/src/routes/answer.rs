@@ -6,7 +6,7 @@ use db::answer::*;
 use db::user::User;
 use error::WeekendAtJoesError;
 use db::Conn;
-use requests_and_responses::answer::*;
+use wire::answer::*;
 use auth::user_authorization::NormalUser;
 use db::Retrievable;
 use db::Creatable;

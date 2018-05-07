@@ -1,5 +1,5 @@
 use db::forum::*;
-use requests_and_responses::forum::*;
+use wire::forum::*;
 
 impl From<Forum> for ForumResponse {
     fn from(forum: Forum) -> ForumResponse {

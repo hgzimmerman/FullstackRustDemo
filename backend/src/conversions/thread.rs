@@ -1,5 +1,5 @@
 use db::thread::*;
-use requests_and_responses::thread::*;
+use wire::thread::*;
 use chrono::Utc;
 
 impl From<NewThreadRequest> for NewThread {

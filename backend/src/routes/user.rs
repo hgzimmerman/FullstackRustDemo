@@ -5,7 +5,7 @@ use db::Conn;
 use db::Retrievable;
 use db::Creatable;
 use db::user::User;
-use requests_and_responses::user::*;
+use wire::user::*;
 use error::WeekendAtJoesError;
 use error::JoeResult;
 use auth::user_authorization::*;

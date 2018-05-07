@@ -28,8 +28,8 @@ use rocket::response::Responder;
 use db::user::User;
 use db::Conn;
 
-use requests_and_responses::login::*;
-use requests_and_responses::user::Jwt;
+use wire::login::*;
+use wire::user::Jwt;
 
 
 /// The secret contains a random string that is generated at startup.

@@ -1,5 +1,5 @@
 
-use requests_and_responses::user::*;
+use wire::user::*;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UserData {

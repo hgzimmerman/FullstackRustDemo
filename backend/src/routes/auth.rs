@@ -7,7 +7,7 @@ use db::Conn;
 use rocket::State;
 
 use auth;
-use requests_and_responses::login::LoginRequest;
+use wire::login::LoginRequest;
 use auth::LoginResult;
 use auth::Secret;
 

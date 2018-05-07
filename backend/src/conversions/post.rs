@@ -1,5 +1,5 @@
 use db::post::*;
-use requests_and_responses::post::*;
+use wire::post::*;
 use chrono::{Utc, NaiveDateTime};
 use db::thread::Thread;
 

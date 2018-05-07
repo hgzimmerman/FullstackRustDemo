@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-requests_and_responses = { path = "../requests_and_responses"}
+wire = { path = "../wire"}
 db_proc_macros = { path = "../db_proc_macros"}
 
 rocket = "0.3.6"

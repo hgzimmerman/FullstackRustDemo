@@ -1,6 +1,6 @@
 use db::question::*;
-use requests_and_responses::question::*;
-use requests_and_responses::answer::AnswerResponse;
+use wire::question::*;
+use wire::answer::AnswerResponse;
 
 
 impl From<QuestionData> for QuestionResponse {

@@ -1,7 +1,7 @@
 //use chrono::NaiveDateTime;
 //use chrono::Utc;
-use requests_and_responses::thread::MinimalThreadResponse;
-use requests_and_responses::thread::NewThreadRequest;
+use wire::thread::MinimalThreadResponse;
+use wire::thread::NewThreadRequest;
 use datatypes::user::UserData;
 
 #[derive(Clone, Debug, PartialEq)]

@@ -11,7 +11,7 @@ use auth::BannedSet;
 
 use error::WeekendAtJoesError;
 
-use requests_and_responses::user::{Jwt, UserRole};
+use wire::user::{Jwt, UserRole};
 
 pub struct ServerJwt(pub Jwt);
 

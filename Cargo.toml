@@ -2,7 +2,7 @@
 members = [
     "backend/",
     "db_proc_macros/",
-    "requests_and_responses/"
+    "wire/"
 ]
 exclude = [
     "frontend7" # The frontend needs to be excluded because it can't compile some of the crates in the workspace context for wasm

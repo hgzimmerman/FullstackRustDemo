@@ -6,8 +6,8 @@ use db::Creatable;
 use db::forum::Forum;
 use error::JoeResult;
 use db::Conn;
-use requests_and_responses::forum::ForumResponse;
-use requests_and_responses::forum::NewForumRequest;
+use wire::forum::ForumResponse;
+use wire::forum::NewForumRequest;
 use auth::user_authorization::AdminUser;
 use routes::convert_vector;
 

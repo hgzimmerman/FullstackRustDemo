@@ -5,9 +5,9 @@ use yew::services::fetch::{FetchTask, Request, Response};
 use yew::callback::Callback;
 
 
-use requests_and_responses::user::*;
-use requests_and_responses::thread::*;
-use requests_and_responses::login::*;
+use wire::user::*;
+use wire::thread::*;
+use wire::login::*;
 use failure::Error;
 use serde_json;
 use serde::Serialize;

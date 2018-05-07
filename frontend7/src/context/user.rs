@@ -9,7 +9,7 @@ use serde_json;
 use failure::Error;
 use base64;
 
-use requests_and_responses::user::{UserRole, Jwt};
+use wire::user::{UserRole, Jwt};
 
 
 #[derive(Fail, Debug)]

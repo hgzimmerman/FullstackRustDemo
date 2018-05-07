@@ -6,7 +6,7 @@ use db::Retrievable;
 use db::Creatable;
 
 use db::article::*;
-use requests_and_responses::article::*;
+use wire::article::*;
 use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
 use auth::user_authorization::NormalUser;

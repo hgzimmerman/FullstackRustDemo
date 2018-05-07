@@ -4,8 +4,8 @@ use Context;
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
 
-use requests_and_responses::thread::{NewThreadRequest, ThreadResponse};
-use requests_and_responses::post::NewPostRequest;
+use wire::thread::{NewThreadRequest, ThreadResponse};
+use wire::post::NewPostRequest;
 use datatypes::forum::ForumData;
 use failure::Error;
 

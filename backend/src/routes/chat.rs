@@ -4,7 +4,7 @@ use rocket::Route;
 
 use db::chat::*;
 use db::Conn;
-use requests_and_responses::chat::*;
+use wire::chat::*;
 use auth::user_authorization::NormalUser;
 use error::JoeResult;
 use db::Creatable;

@@ -1,5 +1,5 @@
 use db::user::*;
-use requests_and_responses::user::*;
+use wire::user::*;
 
 use auth::hash_password;
 

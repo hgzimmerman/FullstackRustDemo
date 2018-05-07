@@ -6,7 +6,7 @@ use db::question::*;
 use error::WeekendAtJoesError;
 use error::VectorMappable;
 use db::Conn;
-use requests_and_responses::question::*;
+use wire::question::*;
 use auth::user_authorization::*;
 
 

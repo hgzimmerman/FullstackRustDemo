@@ -3,7 +3,7 @@ use Context;
 use yew::format::Json;
 
 use yew::services::fetch::Response;
-use requests_and_responses::forum::ForumResponse;
+use wire::forum::ForumResponse;
 
 use datatypes::forum::ForumData;
 

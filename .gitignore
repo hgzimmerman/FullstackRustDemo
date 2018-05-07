@@ -1,6 +1,6 @@
 /target/
 /www/target/
-/requests_and_responses/target/
+/wire/target/
 /db_proc_macros/target
 /frontend7/target/
 /backend/target/

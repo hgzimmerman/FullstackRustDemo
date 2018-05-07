@@ -8,7 +8,7 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 #yew = { git = "https://github.com/hgzimmerman/yew", rev = "afbdbf2b291ae17beed5a4d7ca77bd86b56f4850" }
 yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
 
-requests_and_responses = {path = "../requests_and_responses"}
+wire = {path = "../wire"}
 failure = "0.1"
 failure_derive = "0.1.1"
 
