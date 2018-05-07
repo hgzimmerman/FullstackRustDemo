@@ -34,10 +34,10 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         use db::Retrievable as macro_Retrievable;
         use db::Creatable as macro_Creatable;
         use db::Deletable as macro_Deletable;
-        use error::JoeResult;
+        use error::JoeResult as macro_JoeResult;
 
         impl macro_Creatable<#insertable> for #name {
-            fn create(insert: #insertable, conn: &Conn) -> JoeResult<Self> {
+            fn create(insert: #insertable, conn: &Conn) -> macro_JoeResult<Self> {
                 use schema::#table_name;
                 use diesel;
                 use diesel::RunQueryDsl;
@@ -51,7 +51,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_Retrievable<'a> for #name {
-            fn get_by_id(item_id: i32, conn: &Conn) -> JoeResult<#name> {
+            fn get_by_id(item_id: i32, conn: &Conn) -> macro_JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
@@ -62,7 +62,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .map_err(#name::handle_error)
             }
 
-            fn get_all(conn: &Conn) -> JoeResult<Vec<#name>> {
+            fn get_all(conn: &Conn) -> macro_JoeResult<Vec<#name>> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 #table_name
@@ -70,7 +70,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                     .map_err(#name::handle_error)
             }
 
-            fn exists(item_id: i32, conn: &Conn) -> JoeResult<bool> {
+            fn exists(item_id: i32, conn: &Conn) -> macro_JoeResult<bool> {
                 use schema::#table_name;
                 use schema::#table_name::dsl::*;
                 use diesel::select;
@@ -101,7 +101,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_Deletable<'a> for #name {
-            fn delete_by_id(item_id: i32, conn: &Conn) -> JoeResult<#name> {
+            fn delete_by_id(item_id: i32, conn: &Conn) -> macro_JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::ExpressionMethods;
                 use diesel;

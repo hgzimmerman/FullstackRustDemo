@@ -6,6 +6,7 @@ use diesel::ExpressionMethods;
 use std::ops::Deref;
 use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
+use error::JoeResult;
 
 use requests_and_responses::user::*;
 

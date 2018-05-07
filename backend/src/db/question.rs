@@ -11,6 +11,7 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use rand::{thread_rng, seq};
 use db::answer::AnswerData;
+use error::JoeResult;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[insertable = "NewQuestion"]

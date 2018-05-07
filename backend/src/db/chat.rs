@@ -11,6 +11,7 @@ use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 // use diesel::Table;
 // use diesel::query_dsl::InternalJoinDsl;
+use error::JoeResult;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewChat"]

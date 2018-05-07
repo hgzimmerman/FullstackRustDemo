@@ -8,6 +8,7 @@ use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc};
 use db::user::User;
 use diesel::BelongingToDsl;
+use error::JoeResult;
 
 
 /// The database's representation of an article

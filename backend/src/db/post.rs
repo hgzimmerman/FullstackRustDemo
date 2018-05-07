@@ -10,6 +10,7 @@ use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
 use diesel::BelongingToDsl;
 use diesel::QueryDsl;
+use error::JoeResult;
 
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
@@ -178,7 +179,7 @@ impl Post {
         Ok(ChildlessPostData { post, user })
     }
 
-    /// Gets all of the childern for a post and assembels the tree with the `self` post as the root node.
+    /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
     /// This will make recursive calls into the database.
     /// This method should be the target of significant scrutiny.
     pub fn get_post_data(self, conn: &Conn) -> JoeResult<PostData> {

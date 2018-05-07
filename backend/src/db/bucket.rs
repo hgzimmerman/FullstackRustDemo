@@ -1,6 +1,7 @@
 use schema::buckets;
 use db::Conn;
 use std::ops::Deref;
+use error::JoeResult;
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]

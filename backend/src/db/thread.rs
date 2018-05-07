@@ -9,6 +9,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
+use error::JoeResult;
 
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
@@ -165,5 +166,19 @@ impl Thread {
             post: PostData::from(post_data),
             user,
         })
+    }
+
+    pub fn get_full_thread(thread_id: i32, conn: &Conn) -> JoeResult<ThreadData> {
+        let thread: Thread = Thread::get_by_id(thread_id, conn)?;
+        let root_post: Post = Post::get_root_post(thread_id, conn)?;
+        let post: PostData = root_post.get_post_data(conn)?;
+        let user = User::get_by_id(thread.author_id, conn)?;
+        Ok(
+            ThreadData {
+                thread,
+                post,
+                user
+            }
+        )
     }
 }

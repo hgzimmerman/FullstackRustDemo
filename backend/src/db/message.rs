@@ -10,6 +10,7 @@ use db::user::User;
 use db::chat::Chat;
 // use diesel::GroupedBy;
 use db::diesel_extensions::pagination::*;
+use error::JoeResult;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[belongs_to(Message, foreign_key = "reply_id")]

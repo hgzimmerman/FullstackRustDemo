@@ -28,6 +28,7 @@ pub enum RequestWrapper {
     GetThreads { forum_id: i32, page_index: usize },
     GetForums,
     GetForum { forum_id: i32 },
+    GetThread { thread_id: i32 }
 }
 
 impl RequestWrapper {
@@ -45,6 +46,7 @@ impl RequestWrapper {
             } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
             GetForums => format!("{}/forum/forums", api_base),
             GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id),
+            GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id)
         }
     }
 }
@@ -99,6 +101,13 @@ impl Context {
                 Ok(self.networking.fetch(request, callback))
             }
             GetForum { .. } => {
+                let request = self.prepare_get_request(
+                    url,
+                    Auth::NotRequired,
+                )?;
+                Ok(self.networking.fetch(request, callback))
+            }
+            GetThread { .. } => {
                 let request = self.prepare_get_request(
                     url,
                     Auth::NotRequired,
