@@ -2,7 +2,9 @@
 //use chrono::Utc;
 use wire::thread::MinimalThreadResponse;
 use wire::thread::NewThreadRequest;
+use wire::thread::ThreadResponse;
 use datatypes::user::UserData;
+use datatypes::post::PostData;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MinimalThreadData {
@@ -50,6 +52,28 @@ impl PartialNewThreadData {
             author_id: self.author_id,
             title: self.title,
             post_content: self.post_content,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ThreadData {
+    pub id: i32,
+    pub title: String,
+    pub author: UserData,
+    pub posts: PostData,
+    pub created_date: i64,
+    pub locked: bool,
+}
+impl From<ThreadResponse> for ThreadData {
+    fn from(response: ThreadResponse) -> Self {
+        ThreadData {
+            id: response.id,
+            title: response.title,
+            author: UserData::from(response.author),
+            posts: PostData::from(response.posts),
+            created_date: response.created_date,
+            locked: response.locked
         }
     }
 }

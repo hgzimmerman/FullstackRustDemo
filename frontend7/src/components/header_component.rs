@@ -70,9 +70,9 @@ impl Renderable<Context, Header> for Header {
     fn view(&self) -> Html<Context, Self> {
 
         let link = |x: &HeaderLink| {
-            html! {
-            <Link<Route>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
-        }
+                html! {
+                <Link<Route>: name=&x.name, cb_value=&x.link, callback=|pv| Msg::CallLink(pv), classes="nav-link", />
+            }
         };
 
         html! {

@@ -238,19 +238,15 @@ impl Renderable<Context, Forum> for Forum {
 
 
         let inner_content = || match self.route {
-            ForumRoute::Forum => {
-                html! {
-                    <ul class=("forum-list"),>
-                        { for self.threads.iter().map(thread_element) }
-                    </ul>
-                }
-            }
-            ForumRoute::Thread(ref thread_route) => {
-                html! {
-                    <div>
-                        {thread_route.view()}
-                    </div>
-                }
+            ForumRoute::Forum => html! {
+                <ul class=("forum-list"),>
+                    { for self.threads.iter().map(thread_element) }
+                </ul>
+            },
+            ForumRoute::Thread(ref thread_route) => html! {
+                <div>
+                    {thread_route.view()}
+                </div>
             }
         };
 
@@ -264,8 +260,6 @@ impl Renderable<Context, Forum> for Forum {
                     {inner_content()}
                 </div>
             </div>
-
         }
-
     }
 }

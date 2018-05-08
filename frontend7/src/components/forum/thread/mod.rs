@@ -1,6 +1,7 @@
 
 pub mod thread_list_element;
 pub mod new_thread;
+pub mod thread;
 
 mod post;
 
@@ -15,6 +16,7 @@ use yew::services::route::RouteInfo;
 use yew::services::route::RouteSection;
 
 use forum::thread::new_thread::NewThread;
+use components::forum::thread::thread::Thread;
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -60,20 +62,16 @@ impl Renderable<Context, Forum> for ThreadRoute {
 
         use components::forum::forum::Msg::CreateThread;
         match *self {
-            ThreadRoute::CreateThread => {
-                html! {
+            ThreadRoute::CreateThread => html! {
                 <>
                     <NewThread: callback=|new_thread_data| CreateThread(new_thread_data), />
                 </>
-            }
-            }
-            ThreadRoute::Thread { thread_id } => {
-                html! {
+            },
+            ThreadRoute::Thread { thread_id } => html! {
                 <>
-//                    <Thread: />
-                    {"Inside of thread, a bunch of posts and stuff"}
+                    <Thread: thread_id=thread_id, />
+//                    {"Inside of thread, a bunch of posts and stuff"}
                 </>
-            }
             }
 
         }
