@@ -13,9 +13,8 @@ use components::forum::post_tree::PostTree;
 
 //use components::forum::thread::thread::Thread;
 
-mod forum_list_element;
 mod post_tree;
-mod thread_list_element;
+mod list_elements;
 mod new_thread;
 //pub mod forum_list;
 //mod forum;
@@ -37,9 +36,6 @@ use datatypes::thread::ThreadData;
 use datatypes::thread::MinimalThreadData;
 use datatypes::forum::ForumData;
 use datatypes::thread::NewThreadData;
-
-use components::forum::thread_list_element::ThreadListElement;
-use components::forum::forum_list_element::ForumListElement;
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -480,28 +476,20 @@ impl Component<Context> for ForumModel {
 impl Renderable<Context, ForumModel> for ForumModel {
     fn view(&self) -> Html<Context, ForumModel> {
 
-        fn forum_element_fn(x: &ForumData) -> Html<Context, ForumModel> {
-            html! {
-                <ForumListElement: forum_data=x, callback=|forum_data: ForumData| Msg::SetForum{forum_data},/>
-            }
-        };
+
         fn forum_list_fn(forums: &Vec<ForumData>) -> Html<Context, ForumModel> {
             html! {
                 <ul class=("forum-list"),>
-                    { for forums.iter().map(forum_element_fn) }
+                    { for forums.iter().map(ForumData::view) }
                 </ul>
             }
         };
 
-        fn thread_element_fn(x: &MinimalThreadData) -> Html<Context, ForumModel> {
-            html! {
-                <ThreadListElement: thread_data=x, callback=|td: MinimalThreadData| Msg::SetThread{thread_id: td.id}, />
-            }
-        };
+
         fn thread_list_fn(threads: &Vec<MinimalThreadData>) -> Html<Context, ForumModel> {
             html! {
                 <ul class=("forum-list"),>
-                    { for threads.iter().map(thread_element_fn) }
+                    { for threads.iter().map(MinimalThreadData::view) }
                 </ul>
             }
         };
@@ -510,7 +498,6 @@ impl Renderable<Context, ForumModel> for ForumModel {
             html! {
                 <div>
                     <PostTree: post=&thread.posts, />
-//                   <Thread: thread_data=thread, />
                 </div>
             }
         }
