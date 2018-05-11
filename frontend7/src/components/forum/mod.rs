@@ -8,11 +8,15 @@ use Model;
 //use forum::forum::Forum;
 
 //use forum::forum_list::ForumList;
-use components::forum::thread::new_thread::NewThread;
-use components::forum::thread::thread::Thread;
+use components::forum::new_thread::NewThread;
+use components::forum::post_tree::PostTree;
+
+//use components::forum::thread::thread::Thread;
 
 mod forum_list_element;
-mod thread;
+mod post_tree;
+mod thread_list_element;
+mod new_thread;
 //pub mod forum_list;
 //mod forum;
 
@@ -34,7 +38,7 @@ use datatypes::thread::MinimalThreadData;
 use datatypes::forum::ForumData;
 use datatypes::thread::NewThreadData;
 
-use components::forum::thread::thread_list_element::ThreadListElement;
+use components::forum::thread_list_element::ThreadListElement;
 use components::forum::forum_list_element::ForumListElement;
 
 
@@ -504,9 +508,10 @@ impl Renderable<Context, ForumModel> for ForumModel {
 
         fn thread_fn(thread: &ThreadData) -> Html<Context, ForumModel> {
             html! {
-                <>
-                   <Thread: thread_data=thread, />
-                </>
+                <div>
+                    <PostTree: post=&thread.posts, />
+//                   <Thread: thread_data=thread, />
+                </div>
             }
         }
         fn new_thread_fn(new_thread: &NewThreadData) -> Html<Context, ForumModel> {
