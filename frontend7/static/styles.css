@@ -15,12 +15,20 @@ body {
     display: flex;
     flex-direction: column;
 
-    min-height: inherit;
+    /*min-height: inherit;*/
     overflow: hidden;
 }
 
 .main-content {
     flex: 1;
+    overflow-y: hidden;
+}
+
+.no-scroll {
+    overflow-y: hidden;
+}
+
+.scrollable {
     overflow-y: auto;
 }
 /* Util */
@@ -102,6 +110,7 @@ button {
     margin: 0px;
     width: 100%;
     background-color: gray;
+    min-height: min-content;
     /*border-left: solid 1px black;
     border-right: solid 1px black; */
 }

@@ -44,26 +44,15 @@ impl From<MinimalThreadResponse> for MinimalThreadData {
 pub struct NewThreadData {
     pub title: String,
     pub post_content: String,
-    pub author_id: i32,
-    pub forum_id: i32
 }
-impl Into<NewThreadRequest> for NewThreadData {
-   fn into(self) -> NewThreadRequest {
-       NewThreadRequest {
-            forum_id: self.forum_id,
-            author_id: self.author_id,
-            title: self.title,
-            post_content: self.post_content,
-        }
-   }
-}
+
 impl NewThreadData {
-    pub fn attach_forum_id(self, forum_id: i32) -> NewThreadRequest {
+    pub fn attach_info(&self, forum_id: i32, user_id: i32) -> NewThreadRequest {
         NewThreadRequest {
             forum_id,
-            author_id: self.author_id,
-            title: self.title,
-            post_content: self.post_content,
+            author_id: user_id,
+            title: self.title.clone(),
+            post_content: self.post_content.clone(),
         }
     }
 }

@@ -21,7 +21,7 @@ use forum::ForumRoute;
 
 pub struct NewThread {
     new_thread: NewThreadData,
-    create_thread_ft: Option<FetchTask>
+    callback: Callback<NewThreadData>
 }
 
 
@@ -29,12 +29,12 @@ pub enum Msg {
     CreateNewThread,
     UpdatePostContent(String),
     UpdateThreadTitle(String),
-    NavigateToNewThread{new_thread_id: i32}
 }
 
 #[derive(Clone, PartialEq, Default)]
 pub struct Props {
-    pub new_thread: NewThreadData
+    pub new_thread: NewThreadData,
+    pub callback: Option<Callback<NewThreadData>>
 }
 
 
@@ -46,38 +46,14 @@ impl Component<Context> for NewThread {
 
         NewThread {
             new_thread: props.new_thread,
-            create_thread_ft: None
+            callback: props.callback.expect("Didn't have a callback")
         }
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
-            // Todo: maybe move the responsibility for uploading into the ForumModel
             Msg::CreateNewThread => {
-                if let Ok(user_id) = context.user_id() {
-
-                    let callback = context.send_back(
-                        |response: Response<Json<Result<ThreadResponse, Error>>>| {
-                            let (meta, Json(data)) = response.into_parts();
-                            println!("META: {:?}, {:?}", meta, data);
-                            let thread_data: ThreadData = data.unwrap().into();
-                            Msg::NavigateToNewThread{new_thread_id: thread_data.id}
-                        },
-                    );
-
-                    let new_thread_request: NewThreadRequest = self.new_thread.clone().into();
-
-                    let task = context.make_request(
-                        RequestWrapper::CreateThread(
-                            new_thread_request,
-                        ),
-                        callback,
-                    );
-                    self.create_thread_ft = task.ok();
-
-                } else {
-                    eprintln!("Couldn't get user id required for request")
-                }
+                self.callback.emit(self.new_thread.clone());
                 true
             }
             Msg::UpdateThreadTitle(title) => {
@@ -86,10 +62,6 @@ impl Component<Context> for NewThread {
             }
             Msg::UpdatePostContent(text) => {
                 self.new_thread.post_content = text;
-                true
-            }
-            Msg::NavigateToNewThread {new_thread_id} =>  {
-//                context.routing.set_route(Route::Forums(ForumRoute::Thread{forum_id: self.forum_id, thread_id: new_thread_id}));
                 true
             }
         }

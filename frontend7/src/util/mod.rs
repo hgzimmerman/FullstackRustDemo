@@ -96,6 +96,24 @@ impl <T> Uploadable<T> {
         }
     }
 
+    pub fn get_inner(&self) -> &T {
+        match self {
+            Uploadable::NotUploaded(ref t) => t,
+            Uploadable::Uploading(ref t, _) => t,
+        }
+    }
+
+    pub fn get_cloned_inner(&self) -> T where T: Clone {
+        self.get_inner().clone()
+    }
+}
+
+impl <T> Default for Uploadable<T>
+where T: Default
+{
+    fn default() -> Self {
+        Uploadable::NotUploaded(T::default())
+    }
 }
 
 #[derive(Clone, Debug)]

@@ -6,12 +6,10 @@ use yew::prelude::*;
 use Context;
 use Model;
 //use forum::forum::Forum;
-
-//use forum::forum_list::ForumList;
 use components::forum::new_thread::NewThread;
 use components::forum::post_tree::PostTree;
+use components::button::Button;
 
-//use components::forum::thread::thread::Thread;
 
 mod post_tree;
 mod list_elements;
@@ -20,6 +18,8 @@ mod new_thread;
 //mod forum;
 
 use util::Loadable;
+use util::Uploadable;
+
 use util::Either;
 use yew::format::Json;
 use yew::services::fetch::Response;
@@ -28,6 +28,7 @@ use failure::Error;
 use Route;
 
 use wire::thread::MinimalThreadResponse;
+use wire::thread::NewThreadRequest;
 use wire::forum::ForumResponse;
 use wire::thread::ThreadResponse;
 use context::networking::RequestWrapper;
@@ -116,11 +117,13 @@ pub enum Msg {
     ThreadsLoading(FetchTask),
     ThreadsFailed,
     ThreadReady(ThreadData),
+    NewThreadReady(ThreadData),
     ThreadFailed,
     ThreadLoading(FetchTask),
     SetCreateThread,
     SetThread{thread_id: i32},
-    SetForum{forum_data: ForumData}
+    SetForum{forum_data: ForumData},
+    PostNewThread{new_thread: NewThreadData}
 }
 
 #[derive(PartialEq, Debug, Clone, Default)]
@@ -133,7 +136,7 @@ pub struct ForumModel {
     route: ForumRoute,
     forums_or_selected_forum: Either<Loadable<Vec<ForumData>>, Loadable<ForumData>>,
     thread_list: Loadable<Vec<MinimalThreadData>>,
-    thread: Either<Loadable<ThreadData>, NewThreadData>
+    thread: Either<Loadable<ThreadData>, Uploadable<NewThreadData>>
 }
 
 
@@ -251,6 +254,41 @@ impl ForumModel {
         }
     }
 
+    fn upload_new_thread(new_thread: NewThreadData, forum_id: i32, context: &mut Env<Context, Self>) -> Uploadable<NewThreadData>
+    {
+        if let Ok(user_id) = context.user_id() {
+
+            let callback = context.send_back(
+                |response: Response<Json<Result<ThreadResponse, Error>>>| {
+                    let (meta, Json(data)) = response.into_parts();
+                    println!("META: {:?}, {:?}", meta, data);
+
+                    if meta.status.is_success() {
+                        Msg::NewThreadReady(data.expect("NewThread data is malformed").into())
+                    } else {
+                        Msg::ThreadFailed
+                    }
+                },
+            );
+
+            let new_thread_request: NewThreadRequest = new_thread.attach_info(forum_id, user_id);
+
+            let task = context.make_request(
+                RequestWrapper::CreateThread(
+                    new_thread_request,
+                ),
+                callback,
+            );
+            if let Ok(ft) = task {
+                Uploadable::Uploading(new_thread.clone(), ft)
+            } else {
+                Uploadable::NotUploaded(new_thread.clone())
+            }
+        } else {
+            Uploadable::NotUploaded(new_thread.clone())
+        }
+    }
+
 
     fn set_self(&mut self, other: ForumModel) {
         self.thread_list = other.thread_list;
@@ -301,7 +339,7 @@ impl Component<Context> for ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
                     thread_list,
-                    thread: Either::Right(NewThreadData::default())
+                    thread: Either::Right(Uploadable::default())
                 }
             }
         }
@@ -318,19 +356,24 @@ impl Component<Context> for ForumModel {
             Msg::ThreadsLoading(ft) => self.thread_list = Loadable::Loading(ft),
             Msg::ThreadsFailed => self.thread_list = Loadable::Failed(None),
             Msg::ThreadReady(thread) => {
-                context.log("Thread ready");
-
-                self.thread = Either::Left(Loadable::Loaded(thread))
+                let route = ForumRoute::Thread { forum_id: thread.forum_id, thread_id: thread.id};
+                context.routing.set_route(Route::Forums(route.clone()));
+                self.thread = Either::Left(Loadable::Loaded(thread));
             },
+            Msg::NewThreadReady(thread) => {
+                let route = ForumRoute::Thread { forum_id: thread.forum_id.clone(), thread_id: thread.id};
+                context.routing.set_route(Route::Forums(route.clone()));
+
+                self.forums_or_selected_forum = Self::get_forum(thread.forum_id, context); // Get the list of forums after the thread was loaded.
+                self.thread = Either::Left(Loadable::Loaded(thread));
+            }
             Msg::ThreadFailed => self.thread = Either::Left(Loadable::Failed(None)),
             Msg::ThreadLoading(ft) => self.thread = Either::Left(Loadable::Loading(ft)),
             Msg::SetCreateThread => {
                 if let Some(forum_id) = self.route.get_forum_id() {
-                let route = ForumRoute::CreateThread {forum_id};
-                context.routing.set_route(Route::Forums(route));
+                    let route = ForumRoute::CreateThread {forum_id};
+                    context.routing.set_route(Route::Forums(route));
                 }
-
-//                self.thread = Either::Right(Default::default())
             },
             Msg::SetThread {thread_id} => {
                 if let Some(forum_id) = self.route.get_forum_id() {
@@ -341,12 +384,14 @@ impl Component<Context> for ForumModel {
             },
             Msg::SetForum {forum_data} => {
                 let route = ForumRoute::Forum { forum_id: forum_data.id.clone() };
-
-//                self.forums_or_selected_forum = Either::Right(Loadable::Loaded(forum_data));
                 context.routing.set_route(Route::Forums(route));
-
             }
-        }
+            Msg::PostNewThread{new_thread} => {
+                if let Some(forum_id) = self.route.get_forum_id() {
+                    self.thread = Either::Right(Self::upload_new_thread(new_thread, forum_id, context))
+                }
+            }
+        };
         true
     }
 
@@ -463,7 +508,7 @@ impl Component<Context> for ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
                     thread_list,
-                    thread: Either::Right(NewThreadData::default())
+                    thread: Either::Right(Uploadable::default())
                 };
                 self.set_self(new_state);
                 true
@@ -504,16 +549,17 @@ impl Renderable<Context, ForumModel> for ForumModel {
         fn new_thread_fn(new_thread: &NewThreadData) -> Html<Context, ForumModel> {
             html! {
                 <>
-                    <NewThread: new_thread=new_thread, />
+                    <NewThread: new_thread=new_thread, callback=|nt| Msg::PostNewThread{new_thread: nt}, />
                 </>
             }
         }
 
         fn forum_title(forum_data: &ForumData) -> Html<Context,ForumModel> {
             html! {
-                <>
+                <div>
                     {&forum_data.title}
-                </>
+                    <Button: title="Create New Thread", onclick=|_| Msg::SetCreateThread, />
+                </div>
             }
         }
 
@@ -526,19 +572,19 @@ impl Renderable<Context, ForumModel> for ForumModel {
                 </div>
             },
             Either::Right(ref selected_forum) =>  html!{
-                <div class=("flexbox-vert","full-height"),>
+                <div class=("flexbox-vert","full-height", "no-scroll"),>
                     <div class="forum-title",>
                         {selected_forum.default_view(forum_title)}
                     </div>
-                    <div class=("flexbox-horiz", "full-height"), > // Horizontal boi
-                        <div class=("vertical-expand", "list-background", "forum-list-width"),> // Vertical boi 1
+                    <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal boi
+                        <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical boi 1
                            {self.thread_list.default_view(thread_list_fn)}
                         </div>
-                        <div class=("vertical-expand", "full-width" ),> // Vertical boi 2
+                        <div class=("vertical-expand", "full-width", "scrollable" ),> // Vertical boi 2
                             {
                                 match self.thread {
                                     Either::Left(ref thread) => thread.default_view(thread_fn),
-                                    Either::Right(ref new_thread) => new_thread_fn(new_thread)
+                                    Either::Right(ref new_thread) => new_thread.default_view(new_thread_fn)
                                 }
                             }
                         </div>
