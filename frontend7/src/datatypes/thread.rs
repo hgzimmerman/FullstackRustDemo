@@ -40,12 +40,24 @@ impl From<MinimalThreadResponse> for MinimalThreadData {
     }
 }
 
-pub struct PartialNewThreadData {
+#[derive(Default, Debug, PartialEq, Clone)]
+pub struct NewThreadData {
     pub title: String,
     pub post_content: String,
     pub author_id: i32,
+    pub forum_id: i32
 }
-impl PartialNewThreadData {
+impl Into<NewThreadRequest> for NewThreadData {
+   fn into(self) -> NewThreadRequest {
+       NewThreadRequest {
+            forum_id: self.forum_id,
+            author_id: self.author_id,
+            title: self.title,
+            post_content: self.post_content,
+        }
+   }
+}
+impl NewThreadData {
     pub fn attach_forum_id(self, forum_id: i32) -> NewThreadRequest {
         NewThreadRequest {
             forum_id,
@@ -56,9 +68,10 @@ impl PartialNewThreadData {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ThreadData {
     pub id: i32,
+    pub forum_id: i32,
     pub title: String,
     pub author: UserData,
     pub posts: PostData,
@@ -69,6 +82,7 @@ impl From<ThreadResponse> for ThreadData {
     fn from(response: ThreadResponse) -> Self {
         ThreadData {
             id: response.id,
+            forum_id: response.forum_id,
             title: response.title,
             author: UserData::from(response.author),
             posts: PostData::from(response.posts),

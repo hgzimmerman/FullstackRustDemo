@@ -23,6 +23,22 @@ body {
     flex: 1;
     overflow-y: auto;
 }
+/* Util */
+.flexbox-horiz {
+    display: flex;
+    flex-direction: row;
+}
+.flexbox-vert {
+    display: flex;
+    flex-direction: column;
+}
+
+.full-height {
+    height: 100%
+}
+.full-width {
+    width: 100%
+}
 
 /* Misc */
 
@@ -47,6 +63,9 @@ button {
    border: 1px solid transparent;
 }
 
+.list-background {
+    background-color: oldlace;
+}
 
 /* Header */
 .header {
@@ -100,15 +119,19 @@ button {
 }
 
 .forum-list-element:hover{
-   box-shadow: 0px 3px 3px gray;
+   box-shadow: 0 3px 3px gray;
    position: relative;
+}
+
+.forum-list-width {
+    width: 400px
 }
 
 .forum-title {
     width: 100%;
     background-color: gray;
-    font-size: 22pt;
-    height: 50px;
+    font-size: 20pt;
+    height: 40px;
 }
 
 .forum-title-span {
@@ -127,6 +150,21 @@ button {
     display: flex;
     flex-direction: column;
     background: sepia;
+}
+
+.post-card {
+    min-height: 35px;
+    border-radius: 4px;
+    background-color: seashell;
+    padding: 10px;
+}
+
+.post-info {
+    font-size: small;
+}
+
+.post-left-pad {
+    margin-left: 10px;
 }
 
 .centered {
@@ -151,8 +189,8 @@ button {
     max-width: 100%;
     min-height: 200px;
     min-width: 100%;
-    padding: 10px;
-    margin: 0;
+    /*margin: 10px;*/
+    /*margin: 0;*/
 }
 .form-control {
     display: block;
@@ -202,3 +240,5 @@ button {
 .border-right {
     border-right: 2px solid black;
 }
+
+

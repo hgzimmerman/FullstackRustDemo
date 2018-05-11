@@ -16,6 +16,7 @@ pub struct NewThreadRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ThreadResponse {
     pub id: i32,
+    pub forum_id: i32,
     pub title: String,
     pub author: UserResponse,
     pub posts: PostResponse,

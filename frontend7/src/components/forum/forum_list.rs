@@ -16,7 +16,6 @@ use yew::services::fetch::FetchTask;
 use failure::Error;
 use Route;
 use forum::ForumRoute;
-use forum::forum::ForumRoute as InnerForumRoute;
 
 
 pub struct ForumList {
@@ -71,10 +70,9 @@ impl Component<Context> for ForumList {
             Msg::NavigateToSpecificForum(forum_data) => {
                 context.routing.set_route(
                     Route::Forums(
-                        ForumRoute::Forum(
-                            forum_data.id,
-                            InnerForumRoute::Forum,
-                        ),
+                        ForumRoute::Forum{
+                            forum_id: forum_data.id,
+                        },
                     ),
                 );
                 false
@@ -96,6 +94,8 @@ impl Renderable<Context, ForumList> for ForumList {
                 <ForumListElement: forum_data=x, callback=|fd| Msg::NavigateToSpecificForum(fd),/>
             }
         };
+
+
 
         html!{
             <div class="vertical-flexbox", >

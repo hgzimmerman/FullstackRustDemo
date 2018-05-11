@@ -21,6 +21,7 @@ impl From<ThreadData> for ThreadResponse {
     fn from(data: ThreadData) -> ThreadResponse {
         ThreadResponse {
             id: data.thread.id,
+            forum_id: data.thread.forum_id,
             title: data.thread.title,
             author: data.user.into(),
             posts: data.post.into(),

@@ -32,6 +32,8 @@ use components::*;
 mod context;
 pub use context::Context;
 
+mod util;
+
 
 use yew::services::route::*;
 
@@ -40,6 +42,7 @@ use components::auth::AuthRoute;
 use components::forum::ForumRoute;
 use components::auth::Auth;
 use components::header_component::*;
+use components::forum::ForumModel;
 
 
 #[derive(Clone, PartialEq, Debug)]
@@ -109,7 +112,7 @@ impl From<RouteResult> for Msg {
 
 impl Default for Route {
     fn default() -> Self {
-        Route::Forums(ForumRoute::List)
+        Route::Forums(ForumRoute::ForumList)
     }
 }
 
@@ -178,7 +181,7 @@ impl Renderable<Context, Model> for Model {
             Route::Forums(ref forum_list_route) => {
                 html! {
                         <>
-                            {forum_list_route.view() }
+                            <ForumModel: route=forum_list_route, />
                         </>
                     }
             }
@@ -194,7 +197,7 @@ impl Renderable<Context, Model> for Model {
         let header_links = vec![
             HeaderLink {
                 name: "Forum".into(),
-                link: Route::Forums(ForumRoute::List),
+                link: Route::Forums(ForumRoute::ForumList),
             },
             HeaderLink {
                 name: "Login".into(),

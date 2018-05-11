@@ -10,12 +10,18 @@ use datatypes::forum::ForumData;
 use failure::Error;
 
 use context::networking::*;
-use datatypes::thread::PartialNewThreadData;
+use datatypes::thread::NewThreadData;
+use datatypes::thread::ThreadData;
+use yew::format::Json;
+use yew::services::fetch::Response;
+use yew::services::fetch::FetchTask;
+use Route;
+use forum::ForumRoute;
+
 
 pub struct NewThread {
-    title: String,
-    post_content: String,
-    callback: Option<Callback<PartialNewThreadData>>,
+    new_thread: NewThreadData,
+    create_thread_ft: Option<FetchTask>
 }
 
 
@@ -23,18 +29,14 @@ pub enum Msg {
     CreateNewThread,
     UpdatePostContent(String),
     UpdateThreadTitle(String),
+    NavigateToNewThread{new_thread_id: i32}
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Default)]
 pub struct Props {
-    pub callback: Option<Callback<PartialNewThreadData>>,
+    pub new_thread: NewThreadData
 }
 
-impl Default for Props {
-    fn default() -> Self {
-        Props { callback: None }
-    }
-}
 
 impl Component<Context> for NewThread {
     type Msg = Msg;
@@ -43,40 +45,51 @@ impl Component<Context> for NewThread {
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
         NewThread {
-            title: String::default(),
-            post_content: String::default(),
-            callback: props.callback,
+            new_thread: props.new_thread,
+            create_thread_ft: None
         }
     }
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
+            // Todo: maybe move the responsibility for uploading into the ForumModel
             Msg::CreateNewThread => {
                 if let Ok(user_id) = context.user_id() {
-                    let new_thread_data = PartialNewThreadData {
-                        author_id: user_id,
-                        title: self.title.clone(),
-                        post_content: self.post_content.clone(),
-                    };
 
+                    let callback = context.send_back(
+                        |response: Response<Json<Result<ThreadResponse, Error>>>| {
+                            let (meta, Json(data)) = response.into_parts();
+                            println!("META: {:?}, {:?}", meta, data);
+                            let thread_data: ThreadData = data.unwrap().into();
+                            Msg::NavigateToNewThread{new_thread_id: thread_data.id}
+                        },
+                    );
 
-                    // TODO: Redirect to login on error
+                    let new_thread_request: NewThreadRequest = self.new_thread.clone().into();
 
+                    let task = context.make_request(
+                        RequestWrapper::CreateThread(
+                            new_thread_request,
+                        ),
+                        callback,
+                    );
+                    self.create_thread_ft = task.ok();
 
-                    if let Some(ref cb) = self.callback {
-                        cb.emit((new_thread_data));
-                    }
                 } else {
                     eprintln!("Couldn't get user id required for request")
                 }
-                false
+                true
             }
             Msg::UpdateThreadTitle(title) => {
-                self.title = title;
+                self.new_thread.title = title;
                 true
             }
             Msg::UpdatePostContent(text) => {
-                self.post_content = text;
+                self.new_thread.post_content = text;
+                true
+            }
+            Msg::NavigateToNewThread {new_thread_id} =>  {
+//                context.routing.set_route(Route::Forums(ForumRoute::Thread{forum_id: self.forum_id, thread_id: new_thread_id}));
                 true
             }
         }
@@ -96,7 +109,7 @@ impl Renderable<Context, NewThread> for NewThread {
                     class="form-control",
                 //    disabled=self.disabled,
                     placeholder="Thread Title",
-                    value=&self.title,
+                    value=&self.new_thread.title,
                     oninput=|e: InputData| Msg::UpdateThreadTitle(e.value),
 //                    onkeypress=|e: KeyData| {
 //                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
