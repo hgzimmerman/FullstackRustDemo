@@ -142,7 +142,7 @@ pub struct ForumModel {
 
 impl ForumModel {
     fn get_forum_list(context: &mut Env<Context, Self>) -> Either<Loadable<Vec<ForumData>>, Loadable<ForumData>> {
-                let callback = context.send_back(
+        let callback = context.send_back(
             |response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
@@ -542,7 +542,7 @@ impl Renderable<Context, ForumModel> for ForumModel {
         fn thread_fn(thread: &ThreadData) -> Html<Context, ForumModel> {
             html! {
                 <div>
-                    <PostTree: post=&thread.posts, />
+                    <PostTree: post=&thread.posts, thread_id=thread.id, />
                 </div>
             }
         }

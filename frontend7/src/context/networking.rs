@@ -8,6 +8,7 @@ use yew::callback::Callback;
 use wire::user::*;
 use wire::thread::*;
 use wire::login::*;
+use wire::post::*;
 use failure::Error;
 use serde_json;
 use serde::Serialize;
@@ -28,7 +29,8 @@ pub enum RequestWrapper {
     GetThreads { forum_id: i32, page_index: usize },
     GetForums,
     GetForum { forum_id: i32 },
-    GetThread { thread_id: i32 }
+    GetThread { thread_id: i32 },
+    CreatePostResponse(NewPostRequest)
 }
 
 impl RequestWrapper {
@@ -46,7 +48,8 @@ impl RequestWrapper {
             } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
             GetForums => format!("{}/forum/forums", api_base),
             GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id),
-            GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id)
+            GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id),
+            CreatePostResponse(_) => format!("{}/post/create", api_base),
         }
     }
 }
@@ -111,6 +114,14 @@ impl Context {
                 let request = self.prepare_get_request(
                     url,
                     Auth::NotRequired,
+                )?;
+                Ok(self.networking.fetch(request, callback))
+            },
+            CreatePostResponse(ref r) => {
+                let request = self.prepare_post_request(
+                    r,
+                    url,
+                    Auth::Required
                 )?;
                 Ok(self.networking.fetch(request, callback))
             }
