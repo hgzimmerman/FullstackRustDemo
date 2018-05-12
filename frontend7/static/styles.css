@@ -123,6 +123,10 @@ button {
     background-color: lightgray;
     transition: all .3s ease-out;
 }
+.list-element-selected {
+    background-color: white;
+}
+
 .forum-list-element:last-child {
     border-bottom: solid 1px black;
 }

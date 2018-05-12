@@ -6,6 +6,7 @@ use datatypes::thread::MinimalThreadData;
 use components::link::Link;
 
 use components::forum::ForumModel;
+use datatypes::thread::SelectableMinimalThreadData;
 
 impl Renderable<Context, ForumModel> for ForumData {
    fn view(&self) -> Html<Context, ForumModel> {
@@ -22,17 +23,35 @@ impl Renderable<Context, ForumModel> for ForumData {
    }
 }
 
-impl Renderable<Context, ForumModel> for MinimalThreadData {
+impl Renderable<Context, ForumModel> for SelectableMinimalThreadData {
    fn view(&self) -> Html<Context, ForumModel> {
-        html! {
-            <li class="forum-list-element",>
-                <div>
-                    <Link<i32>: name=&self.title, cb_value=self.id, callback=|id| super::Msg::SetThread {thread_id: id}, classes="forum-link", />
-                </div>
-                <div>
-                    {format!("By: {}", &self.author.display_name)}
-                </div>
-            </li>
-        }
+
+       fn element_internals(minimal_thread_data: &MinimalThreadData) -> Html<Context,ForumModel> {
+           html! {
+               <>
+                   <div>
+                        <Link<i32>: name=&minimal_thread_data.title, cb_value=minimal_thread_data.id, callback=|id| super::Msg::SetThread {thread_id: id}, classes="forum-link", />
+                   </div>
+                   <div>
+                        {format!("By: {}", minimal_thread_data.author.display_name)}
+                   </div>
+               </>
+           }
+
+       }
+       if !self.is_selected {
+           html! {
+                <li class="forum-list-element",>
+                    {element_internals(&self.minimal_thread_data)}
+                </li>
+           }
+       } else {
+           html! {
+                <li class=("forum-list-element","list-element-selected"),>
+                    {element_internals(&self.minimal_thread_data)}
+                </li>
+           }
+       }
+
    }
 }

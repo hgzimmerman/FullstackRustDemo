@@ -80,3 +80,23 @@ impl From<ThreadResponse> for ThreadData {
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct SelectableMinimalThreadData {
+    pub minimal_thread_data: MinimalThreadData,
+    pub is_selected: bool
+}
+impl From<MinimalThreadData> for SelectableMinimalThreadData {
+    fn from(minimal_thread_data: MinimalThreadData) -> Self {
+        SelectableMinimalThreadData {
+            minimal_thread_data,
+            is_selected: false
+        }
+    }
+}
+
+impl Into<MinimalThreadData> for SelectableMinimalThreadData {
+    fn into(self) -> MinimalThreadData {
+        self.minimal_thread_data
+    }
+}

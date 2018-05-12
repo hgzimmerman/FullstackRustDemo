@@ -37,6 +37,7 @@ use datatypes::thread::ThreadData;
 use datatypes::thread::MinimalThreadData;
 use datatypes::forum::ForumData;
 use datatypes::thread::NewThreadData;
+use datatypes::thread::SelectableMinimalThreadData;
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -113,7 +114,7 @@ pub enum Msg {
     ForumReady(ForumData),
     ForumLoading(FetchTask),
     ForumFailed,
-    ThreadsReady(Vec<MinimalThreadData>),
+    ThreadsReady(Vec<SelectableMinimalThreadData>),
     ThreadsLoading(FetchTask),
     ThreadsFailed,
     ThreadReady(ThreadData),
@@ -135,7 +136,7 @@ pub struct Props {
 pub struct ForumModel {
     route: ForumRoute,
     forums_or_selected_forum: Either<Loadable<Vec<ForumData>>, Loadable<ForumData>>,
-    thread_list: Loadable<Vec<MinimalThreadData>>,
+    thread_list: Loadable<Vec<SelectableMinimalThreadData>>,
     thread: Either<Loadable<ThreadData>, Uploadable<NewThreadData>>
 }
 
@@ -195,7 +196,7 @@ impl ForumModel {
 
     }
 
-    fn get_threads(forum_id: i32, context: &mut Env<Context, Self>) -> Loadable<Vec<MinimalThreadData>> {
+    fn get_threads(forum_id: i32, context: &mut Env<Context, Self>) -> Loadable<Vec<SelectableMinimalThreadData>> {
         let threads_callback = context.send_back(
             |response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -205,6 +206,7 @@ impl ForumModel {
                         data.unwrap()
                             .into_iter()
                             .map(MinimalThreadData::from)
+                            .map(SelectableMinimalThreadData::from)
                             .collect(),
                     )
                 } else {
@@ -296,6 +298,37 @@ impl ForumModel {
         self.forums_or_selected_forum = other.forums_or_selected_forum;
         self.route = other.route;
     }
+
+    fn select_thread_in_list(&mut self) {
+        if let Loadable::Loaded(ref mut thread_list) = self.thread_list {
+            if let Either::Left(Loadable::Loaded(ref mut selected_thread)) = self.thread {
+                 *thread_list = thread_list
+                     .iter()
+                     .cloned()
+                     .map(|x: SelectableMinimalThreadData| {
+                         let mut replacement = x.clone();
+                         if x.minimal_thread_data.id == selected_thread.id {
+                             replacement.is_selected = true;
+                         } else {
+                             replacement.is_selected = false;
+                         }
+                         replacement
+                     })
+                     .collect();
+            } else {
+                *thread_list = thread_list
+                    .iter()
+                    .cloned()
+                    .map(|x: SelectableMinimalThreadData| {
+                        SelectableMinimalThreadData {
+                            is_selected: false,
+                            ..x
+                        }
+                    })
+                    .collect()
+            }
+        }
+    }
 }
 
 
@@ -359,6 +392,7 @@ impl Component<Context> for ForumModel {
                 let route = ForumRoute::Thread { forum_id: thread.forum_id, thread_id: thread.id};
                 context.routing.set_route(Route::Forums(route.clone()));
                 self.thread = Either::Left(Loadable::Loaded(thread));
+                self.select_thread_in_list();
             },
             Msg::NewThreadReady(thread) => {
                 let route = ForumRoute::Thread { forum_id: thread.forum_id.clone(), thread_id: thread.id};
@@ -366,8 +400,12 @@ impl Component<Context> for ForumModel {
 
                 self.forums_or_selected_forum = Self::get_forum(thread.forum_id, context); // Get the list of forums after the thread was loaded.
                 self.thread = Either::Left(Loadable::Loaded(thread));
+                self.select_thread_in_list();
             }
-            Msg::ThreadFailed => self.thread = Either::Left(Loadable::Failed(None)),
+            Msg::ThreadFailed => {
+                self.thread = Either::Left(Loadable::Failed(None));
+                self.select_thread_in_list();
+            },
             Msg::ThreadLoading(ft) => self.thread = Either::Left(Loadable::Loading(ft)),
             Msg::SetCreateThread => {
                 if let Some(forum_id) = self.route.get_forum_id() {
@@ -380,7 +418,7 @@ impl Component<Context> for ForumModel {
                     let route = ForumRoute::Thread { forum_id, thread_id};
                     context.routing.set_route(Route::Forums(route.clone()));
                 }
-                self.thread = Either::Left(Self::get_thread(thread_id, context))
+                self.thread = Either::Left(Self::get_thread(thread_id, context));
             },
             Msg::SetForum {forum_data} => {
                 let route = ForumRoute::Forum { forum_id: forum_data.id.clone() };
@@ -514,6 +552,7 @@ impl Component<Context> for ForumModel {
                 true
             }
         };
+        self.select_thread_in_list(); // Make UI change
         self.route = cloned_route; // Set this here, in case it was forgotten earlier.
         should_render
     }
@@ -531,10 +570,10 @@ impl Renderable<Context, ForumModel> for ForumModel {
         };
 
 
-        fn thread_list_fn(threads: &Vec<MinimalThreadData>) -> Html<Context, ForumModel> {
+        fn thread_list_fn(threads: &Vec<SelectableMinimalThreadData>) -> Html<Context, ForumModel> {
             html! {
                 <ul class=("forum-list"),>
-                    { for threads.iter().map(MinimalThreadData::view) }
+                    { for threads.iter().map(SelectableMinimalThreadData::view) }
                 </ul>
             }
         };
