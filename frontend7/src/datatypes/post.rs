@@ -32,3 +32,11 @@ impl From<PostResponse> for PostData {
         }
     }
 }
+
+impl PostData {
+    pub fn merge_childless(&mut self, other: PostData) {
+        self.content = other.content;
+        self.modified_date = other.modified_date;
+        self.author = other.author; // There is a very remote chance that user related data changed between updates
+    }
+}

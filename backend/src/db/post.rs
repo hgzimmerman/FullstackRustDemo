@@ -11,6 +11,7 @@ use diesel::ExpressionMethods;
 use diesel::BelongingToDsl;
 use diesel::QueryDsl;
 use error::JoeResult;
+use diesel::SaveChangesDsl;
 
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
@@ -49,7 +50,7 @@ pub struct NewPost {
     pub censored: bool,
 }
 
-#[derive(Serialize, Deserialize, AsChangeset, Debug)]
+#[derive(Serialize, Deserialize, AsChangeset, Debug, Identifiable)]
 #[table_name = "posts"]
 pub struct EditPostChangeset {
     pub id: i32,
@@ -80,9 +81,9 @@ impl Post {
             return Err(WeekendAtJoesError::ThreadLocked);
         }
 
-        let modified_post: Post = diesel::update(posts::table)
-            .set(&edit_post_changeset)
-            .get_result(conn.deref())
+
+        let modified_post: Post = edit_post_changeset
+            .save_changes(conn.deref())
             .map_err(Post::handle_error)?;
         let user = User::get_by_id(modified_post.author_id, conn)?;
         Ok(ChildlessPostData {

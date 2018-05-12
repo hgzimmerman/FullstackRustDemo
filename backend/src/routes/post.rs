@@ -31,6 +31,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 /// This edits posts.
 /// This operation is available to users.
 /// This will only work if the user is the author of the post.
+/// The returned PostResponse will not have children and therefore the client must merge the new data.
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
