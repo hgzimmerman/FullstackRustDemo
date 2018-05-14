@@ -165,16 +165,14 @@ impl Component<Context> for PostTree {
                             }
                         },
                     );
-                    if let Ok(user_id) = context.user_id() {
-                         let post_edit = EditPostRequest {
-                             id: self.post.id,
-                             thread_id: self.thread_id,
-                             content: edit_text.clone(),
-                         };
-
-                        let task = context.make_request(RequestWrapper::UpdatePost(post_edit), callback);
-                        self.ft = task.ok() // This will cancel a reply if a reply post is active.
+                    let post_edit = EditPostRequest {
+                        id: self.post.id,
+                        thread_id: self.thread_id,
+                        content: edit_text.clone(),
                     };
+
+                    let task = context.make_request(RequestWrapper::UpdatePost(post_edit), callback);
+                    self.ft = task.ok() // This will cancel a reply if a reply post is active.
                 }
                 true
             }
@@ -192,7 +190,7 @@ impl Component<Context> for PostTree {
 
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
         true
     }
 }

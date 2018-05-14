@@ -9,6 +9,9 @@ use wire::user::*;
 
 use context::networking::*;
 
+use Route;
+use super::AuthRoute;
+
 pub enum Msg {
     UpdatePassword(String),
     UpdateConfirmPassword(String),
@@ -16,6 +19,7 @@ pub enum Msg {
     UpdateDisplayName(String),
     Submit,
     NoOp,
+    AccountCreationSucceeded
 }
 
 pub struct CreateAccount {
@@ -44,7 +48,7 @@ impl Component<Context> for CreateAccount {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(_: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
         //        context.routing.set_route("/auth/create");
         //        println!("location: {}",context.routing.get_location());
 
@@ -65,9 +69,14 @@ impl Component<Context> for CreateAccount {
 //                println!("Logging in with user name: {}", self.user_name);
                 let callback = context.send_back(
                     |response: Response<Json<Result<String, Error>>>| {
-                        let (meta, Json(data)) = response.into_parts();
+                        let (meta, Json(_data)) = response.into_parts();
 //                        println!("META: {:?}, {:?}", meta, data);
-                        Msg::NoOp
+
+                        if meta.status.is_success() {
+                            Msg::AccountCreationSucceeded
+                        } else {
+                            Msg::NoOp
+                        }
                     },
                 );
                 let new_user_request = NewUserRequest {
@@ -101,6 +110,10 @@ impl Component<Context> for CreateAccount {
             Msg::UpdateDisplayName(u) => {
                 self.display_name = u;
                 true
+            }
+            Msg::AccountCreationSucceeded => {
+                context.routing.set_route(Route::Auth(AuthRoute::Login)); // navigate back to login page
+                false
             }
             Msg::NoOp => false,
         }

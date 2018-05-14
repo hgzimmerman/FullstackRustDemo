@@ -41,7 +41,7 @@ impl Component<Context> for Header {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
         Header {
             links: props.links,
 //            callback: props.callback

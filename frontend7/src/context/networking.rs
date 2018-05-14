@@ -25,6 +25,7 @@ enum HttpMethod {
     Get,
     Post(String),
     Put(String),
+    #[allow(dead_code)]
     Delete
 }
 

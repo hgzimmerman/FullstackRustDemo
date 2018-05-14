@@ -95,18 +95,17 @@ impl Context {
     }
 
     pub fn has_token_expired(&mut self) -> bool {
-        /*match self.user_auth_expire_date() {
-            Ok(expire_date) => {
-                let now = Utc::now().naive_utc();
-                if expire_date < now { true } else { false }
-            }
-            Err(e) => {
-                eprintln!("Indicating token has expired for an error: {}", e);
+        match self.user_auth_expire_date() {
+            Ok(_expire_date) => {
+                false // TODO impl me
+            } Err(_e) => {
                 true
             }
-        }*/
+        }
+//                let now = Utc::now().naive_utc();
+//                if expire_date < now { true } else { false }
+
         // TODO, handle dates intelligently in frontend.
-        false
 
     }
 }

@@ -68,9 +68,13 @@ impl Component<Context> for Login {
                     |response: Response<Result<String, Error>>| {
                         let (meta, jwt) = response.into_parts();
 //                        println!("META: {:?}, JWT: {:?}", meta, jwt);
-                        if let Ok(j) = jwt {
-                            // TODO This Result doesn't appear to indicate for errors, use meta instead
-                            Msg::LoginSuccess(j)
+
+                        if meta.status.is_success() {
+                            if let Ok(j) = jwt {
+                                Msg::LoginSuccess(j)
+                            } else {
+                                Msg::LoginError
+                            }
                         } else {
                             Msg::LoginError
                         }

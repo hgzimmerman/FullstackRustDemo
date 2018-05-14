@@ -102,7 +102,7 @@ impl From<RouteResult> for Msg {
     fn from(result: RouteResult) -> Self {
         match result {
             Ok(mut route_info) => Msg::Navigate(Route::from_route_main(&mut route_info)),
-            Err(e) => {
+            Err(_e) => {
 //                eprintln!("Couldn't route: {:?}", e);
                 Msg::Navigate(Route::PageNotFound)
             }

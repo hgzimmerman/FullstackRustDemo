@@ -4,7 +4,7 @@ use yew::html::Renderable;
 use yew::prelude::*;
 
 use Context;
-use Model;
+//use Model;
 //use forum::forum::Forum;
 use components::forum::new_thread::NewThread;
 use components::forum::post_tree::PostTree;
@@ -20,10 +20,10 @@ mod new_thread;
 use util::Loadable;
 use util::Uploadable;
 
-use util::Either;
+//use util::Either;
 use yew::format::Json;
 use yew::services::fetch::Response;
-use yew::services::fetch::FetchTask;
+//use yew::services::fetch::FetchTask;
 use failure::Error;
 use Route;
 
@@ -112,15 +112,12 @@ pub enum Msg {
     ForumsReady(Vec<ForumData>),
     ForumsFailed,
     ForumReady(ForumData),
-    ForumLoading(FetchTask),
     ForumFailed,
     ThreadsReady(Vec<SelectableMinimalThreadData>),
-    ThreadsLoading(FetchTask),
     ThreadsFailed,
     ThreadReady(ThreadData),
     NewThreadReady(ThreadData),
     ThreadFailed,
-    ThreadLoading(FetchTask),
     SetCreateThread,
     SetThread{thread_id: i32},
     SetForum{forum_data: ForumData},
@@ -132,7 +129,7 @@ pub struct Props {
     pub route: ForumRoute
 }
 
-//#[derive(Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum ForumsOrForum {
     Forums(Loadable<Vec<ForumData>>),
     Forum { forum: Loadable<ForumData>, threads: Loadable<Vec<SelectableMinimalThreadData>> }
@@ -157,9 +154,8 @@ impl Default for ThreadOrNewThread {
 #[derive(Default)]
 pub struct ForumModel {
     route: ForumRoute, // TODO, Should I need to store this? I should be able to reconstruct it from the internal types
-    forums_or_selected_forum: ForumsOrForum,//Either<Loadable<Vec<ForumData>>, Loadable<ForumData>>,
-//    thread_list: Loadable<Vec<SelectableMinimalThreadData>>,
-    thread: ThreadOrNewThread //Either<Loadable<ThreadData>, Uploadable<NewThreadData>>
+    forums_or_selected_forum: ForumsOrForum,
+    thread: ThreadOrNewThread
 }
 
 
@@ -412,16 +408,6 @@ impl Component<Context> for ForumModel {
                     }
                 }
             },
-            Msg::ForumLoading(ft) => {
-                if let ForumsOrForum::Forum{ref mut forum, ..} = self.forums_or_selected_forum {
-                   *forum = Loadable::Loading(ft);
-                } else {
-                    self.forums_or_selected_forum = ForumsOrForum::Forum {
-                        forum: Loadable::Loading(ft),
-                        threads: Loadable::Unloaded
-                    }
-                }
-            },
             Msg::ForumFailed => {
                 if let ForumsOrForum::Forum{ ref mut forum, ..} = self.forums_or_selected_forum {
                    *forum = Loadable::Failed(None);
@@ -442,16 +428,6 @@ impl Component<Context> for ForumModel {
                     }
                 }
             },
-            Msg::ThreadsLoading(ft) =>{
-                if let ForumsOrForum::Forum{ ref mut threads, ..} = self.forums_or_selected_forum {
-                   *threads = Loadable::Loading(ft);
-                } else {
-                    self.forums_or_selected_forum = ForumsOrForum::Forum {
-                        forum: Loadable::Unloaded,
-                        threads: Loadable::Loading(ft)
-                    }
-                }
-            }
             Msg::ThreadsFailed => {
                 if let ForumsOrForum::Forum{ ref mut threads, ..} = self.forums_or_selected_forum {
                    *threads = Loadable::Failed(None)
@@ -487,7 +463,6 @@ impl Component<Context> for ForumModel {
                 self.thread = ThreadOrNewThread::Thread(Loadable::Failed(None));
                 self.select_thread_in_list();
             },
-            Msg::ThreadLoading(ft) => self.thread = ThreadOrNewThread::Thread(Loadable::Loading(ft)),
             Msg::SetCreateThread => {
                 if let Some(forum_id) = self.route.get_forum_id() {
                     let route = ForumRoute::CreateThread {forum_id};
@@ -587,57 +562,6 @@ impl Component<Context> for ForumModel {
         };
         true;
 
-
-
-//        match props.route.clone() {
-//            ForumRoute::ForumList => {
-//                let forums_or_selected_forum = Self::get_forum_list(context);
-//                let new_state = ForumModel {
-//                    route: props.route,
-//                    forums_or_selected_forum,
-//                    ..Default::default()
-//                };
-//                self.set_self(new_state);
-//                true
-//            }
-//            ForumRoute::Forum { forum_id } => {
-//                let mut refresh_forums_needed = true;
-//                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
-//                    if forum_id == forum_data.id {
-//                        refresh_forums_needed = false;
-//                    }
-//                }
-//
-//                let forums_or_selected_forum = if refresh_forums_needed {
-//                    Self::get_forum(forum_id, context)
-//                } else {
-//                    self.forums_or_selected_forum.clone()
-//                };
-//                let new_state = ForumModel {
-//                    route: props.route,
-//                    forums_or_selected_forum,
-//                    thread_list: Self::get_threads(forum_id, context),
-//                    ..Default::default()
-//                };
-//                self.set_self(new_state);
-//                context.log(&format!("Setting forum- route: {:?}", self.route));
-//                true
-//            }
-//            ForumRoute::Thread { forum_id, thread_id } => {
-//                context.log("Thread (new)");
-//
-//            }
-//            ForumRoute::CreateThread { forum_id } => {
-//                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
-//                    if forum_id == forum_data.id {
-//                        self.forums_or_selected_forum = Self::get_forum(forum_id, context);
-//                        self.thread_list = Self::get_threads(forum_id, context);
-//                    }
-//                }
-//
-//            }
-//        };
-        self.select_thread_in_list(); // Mark association between thread and its element in list.
         self.route = props.route; // Set this here, in case it was forgotten earlier.
         true
     }
@@ -680,42 +604,52 @@ impl Renderable<Context, ForumModel> for ForumModel {
 
         fn forum_title(forum_data: &ForumData) -> Html<Context,ForumModel> {
             html! {
-                <div>
+                <div class=("flexbox-horiz"),>
                     {&forum_data.title}
                     <Button: title="Create New Thread", onclick=|_| Msg::SetCreateThread, />
                 </div>
             }
         }
-
-        match self.forums_or_selected_forum {
-            ForumsOrForum::Forums(ref forums) => html! {
-                <div>
-                    <div>
-                        {forums.default_view(forum_list_fn)}
-                    </div>
-                </div>
-            },
-            ForumsOrForum::Forum{ref forum, ref threads} =>  html!{
-                <div class=("flexbox-vert","full-height", "no-scroll"),>
-                    <div class="forum-title",>
-                        {forum.default_view(forum_title)}
-                    </div>
-                    <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal boi
-                        <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical boi 1
-                           {threads.default_view(thread_list_fn)}
-                        </div>
-                        <div class=("vertical-expand", "full-width", "scrollable" ),> // Vertical boi 2
-                            {
-                                match self.thread {
-                                    ThreadOrNewThread::Thread(ref thread) => thread.default_view(thread_fn),
-                                    ThreadOrNewThread::NewThread(ref new_thread) => new_thread.default_view(new_thread_fn)
-                                }
-                            }
-                        </div>
-                    </div>
+        fn forums_title(_: &Vec<ForumData>) -> Html<Context, ForumModel> {
+            html! {
+                <div> // TODO possibly switch to fragment and include horizontal boi div in area around callsite.
+                    {"Forums"}
                 </div>
             }
         }
+
+
+        html!{
+            <div class=("flexbox-vert","full-height", "no-scroll"),>
+                <div class="forum-title",>
+                    {
+                        match self.forums_or_selected_forum {
+                            ForumsOrForum::Forums(ref forums) => forums.default_view(forums_title),
+                            ForumsOrForum::Forum{ref forum, ..} =>  forum.default_view(forum_title)
+                        }
+                    }
+                </div>
+                <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal container
+                    <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical - list container
+                       {
+                            match self.forums_or_selected_forum {
+                                ForumsOrForum::Forums(ref forums) => forums.default_view(forum_list_fn),
+                                ForumsOrForum::Forum{ref threads ,..} =>  threads.default_view(thread_list_fn)
+                            }
+                        }
+                    </div>
+                    <div class=("vertical-expand", "full-width", "scrollable" ),> // Vertical - content container
+                        {
+                            match self.thread {
+                                ThreadOrNewThread::Thread(ref thread) => thread.default_view(thread_fn),
+                                ThreadOrNewThread::NewThread(ref new_thread) => new_thread.default_view(new_thread_fn)
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
     }
 }
 

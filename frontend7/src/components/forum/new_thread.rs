@@ -4,19 +4,17 @@ use Context;
 use components::markdown::author_markdown_toggle::AuthorMarkdownToggle;
 use components::button::Button;
 
-use wire::thread::{NewThreadRequest, ThreadResponse};
-use wire::post::NewPostRequest;
-use datatypes::forum::ForumData;
-use failure::Error;
+//use datatypes::forum::ForumData;
+//use failure::Error;
 
-use context::networking::*;
+//use context::networking::*;
 use datatypes::thread::NewThreadData;
-use datatypes::thread::ThreadData;
-use yew::format::Json;
-use yew::services::fetch::Response;
-use yew::services::fetch::FetchTask;
-use Route;
-use forum::ForumRoute;
+//use datatypes::thread::ThreadData;
+//use yew::format::Json;
+//use yew::services::fetch::Response;
+//use yew::services::fetch::FetchTask;
+//use Route;
+//use forum::ForumRoute;
 
 
 pub struct NewThread {
@@ -50,7 +48,7 @@ impl Component<Context> for NewThread {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::CreateNewThread => {
                 self.callback.emit(self.new_thread.clone());

@@ -41,13 +41,6 @@ impl <T> Clone for Loadable<T>
 }
 
 impl <T> Loadable<T> {
-    pub fn loaded<'a>(&'a self) -> Option<&'a T> {
-        if let Loadable::Loaded(ref t) = self {
-            Some(t)
-        } else {
-            None
-        }
-    }
 
     pub fn default_view<U, CTX>(&self, render_fn: fn(&T) -> Html<CTX, U> ) -> Html<CTX, U>
         where
@@ -89,7 +82,7 @@ impl <T> Loadable<T> {
 pub enum Uploadable<T> {
     NotUploaded(T),
     Uploading(T, FetchTask),
-//    Failed(E) // TODO, provide a way to swap in a component that displays errors.
+//    Failed(T) // TODO, this may not be necessary, as the responsibility for showing errors may best be shown in the NotUploaded section
 }
 
 impl <T> Uploadable<T> {
@@ -115,7 +108,7 @@ impl <T> Uploadable<T> {
             Uploadable::Uploading(ref t, _) => t,
         }
     }
-
+    #[allow(dead_code)]
     pub fn get_cloned_inner(&self) -> T where T: Clone {
         self.get_inner().clone()
     }
@@ -129,17 +122,17 @@ where T: Default
     }
 }
 
-#[derive(Clone, Debug)]
-pub enum Either<L,R> {
-    Left(L),
-    Right(R)
-}
-impl <L,R> Default for Either<L,R>
-    where
-        L: Default
-{
-    fn default() -> Self {
-        Either::Left(L::default())
-    }
-}
+//#[derive(Clone, Debug)]
+//pub enum Either<L,R> {
+//    Left(L),
+//    Right(R)
+//}
+//impl <L,R> Default for Either<L,R>
+//    where
+//        L: Default
+//{
+//    fn default() -> Self {
+//        Either::Left(L::default())
+//    }
+//}
 

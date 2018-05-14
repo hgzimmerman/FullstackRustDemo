@@ -60,14 +60,14 @@ impl Component<Context> for Auth {
     type Msg = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
         let auth = Auth { child: props.child };
         //        auth.update(Msg::SetChild(props.child.resolve_route()), context);
         auth
 
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, _msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
         //        match msg {
         //            Msg::SetChild(child) => {
         //                //                match child {
