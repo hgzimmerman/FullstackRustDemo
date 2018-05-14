@@ -59,16 +59,16 @@ impl Default for ForumRoute {
     }
 }
 
-impl ForumRoute {
-    fn get_forum_id(&self) -> Option<i32> {
-        match self {
-            ForumRoute::Forum{forum_id} => Some(forum_id.clone()),
-            ForumRoute::Thread {forum_id, ..} => Some(forum_id.clone()),
-            ForumRoute::CreateThread {forum_id} => Some(forum_id.clone()),
-            _ => None
-        }
-    }
-}
+//impl ForumRoute {
+//    fn get_forum_id(&self) -> Option<i32> {
+//        match self {
+//            ForumRoute::Forum{forum_id} => Some(forum_id.clone()),
+//            ForumRoute::Thread {forum_id, ..} => Some(forum_id.clone()),
+//            ForumRoute::CreateThread {forum_id} => Some(forum_id.clone()),
+//            _ => None
+//        }
+//    }
+//}
 
 impl Router for ForumRoute {
     fn to_route(&self) -> RouteInfo {
@@ -153,7 +153,6 @@ impl Default for ThreadOrNewThread {
 
 #[derive(Default)]
 pub struct ForumModel {
-    route: ForumRoute, // TODO, Should I need to store this? I should be able to reconstruct it from the internal types
     forums_or_selected_forum: ForumsOrForum,
     thread: ThreadOrNewThread
 }
@@ -352,7 +351,6 @@ impl Component<Context> for ForumModel {
             ForumRoute::ForumList => {
                 let forums_or_selected_forum = ForumsOrForum::Forums(Self::get_forum_list(context));
                 ForumModel {
-                    route: props.route,
                     forums_or_selected_forum,
                     ..Default::default()
                 }
@@ -363,7 +361,6 @@ impl Component<Context> for ForumModel {
                     threads: Self::get_threads(forum_id, context)
                 };
                 ForumModel {
-                    route: props.route,
                     forums_or_selected_forum,
                     ..Default::default()
                 }
@@ -375,7 +372,6 @@ impl Component<Context> for ForumModel {
                 };
                 let thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
                 ForumModel {
-                    route: props.route,
                     forums_or_selected_forum,
                     thread
                 }
@@ -386,7 +382,6 @@ impl Component<Context> for ForumModel {
                     threads: Self::get_threads(forum_id, context)
                 };
                 ForumModel {
-                    route: props.route,
                     forums_or_selected_forum,
                     thread: ThreadOrNewThread::NewThread(Uploadable::default())
                 }
@@ -464,14 +459,16 @@ impl Component<Context> for ForumModel {
                 self.select_thread_in_list();
             },
             Msg::SetCreateThread => {
-                if let Some(forum_id) = self.route.get_forum_id() {
+                if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    let forum_id = forum_data.id;
                     let route = ForumRoute::CreateThread {forum_id};
                     context.routing.set_route(Route::Forums(route));
                 }
             },
             Msg::SetThread {thread_id} => {
-                if let Some(forum_id) = self.route.get_forum_id() {
-                    let route = ForumRoute::Thread { forum_id, thread_id};
+                if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    let forum_id = forum_data.id;
+                    let route = ForumRoute::Thread { forum_id, thread_id };
                     context.routing.set_route(Route::Forums(route.clone()));
                 }
                 self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
@@ -481,7 +478,8 @@ impl Component<Context> for ForumModel {
                 context.routing.set_route(Route::Forums(route));
             }
             Msg::PostNewThread{new_thread} => {
-                if let Some(forum_id) = self.route.get_forum_id() {
+                if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    let forum_id = forum_data.id;
                     self.thread = ThreadOrNewThread::NewThread(Self::upload_new_thread(new_thread, forum_id, context))
                 }
             }
@@ -560,9 +558,7 @@ impl Component<Context> for ForumModel {
                 self.thread = ThreadOrNewThread::NewThread(Default::default());
             }
         };
-        true;
 
-        self.route = props.route; // Set this here, in case it was forgotten earlier.
         true
     }
 }
