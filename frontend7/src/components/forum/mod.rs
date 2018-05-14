@@ -17,8 +17,8 @@ mod new_thread;
 //pub mod forum_list;
 //mod forum;
 
-use util::Loadable;
-use util::Uploadable;
+use util::loadable::Loadable;
+use util::uploadable::Uploadable;
 
 //use util::Either;
 use yew::format::Json;
@@ -471,9 +471,9 @@ impl Component<Context> for ForumModel {
                     let route = ForumRoute::Thread { forum_id, thread_id };
                     context.routing.set_route(Route::Forums(route.clone()));
                 }
-                self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
             },
             Msg::SetForum {forum_data} => {
+                // TODO, this can be optomized to avoid needing to re-get the forum-data, but isn't particularly important.
                 let route = ForumRoute::Forum { forum_id: forum_data.id.clone() };
                 context.routing.set_route(Route::Forums(route));
             }
@@ -600,30 +600,33 @@ impl Renderable<Context, ForumModel> for ForumModel {
 
         fn forum_title(forum_data: &ForumData) -> Html<Context,ForumModel> {
             html! {
-                <div class=("flexbox-horiz"),>
+                <>
                     {&forum_data.title}
                     <Button: title="Create New Thread", onclick=|_| Msg::SetCreateThread, />
-                </div>
+                </>
             }
         }
         fn forums_title(_: &Vec<ForumData>) -> Html<Context, ForumModel> {
             html! {
-                <div> // TODO possibly switch to fragment and include horizontal boi div in area around callsite.
+                <>
                     {"Forums"}
-                </div>
+                </>
             }
         }
 
 
         html!{
             <div class=("flexbox-vert","full-height", "no-scroll"),>
-                <div class="forum-title",>
-                    {
-                        match self.forums_or_selected_forum {
-                            ForumsOrForum::Forums(ref forums) => forums.default_view(forums_title),
-                            ForumsOrForum::Forum{ref forum, ..} =>  forum.default_view(forum_title)
+                <div class="forum-title",> // Title bar
+
+                    <div class=("flexbox-horiz", "margin-left"),>
+                        {
+                            match self.forums_or_selected_forum {
+                                ForumsOrForum::Forums(ref forums) => forums.small_view(forums_title),
+                                ForumsOrForum::Forum{ref forum, ..} =>  forum.small_view(forum_title)
+                            }
                         }
-                    }
+                    </div>
                 </div>
                 <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal container
                     <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical - list container
@@ -645,7 +648,6 @@ impl Renderable<Context, ForumModel> for ForumModel {
                 </div>
             </div>
         }
-
     }
 }
 

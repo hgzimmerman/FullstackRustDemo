@@ -15,7 +15,7 @@ extern crate serde_derive;
 
 //extern crate chrono;
 
-//#[macro_use]
+#[macro_use]
 extern crate stdweb;
 
 extern crate pulldown_cmark;
