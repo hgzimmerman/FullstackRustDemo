@@ -1,11 +1,24 @@
 use yew::services::fetch::FetchTask;
 use yew::prelude::*;
+use std::fmt::Formatter;
+use std::fmt::Debug;
 
 pub enum Loadable<T> {
     Unloaded,
     Loading(FetchTask),
     Loaded(T),
     Failed(Option<String>)
+}
+
+impl <T> Debug for Loadable<T> where T: Debug {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), ::std::fmt::Error> {
+        match self {
+            Loadable::Unloaded => write!(f, "Unloaded"),
+            Loadable::Loading(_) => write!(f, "Loading"),
+            Loadable::Loaded(t) => write!(f, "Loaded: {:?}", t),
+            Loadable::Failed(_) => write!(f, "Failed"),
+        }
+    }
 }
 
 impl <T> Default for Loadable<T> {
@@ -129,3 +142,4 @@ impl <L,R> Default for Either<L,R>
         Either::Left(L::default())
     }
 }
+

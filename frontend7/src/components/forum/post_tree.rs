@@ -173,7 +173,7 @@ impl Component<Context> for PostTree {
                          };
 
                         let task = context.make_request(RequestWrapper::UpdatePost(post_edit), callback);
-                        self.ft = task.ok() // This will cancel a reply if a reply is active.
+                        self.ft = task.ok() // This will cancel a reply if a reply post is active.
                     };
                 }
                 true
@@ -185,7 +185,6 @@ impl Component<Context> for PostTree {
                 true
             }
             Msg::PostEditFailed => {
-                //unimplemented!()
                 context.log("Edit post failed.");
                 true
             }

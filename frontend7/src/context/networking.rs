@@ -100,10 +100,6 @@ impl RequestWrapper {
             UpdatePost(r) => Put(to_body(r))
         }
     }
-
-
-
-
 }
 
 
@@ -146,84 +142,10 @@ impl Context {
             }
         }
 
-
-//        use self::RequestWrapper::*;
-//        match request {
-//            Login(ref r) => {
-//                let request = self.prepare_post_request(
-//                    r,
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            CreateUser(ref r) => {
-//                let request = self.prepare_post_request(
-//                    r,
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            CreateThread(ref r) => {
-//                let request = self.prepare_post_request(
-//                    r,
-//                    url,
-//                    Auth::Required,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            GetThreads { .. } => {
-//                let request = self.prepare_get_request(
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            GetForums => {
-//                let request = self.prepare_get_request(
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            GetForum { .. } => {
-//                let request = self.prepare_get_request(
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//            GetThread { .. } => {
-//                let request = self.prepare_get_request(
-//                    url,
-//                    Auth::NotRequired,
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            },
-//            CreatePostResponse(ref r) => {
-//                let request = self.prepare_post_request(
-//                    r,
-//                    url,
-//                    Auth::Required
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            },
-//            UpdatePost(ref r) => {
-//                let request = self.prepare_put_request(
-//                    r,
-//                    url,
-//                    Auth::Required
-//                )?;
-//                Ok(self.networking.fetch(request, callback))
-//            }
-//        }
     }
 
 
     fn prepare_put_request(&mut self, body: String, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
- /*       let body = serde_json::to_string(&request_object)
-            .unwrap();*/
         match self.restore_jwt() {
             Ok(jwt_string) => {
                 // TODO: possibly check if the jwt is outdated here before sending

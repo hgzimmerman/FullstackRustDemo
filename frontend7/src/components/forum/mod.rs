@@ -132,17 +132,39 @@ pub struct Props {
     pub route: ForumRoute
 }
 
+//#[derive(Debug, Clone)]
+pub enum ForumsOrForum {
+    Forums(Loadable<Vec<ForumData>>),
+    Forum { forum: Loadable<ForumData>, threads: Loadable<Vec<SelectableMinimalThreadData>> }
+}
+pub enum ThreadOrNewThread {
+    Thread(Loadable<ThreadData>),
+    NewThread(Uploadable<NewThreadData>)
+}
+
+
+impl Default for ForumsOrForum {
+    fn default() -> Self {
+        ForumsOrForum::Forums(Default::default())
+    }
+}
+impl Default for ThreadOrNewThread {
+    fn default() -> Self {
+        ThreadOrNewThread::Thread(Default::default())
+    }
+}
+
 #[derive(Default)]
 pub struct ForumModel {
-    route: ForumRoute,
-    forums_or_selected_forum: Either<Loadable<Vec<ForumData>>, Loadable<ForumData>>,
-    thread_list: Loadable<Vec<SelectableMinimalThreadData>>,
-    thread: Either<Loadable<ThreadData>, Uploadable<NewThreadData>>
+    route: ForumRoute, // TODO, Should I need to store this? I should be able to reconstruct it from the internal types
+    forums_or_selected_forum: ForumsOrForum,//Either<Loadable<Vec<ForumData>>, Loadable<ForumData>>,
+//    thread_list: Loadable<Vec<SelectableMinimalThreadData>>,
+    thread: ThreadOrNewThread //Either<Loadable<ThreadData>, Uploadable<NewThreadData>>
 }
 
 
 impl ForumModel {
-    fn get_forum_list(context: &mut Env<Context, Self>) -> Either<Loadable<Vec<ForumData>>, Loadable<ForumData>> {
+    fn get_forum_list(context: &mut Env<Context, Self>) -> Loadable<Vec<ForumData>> {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<ForumResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -163,13 +185,13 @@ impl ForumModel {
 
         let forums_task = context.make_request(RequestWrapper::GetForums, callback);
         if let Ok(ft) = forums_task {
-            Either::Left(Loadable::Loading(ft))
+            Loadable::Loading(ft)
         } else {
-            Either::Left(Loadable::Failed(Some("Couldn't make request".into())))
+            Loadable::Failed(Some("Couldn't make request".into()))
         }
     }
 
-    fn get_forum(forum_id: i32, context: &mut Env<Context, Self>) -> Either<Loadable<Vec<ForumData>>, Loadable<ForumData>> {
+    fn get_forum(forum_id: i32, context: &mut Env<Context, Self>) -> Loadable<ForumData> {
         let forum_callback = context.send_back(
             |response: Response<Json<Result<ForumResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -189,9 +211,9 @@ impl ForumModel {
             forum_callback,
         );
         if let Ok(ft) = forum_task {
-            Either::Right(Loadable::Loading(ft))
+            Loadable::Loading(ft)
         } else {
-            Either::Right(Loadable::Failed(Some("Couldn't make request".into())))
+            Loadable::Failed(Some("Couldn't make request".into()))
         }
 
     }
@@ -292,16 +314,9 @@ impl ForumModel {
     }
 
 
-    fn set_self(&mut self, other: ForumModel) {
-        self.thread_list = other.thread_list;
-        self.thread = other.thread;
-        self.forums_or_selected_forum = other.forums_or_selected_forum;
-        self.route = other.route;
-    }
-
     fn select_thread_in_list(&mut self) {
-        if let Loadable::Loaded(ref mut thread_list) = self.thread_list {
-            if let Either::Left(Loadable::Loaded(ref mut selected_thread)) = self.thread {
+        if let ForumsOrForum::Forum{threads: Loadable::Loaded(ref mut thread_list), .. } = self.forums_or_selected_forum {
+            if let ThreadOrNewThread::Thread(Loadable::Loaded(ref mut selected_thread)) = self.thread {
                  *thread_list = thread_list
                      .iter()
                      .cloned()
@@ -339,7 +354,7 @@ impl Component<Context> for ForumModel {
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         match props.route {
             ForumRoute::ForumList => {
-                let forums_or_selected_forum = Self::get_forum_list(context);
+                let forums_or_selected_forum = ForumsOrForum::Forums(Self::get_forum_list(context));
                 ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
@@ -347,7 +362,10 @@ impl Component<Context> for ForumModel {
                 }
             }
             ForumRoute::Forum { forum_id } => {
-                let forums_or_selected_forum = Self::get_forum(forum_id, context);
+                let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
+                    forum: Self::get_forum(forum_id, context),
+                    threads: Self::get_threads(forum_id, context)
+                };
                 ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
@@ -355,24 +373,26 @@ impl Component<Context> for ForumModel {
                 }
             }
             ForumRoute::Thread { forum_id, thread_id } => {
-                let forums_or_selected_forum = Self::get_forum(forum_id, context);
-                let thread_list = Self::get_threads(forum_id, context); // TODO add a way of marking the threads in the list as being selected if they have the same id as the "thread" value below. Do this in the Update method.
-                let thread = Self::get_thread(thread_id, context);
+                let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
+                    forum: Self::get_forum(forum_id, context),
+                    threads: Self::get_threads(forum_id, context)
+                };
+                let thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
                 ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
-                    thread_list,
-                    thread: Either::Left(thread)
+                    thread
                 }
             }
             ForumRoute::CreateThread { forum_id } => {
-                let forums_or_selected_forum = Self::get_forum(forum_id, context);
-                let thread_list = Self::get_threads(forum_id, context);
+                let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
+                    forum: Self::get_forum(forum_id, context),
+                    threads: Self::get_threads(forum_id, context)
+                };
                 ForumModel {
                     route: props.route,
                     forums_or_selected_forum,
-                    thread_list,
-                    thread: Either::Right(Uploadable::default())
+                    thread: ThreadOrNewThread::NewThread(Uploadable::default())
                 }
             }
         }
@@ -380,33 +400,94 @@ impl Component<Context> for ForumModel {
 
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
-            Msg::ForumsReady(forums) => self.forums_or_selected_forum = Either::Left(Loadable::Loaded(forums)),
-            Msg::ForumsFailed => self.forums_or_selected_forum = Either::Left(Loadable::Failed(None)),
-            Msg::ForumReady(forum) => self.forums_or_selected_forum = Either::Right(Loadable::Loaded(forum)),
-            Msg::ForumLoading(ft) => self.forums_or_selected_forum = Either::Right(Loadable::Loading(ft)),
-            Msg::ForumFailed => self.forums_or_selected_forum = Either::Right(Loadable::Failed(None)),
-            Msg::ThreadsReady(threads) => self.thread_list = Loadable::Loaded(threads),
-            Msg::ThreadsLoading(ft) => self.thread_list = Loadable::Loading(ft),
-            Msg::ThreadsFailed => self.thread_list = Loadable::Failed(None),
+            Msg::ForumsReady(forums) => self.forums_or_selected_forum = ForumsOrForum::Forums(Loadable::Loaded(forums)),
+            Msg::ForumsFailed => self.forums_or_selected_forum = ForumsOrForum::Forums(Loadable::Failed(None)),
+            Msg::ForumReady(forum) => {
+                if let ForumsOrForum::Forum{forum: ref mut existing_forum, ..} = self.forums_or_selected_forum {
+                   *existing_forum = Loadable::Loaded(forum);
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Loaded(forum),
+                        threads: Loadable::Unloaded
+                    }
+                }
+            },
+            Msg::ForumLoading(ft) => {
+                if let ForumsOrForum::Forum{ref mut forum, ..} = self.forums_or_selected_forum {
+                   *forum = Loadable::Loading(ft);
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Loading(ft),
+                        threads: Loadable::Unloaded
+                    }
+                }
+            },
+            Msg::ForumFailed => {
+                if let ForumsOrForum::Forum{ ref mut forum, ..} = self.forums_or_selected_forum {
+                   *forum = Loadable::Failed(None);
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Failed(None),
+                        threads: Loadable::Unloaded
+                    }
+                }
+            },
+            Msg::ThreadsReady(threads) => {
+                if let ForumsOrForum::Forum{ threads: ref mut existing_threads, ..} = self.forums_or_selected_forum {
+                   *existing_threads = Loadable::Loaded(threads);
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Unloaded,
+                        threads: Loadable::Loaded(threads)
+                    }
+                }
+            },
+            Msg::ThreadsLoading(ft) =>{
+                if let ForumsOrForum::Forum{ ref mut threads, ..} = self.forums_or_selected_forum {
+                   *threads = Loadable::Loading(ft);
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Unloaded,
+                        threads: Loadable::Loading(ft)
+                    }
+                }
+            }
+            Msg::ThreadsFailed => {
+                if let ForumsOrForum::Forum{ ref mut threads, ..} = self.forums_or_selected_forum {
+                   *threads = Loadable::Failed(None)
+                } else {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {
+                        forum: Loadable::Unloaded,
+                        threads: Loadable::Failed(None)
+                    }
+                }
+            },
             Msg::ThreadReady(thread) => {
                 let route = ForumRoute::Thread { forum_id: thread.forum_id, thread_id: thread.id};
                 context.routing.set_route(Route::Forums(route.clone()));
-                self.thread = Either::Left(Loadable::Loaded(thread));
+                self.thread = ThreadOrNewThread::Thread(Loadable::Loaded(thread));
                 self.select_thread_in_list();
             },
             Msg::NewThreadReady(thread) => {
                 let route = ForumRoute::Thread { forum_id: thread.forum_id.clone(), thread_id: thread.id};
                 context.routing.set_route(Route::Forums(route.clone()));
 
-                self.forums_or_selected_forum = Self::get_forum(thread.forum_id, context); // Get the list of forums after the thread was loaded.
-                self.thread = Either::Left(Loadable::Loaded(thread));
+                if let ForumsOrForum::Forum {threads: ref mut existing_thread, ..} = self.forums_or_selected_forum {
+                    *existing_thread = Self::get_threads(thread.forum_id, context);
+                } else {
+                    let f = Self::get_forum(thread.forum_id, context);
+                    let t = Self::get_threads(thread.forum_id, context);
+                    self.forums_or_selected_forum = ForumsOrForum::Forum {forum: f, threads: t}
+                }
+
+                self.thread = ThreadOrNewThread::Thread(Loadable::Loaded(thread));
                 self.select_thread_in_list();
             }
             Msg::ThreadFailed => {
-                self.thread = Either::Left(Loadable::Failed(None));
+                self.thread = ThreadOrNewThread::Thread(Loadable::Failed(None));
                 self.select_thread_in_list();
             },
-            Msg::ThreadLoading(ft) => self.thread = Either::Left(Loadable::Loading(ft)),
+            Msg::ThreadLoading(ft) => self.thread = ThreadOrNewThread::Thread(Loadable::Loading(ft)),
             Msg::SetCreateThread => {
                 if let Some(forum_id) = self.route.get_forum_id() {
                     let route = ForumRoute::CreateThread {forum_id};
@@ -418,7 +499,7 @@ impl Component<Context> for ForumModel {
                     let route = ForumRoute::Thread { forum_id, thread_id};
                     context.routing.set_route(Route::Forums(route.clone()));
                 }
-                self.thread = Either::Left(Self::get_thread(thread_id, context));
+                self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
             },
             Msg::SetForum {forum_data} => {
                 let route = ForumRoute::Forum { forum_id: forum_data.id.clone() };
@@ -426,7 +507,7 @@ impl Component<Context> for ForumModel {
             }
             Msg::PostNewThread{new_thread} => {
                 if let Some(forum_id) = self.route.get_forum_id() {
-                    self.thread = Either::Right(Self::upload_new_thread(new_thread, forum_id, context))
+                    self.thread = ThreadOrNewThread::NewThread(Self::upload_new_thread(new_thread, forum_id, context))
                 }
             }
         };
@@ -437,124 +518,128 @@ impl Component<Context> for ForumModel {
         context.log(&format!("Forum: change() called: {:?}", props.route));
 
 
-        let cloned_route = props.route.clone();
-        let should_render = match props.route.clone() {
-            ForumRoute::ForumList => {
-                let forums_or_selected_forum = Self::get_forum_list(context);
-                let new_state = ForumModel {
-                    route: props.route,
-                    forums_or_selected_forum,
-                    ..Default::default()
-                };
-                self.set_self(new_state);
-                true
-            }
-            ForumRoute::Forum { forum_id } => {
-                let mut refresh_forums_needed = true;
-                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
-                    if forum_id == forum_data.id {
-                        refresh_forums_needed = false;
-                    }
-                }
-
-                let forums_or_selected_forum = if refresh_forums_needed {
-                    Self::get_forum(forum_id, context)
-                } else {
-                    self.forums_or_selected_forum.clone()
-                };
-                let new_state = ForumModel {
-                    route: props.route,
-                    forums_or_selected_forum,
-                    thread_list: Self::get_threads(forum_id, context),
-                    ..Default::default()
-                };
-                self.set_self(new_state);
-                context.log(&format!("Setting forum- route: {:?}", self.route));
-                true
-            }
-            ForumRoute::Thread { forum_id, thread_id } => {
-                context.log("Thread (new)");
-                match self.route {
-                    ForumRoute::ForumList => {
-                        let forums_or_selected_forum = Self::get_forum_list(context);
-                        let new_state = ForumModel {
-                            route: props.route,
-                            forums_or_selected_forum,
-                            ..Default::default()
-                        };
-                        self.set_self(new_state);
+        use self::ForumRoute::*;
+        match props.route {
+            ForumList => {
+                self.forums_or_selected_forum = ForumsOrForum::Forums(Self::get_forum_list(context));
+                self.thread = ThreadOrNewThread::Thread(Loadable::Unloaded);
+            },
+            Forum {forum_id} => {
+                let refresh: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    if forum_id != forum_data.id {
                         true
+                    } else {
+                        false
                     }
-                    ForumRoute::Forum {forum_id: old_forum_id} => {
-                        context.log("forum");
-                        if forum_id != old_forum_id {
-                            self.forums_or_selected_forum = Self::get_forum(forum_id, context);
-                            self.thread_list = Self::get_threads(forum_id, context); // TODO add a way of marking the threads in the list as being selected if they have the same id as the "thread" value below. Do this in the Update method.
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                    ForumRoute::Thread { forum_id: old_forum_id, thread_id: old_thread_id } => {
-                        context.log("Thread (old)");
-                        let mut should_render: ShouldRender = false;
-                        if forum_id != old_forum_id {
-                            self.forums_or_selected_forum = Self::get_forum(forum_id, context);
-                            self.thread_list = Self::get_threads(forum_id, context); // TODO add a way of marking the threads in the list as being selected if they have the same id as the "thread" value below. Do this in the Update method.
-                            should_render = true;
-                        }
-                        context.log(&format!("old: {}, new: {}", old_thread_id, thread_id));
-                        if thread_id != old_thread_id {
-                            self.thread = Either::Left(Self::get_thread(thread_id, context));
-                            should_render = true;
-                        }
-                        should_render
-                    }
-                    ForumRoute::CreateThread { forum_id: old_forum_id } => {
-                        if forum_id != old_forum_id {
-                            self.forums_or_selected_forum = Self::get_forum(forum_id, context);
-                            self.thread_list = Self::get_threads(forum_id, context); // TODO add a way of marking the threads in the list as being selected if they have the same id as the "thread" value below. Do this in the Update method.
-                            true
-                        } else {
-                            false
-                        }
-                    }
-                }
-            }
-            ForumRoute::CreateThread { forum_id } => {
-                let mut refresh_forums_needed = true;
-                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
-                    if forum_id == forum_data.id {
-                        refresh_forums_needed = false;
-                    }
-                }
-
-
-                // TODO this problem _may_ be problematic due to invalidation of loading loadables when they are cloned
-                let forums_or_selected_forum = if refresh_forums_needed {
-                    Self::get_forum(forum_id, context)
                 } else {
-                    self.forums_or_selected_forum.clone()
-                };
-                let thread_list = if refresh_forums_needed {
-                    Self::get_threads(forum_id, context)
-                } else {
-                    self.thread_list.clone()
+                    true
                 };
 
-                let new_state = ForumModel {
-                    route: props.route,
-                    forums_or_selected_forum,
-                    thread_list,
-                    thread: Either::Right(Uploadable::default())
+                if refresh {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) }
+                }
+                self.thread = ThreadOrNewThread::Thread(Loadable::Unloaded);
+
+            },
+            Thread {thread_id, forum_id} => {
+                let refresh_forum: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    if forum_id != forum_data.id {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    true
                 };
-                self.set_self(new_state);
-                true
+                let refresh_thread: bool = if let ThreadOrNewThread::Thread(Loadable::Loaded(ref thread_data)) = self.thread {
+                    if thread_id != thread_data.id {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    true
+                };
+
+                if refresh_forum {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) };
+                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context))
+                } else if refresh_thread {
+                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context))
+                }
+            },
+            CreateThread {forum_id} => {
+                let refresh: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
+                    if forum_id != forum_data.id {
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    true
+                };
+
+                if refresh {
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) }
+                }
+                self.thread = ThreadOrNewThread::NewThread(Default::default());
             }
         };
-        self.select_thread_in_list(); // Make UI change
-        self.route = cloned_route; // Set this here, in case it was forgotten earlier.
-        should_render
+        true;
+
+
+
+//        match props.route.clone() {
+//            ForumRoute::ForumList => {
+//                let forums_or_selected_forum = Self::get_forum_list(context);
+//                let new_state = ForumModel {
+//                    route: props.route,
+//                    forums_or_selected_forum,
+//                    ..Default::default()
+//                };
+//                self.set_self(new_state);
+//                true
+//            }
+//            ForumRoute::Forum { forum_id } => {
+//                let mut refresh_forums_needed = true;
+//                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
+//                    if forum_id == forum_data.id {
+//                        refresh_forums_needed = false;
+//                    }
+//                }
+//
+//                let forums_or_selected_forum = if refresh_forums_needed {
+//                    Self::get_forum(forum_id, context)
+//                } else {
+//                    self.forums_or_selected_forum.clone()
+//                };
+//                let new_state = ForumModel {
+//                    route: props.route,
+//                    forums_or_selected_forum,
+//                    thread_list: Self::get_threads(forum_id, context),
+//                    ..Default::default()
+//                };
+//                self.set_self(new_state);
+//                context.log(&format!("Setting forum- route: {:?}", self.route));
+//                true
+//            }
+//            ForumRoute::Thread { forum_id, thread_id } => {
+//                context.log("Thread (new)");
+//
+//            }
+//            ForumRoute::CreateThread { forum_id } => {
+//                if let Either::Right(Loadable::Loaded(ref forum_data)) = self.forums_or_selected_forum {
+//                    if forum_id == forum_data.id {
+//                        self.forums_or_selected_forum = Self::get_forum(forum_id, context);
+//                        self.thread_list = Self::get_threads(forum_id, context);
+//                    }
+//                }
+//
+//            }
+//        };
+        self.select_thread_in_list(); // Mark association between thread and its element in list.
+        self.route = props.route; // Set this here, in case it was forgotten earlier.
+        true
     }
 }
 impl Renderable<Context, ForumModel> for ForumModel {
@@ -603,27 +688,27 @@ impl Renderable<Context, ForumModel> for ForumModel {
         }
 
         match self.forums_or_selected_forum {
-            Either::Left(ref forums) => html! {
+            ForumsOrForum::Forums(ref forums) => html! {
                 <div>
                     <div>
                         {forums.default_view(forum_list_fn)}
                     </div>
                 </div>
             },
-            Either::Right(ref selected_forum) =>  html!{
+            ForumsOrForum::Forum{ref forum, ref threads} =>  html!{
                 <div class=("flexbox-vert","full-height", "no-scroll"),>
                     <div class="forum-title",>
-                        {selected_forum.default_view(forum_title)}
+                        {forum.default_view(forum_title)}
                     </div>
                     <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal boi
                         <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical boi 1
-                           {self.thread_list.default_view(thread_list_fn)}
+                           {threads.default_view(thread_list_fn)}
                         </div>
                         <div class=("vertical-expand", "full-width", "scrollable" ),> // Vertical boi 2
                             {
                                 match self.thread {
-                                    Either::Left(ref thread) => thread.default_view(thread_fn),
-                                    Either::Right(ref new_thread) => new_thread.default_view(new_thread_fn)
+                                    ThreadOrNewThread::Thread(ref thread) => thread.default_view(thread_fn),
+                                    ThreadOrNewThread::NewThread(ref new_thread) => new_thread.default_view(new_thread_fn)
                                 }
                             }
                         </div>
