@@ -69,7 +69,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     )?
     {
         //TODO: THIS SHOULD ABSOLUTELY BE IN ANY RELEASE BUILD, I accidentally locked my own account at one point, so I uncommented this to fix it
-//        return Err(LoginError::AccountLocked);
+        //        return Err(LoginError::AccountLocked);
     }
 
     info!("verifing password: {}", &login_request.password);
