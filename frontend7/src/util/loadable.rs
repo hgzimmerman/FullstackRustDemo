@@ -3,9 +3,10 @@ use yew::prelude::*;
 use std::fmt::Formatter;
 use std::fmt::Debug;
 
-use stdweb::web::Node;
-use stdweb::unstable::TryFrom;
-use yew::virtual_dom::VNode;
+use util::loading::LoadingType;
+
+use util::empty::empty;
+
 
 
 pub enum Loadable<T> {
@@ -45,75 +46,60 @@ impl <T> Clone for Loadable<T>
     }
 }
 
-//#[derive(Clone, Debug)]
-//pub enum IconType {
-//    Normal,
-//    Text
-//}
 
-
-const LOADING_SVG: &'static str = include_str!("../../inlined_assets/LoadingRoll.svg");
-
-struct LoadingIcon{}
-
-impl<U, CTX> Renderable<CTX, U> for LoadingIcon
-    where
-//        CTX: AsMut<ConsoleService> + 'static,
-        CTX: 'static,
-        U: Component<CTX>
-
-{
-    fn view(&self) -> Html<CTX, U> {
-        let js_svg = js! {
-            var div = document.createElement("div");
-            div.innerHTML = @{LOADING_SVG.to_string()};
-//            console.log(div);
-            return div;
-        };
-        let node = Node::try_from(js_svg).expect("convert js_svg");
-        let vnode = VNode::VRef(node);
-        vnode
-    }
-}
 
 impl <T> Loadable<T> {
 
+
+    fn custom_view<U, CTX, LoadedFn, FailedFn>(&self, loaded_fn: LoadedFn, loading: Html<CTX,U>, failed_fn: FailedFn) -> Html<CTX, U>
+        where
+        CTX: 'static,
+        U: Component<CTX>,
+        LoadedFn: Fn(&T) -> Html<CTX, U>,
+        FailedFn: Fn(&Option<String>) -> Html<CTX, U>
+    {
+        match self {
+            Loadable::Unloaded => empty(),
+            Loadable::Loading(_) => loading,
+            Loadable::Loaded(ref t) => loaded_fn(t),
+            Loadable::Failed(ref error) => failed_fn(error)
+        }
+    }
+
+
+    fn failed<U, CTX> (error: &Option<String>) -> Html<CTX, U>
+    where
+        CTX: 'static,
+        U: Component<CTX>,
+    {
+        if let Some(message) = error {
+            html! {
+                <div class="flexbox-center",>
+                    {message}
+                </div>
+            }
+        }
+        else {
+            html! {
+                <div class="flexbox-center",>
+                    {"Request Failed"}
+                </div>
+            }
+        }
+    }
+
     /// Uses a 100x100 icons for loading and error.
-    /// This should work for medium to large sized elements, but if the view area is less than that, visual bugs will result.
+    /// This should work for medium to large sized views, but if a view dimension can be less than that, visual bugs will result.
     pub fn default_view<U, CTX>(&self, render_fn: fn(&T) -> Html<CTX, U> ) -> Html<CTX, U>
         where
             CTX: 'static,
             U: Component<CTX>
     {
-
-        match self {
-            Loadable::Unloaded => html! {
-                <>
-                </>
-            },
-            Loadable::Loading(_) => html! {
-                <div class="flexbox-center",>
-                    {LoadingIcon{}.view()}
-                </div>
-            },
-            Loadable::Loaded(ref t) => render_fn(t),
-            Loadable::Failed(error) => {
-                if let Some(message) = error {
-                    html! {
-                        <div class="flexbox-center",>
-                            {message}
-                        </div>
-                    }
-                }
-                else {
-                    html! {
-                        <div class="flexbox-center",>
-                            {"Request Failed"}
-                        </div>
-                    }
-                }
-            }
-        }
+        self.custom_view(
+            render_fn,
+            LoadingType::Fidget{diameter: 100}.view(),
+            Self::failed
+        )
     }
 
     /// Uses text for all error and loading fillers.
@@ -123,35 +109,11 @@ impl <T> Loadable<T> {
             CTX: 'static,
             U: Component<CTX>
     {
-
-        match self {
-            Loadable::Unloaded => html! {
-                <>
-                </>
-            },
-            Loadable::Loading(_) => html! {
-                <div class="flexbox-center",>
-                    {"Loading..."}
-                </div>
-            },
-            Loadable::Loaded(ref t) => render_fn(t),
-            Loadable::Failed(error) => {
-                if let Some(message) = error {
-                    html! {
-                        <div class="flexbox-center",>
-                            {message}
-                        </div>
-                    }
-                }
-                else {
-                    html! {
-                        <div class="flexbox-center",>
-                            {"Request Failed"}
-                        </div>
-                    }
-                }
-            }
-        }
+        self.custom_view(
+            render_fn,
+            LoadingType::Empty.view(),
+            Self::failed
+        )
     }
 
 }
