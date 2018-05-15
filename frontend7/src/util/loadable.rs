@@ -5,7 +5,7 @@ use std::fmt::Debug;
 
 use util::loading::LoadingType;
 
-use util::empty::empty;
+use util::empty::empty_vdom_node;
 
 
 
@@ -59,7 +59,7 @@ impl <T> Loadable<T> {
         FailedFn: Fn(&Option<String>) -> Html<CTX, U>
     {
         match self {
-            Loadable::Unloaded => empty(),
+            Loadable::Unloaded => empty_vdom_node(),
             Loadable::Loading(_) => loading,
             Loadable::Loaded(ref t) => loaded_fn(t),
             Loadable::Failed(ref error) => failed_fn(error)

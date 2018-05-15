@@ -90,7 +90,7 @@ impl Component<Context> for Auth {
 impl Renderable<Context, Auth> for Auth {
     fn view(&self) -> Html<Context, Self> {
 
-        let page = || match &self.child {
+        match &self.child {
             &AuthRoute::Login => {
                 html! {
                         <>
@@ -105,12 +105,6 @@ impl Renderable<Context, Auth> for Auth {
                         </>
                     }
             }
-        };
-
-        return html! {
-            <>
-                {page()}
-            </>
-        };
+        }
     }
 }

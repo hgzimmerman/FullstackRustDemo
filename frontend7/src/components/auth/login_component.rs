@@ -2,12 +2,13 @@ use yew::prelude::*;
 use Context;
 use components::button::*;
 
-use yew::services::fetch::{FetchTask, Response};
+use yew::services::fetch::{Response};
 use failure::Error;
 use wire::login::*;
 use context::networking::*;
 use super::AuthRoute;
 use Route;
+use util::uploadable::Uploadable;
 
 
 pub enum Msg {
@@ -20,25 +21,27 @@ pub enum Msg {
     LoginError,
 }
 
-pub struct Login {
+#[derive(Debug, Default, Clone)]
+pub struct LoginData {
     user_name: String,
-    password: String,
-    ft: Option<FetchTask>,
+    password: String
+}
+
+
+pub struct Login {
+    login_data: Uploadable<LoginData>,
     create_account_nav_cb: Option<Callback<()>>,
-    login_nav_cb: Option<Callback<()>>,
 }
 
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
-    pub login_nav_cb: Option<Callback<()>>,
     pub create_account_nav_cb: Option<Callback<()>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            login_nav_cb: None,
             create_account_nav_cb: None,
         }
     }
@@ -52,11 +55,8 @@ impl Component<Context> for Login {
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
 
         Login {
-            user_name: String::from(""),
-            password: String::from(""),
-            ft: None,
+            login_data: Uploadable::default(),
             create_account_nav_cb: props.create_account_nav_cb,
-            login_nav_cb: props.login_nav_cb,
         }
     }
 
@@ -80,21 +80,24 @@ impl Component<Context> for Login {
                         }
                     },
                 );
+
+                let login_data = self.login_data.cloned_inner();
+
                 let login_request: LoginRequest = LoginRequest {
-                    user_name: self.user_name.clone(),
-                    password: self.password.clone(),
+                    user_name: login_data.user_name,
+                    password: login_data.password,
                 };
 
-                let task = context.make_request(
+                context.make_logoutable_request(
+                    &mut self.login_data,
                     RequestWrapper::Login(
                         login_request,
                     ),
                     callback,
                 );
-                // This conversion of Err to Some is ok here because make_request will not fail with these parameters
-                self.ft = task.ok();
 
-                false
+//                self.login_data.attach_fetch_task(task);
+                true
             }
             Msg::NavToCreateAccount => {
 //                println!("LoginComponent: navigating to create account");
@@ -108,22 +111,23 @@ impl Component<Context> for Login {
                 true
             }
             Msg::UpdatePassword(p) => {
-                self.password = p;
+                self.login_data.as_mut().password = p;
                 true
             }
             Msg::UpdateUserName(u) => {
-                self.user_name = u;
+                self.login_data.as_mut().user_name = u;
                 true
             }
             Msg::LoginSuccess(jwt) => {
-                context.store_jwt(jwt);
-                if let Some(ref mut cb) = self.login_nav_cb {
-                    cb.emit(())
-                }
+                context.store_jwt(jwt); // store/upsert the local JWT.
+
+                use Route;
+                use components::forum::ForumRoute;
+                context.routing.set_route(Route::Forums(ForumRoute::ForumList));
                 true
             }
             Msg::LoginError => {
-                //TODO, add an element indicating that the login failed
+                self.login_data.set_failed("Login Failed, try another user name combo");
                 true
             }
             Msg::NoOp => false,
@@ -138,35 +142,45 @@ impl Component<Context> for Login {
 
 impl Renderable<Context, Login> for Login {
     fn view(&self) -> Html<Context, Self> {
-        html!{
-            <div>
-                {"Login"}
-                <input
-                    class="form-control",
-                //    disabled=self.disabled,
-                    placeholder="User Name",
-                    value=&self.user_name,
-                    oninput=|e: InputData| Msg::UpdateUserName(e.value),
-                    onkeypress=|e: KeyData| {
-                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                    },
-                />
-                <input
-                    class="form-control",
-                //    disabled=self.disabled,
-                    placeholder="Password",
-                    value=&self.password,
-                    oninput=|e: InputData| Msg::UpdatePassword(e.value),
-                    onkeypress=|e: KeyData| {
-                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                    },
-                />
+        fn login_view(login_data: &LoginData) -> Html<Context, Login> {
+            html! {
+                <div class=("login-card", "flexbox-vert"),>
+                    <div class="flexbox-child-grow",>
+                        {"Login"}
+                        <input
+                            class="form-control",
+                        //    disabled=self.disabled,
+                            placeholder="User Name",
+                            value=&login_data.user_name,
+                            oninput=|e: InputData| Msg::UpdateUserName(e.value),
+                            onkeypress=|e: KeyData| {
+                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                            },
+                        />
+                        <input
+                            class="form-control",
+                        //    disabled=self.disabled,
+                            placeholder="Password",
+                            value=&login_data.password,
+                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
+                            onkeypress=|e: KeyData| {
+                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                            },
+                        />
+                    </div>
 
-                <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
-//                <Button: title=&self.button_title, color=Color::Success, disabled=self.disabled, onclick=|_| Msg::Submit, />
+                    <div class=("flexbox-horiz"),>
+                        <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                        <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
+                    </div>
+                </div>
+            }
+        }
+        html! {
 
-            <div/>
+            <div class="flexbox-center",>
+                {self.login_data.default_view(login_view)}
+            </div>
         }
 
     }

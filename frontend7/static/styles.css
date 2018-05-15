@@ -47,6 +47,9 @@ body {
     height: 100%;
     width: 100%;
 }
+.flexbox-child-grow {
+    flex-grow: 1;
+}
 
 .full-height {
     height: 100%
@@ -114,6 +117,16 @@ button {
     font-size: 18px;
     margin: 5px;
     color: blue;
+}
+
+/* Login */
+.login-card {
+    min-width: 300px;
+    width: 450px;
+    min-height: 400px;
+    background-color: lightgray;
+    box-shadow: 10px 10px darkgray;
+    padding: 20px;
 }
 
 /* Forum */

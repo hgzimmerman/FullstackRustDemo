@@ -1,6 +1,6 @@
 use yew::virtual_dom::VNode;
 use yew::prelude::*;
-use util::empty::empty;
+use util::empty::empty_vdom_node;
 use stdweb::web::Node;
 use stdweb::unstable::TryFrom;
 
@@ -48,7 +48,7 @@ where
                 }
             }
             LoadingType::Empty => {
-                empty()
+                empty_vdom_node()
             }
             LoadingType::Custom(render_fn) => {
                 render_fn()

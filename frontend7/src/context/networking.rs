@@ -15,6 +15,10 @@ use serde::Serialize;
 
 //use context::storage;
 
+pub trait FtWrapper{
+    fn set_ft(&mut self, fetch_task: FetchTask);
+}
+
 enum Auth {
     Required,
     NotRequired,
@@ -105,6 +109,26 @@ impl RequestWrapper {
 
 
 impl Context {
+
+
+    /// Make a request, that if the conditions to send a JWT aren't met, the user will be logged out.
+    pub fn make_logoutable_request<W, FTW>(&mut self, ft_wrapper: &mut FTW, request: RequestWrapper, callback: Callback<Response<W>>)
+    where
+        W: From<Result<String, Error>> + 'static,
+        FTW: FtWrapper + Sized
+    {
+        match self.make_request(request, callback) {
+            Ok(ft) => ft_wrapper.set_ft(ft),
+            Err(_) => {
+                use Route;
+                use components::auth::AuthRoute;
+                self.routing.set_route(Route::Auth(AuthRoute::Login));
+            }
+        }
+    }
+
+    /// The error in the result here should only occur if the JWT is outdated, or not present,
+    /// in which case, the caller should redirect to the login screen.
     pub fn make_request<W>(&mut self, request: RequestWrapper, callback: Callback<Response<W>>) -> Result<FetchTask, Error>
     where
         W: From<Result<String, Error>> + 'static,
