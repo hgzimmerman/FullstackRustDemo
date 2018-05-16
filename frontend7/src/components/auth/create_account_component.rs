@@ -14,44 +14,48 @@ use super::AuthRoute;
 
 use util::uploadable::Uploadable;
 
+use util::input::InputState;
+use util::input::Input;
+use util::input::InputValidator;
+
 pub enum Msg {
-    UpdatePassword(String),
-    UpdateConfirmPassword(String),
-    UpdateUserName(String),
-    UpdateDisplayName(String),
+    UpdatePassword(InputState),
+    UpdateConfirmPassword(InputState),
+    UpdateUserName(InputState),
+    UpdateDisplayName(InputState),
     Submit,
     NavigateToLogin,
     AccountCreationFailed,
-    NoOp
+//    NoOp
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct CreateAccountData {
-    user_name: String,
-    display_name: String,
-    password: String,
-    confirm_password: String,
+    user_name: InputState,
+    display_name: InputState,
+    password: InputState,
+    confirm_password: InputState,
 }
 
 impl CreateAccountData {
     fn validate(&self) -> Result<NewUserRequest, &str> {
-        if self.user_name.len() < 5 {
-            return Err("User Name must be 5 or more characters.")
-        }
-        if self.display_name.len() < 5 {
-            return Err("Display Name must be 5 or more characters.")
-        }
-        if self.password.len() < 8 {
-            return Err("Password must be 8 or more characters ")
-        }
+//        if self.user_name.len() < 5 {
+//            return Err("User Name must be 5 or more characters.")
+//        }
+//        if self.display_name.len() < 5 {
+//            return Err("Display Name must be 5 or more characters.")
+//        }
+//        if self.password.len() < 8 {
+//            return Err("Password must be 8 or more characters ")
+//        }
         if self.confirm_password != self.password {
             return Err("Passwords do not match")
         }
 
         let request = NewUserRequest {
-            user_name: self.user_name.clone(),
-            display_name: self.display_name.clone(),
-            plaintext_password: self.password.clone(),
+            user_name: self.user_name.inner_text().clone(),
+            display_name: self.display_name.inner_text().clone(),
+            plaintext_password: self.password.inner_text().clone(),
         };
         Ok(request)
     }
@@ -132,9 +136,9 @@ impl Component<Context> for CreateAccount {
                 self.data.set_failed("Could not create account.");
                 true
             }
-            Msg::NoOp => {
-                false
-            }
+//            Msg::NoOp => {
+//                false
+//            }
         }
     }
 
@@ -142,6 +146,31 @@ impl Component<Context> for CreateAccount {
         true
     }
 }
+
+fn validate_user_name(user_name: String) -> Result<String,String> {
+    if user_name.len() < 5 {
+        return Err("User Name must be 5 or more characters.".into())
+    }
+    Ok(user_name)
+}
+
+fn validate_display_name(display_name: String) -> Result<String, String> {
+    if display_name.len() < 5 {
+        return Err("Display Name must be 5 or more characters.".into())
+    }
+    Ok(display_name)
+}
+
+
+fn validate_password(password: String) -> Result<String, String> {
+    if password.len() < 8 {
+        return Err("Password must be 8 or more characters.".into())
+    }
+    Ok(password)
+}
+//fn validate_confirm_password(password: String) -> Result<String, String> {
+//    Ok(password)
+//}
 
 impl Renderable<Context, CreateAccount> for CreateAccount {
     fn view(&self) -> Html<Context, Self> {
@@ -152,46 +181,76 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
                         <h3>
                             {"Create Account"}
                         </h3>
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
-                            placeholder="User Name",
-                            value=&create_account.user_name,
-                            oninput=|e: InputData| Msg::UpdateUserName(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
-                        />
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
+                        <Input:
+//                            required=true,
                             placeholder="Display Name",
-                            value=&create_account.display_name,
-                            oninput=|e: InputData| Msg::UpdateDisplayName(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
+                            input_state=&create_account.display_name,
+                            on_change=|a| Msg::UpdateDisplayName(a),
+                            on_enter=|_| Msg::Submit,
+                            validator=Box::new(validate_display_name as InputValidator),
                         />
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
+
+                        <Input:
+//                            required=true,
+                            placeholder="User Name",
+                            input_state=&create_account.user_name,
+                            on_change=|a| Msg::UpdateUserName(a),
+                            on_enter=|_| Msg::Submit,
+                            validator=Box::new(validate_user_name as InputValidator),
+                        />
+
+
+
+//                        <input
+//                            class="form-control",
+//                        //    disabled=self.disabled,
+//                            placeholder="Display Name",
+//                            value=&create_account.display_name,
+//                            oninput=|e: InputData| Msg::UpdateDisplayName(e.value),
+//                            onkeypress=|e: KeyData| {
+//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+//                            },
+//                        />
+
+                        <Input:
+//                            required=true,
                             placeholder="Password",
-                            value=&create_account.password,
-                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
+                            input_state=&create_account.password,
+                            on_change=|a| Msg::UpdatePassword(a),
+                            on_enter=|_| Msg::Submit,
+                            validator=Box::new(validate_password as InputValidator),
+                            is_password=true,
                         />
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
+
+//                        <input
+//                            class="form-control",
+//                        //    disabled=self.disabled,
+//                            placeholder="Password",
+//                            value=&create_account.password,
+//                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
+//                            onkeypress=|e: KeyData| {
+//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+//                            },
+//                        />
+                        <Input:
+//                            required=true,
                             placeholder="Confirm Password",
-                            value=&create_account.confirm_password,
-                            oninput=|e: InputData| Msg::UpdateConfirmPassword(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
+                            input_state=&create_account.confirm_password,
+                            on_change=|a| Msg::UpdateConfirmPassword(a),
+                            on_enter=|_| Msg::Submit,
+                            validator=Box::new(validate_password as InputValidator),
+                            is_password=true,
                         />
+//                        <input
+//                            class="form-control",
+//                        //    disabled=self.disabled,
+//                            placeholder="Confirm Password",
+//                            value=&create_account.confirm_password,
+//                            oninput=|e: InputData| Msg::UpdateConfirmPassword(e.value),
+//                            onkeypress=|e: KeyData| {
+//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+//                            },
+//                        />
 
                     </div>
                     <div>

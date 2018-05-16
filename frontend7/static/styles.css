@@ -31,6 +31,10 @@ body {
 .scrollable {
     overflow-y: auto;
 }
+
+/* Util visibility*/
+
+
 /* Util */
 .flexbox-horiz {
     display: flex;
@@ -47,6 +51,12 @@ body {
     height: 100%;
     width: 100%;
 }
+
+.flexbox-center-vert {
+    display: flex; /*Ok if redundant*/
+    align-items: center;
+}
+
 .flexbox-child-grow {
     flex-grow: 1;
 }
@@ -258,14 +268,62 @@ button {
     color: #555;
     background-color: #fff;
     background-image: none;
-    border: 1px solid #ccc;
+    border: 1px solid #bbb;
     box-sizing: border-box;
 }
-.form-control {
-    border-color: #66afe9;
-    outline: 0;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);
+.form-control-start {
+    display: block;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    padding: 6px 12px;
+    font-size: 14px;
+    background: #fff none;
+    border-left: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    border-bottom: 1px solid #bbb;
+    box-sizing: border-box;
+}
+
+/*.form-control {*/
+    /*border-color: #66afe9;*/
+    /*outline: 0;*/
+    /*-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);*/
+    /*box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);*/
+/*}*/
+
+.form-error-message {
+    position: absolute;
+    display: block;
+    /*left: 34px;*/
+    top:-30px;
+    /*width: calc(100% - 34px);*/
+    width:100%;
+    padding: 6px 12px;
+    font-size: 14px;
+    background: #ff8684 none;
+    border-left: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    border-right: 1px solid #bbb;
+    box-sizing: border-box;
+}
+
+.input-group {
+    position: relative;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    /*-ms-flex-wrap: wrap;*/
+    /*flex-wrap: wrap;*/
+    -webkit-box-align: stretch;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-and-error-container {
+    margin-top: 34px;
+    position: relative;
 }
 
 .edit-markdown-bar {

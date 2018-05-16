@@ -1,5 +1,5 @@
 //#![feature(try_from)]
-
+#![recursion_limit="128"]
 
 #[macro_use]
 extern crate yew;
