@@ -55,24 +55,28 @@ impl <T> Uploadable<T> where T: Default {
         }
     }
 
-    pub fn as_mut(&mut self) -> &mut T {
-        match self {
-            Uploadable::NotUploaded(ref mut t) => t,
-            Uploadable::Uploading(ref mut t, _) => t,
-            Uploadable::Failed(ref mut t, _) => t
-        }
+    pub fn cloned_inner(&self) -> T where T: Clone {
+        self.as_ref().clone()
     }
+}
 
-    pub fn as_ref(&self) -> &T {
+impl <T> AsRef<T> for Uploadable<T> {
+    fn as_ref(&self) -> &T {
         match self {
             Uploadable::NotUploaded(ref t) => t,
             Uploadable::Uploading(ref t, _) => t,
             Uploadable::Failed(ref t, _) => t
         }
     }
+}
 
-    pub fn cloned_inner(&self) -> T where T: Clone {
-        self.as_ref().clone()
+impl <T> AsMut<T> for Uploadable<T> {
+    fn as_mut(&mut self) -> &mut T {
+        match self {
+            Uploadable::NotUploaded(ref mut t) => t,
+            Uploadable::Uploading(ref mut t, _) => t,
+            Uploadable::Failed(ref mut t, _) => t
+        }
     }
 }
 
