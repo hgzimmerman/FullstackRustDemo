@@ -30,8 +30,10 @@ impl <T> Uploadable<T> where T: Default {
         match self {
             Uploadable::NotUploaded(ref t) => render_fn(t),
             Uploadable::Uploading(ref t, _) => html! {
-                <div>
-                    {LoadingType::Fidget{diameter: 100}.view()}
+                <div class="loading-container",>
+                    <div class="loading-overlay",>
+                        {LoadingType::Fidget{diameter: 100}.view()}
+                    </div>
                     {render_fn(t)}
                 </div>
             },

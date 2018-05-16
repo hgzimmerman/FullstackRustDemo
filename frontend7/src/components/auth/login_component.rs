@@ -146,7 +146,9 @@ impl Renderable<Context, Login> for Login {
             html! {
                 <div class=("login-card", "flexbox-vert"),>
                     <div class="flexbox-child-grow",>
-                        {"Login"}
+                        <h3>
+                            {"Login"}
+                        </h3>
                         <input
                             class="form-control",
                         //    disabled=self.disabled,
@@ -166,6 +168,7 @@ impl Renderable<Context, Login> for Login {
                             onkeypress=|e: KeyData| {
                                 if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
                             },
+                            type="password",
                         />
                     </div>
 

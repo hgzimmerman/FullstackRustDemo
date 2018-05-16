@@ -67,6 +67,22 @@ body {
 
 /* Misc */
 
+/* Container for content and loading overlay */
+.loading-container {
+    width: auto;
+    height: auto;
+    position: relative;
+}
+
+/* The overlay that sits on top of the content while something is uploaded. */
+.loading-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background-color: #aaaaaa88
+}
+
 button {
    display: inline-block;
    padding: 6px 12px;
