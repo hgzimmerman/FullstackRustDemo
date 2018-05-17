@@ -136,9 +136,6 @@ impl Component<Context> for CreateAccount {
                 self.data.set_failed("Could not create account.");
                 true
             }
-//            Msg::NoOp => {
-//                false
-//            }
         }
     }
 
@@ -176,7 +173,7 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
     fn view(&self) -> Html<Context, Self> {
         fn create_account_view(create_account: &CreateAccountData) -> Html<Context, CreateAccount> {
             html! {
-                <div class=("login-card", "flexbox-vert"),>
+                <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
                     <div class="flexbox-child-grow",>
                         <h3>
                             {"Create Account"}
@@ -199,19 +196,6 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
                             validator=Box::new(validate_user_name as InputValidator),
                         />
 
-
-
-//                        <input
-//                            class="form-control",
-//                        //    disabled=self.disabled,
-//                            placeholder="Display Name",
-//                            value=&create_account.display_name,
-//                            oninput=|e: InputData| Msg::UpdateDisplayName(e.value),
-//                            onkeypress=|e: KeyData| {
-//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-//                            },
-//                        />
-
                         <Input:
 //                            required=true,
                             placeholder="Password",
@@ -222,16 +206,6 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
                             is_password=true,
                         />
 
-//                        <input
-//                            class="form-control",
-//                        //    disabled=self.disabled,
-//                            placeholder="Password",
-//                            value=&create_account.password,
-//                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
-//                            onkeypress=|e: KeyData| {
-//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-//                            },
-//                        />
                         <Input:
 //                            required=true,
                             placeholder="Confirm Password",
@@ -241,16 +215,6 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
                             validator=Box::new(validate_password as InputValidator),
                             is_password=true,
                         />
-//                        <input
-//                            class="form-control",
-//                        //    disabled=self.disabled,
-//                            placeholder="Confirm Password",
-//                            value=&create_account.confirm_password,
-//                            oninput=|e: InputData| Msg::UpdateConfirmPassword(e.value),
-//                            onkeypress=|e: KeyData| {
-//                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-//                            },
-//                        />
 
                     </div>
                     <div>
@@ -261,7 +225,7 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
             }
         }
         html! {
-            <div class="flexbox-center",>
+            <div class=("flexbox-center","scrollable"),>
                 {self.data.default_view(create_account_view)}
             </div>
         }

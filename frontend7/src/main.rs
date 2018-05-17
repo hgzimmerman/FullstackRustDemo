@@ -119,11 +119,13 @@ impl Default for Route {
 
 struct Model {
     route: Route,
+    is_logged_in: bool
 }
 
 
 enum Msg {
     Navigate(Route),
+    UpdateLogin
 }
 
 
@@ -150,14 +152,21 @@ impl Component<Context> for Model {
             route.clone(),
         ); // sets the url to be dependent on what the route_info was resolved to
 
-        Model { route }
+        Model { route, is_logged_in: context.is_logged_in() }
     }
 
-    fn update(&mut self, msg: Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
 
         match msg {
             Msg::Navigate(route) => {
                 self.route = route;
+                self.is_logged_in = context.is_logged_in();
+                true
+            }
+            Msg::UpdateLogin => {
+                // TODO This does not work reliably, so it is done on updates
+                // TODO a good solution is implementing a Redux like solution by allowing anything with access to a context to send messages to this.
+                self.is_logged_in = context.is_logged_in();
                 true
             }
         }
@@ -172,11 +181,7 @@ impl Renderable<Context, Model> for Model {
 
         let page = |route: &Route| match route {
             Route::Auth(ref auth_page) => {
-                html! {
-                        <>
-                            <Auth: child=auth_page, />
-                        </>
-                    }
+                auth_page.view()
             }
             Route::Forums(ref forum_list_route) => {
                 html! {
@@ -194,19 +199,9 @@ impl Renderable<Context, Model> for Model {
             }
         };
 
-        let header_links = vec![
-            HeaderLink {
-                name: "Forum".into(),
-                link: Route::Forums(ForumRoute::ForumList),
-            },
-            HeaderLink {
-                name: "Login".into(),
-                link: Route::Auth(AuthRoute::Login),
-            },
-        ];
         html! {
             <div class="main-container", >
-                <Header: links=header_links, />
+                <Header: is_logged_in=self.is_logged_in,  />
                 <div class="main-content", >
                     {page(&self.route)}
                 </div>

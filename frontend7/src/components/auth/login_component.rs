@@ -30,19 +30,19 @@ pub struct LoginData {
 
 pub struct Login {
     login_data: Uploadable<LoginData>,
-    create_account_nav_cb: Option<Callback<()>>,
+    on_login_cb: Option<Callback<()>>,
 }
 
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
-    pub create_account_nav_cb: Option<Callback<()>>,
+    pub on_login_cb: Option<Callback<()>>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
-            create_account_nav_cb: None,
+            on_login_cb: None,
         }
     }
 }
@@ -56,7 +56,7 @@ impl Component<Context> for Login {
 
         Login {
             login_data: Uploadable::default(),
-            create_account_nav_cb: props.create_account_nav_cb,
+            on_login_cb: props.on_login_cb,
         }
     }
 
@@ -100,14 +100,9 @@ impl Component<Context> for Login {
                 true
             }
             Msg::NavToCreateAccount => {
-//                println!("LoginComponent: navigating to create account");
-                if let Some(ref mut cb) = self.create_account_nav_cb {
-                    cb.emit(())
-                }
                 context.routing.set_route(Route::Auth(
                     AuthRoute::Create,
                 ));
-
                 true
             }
             Msg::UpdatePassword(p) => {
@@ -123,7 +118,11 @@ impl Component<Context> for Login {
 
                 use Route;
                 use components::forum::ForumRoute;
+
                 context.routing.set_route(Route::Forums(ForumRoute::ForumList));
+                if let Some(ref cb) = self.on_login_cb {
+                    cb.emit(())
+                }
                 true
             }
             Msg::LoginError => {
@@ -134,8 +133,8 @@ impl Component<Context> for Login {
         }
     }
 
-    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
-        //        self.nav_cb = props.nav_cb;33
+    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+        self.on_login_cb = props.on_login_cb;
         true
     }
 }
@@ -180,8 +179,7 @@ impl Renderable<Context, Login> for Login {
             }
         }
         html! {
-
-            <div class="flexbox-center",>
+            <div class=("flexbox-center", "scrollable"),>
                 {self.login_data.default_view(login_view)}
             </div>
         }
