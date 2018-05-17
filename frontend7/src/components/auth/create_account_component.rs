@@ -217,9 +217,10 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
             }
         }
         html! {
-
-            <div class=("full-height","scrollable"),>
-                {self.data.default_view(create_account_view)}
+            <div class=("full-height","scrollable", "flexbox"),>
+                <div class="flexbox-center-item",>
+                    {self.data.default_view(create_account_view)}
+                </div>
             </div>
         }
 

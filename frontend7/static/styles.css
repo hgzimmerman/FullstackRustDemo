@@ -106,7 +106,7 @@ body {
 /* Container for content and loading overlay */
 .loading-container {
     width: auto;
-    height: 100%; /*eeeh */
+    height: auto;
     position: relative;
 }
 
