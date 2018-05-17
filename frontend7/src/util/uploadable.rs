@@ -3,7 +3,8 @@ use yew::prelude::*;
 use std::mem;
 use context::networking::FtWrapper;
 use util::loading::LoadingType;
-
+use std::fmt::Formatter;
+use std::fmt::Debug;
 
 
 pub enum Uploadable<T> {
@@ -11,6 +12,18 @@ pub enum Uploadable<T> {
     Uploading(T, FetchTask),
     Failed(T, String)
 }
+
+impl <T> Debug for Uploadable<T> where T: Debug {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), ::std::fmt::Error> {
+        use self::Uploadable::*;
+        match self {
+            NotUploaded(t) => write!(f, "Unloaded: {:?}", t),
+            Uploading(t, _) => write!(f, "Loaded: {:?}", t),
+            Failed(t, e) => write!(f, "Failed with error: {} for wrapped: {:?}",e, t),
+        }
+    }
+}
+
 impl <T> FtWrapper for Uploadable<T> where T: Default {
     fn set_ft(&mut self, ft: FetchTask) {
         *self = match *self {

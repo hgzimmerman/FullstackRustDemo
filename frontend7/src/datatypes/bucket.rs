@@ -22,6 +22,7 @@ pub struct NewBucket {
     pub name: InputState
 }
 
+
 impl NewBucket {
     pub fn validate_name(name: String) -> Result<String, String> {
         if name.len() < 1 {

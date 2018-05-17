@@ -6,6 +6,7 @@ use yew::services::route::RouteSection;
 
 mod bucket;
 mod buckets;
+mod new_bucket;
 //use components::bucket::buckets::BucketList;
 use components::bucket::buckets::*;
 use components::button::Button;
@@ -25,6 +26,11 @@ use wire::bucket::BucketResponse;
 use util::input::InputValidator;
 use util::input::Input;
 use util::input::InputState;
+
+use util::uploadable::Uploadable;
+use wire::bucket::NewBucketRequest;
+
+
 
 
 
@@ -78,7 +84,7 @@ pub struct BucketModel {
 pub enum BucketPage {
     BucketList(Loadable<Vec<BucketData>>),
     Bucket(Loadable<BucketData>),
-    Create(NewBucket)
+    Create(Uploadable<NewBucket>)
 }
 
 
@@ -90,7 +96,7 @@ pub enum Msg {
     BucketFailed,
     NavigateToCreateBucket,
     CreateBucket,
-    UpdateBucketName(InputState)
+    UpdateBucketName(InputState),
 }
 
 impl BucketModel {
@@ -140,6 +146,38 @@ impl BucketModel {
             callback,
         );
     }
+    fn create_bucket(new_bucket: &mut Uploadable<NewBucket>, context: &mut Env<Context, Self>) {
+        let callback = context.send_back(
+            |response: Response<Json<Result<BucketResponse, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                if meta.status.is_success() {
+                    Msg::BucketReady(
+                        data.map(BucketData::from).unwrap()
+                    )
+                } else {
+                    Msg::BucketFailed
+                }
+            },
+        );
+
+        let bucket: NewBucket = new_bucket.cloned_inner();
+
+        match bucket.validate() {
+            Ok(new_bucket_request) => {
+                 context.make_logoutable_request(
+                    new_bucket,
+                    RequestWrapper::CreateBucket(new_bucket_request),
+                    callback,
+                );
+            }
+            Err(error) => {
+                new_bucket.set_failed(&error)
+            }
+        }
+
+
+    }
 }
 
 impl Component<Context> for BucketModel {
@@ -160,7 +198,7 @@ impl Component<Context> for BucketModel {
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {
-                BucketPage::Create(NewBucket::default())
+                BucketPage::Create(Uploadable::default())
             }
         };
 
@@ -179,10 +217,14 @@ impl Component<Context> for BucketModel {
             BucketReady(bucket) => self.bucket_page = BucketPage::Bucket(Loadable::Loaded(bucket)),
             BucketFailed => self.bucket_page = BucketPage::Bucket(Loadable::Failed(Some("Failed to load bucket.".to_string()))),
             NavigateToCreateBucket => context.routing.set_route(Route::Bucket(BucketRoute::Create)),
-            CreateBucket => unimplemented!(),
+            CreateBucket => {
+                if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
+                    Self::create_bucket(new_bucket, context)
+                }
+            },
             UpdateBucketName(bucket_name) => {
                 if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
-                    new_bucket.name = bucket_name;
+                    new_bucket.as_mut().name = bucket_name;
                 } else {
                     context.log("Incongruent state. Expected page to be /create");
                     return false
@@ -204,7 +246,7 @@ impl Component<Context> for BucketModel {
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {
-                BucketPage::Create(NewBucket::default())
+                BucketPage::Create(Uploadable::default())
             }
         };
         self.bucket_page = bucket_page;
@@ -224,17 +266,8 @@ impl Renderable<Context, BucketModel> for BucketModel {
                 </>
             },
             Create(ref new_bucket) => html! {
-                 <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
-                    <div class="flexbox-child-grow",>
-                        <Input:
-                            placeholder="Bucket Name",
-                            input_state=&new_bucket.name,
-                            on_change=|a| Msg::UpdateBucketName(a),
-                            on_enter=|_| Msg::CreateBucket,
-                            validator=Box::new(NewBucket::validate_name as InputValidator),
-                        />
-                    </div>
-                    <Button: title="Create Bucket", onclick=|_| Msg::CreateBucket, />
+                <div class="flexbox-center-item",>
+                    {new_bucket.default_view(NewBucket::view)}
                 </div>
             }
         };

@@ -70,6 +70,7 @@ body {
 
 
 
+/*TODO this is not accurately named*/
 .flexbox-center-item {
     margin: auto
 }
@@ -170,6 +171,9 @@ button {
     font-size: 18px;
     margin: 5px 5px 5px 10px;
     color: blue;
+}
+.nav-link:hover {
+    cursor: pointer;
 }
 
 /* Login */
@@ -391,5 +395,10 @@ button {
 .bucket-card {
     min-height: 150px;
     min-width: 200px;
+    background: aquamarine;
+}
+
+.bucket-card:hover {
+    cursor: pointer;
 }
 

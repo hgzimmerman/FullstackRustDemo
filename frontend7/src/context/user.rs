@@ -22,7 +22,7 @@ enum JwtError {
     JsonDecodeFailure,
 }
 
-fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, Error> {
+pub fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, Error> {
     let payload_segment: &str = jwt_string
         .split('.')
         .collect::<Vec<&str>>()
