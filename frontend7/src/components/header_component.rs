@@ -6,6 +6,7 @@ use context::Context;
 use Route;
 use components::auth::AuthRoute;
 use components::forum::ForumRoute;
+use components::bucket::BucketRoute;
 
 #[derive(Clone, PartialEq)]
 pub struct HeaderLink {
@@ -24,7 +25,8 @@ pub enum Msg {
 //    CallLink(Route),
     Login,
     Logout,
-    Forums
+    Forums,
+    BucketQuestions
 }
 
 #[derive(PartialEq, Clone)]
@@ -63,7 +65,7 @@ impl Component<Context> for Header {
                 context.routing.set_route(Route::Auth(AuthRoute::Login));
             }
             Forums => context.routing.set_route(Route::Forums(ForumRoute::ForumList)),
-
+            BucketQuestions => context.routing.set_route(Route::Bucket(BucketRoute::BucketList))
         }
         true
     }
@@ -94,6 +96,7 @@ impl Renderable<Context, Header> for Header {
                 </div>
                 <div class="nav-links",>
                     <Link<()>: name="Forums", callback=|_| Msg::Forums, classes="nav-link", />
+                    <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
                     {log_in_out}
                 </div>
             </div>

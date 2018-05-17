@@ -44,7 +44,9 @@ pub enum RequestWrapper {
     GetForum { forum_id: i32 },
     GetThread { thread_id: i32 },
     CreatePostResponse(NewPostRequest),
-    UpdatePost(EditPostRequest)
+    UpdatePost(EditPostRequest),
+    GetBuckets,
+    GetBucket{bucket_id: i32}
 }
 
 impl RequestWrapper {
@@ -64,7 +66,9 @@ impl RequestWrapper {
             GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id),
             GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id),
             CreatePostResponse(_) => format!("{}/post/create", api_base),
-            UpdatePost(_) => format!("{}/post/edit", api_base)
+            UpdatePost(_) => format!("{}/post/edit", api_base),
+            GetBuckets => format!("{}/bucket/buckets", api_base),
+            GetBucket{bucket_id} => format!("{}/bucket/{}", api_base, bucket_id) // TODO this api is not yet implemented
         }
     }
 
@@ -81,7 +85,9 @@ impl RequestWrapper {
             GetForum {..} => NotRequired,
             GetThread {..} => NotRequired,
             CreatePostResponse(_) => Required,
-            UpdatePost(_) => Required
+            UpdatePost(_) => Required,
+            GetBuckets => Required,
+            GetBucket{..} => Required,
         }
     }
 
@@ -102,7 +108,9 @@ impl RequestWrapper {
             GetForum {..} => Get,
             GetThread {..} => Get,
             CreatePostResponse(r) => Post(to_body(r)),
-            UpdatePost(r) => Put(to_body(r))
+            UpdatePost(r) => Put(to_body(r)),
+            GetBuckets => Get,
+            GetBucket {..} => Get
         }
     }
 }

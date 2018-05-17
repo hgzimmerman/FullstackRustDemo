@@ -40,9 +40,12 @@ use yew::services::route::*;
 
 use components::auth::AuthRoute;
 use components::forum::ForumRoute;
+use components::bucket::BucketRoute;
 use components::auth::Auth;
 use components::header_component::*;
 use components::forum::ForumModel;
+use components::bucket::BucketModel;
+
 
 
 #[derive(Clone, PartialEq, Debug)]
@@ -50,7 +53,7 @@ pub enum Route {
     Forums(ForumRoute),
     //    ArticleView,
     Auth(AuthRoute),
-    //    BucketView,
+    Bucket(BucketRoute),
     PageNotFound,
 }
 
@@ -60,6 +63,7 @@ impl Router for Route {
         match *self {
             Route::Forums(ref forum_list_route) => RouteInfo::parse("/forum").unwrap() + forum_list_route.to_route(),
             Route::Auth(ref auth_route) => RouteInfo::parse("/auth").unwrap() + auth_route.to_route(),
+            Route::Bucket(ref bucket_route) => RouteInfo::parse("/bucket").unwrap() + bucket_route.to_route(),
             Route::PageNotFound => {
                 RouteInfo::parse("/pagenotfound")
                     .unwrap()
@@ -85,6 +89,13 @@ impl MainRouter for Route {
                 "auth" => {
                     if let Some(child) = AuthRoute::from_route(route) {
                         Route::Auth(child)
+                    } else {
+                        Route::PageNotFound
+                    }
+                }
+                "bucket" => {
+                    if let Some(child) = BucketRoute::from_route(route) {
+                        Route::Bucket(child)
                     } else {
                         Route::PageNotFound
                     }
@@ -124,8 +135,13 @@ struct Model {
 
 
 enum Msg {
+    /// This should not be called by children, as the actions preformed due to this message don't affect the router state.
+    /// This should only be called by the router logic itself.
     Navigate(Route),
-    UpdateLogin
+    UpdateLogin,
+    /// This can be called by children te sot the route
+    #[allow(dead_code)]
+    SetRoute(Route)
 }
 
 
@@ -160,7 +176,7 @@ impl Component<Context> for Model {
         match msg {
             Msg::Navigate(route) => {
                 self.route = route;
-                self.is_logged_in = context.is_logged_in();
+                self.is_logged_in = context.is_logged_in(); // TODO remove this in the future.
                 true
             }
             Msg::UpdateLogin => {
@@ -169,33 +185,34 @@ impl Component<Context> for Model {
                 self.is_logged_in = context.is_logged_in();
                 true
             }
+            Msg::SetRoute(route) => {
+                context.routing.set_route(route);
+                false // let the call back to ::Navigate do the updating
+            }
         }
     }
 }
 
 
-
-
 impl Renderable<Context, Model> for Model {
     fn view(&self) -> Html<Context, Self> {
 
+        use self::Route::*;
         let page = |route: &Route| match route {
-            Route::Auth(ref auth_page) => {
+            Auth(ref auth_page) => {
                 auth_page.view()
             }
-            Route::Forums(ref forum_list_route) => {
-                html! {
-                        <>
-                            <ForumModel: route=forum_list_route, />
-                        </>
-                    }
-            }
-            _ => {
-                html! {
-                        <>
-                            {"Main routing Not implemented"}
-                        </>
-                    }
+            Forums(ref forum_list_route) => html! {
+                <ForumModel: route=forum_list_route, />
+            },
+            Bucket(ref bucket_route) => html! {
+//                bucket_route.view(),
+                <BucketModel: route=bucket_route, />
+            },
+            PageNotFound => html! {
+                <>
+                    {"Page Not Found"}
+                </>
             }
         };
 

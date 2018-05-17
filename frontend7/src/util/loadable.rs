@@ -3,6 +3,8 @@ use yew::prelude::*;
 use std::fmt::Formatter;
 use std::fmt::Debug;
 
+use context::networking::FtWrapper;
+
 use util::loading::LoadingType;
 
 use util::empty::empty_vdom_node;
@@ -14,6 +16,12 @@ pub enum Loadable<T> {
     Loading(FetchTask),
     Loaded(T),
     Failed(Option<String>)
+}
+
+impl <T> FtWrapper for Loadable<T> where T: Default {
+    fn set_ft(&mut self, ft: FetchTask) {
+        *self = Loadable::Loading(ft)
+    }
 }
 
 impl <T> Debug for Loadable<T> where T: Debug {

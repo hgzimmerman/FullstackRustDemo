@@ -617,16 +617,13 @@ impl Renderable<Context, ForumModel> for ForumModel {
 
         html!{
             <div class=("flexbox-vert","full-height", "no-scroll"),>
-                <div class="forum-title",> // Title bar
-
-                    <div class=("flexbox-horiz", "margin-left"),>
-                        {
-                            match self.forums_or_selected_forum {
-                                ForumsOrForum::Forums(ref forums) => forums.small_view(forums_title),
-                                ForumsOrForum::Forum{ref forum, ..} =>  forum.small_view(forum_title)
-                            }
+                <div class=("title-bar", "flexbox-horiz", "flexbox-center-vert"),> // Title bar
+                    {
+                        match self.forums_or_selected_forum {
+                            ForumsOrForum::Forums(ref forums) => forums.small_view(forums_title),
+                            ForumsOrForum::Forum{ref forum, ..} =>  forum.small_view(forum_title)
                         }
-                    </div>
+                    }
                 </div>
                 <div class=("flexbox-horiz", "full-height", "no-scroll"), > // Horizontal container
                     <div class=("vertical-expand", "list-background", "forum-list-width", "scrollable"),> // Vertical - list container

@@ -49,6 +49,12 @@ body {
     display: flex;
     flex-direction: column;
 }
+.flexbox-horiz-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
 .flexbox-center {
     display: flex;
     align-items: safe center;
@@ -56,6 +62,8 @@ body {
     height: 100%;
     width: 100%;
 }
+
+
 
 .flexbox-center-item {
     margin: auto
@@ -136,6 +144,7 @@ button {
     flex: 0;
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     align-items: center; /* Vertically center the content*/
 }
 
@@ -145,12 +154,12 @@ button {
 }
 
 .nav-links {
-    flex: 0;
+    /*flex: 0;*/
 }
 
 .nav-link {
     font-size: 18px;
-    margin: 5px;
+    margin: 5px 5px 5px 10px;
     color: blue;
 }
 
@@ -202,12 +211,17 @@ button {
     width: 400px
 }
 
-.forum-title {
+.title-bar {
     width: 100%;
     background-color: gray;
-    font-size: 20pt;
+    font-size: 18pt;
     height: 40px;
+    min-height: 40px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
+
+
 
 .forum-title-span {
     padding: 10px;
@@ -364,4 +378,9 @@ button {
     border-right: 2px solid black;
 }
 
+/*Bucket*/
+.bucket-card {
+    min-height: 150px;
+    min-width: 200px;
+}
 
