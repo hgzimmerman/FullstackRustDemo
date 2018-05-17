@@ -12,6 +12,7 @@ use components::button::Button;
 use Route;
 
 use datatypes::bucket::BucketData;
+use datatypes::bucket::NewBucket;
 use util::loadable::Loadable;
 
 
@@ -20,6 +21,11 @@ use yew::services::fetch::Response;
 use failure::Error;
 use context::networking::RequestWrapper;
 use wire::bucket::BucketResponse;
+
+use util::input::InputValidator;
+use util::input::Input;
+use util::input::InputState;
+
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -65,10 +71,6 @@ pub struct Props {
     pub route: BucketRoute
 }
 
-pub struct NewBucket {
-
-}
-
 pub struct BucketModel {
     bucket_page: BucketPage
 }
@@ -86,7 +88,9 @@ pub enum Msg {
     BucketsFailed,
     BucketReady(BucketData),
     BucketFailed,
-    NavigateToCreateBucket
+    NavigateToCreateBucket,
+    CreateBucket,
+    UpdateBucketName(InputState)
 }
 
 impl BucketModel {
@@ -156,7 +160,7 @@ impl Component<Context> for BucketModel {
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {
-                BucketPage::Create(NewBucket{})
+                BucketPage::Create(NewBucket::default())
             }
         };
 
@@ -175,6 +179,15 @@ impl Component<Context> for BucketModel {
             BucketReady(bucket) => self.bucket_page = BucketPage::Bucket(Loadable::Loaded(bucket)),
             BucketFailed => self.bucket_page = BucketPage::Bucket(Loadable::Failed(Some("Failed to load bucket.".to_string()))),
             NavigateToCreateBucket => context.routing.set_route(Route::Bucket(BucketRoute::Create)),
+            CreateBucket => unimplemented!(),
+            UpdateBucketName(bucket_name) => {
+                if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
+                    new_bucket.name = bucket_name;
+                } else {
+                    context.log("Incongruent state. Expected page to be /create");
+                    return false
+                }
+            }
         }
         true
     }
@@ -191,7 +204,7 @@ impl Component<Context> for BucketModel {
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {
-                BucketPage::Create(NewBucket{})
+                BucketPage::Create(NewBucket::default())
             }
         };
         self.bucket_page = bucket_page;
@@ -210,10 +223,17 @@ impl Renderable<Context, BucketModel> for BucketModel {
                     {"A single bucket"}
                 </>
             },
-            Create(_) => html! {
-                <>
-                    {"Create a bucket"}
-                </>
+            Create(ref new_bucket) => html! {
+                 <div>
+                    <Input:
+                        placeholder="Bucket Name",
+                        input_state=&new_bucket.name,
+                        on_change=|a| Msg::UpdateBucketName(a),
+                        on_enter=|_| Msg::CreateBucket,
+                        validator=Box::new(NewBucket::validate_name as InputValidator),
+                    />
+                    <Button: title="Create Bucket", onclick=|_| Msg::CreateBucket, />
+                </div>
             }
         };
 

@@ -26,7 +26,6 @@ pub enum Msg {
     Submit,
     NavigateToLogin,
     AccountCreationFailed,
-//    NoOp
 }
 
 #[derive(Debug, Clone, Default)]
@@ -39,15 +38,6 @@ pub struct CreateAccountData {
 
 impl CreateAccountData {
     fn validate(&self) -> Result<NewUserRequest, &str> {
-//        if self.user_name.len() < 5 {
-//            return Err("User Name must be 5 or more characters.")
-//        }
-//        if self.display_name.len() < 5 {
-//            return Err("Display Name must be 5 or more characters.")
-//        }
-//        if self.password.len() < 8 {
-//            return Err("Password must be 8 or more characters ")
-//        }
         if self.confirm_password != self.password {
             return Err("Passwords do not match")
         }

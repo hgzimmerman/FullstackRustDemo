@@ -1,4 +1,6 @@
 use wire::bucket::*;
+use util::input::InputState;
+
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BucketData {
@@ -14,3 +16,32 @@ impl From<BucketResponse> for BucketData {
         }
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NewBucket {
+    pub name: InputState
+}
+impl NewBucket {
+    pub fn validate_name(name: String) -> Result<String,String> {
+        if name.len() < 1 {
+            return Err("Name must have some text.".into())
+        }
+        Ok(name)
+    }
+    pub fn validate(&self) -> Result<NewBucketRequest, String> {
+        Self::validate_name(self.name.inner_text())?;
+
+        let request = NewBucketRequest {
+            bucket_name: self.name.inner_text().clone(),
+        };
+        Ok(request)
+    }
+}
+
+//impl Into<NewBucketRequest> for NewBucket {
+//    fn into(self) -> NewBucketRequest {
+//        NewBucketRequest {
+//            bucket_name: self.name
+//        }
+//    }
+//}

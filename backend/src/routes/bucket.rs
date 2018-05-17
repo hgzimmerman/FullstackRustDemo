@@ -13,11 +13,19 @@ use db::Creatable;
 
 
 /// Get all of the available buckets.
-#[get("/buckets")]
+#[get("/")]
 fn get_buckets(conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
 
     Bucket::get_all(&conn)
         .map(convert_vector)
+        .map(Json)
+}
+
+/// gets the bucket at the given Id.
+#[get("/<bucket_id>")]
+fn get_bucket(bucket_id: i32, conn: Conn) -> JoeResult<Json<BucketResponse>> {
+    Bucket::get_by_id(bucket_id, &conn)
+        .map(BucketResponse::from)
         .map(Json)
 }
 
@@ -33,6 +41,6 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: AdminUser, conn: Co
 
 
 impl Routable for Bucket {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_buckets, create_bucket];
-    const PATH: &'static str = "/bucket/";
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![get_buckets, get_bucket, create_bucket];
+    const PATH: &'static str = "/buckets/";
 }

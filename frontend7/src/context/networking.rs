@@ -9,6 +9,7 @@ use wire::user::*;
 use wire::thread::*;
 use wire::login::*;
 use wire::post::*;
+use wire::bucket::*;
 use failure::Error;
 use serde_json;
 use serde::Serialize;
@@ -46,7 +47,8 @@ pub enum RequestWrapper {
     CreatePostResponse(NewPostRequest),
     UpdatePost(EditPostRequest),
     GetBuckets,
-    GetBucket{bucket_id: i32}
+    GetBucket{bucket_id: i32},
+    CreateBucket(NewBucketRequest)
 }
 
 impl RequestWrapper {
@@ -67,8 +69,9 @@ impl RequestWrapper {
             GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id),
             CreatePostResponse(_) => format!("{}/post/create", api_base),
             UpdatePost(_) => format!("{}/post/edit", api_base),
-            GetBuckets => format!("{}/bucket/buckets", api_base),
-            GetBucket{bucket_id} => format!("{}/bucket/{}", api_base, bucket_id) // TODO this api is not yet implemented
+            GetBuckets => format!("{}/buckets/", api_base),
+            GetBucket{bucket_id} => format!("{}/buckets/{}", api_base, bucket_id),
+            CreateBucket(_) => format!("{}/buckets/create", api_base),
         }
     }
 
@@ -88,6 +91,7 @@ impl RequestWrapper {
             UpdatePost(_) => Required,
             GetBuckets => Required,
             GetBucket{..} => Required,
+            CreateBucket(_) => Required
         }
     }
 
@@ -110,7 +114,8 @@ impl RequestWrapper {
             CreatePostResponse(r) => Post(to_body(r)),
             UpdatePost(r) => Put(to_body(r)),
             GetBuckets => Get,
-            GetBucket {..} => Get
+            GetBucket {..} => Get,
+            CreateBucket(r) => Post(to_body(r))
         }
     }
 }
@@ -118,8 +123,8 @@ impl RequestWrapper {
 
 impl Context {
 
-
     /// Make a request, that if the conditions to send a JWT aren't met, the user will be logged out.
+    /// This will also set the object that encapsulates the fetch task to be in its loading state.
     pub fn make_logoutable_request<W, FTW>(&mut self, ft_wrapper: &mut FTW, request: RequestWrapper, callback: Callback<Response<W>>)
     where
         W: From<Result<String, Error>> + 'static,
