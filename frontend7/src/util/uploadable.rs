@@ -28,9 +28,13 @@ impl <T> Uploadable<T> where T: Default {
         U: Component<CTX>
     {
         match self {
-            Uploadable::NotUploaded(ref t) => render_fn(t),
+            Uploadable::NotUploaded(ref t) => html! {
+                <div class=("loading-container"),>
+                    {render_fn(t)}
+                </div>
+            },
             Uploadable::Uploading(ref t, _) => html! {
-                <div class="loading-container",>
+                <div class=("loading-container", "full-height","full-width"),>
                     <div class="loading-overlay",>
                         {LoadingType::Fidget{diameter: 100}.view()}
                     </div>

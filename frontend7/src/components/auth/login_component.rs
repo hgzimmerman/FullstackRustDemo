@@ -143,43 +143,45 @@ impl Renderable<Context, Login> for Login {
     fn view(&self) -> Html<Context, Self> {
         fn login_view(login_data: &LoginData) -> Html<Context, Login> {
             html! {
-                <div class=("login-card", "flexbox-vert"),>
-                    <div class="flexbox-child-grow",>
-                        <h3>
-                            {"Login"}
-                        </h3>
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
-                            placeholder="User Name",
-                            value=&login_data.user_name,
-                            oninput=|e: InputData| Msg::UpdateUserName(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
-                        />
-                        <input
-                            class="form-control",
-                        //    disabled=self.disabled,
-                            placeholder="Password",
-                            value=&login_data.password,
-                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
-                            },
-                            type="password",
-                        />
-                    </div>
+                <div class=("flexbox","full-height"),>
+                    <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
+                        <div class="flexbox-child-grow",>
+                            <h3>
+                                {"Login"}
+                            </h3>
+                            <input
+                                class="form-control",
+                            //    disabled=self.disabled,
+                                placeholder="User Name",
+                                value=&login_data.user_name,
+                                oninput=|e: InputData| Msg::UpdateUserName(e.value),
+                                onkeypress=|e: KeyData| {
+                                    if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                                },
+                            />
+                            <input
+                                class="form-control",
+                            //    disabled=self.disabled,
+                                placeholder="Password",
+                                value=&login_data.password,
+                                oninput=|e: InputData| Msg::UpdatePassword(e.value),
+                                onkeypress=|e: KeyData| {
+                                    if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                                },
+                                type="password",
+                            />
+                        </div>
 
-                    <div class=("flexbox-horiz"),>
-                        <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                        <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
+                        <div class=("flexbox-horiz"),>
+                            <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                            <Button: title="Create Account", disabled=false, onclick=|_| Msg::NavToCreateAccount, />
+                        </div>
                     </div>
                 </div>
             }
         }
         html! {
-            <div class=("flexbox-center", "scrollable"),>
+            <div class=("full-height","scrollable"),>
                 {self.login_data.default_view(login_view)}
             </div>
         }

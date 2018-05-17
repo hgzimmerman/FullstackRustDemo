@@ -21,10 +21,11 @@ impl From<BucketResponse> for BucketData {
 pub struct NewBucket {
     pub name: InputState
 }
+
 impl NewBucket {
-    pub fn validate_name(name: String) -> Result<String,String> {
+    pub fn validate_name(name: String) -> Result<String, String> {
         if name.len() < 1 {
-            return Err("Name must have some text.".into())
+            return Err("Bucket Name must have some text.".into())
         }
         Ok(name)
     }
@@ -37,11 +38,3 @@ impl NewBucket {
         Ok(request)
     }
 }
-
-//impl Into<NewBucketRequest> for NewBucket {
-//    fn into(self) -> NewBucketRequest {
-//        NewBucketRequest {
-//            bucket_name: self.name
-//        }
-//    }
-//}

@@ -224,14 +224,16 @@ impl Renderable<Context, BucketModel> for BucketModel {
                 </>
             },
             Create(ref new_bucket) => html! {
-                 <div>
-                    <Input:
-                        placeholder="Bucket Name",
-                        input_state=&new_bucket.name,
-                        on_change=|a| Msg::UpdateBucketName(a),
-                        on_enter=|_| Msg::CreateBucket,
-                        validator=Box::new(NewBucket::validate_name as InputValidator),
-                    />
+                 <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
+                    <div class="flexbox-child-grow",>
+                        <Input:
+                            placeholder="Bucket Name",
+                            input_state=&new_bucket.name,
+                            on_change=|a| Msg::UpdateBucketName(a),
+                            on_enter=|_| Msg::CreateBucket,
+                            validator=Box::new(NewBucket::validate_name as InputValidator),
+                        />
+                    </div>
                     <Button: title="Create Bucket", onclick=|_| Msg::CreateBucket, />
                 </div>
             }
@@ -254,7 +256,7 @@ impl Renderable<Context, BucketModel> for BucketModel {
                 </div>
             },
             Create(_) => html! {
-                 <div>
+                <div>
                     {"Create Bucket"}
                 </div>
             }
@@ -263,10 +265,14 @@ impl Renderable<Context, BucketModel> for BucketModel {
 
         html! {
             <div class=("flexbox-vert", "full-height"),>
-                <div class=("title-bar", "flexbox-horiz", "flexbox-center-vert"), > // Title bar
-                    {title_content}
+                <div class="flexbox-horiz",>
+                     <div class=("title-bar", "flexbox-center-vert"), > // Title bar
+                        {title_content}
+                    </div>
                 </div>
-                {page}
+                <div class=("scrollable", "full-height", "flexbox"),>
+                    {page}
+                </div>
             </div>
         }
 

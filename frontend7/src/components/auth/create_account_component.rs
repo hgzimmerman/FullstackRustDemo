@@ -163,59 +163,62 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
     fn view(&self) -> Html<Context, Self> {
         fn create_account_view(create_account: &CreateAccountData) -> Html<Context, CreateAccount> {
             html! {
-                <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
-                    <div class="flexbox-child-grow",>
-                        <h3>
-                            {"Create Account"}
-                        </h3>
-                        <Input:
-//                            required=true,
-                            placeholder="Display Name",
-                            input_state=&create_account.display_name,
-                            on_change=|a| Msg::UpdateDisplayName(a),
-                            on_enter=|_| Msg::Submit,
-                            validator=Box::new(validate_display_name as InputValidator),
-                        />
+                <div class=("flexbox","full-height"),>
+                    <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
+                        <div class="flexbox-child-grow",>
+                            <h3>
+                                {"Create Account"}
+                            </h3>
+                            <Input:
+    //                            required=true,
+                                placeholder="Display Name",
+                                input_state=&create_account.display_name,
+                                on_change=|a| Msg::UpdateDisplayName(a),
+                                on_enter=|_| Msg::Submit,
+                                validator=Box::new(validate_display_name as InputValidator),
+                            />
 
-                        <Input:
-//                            required=true,
-                            placeholder="User Name",
-                            input_state=&create_account.user_name,
-                            on_change=|a| Msg::UpdateUserName(a),
-                            on_enter=|_| Msg::Submit,
-                            validator=Box::new(validate_user_name as InputValidator),
-                        />
+                            <Input:
+    //                            required=true,
+                                placeholder="User Name",
+                                input_state=&create_account.user_name,
+                                on_change=|a| Msg::UpdateUserName(a),
+                                on_enter=|_| Msg::Submit,
+                                validator=Box::new(validate_user_name as InputValidator),
+                            />
 
-                        <Input:
-//                            required=true,
-                            placeholder="Password",
-                            input_state=&create_account.password,
-                            on_change=|a| Msg::UpdatePassword(a),
-                            on_enter=|_| Msg::Submit,
-                            validator=Box::new(validate_password as InputValidator),
-                            is_password=true,
-                        />
+                            <Input:
+    //                            required=true,
+                                placeholder="Password",
+                                input_state=&create_account.password,
+                                on_change=|a| Msg::UpdatePassword(a),
+                                on_enter=|_| Msg::Submit,
+                                validator=Box::new(validate_password as InputValidator),
+                                is_password=true,
+                            />
 
-                        <Input:
-//                            required=true,
-                            placeholder="Confirm Password",
-                            input_state=&create_account.confirm_password,
-                            on_change=|a| Msg::UpdateConfirmPassword(a),
-                            on_enter=|_| Msg::Submit,
-                            validator=Box::new(validate_password as InputValidator),
-                            is_password=true,
-                        />
+                            <Input:
+    //                            required=true,
+                                placeholder="Confirm Password",
+                                input_state=&create_account.confirm_password,
+                                on_change=|a| Msg::UpdateConfirmPassword(a),
+                                on_enter=|_| Msg::Submit,
+                                validator=Box::new(validate_password as InputValidator),
+                                is_password=true,
+                            />
 
-                    </div>
-                    <div>
-                        <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                        <Button: title="Back To Login", disabled=false, onclick=|_| Msg::NavigateToLogin, />
+                        </div>
+                        <div>
+                            <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
+                            <Button: title="Back To Login", disabled=false, onclick=|_| Msg::NavigateToLogin, />
+                        </div>
                     </div>
                 </div>
             }
         }
         html! {
-            <div class=("flexbox-center","scrollable"),>
+
+            <div class=("full-height","scrollable"),>
                 {self.data.default_view(create_account_view)}
             </div>
         }

@@ -41,6 +41,11 @@ body {
 
 
 /* Util */
+
+.flexbox {
+    display: flex;
+}
+
 .flexbox-horiz {
     display: flex;
     flex-direction: row;
@@ -94,10 +99,14 @@ body {
 
 /* Misc */
 
+.meta-loading-container {
+    width: 100%;
+    height: 100%;
+}
 /* Container for content and loading overlay */
 .loading-container {
     width: auto;
-    height: auto;
+    height: 100%; /*eeeh */
     position: relative;
 }
 
