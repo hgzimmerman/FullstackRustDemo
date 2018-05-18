@@ -64,13 +64,24 @@ body {
     display: flex;
     align-items: safe center;
     justify-content: safe center;
+    /*height: 100%;*/
+    /*width: 100%;*/
+}
+
+.flexbox-test {
+    display: flex;
     height: 100%;
     width: 100%;
+    justify-content: stretch;
 }
 
 
 
-/*TODO this is not accurately named*/
+
+/*
+While this itself does not use any flexbox-specific features,
+It does require the parent to be "display: flex".
+*/
 .flexbox-center-item {
     margin: auto
 }
@@ -78,6 +89,11 @@ body {
 .flexbox-center-vert {
     display: flex; /*Ok if redundant*/
     align-items: center;
+}
+
+.flexbox-center-horiz {
+    display: flex;
+    justify-content: center;
 }
 
 .flexbox-child-grow {
@@ -402,3 +418,17 @@ button {
     cursor: pointer;
 }
 
+.question-card {
+    min-height: 200px;
+    min-width: 350px;
+    width: 90%;
+    height: 90%;
+    border: 1px solid black;
+}
+
+.questions-container {
+    flex: 2;
+}
+.answers-container {
+    flex: 1;
+}

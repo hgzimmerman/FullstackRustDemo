@@ -59,7 +59,12 @@ impl <T> Clone for Loadable<T>
 impl <T> Loadable<T> {
 
 
-    fn custom_view<U, CTX, LoadedFn, FailedFn>(&self, loaded_fn: LoadedFn, loading: Html<CTX,U>, failed_fn: FailedFn) -> Html<CTX, U>
+    fn custom_view<U, CTX, LoadedFn, FailedFn>(&self,
+                                                   unloaded: Html<CTX,U>,
+                                                   loading: Html<CTX,U>,
+                                                   loaded_fn: LoadedFn,
+                                                   failed_fn: FailedFn
+    ) -> Html<CTX, U>
         where
         CTX: 'static,
         U: Component<CTX>,
@@ -67,7 +72,7 @@ impl <T> Loadable<T> {
         FailedFn: Fn(&Option<String>) -> Html<CTX, U>
     {
         match self {
-            Loadable::Unloaded => empty_vdom_node(),
+            Loadable::Unloaded => unloaded,
             Loadable::Loading(_) => loading,
             Loadable::Loaded(ref t) => loaded_fn(t),
             Loadable::Failed(ref error) => failed_fn(error)
@@ -104,8 +109,9 @@ impl <T> Loadable<T> {
             U: Component<CTX>
     {
         self.custom_view(
-            render_fn,
+            empty_vdom_node(),
             LoadingType::Fidget{diameter: 100}.view(),
+            render_fn,
             Self::failed
         )
     }
@@ -118,10 +124,33 @@ impl <T> Loadable<T> {
             U: Component<CTX>
     {
         self.custom_view(
-            render_fn,
+            empty_vdom_node(),
             LoadingType::Empty.view(),
+            render_fn,
             Self::failed
         )
     }
+
+    pub fn restricted_custom_view<CTX, U, LoadedFn, FailedFn>(&self,
+                                     unloaded: Html<CTX, U>,
+                                     loading_type: LoadingType<CTX, U>,
+                                     render_fn: LoadedFn,
+                                     failed_fn: FailedFn
+    ) -> Html<CTX,U>
+            where
+            CTX: 'static,
+            U: Component<CTX>,
+            LoadedFn: Fn(&T) -> Html<CTX, U>,
+            FailedFn: Fn(&Option<String>) -> Html<CTX, U>
+    {
+        self.custom_view(
+            unloaded,
+            loading_type.view(),
+            render_fn,
+            failed_fn
+        )
+    }
+
+
 
 }

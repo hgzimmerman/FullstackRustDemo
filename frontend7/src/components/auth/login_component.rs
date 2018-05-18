@@ -116,7 +116,7 @@ impl Component<Context> for Login {
             Msg::LoginSuccess(jwt) => {
                 context.store_jwt(jwt.clone()); // store/upsert the local JWT.
 
-                context.log(&format!("{:?}", ::context::user::extract_payload_from_jwt(jwt)));
+                context.log(&format!("Logged in. JWT received with payload: {:?}", ::context::user::extract_payload_from_jwt(jwt)));
                 use Route;
                 use components::forum::ForumRoute;
 

@@ -10,6 +10,7 @@ mod new_bucket;
 //use components::bucket::buckets::BucketList;
 use components::bucket::buckets::*;
 use components::button::Button;
+use components::bucket::bucket::BucketLobby;
 use Route;
 
 use datatypes::bucket::BucketData;
@@ -258,13 +259,18 @@ impl Renderable<Context, BucketModel> for BucketModel {
 
         use self::BucketPage::*;
         use self::buckets;
+
+        fn bucket_lobby_fn(bucket: &BucketData) -> Html<Context, BucketModel> {
+            html! {
+                <>
+                    <BucketLobby: bucket_data=bucket, />
+                </>
+            }
+        }
+
         let page = match self.bucket_page {
             BucketList(ref buckets) => buckets.default_view(Vec::<BucketData>::view),
-            Bucket(_) => html! {
-                <>
-                    {"A single bucket"}
-                </>
-            },
+            Bucket(ref bucket) => bucket.default_view(bucket_lobby_fn),
             Create(ref new_bucket) => html! {
                 <div class="flexbox-center-item",>
                     {new_bucket.default_view(NewBucket::view)}

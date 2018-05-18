@@ -10,6 +10,7 @@ use wire::thread::*;
 use wire::login::*;
 use wire::post::*;
 use wire::bucket::*;
+use wire::answer::*;
 use failure::Error;
 use serde_json;
 use serde::Serialize;
@@ -48,7 +49,10 @@ pub enum RequestWrapper {
     UpdatePost(EditPostRequest),
     GetBuckets,
     GetBucket{bucket_id: i32},
-    CreateBucket(NewBucketRequest)
+    CreateBucket(NewBucketRequest),
+    GetRandomQuestion { bucket_id: i32 },
+    GetQuestions { bucket_id: i32},
+    AnswerQuestion(NewAnswerRequest)
 }
 
 impl RequestWrapper {
@@ -56,23 +60,28 @@ impl RequestWrapper {
         let api_base = "http://localhost:8001/api"; // TODO Make this build-time configurable
 
         use self::RequestWrapper::*;
-        match *request {
-            Login(_) => format!("{}/auth/login", api_base),
-            CreateUser(_) => format!("{}/user/", api_base),
-            CreateThread(_) => format!("{}/thread/create", api_base),
+        let path: String = match *request {
+            Login(_) => "auth/login".into(),
+            CreateUser(_) => "user/".into(),
+            CreateThread(_) => "thread/create".into(),
             GetThreads {
                 forum_id,
                 page_index,
-            } => format!("{}/thread/get/{}/{}", api_base, forum_id, page_index),
-            GetForums => format!("{}/forum/forums", api_base),
-            GetForum { forum_id } => format!("{}/forum/{}", api_base, forum_id),
-            GetThread { thread_id } => format!("{}/thread/{}", api_base, thread_id),
-            CreatePostResponse(_) => format!("{}/post/create", api_base),
-            UpdatePost(_) => format!("{}/post/edit", api_base),
-            GetBuckets => format!("{}/buckets/", api_base),
-            GetBucket{bucket_id} => format!("{}/buckets/{}", api_base, bucket_id),
-            CreateBucket(_) => format!("{}/buckets/create", api_base),
-        }
+            } => format!("thread/get/{}/{}", forum_id, page_index),
+            GetForums => "forum/forums".into(),
+            GetForum { forum_id } => format!("forum/{}", forum_id),
+            GetThread { thread_id } => format!("thread/{}", thread_id),
+            CreatePostResponse(_) => "post/create".into(),
+            UpdatePost(_) => "post/edit".into(),
+            GetBuckets => "buckets".into(),
+            GetBucket{bucket_id} => format!("buckets/{}", bucket_id),
+            CreateBucket(_) => "buckets/create".into(),
+            GetRandomQuestion { bucket_id } => format!("question/random_question/{}", bucket_id),
+            GetQuestions { bucket_id } => format!("question/questions_in_bucket/{}", bucket_id),
+            AnswerQuestion(_) => "answer/create".into()
+        };
+
+        format!("{}/{}", api_base, path)
     }
 
     fn resolve_auth(&self) -> Auth {
@@ -91,7 +100,10 @@ impl RequestWrapper {
             UpdatePost(_) => Required,
             GetBuckets => Required,
             GetBucket{..} => Required,
-            CreateBucket(_) => Required
+            CreateBucket(_) => Required,
+            GetRandomQuestion {..} => NotRequired,
+            GetQuestions {..} => NotRequired,
+            AnswerQuestion(_) => Required
         }
     }
 
@@ -115,7 +127,10 @@ impl RequestWrapper {
             UpdatePost(r) => Put(to_body(r)),
             GetBuckets => Get,
             GetBucket {..} => Get,
-            CreateBucket(r) => Post(to_body(r))
+            CreateBucket(r) => Post(to_body(r)),
+            GetRandomQuestion {..} => Get,
+            GetQuestions {..} => Get,
+            AnswerQuestion(r) => Post(to_body(r))
         }
     }
 }
