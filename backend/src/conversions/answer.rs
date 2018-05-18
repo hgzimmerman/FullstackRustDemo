@@ -11,11 +11,20 @@ impl From<AnswerData> for AnswerResponse {
     }
 }
 
-impl From<NewAnswerRequest> for NewAnswer {
-    fn from(request: NewAnswerRequest) -> NewAnswer {
+//impl From<NewAnswerRequest> for NewAnswer {
+//    fn from(request: NewAnswerRequest) -> NewAnswer {
+//        NewAnswer {
+//            answer_text: request.answer_text,
+//            author_id: request.author_id,
+//            question_id: request.question_id,
+//        }
+//    }
+//}
+impl NewAnswer {
+    pub fn attach_user_id(request: NewAnswerRequest, user_id: i32) -> NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
-            author_id: request.author_id,
+            author_id: user_id,
             question_id: request.question_id,
         }
     }

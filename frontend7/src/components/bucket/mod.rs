@@ -147,6 +147,7 @@ impl BucketModel {
             callback,
         );
     }
+
     fn create_bucket(new_bucket: &mut Uploadable<NewBucket>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<BucketResponse, Error>>>| {

@@ -25,8 +25,9 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
 
 /// Gets a random question from the bucket.
 #[get("/random_question/<bucket_id>")]
-fn get_random_unanswered_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
-    Question::get_random_unanswered_question(bucket_id, &conn)
+fn get_random_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+    info!("Enter get random question");
+    Question::get_random_question(bucket_id, &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
@@ -44,10 +45,10 @@ fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, 
 #[post("/create", data = "<new_question>")]
 fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
-    if request.author_id != user.user_id {
-        return Err(WeekendAtJoesError::BadRequest);
-    }
-    Question::create_data(request.into(), &conn)
+
+    let new_question: NewQuestion = NewQuestion::attach_user_id(request, user.user_id);
+
+    Question::create_data(new_question, &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
@@ -58,7 +59,7 @@ impl Routable for Question {
     const ROUTES: &'static Fn() -> Vec<Route> = &|| {
         routes![
             create_question,
-            get_random_unanswered_question,
+            get_random_question,
             get_questions_for_bucket,
             get_question,
         ]

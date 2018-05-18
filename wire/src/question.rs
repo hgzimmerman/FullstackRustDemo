@@ -12,6 +12,5 @@ pub struct QuestionResponse {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewQuestionRequest {
     pub bucket_id: i32,
-    pub author_id: i32,
     pub question_text: String,
 }

@@ -77,6 +77,8 @@ impl Question {
         Ok(question_data)
     }
 
+    // TODO Alter the schema to add a bool that indicates if the question is in the metaphorical bucket or not.
+    // Only return questions in the "bucket".
     /// Gets a random question that may have already been answered
     pub fn get_random_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
@@ -118,23 +120,32 @@ impl Question {
         })
     }
 
+    // TODO, get rid of this.
     /// Gets a random question from the bucket that has not been answered yet.
     pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
+        info!("Get Random Question: stop 0");
         // Get the bucket from which the questions will be retrieved.
         let bucket = Bucket::get_by_id(bucket_id, &conn)?;
+
+        info!("Get Random Question: stop 1");
         // Get all the questions in the bucket.
         let questions: Vec<Question> = Question::belonging_to(&bucket)
             .load::<Question>(conn.deref())
             .map_err(Question::handle_error)?;
+
+        info!("Get Random Question: stop 2");
         // Get all the answers belonging to the questions.
         let answers: Vec<Answer> = Answer::belonging_to(&questions)
             .load::<Answer>(conn.deref())
             .map_err(Answer::handle_error)?;
+
+        info!("Get Random Question: stop 3");
         // Group the answers in such a way that they correspond to their questions.
         let grouped_answers: Vec<Vec<Answer>> = answers.grouped_by(&questions);
 
+        info!("Get Random Question: stop 4");
         // Select the questions that don't already have answers
         let unanswered_questions: Vec<Question> = questions
             .into_iter()

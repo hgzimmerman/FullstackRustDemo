@@ -11,6 +11,8 @@ use wire::login::*;
 use wire::post::*;
 use wire::bucket::*;
 use wire::answer::*;
+use wire::question::*;
+
 use failure::Error;
 use serde_json;
 use serde::Serialize;
@@ -52,7 +54,8 @@ pub enum RequestWrapper {
     CreateBucket(NewBucketRequest),
     GetRandomQuestion { bucket_id: i32 },
     GetQuestions { bucket_id: i32},
-    AnswerQuestion(NewAnswerRequest)
+    AnswerQuestion(NewAnswerRequest),
+    CreateQuestion(NewQuestionRequest)
 }
 
 impl RequestWrapper {
@@ -78,7 +81,8 @@ impl RequestWrapper {
             CreateBucket(_) => "buckets/create".into(),
             GetRandomQuestion { bucket_id } => format!("question/random_question/{}", bucket_id),
             GetQuestions { bucket_id } => format!("question/questions_in_bucket/{}", bucket_id),
-            AnswerQuestion(_) => "answer/create".into()
+            AnswerQuestion(_) => "answer/create".into(),
+            CreateQuestion(_) => "question/create".into(),
         };
 
         format!("{}/{}", api_base, path)
@@ -103,7 +107,8 @@ impl RequestWrapper {
             CreateBucket(_) => Required,
             GetRandomQuestion {..} => NotRequired,
             GetQuestions {..} => NotRequired,
-            AnswerQuestion(_) => Required
+            AnswerQuestion(_) => Required,
+            CreateQuestion(_) => Required
         }
     }
 
@@ -130,7 +135,8 @@ impl RequestWrapper {
             CreateBucket(r) => Post(to_body(r)),
             GetRandomQuestion {..} => Get,
             GetQuestions {..} => Get,
-            AnswerQuestion(r) => Post(to_body(r))
+            AnswerQuestion(r) => Post(to_body(r)),
+            CreateQuestion(r) => Post(to_body(r))
         }
     }
 }

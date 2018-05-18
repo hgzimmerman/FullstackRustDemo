@@ -19,12 +19,21 @@ impl From<QuestionData> for QuestionResponse {
     }
 }
 
-impl From<NewQuestionRequest> for NewQuestion {
-    fn from(request: NewQuestionRequest) -> NewQuestion {
+impl NewQuestion {
+    pub fn attach_user_id(request: NewQuestionRequest, user_id: i32) -> NewQuestion {
         NewQuestion {
             bucket_id: request.bucket_id,
-            author_id: request.author_id,
+            author_id: user_id,
             question_text: request.question_text,
         }
     }
 }
+//impl From<NewQuestionRequest> for NewQuestion {
+//    fn from(request: NewQuestionRequest) -> NewQuestion {
+//        NewQuestion {
+//            bucket_id: request.bucket_id,
+//            author_id: request.author_id,
+//            question_text: request.question_text,
+//        }
+//    }
+//}
