@@ -8,7 +8,7 @@ pub struct AnswerResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewAnswerRequest {
-//    pub author_id: i32,
+    //    pub author_id: i32,
     pub question_id: i32,
     pub answer_text: Option<String>,
 }

@@ -20,9 +20,9 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: C
     let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer.into_inner(), user.user_id);
     let answer_user: User = User::get_by_id(new_answer.author_id, &conn)?;
 
-//    if user.user_id != answer_user.id {
-//        return Err(WeekendAtJoesError::BadRequest);
-//    }
+    //    if user.user_id != answer_user.id {
+    //        return Err(WeekendAtJoesError::BadRequest);
+    //    }
 
 
 
