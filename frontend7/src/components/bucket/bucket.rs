@@ -26,6 +26,8 @@ use wire::answer::AnswerResponse;
 use wire::question::NewQuestionRequest;
 use wire::answer::NewAnswerRequest;
 
+use util::input::InputValidator;
+
 
 
 #[derive(Debug, Default, Clone)]
@@ -43,6 +45,14 @@ pub struct QuestionList {
 #[derive(Debug, Default, Clone)]
 struct NewQuestion {
     question_text: InputState
+}
+impl NewQuestion {
+    fn validator(text: String) -> Result<String, String> {
+        if text.len() < 1 {
+            return Err("New question must contain some text".into())
+        }
+        Ok(text)
+    }
 }
 
 #[derive(Default)]
@@ -95,7 +105,7 @@ impl BucketLobby {
                         question_package
                     )
                 } else {
-                    Msg::PriorQuestionsFailed
+                    Msg::GetRandomQuestionFailed
                 }
             },
         );
@@ -112,7 +122,7 @@ impl BucketLobby {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let question_data = data.map(QuestionData::from).unwrap();
+                    let _question_data = data.map(QuestionData::from).unwrap();
                     Msg::ResetCreateQuestionText
                 } else {
                     Msg::CreateQuestionFailed
@@ -133,7 +143,7 @@ impl BucketLobby {
         );
     }
 
-    fn post_answer_to_question(question_package: &mut Uploadable<QuestionPackage>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn post_answer_to_question(question_package: &mut Uploadable<QuestionPackage>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<AnswerResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -186,6 +196,27 @@ impl BucketLobby {
         ).expect("user logged in"); // TODO refactor this.
         Some(ft)
     }
+
+    fn delete_question(question_id: i32, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+        let callback = context.send_back(
+            |response: Response<Json<Result<i32, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                if meta.status.is_success() {
+                    let question_id: i32 = data.unwrap();
+                    Msg::DiscardQuestionSucceeded {question_id}
+                } else {
+                    Msg::DiscardQuestionFailed
+                }
+            },
+        );
+
+        let ft = context.make_request(
+            RequestWrapper::DeleteQuestion{question_id},
+            callback,
+        ).expect("user logged in"); // TODO refactor this.
+        Some(ft)
+    }
 }
 
 #[derive(Default, PartialEq, Debug, Clone)]
@@ -211,6 +242,8 @@ pub enum Msg {
     QuestionPutBackInBucketSuccess{question_id: i32},
     QuestionPutBackInBucketFailed,
     DiscardQuestion,
+    DiscardQuestionSucceeded {question_id: i32},
+    DiscardQuestionFailed,
     SetListFilter(QuestionLocation)
 }
 
@@ -250,7 +283,7 @@ impl Component<Context> for BucketLobby {
             SubmitAnswer => {
                 if let Loadable::Loaded(ref mut question_package) = self.active_question {
 
-                    Self::post_answer_to_question(question_package, self.bucket_data.id, context )
+                    Self::post_answer_to_question(question_package, context )
                 } else {
                     context.log("Error, should not be able to submit an answer for an unloaded question.")
                 }
@@ -277,11 +310,30 @@ impl Component<Context> for BucketLobby {
             PutOldQuestionBackInBucket{question_id} => self.misc_ft = Self::put_question_back_in_bucket(question_id, context),
             QuestionPutBackInBucketSuccess {question_id} => {
                 if let Loadable::Loaded(ref mut q_list) = self.prior_questions_and_answers {
-                    q_list.list.retain(|x| x.id != question_id) // remove the question with the id of the question now in the bucket again.
+                    // Set the question to say it is in the bucket now locally,
+                    // instead of fetching an up to date version of the list.
+                    q_list.list
+                        .iter_mut()
+                        .for_each(|x| {
+                            if x.id == question_id {
+                                x.location = QuestionLocation::Bucket
+                            }
+                        })
                 }
             },
             QuestionPutBackInBucketFailed => context.log("failed to put question back in bucket"),
-            DiscardQuestion => context.log("Discard question"),
+            DiscardQuestion => {
+                if let Loadable::Loaded(ref active_question) = self.active_question {
+                    self.misc_ft = Self::delete_question(active_question.as_ref().question_data.id, context)
+                }
+            }
+            DiscardQuestionSucceeded { question_id} => {
+                self.active_question = Loadable::Unloaded;
+                if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
+                    old_list.list.retain(|x| x.id != question_id) // Remove the question from the local list of questions.
+                }
+            },
+            DiscardQuestionFailed => context.log("Failed to discard question"),
             SetListFilter(location) => {
                 if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
                     old_list.filter = location
@@ -422,6 +474,7 @@ impl Renderable<Context, BucketLobby> for NewQuestion {
                         input_state=&self.question_text,
                         on_change=|a| Msg::UpdateNewQuestion(a),
                         on_enter=|_| Msg::SubmitNewQuestion,
+                        validator=Box::new(NewQuestion::validator as InputValidator),
                     />
                 </div>
                 <div class=("flexbox-horiz-reverse"),>
@@ -461,7 +514,15 @@ impl Renderable<Context, BucketLobby> for QuestionData {
 
                     {answers(&self.answers)}
                 </div>
-                <Button: title="Put back in Bucket", onclick=move |_| Msg::PutOldQuestionBackInBucket{question_id}, />
+                {
+                    if self.location == QuestionLocation::Floor {
+                        html! {
+                            <Button: title="Put back in Bucket", onclick=move |_| Msg::PutOldQuestionBackInBucket{question_id}, />
+                        }
+                    } else {
+                        ::util::empty::empty_vdom_node()
+                    }
+                }
             </div>
         }
     }
@@ -470,8 +531,15 @@ impl Renderable<Context, BucketLobby> for QuestionData {
 impl Renderable<Context, BucketLobby> for QuestionList {
     fn view(&self) -> Html<Context, BucketLobby> {
 
+        let floor_filter_disabled: bool = self.filter == QuestionLocation::Floor; // If Floor is already selected, disable the button
+        let bucket_filter_disabled: bool = !floor_filter_disabled;
+
         html! {
             <div class=("full-height", "question-list"),>
+                <div class=("flexbox-horiz"),>
+                    <Button: title="Floor",  disabled=floor_filter_disabled, onclick=move |_| Msg::SetListFilter(QuestionLocation::Floor), />
+                    <Button: title="Bucket", disabled=bucket_filter_disabled, onclick=move |_| Msg::SetListFilter(QuestionLocation::Bucket), />
+                </div>
                 {for self.list.iter().filter(|x| x.location == self.filter).map(QuestionData::view)}
             </div>
         }

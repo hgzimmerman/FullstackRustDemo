@@ -228,7 +228,7 @@ impl Component<Context> for BucketModel {
                 if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
                     new_bucket.as_mut().name = bucket_name;
                 } else {
-                    context.log("Incongruent state. Expected page to be /create");
+                    context.log("Incoherent state. Expected page to be /create");
                     return false
                 }
             }
@@ -290,9 +290,15 @@ impl Renderable<Context, BucketModel> for BucketModel {
                     </div>
                 </>
             },
-            Bucket(ref _bucket) => html! {
+            Bucket(ref bucket) => html! {
                 <div>
-                    {&format!("Bucket: ")}
+                    {
+                        &if let Loadable::Loaded(bucket_data) = bucket {
+                            format!("Bucket: {}", bucket_data.bucket_name)
+                        } else {
+                            "Bucket: ".into()
+                        }
+                    }
                 </div>
             },
             Create(_) => html! {

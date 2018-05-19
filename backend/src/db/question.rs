@@ -27,7 +27,7 @@ pub struct Question {
     pub bucket_id: i32,
     pub author_id: i32,
     pub question_text: String,
-    pub on_floor: bool
+    pub on_floor: bool,
 }
 
 #[derive(Insertable, Debug)]
@@ -36,7 +36,7 @@ pub struct NewQuestion {
     pub bucket_id: i32,
     pub author_id: i32,
     pub question_text: String,
-    pub on_floor: bool // Should be false by default
+    pub on_floor: bool, // Should be false by default
 }
 
 pub struct QuestionData {
@@ -128,58 +128,58 @@ impl Question {
     }
 
     // TODO, get rid of this.
-//    /// Gets a random question from the bucket that has not been answered yet.
-//    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
-//        use schema::users::dsl::*;
-//
-//        info!("Get Random Question: stop 0");
-//        // Get the bucket from which the questions will be retrieved.
-//        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
-//
-//        info!("Get Random Question: stop 1");
-//        // Get all the questions in the bucket.
-//        let questions: Vec<Question> = Question::belonging_to(&bucket)
-//            .load::<Question>(conn.deref())
-//            .map_err(Question::handle_error)?;
-//
-//        info!("Get Random Question: stop 2");
-//        // Get all the answers belonging to the questions.
-//        let answers: Vec<Answer> = Answer::belonging_to(&questions)
-//            .load::<Answer>(conn.deref())
-//            .map_err(Answer::handle_error)?;
-//
-//        info!("Get Random Question: stop 3");
-//        // Group the answers in such a way that they correspond to their questions.
-//        let grouped_answers: Vec<Vec<Answer>> = answers.grouped_by(&questions);
-//
-//        info!("Get Random Question: stop 4");
-//        // Select the questions that don't already have answers
-//        let unanswered_questions: Vec<Question> = questions
-//            .into_iter()
-//            .zip(grouped_answers)
-//            .filter(|x| x.1.len() == 0) // only keep the questions with unanswered questions
-//            .map(|x| x.0) // only keep the questions
-//            .collect();
-//
-//        // Select one random question from the group
-//        let mut rng = thread_rng();
-//        let random_question: Question = seq::sample_iter(&mut rng, unanswered_questions, 1)
-//            .map_err(|_| WeekendAtJoesError::InternalServerError)?
-//            .first()
-//            .cloned()
-//            .ok_or(WeekendAtJoesError::NotFound { type_name: "Question" })?;
-//
-//        // Get the matching user
-//        let user: User = users
-//            .find(random_question.author_id)
-//            .first::<User>(conn.deref())
-//            .map_err(User::handle_error)?;
-//        Ok(QuestionData {
-//            question: random_question,
-//            user,
-//            answers: vec![],
-//        })
-//    }
+    //    /// Gets a random question from the bucket that has not been answered yet.
+    //    pub fn get_random_unanswered_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
+    //        use schema::users::dsl::*;
+    //
+    //        info!("Get Random Question: stop 0");
+    //        // Get the bucket from which the questions will be retrieved.
+    //        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
+    //
+    //        info!("Get Random Question: stop 1");
+    //        // Get all the questions in the bucket.
+    //        let questions: Vec<Question> = Question::belonging_to(&bucket)
+    //            .load::<Question>(conn.deref())
+    //            .map_err(Question::handle_error)?;
+    //
+    //        info!("Get Random Question: stop 2");
+    //        // Get all the answers belonging to the questions.
+    //        let answers: Vec<Answer> = Answer::belonging_to(&questions)
+    //            .load::<Answer>(conn.deref())
+    //            .map_err(Answer::handle_error)?;
+    //
+    //        info!("Get Random Question: stop 3");
+    //        // Group the answers in such a way that they correspond to their questions.
+    //        let grouped_answers: Vec<Vec<Answer>> = answers.grouped_by(&questions);
+    //
+    //        info!("Get Random Question: stop 4");
+    //        // Select the questions that don't already have answers
+    //        let unanswered_questions: Vec<Question> = questions
+    //            .into_iter()
+    //            .zip(grouped_answers)
+    //            .filter(|x| x.1.len() == 0) // only keep the questions with unanswered questions
+    //            .map(|x| x.0) // only keep the questions
+    //            .collect();
+    //
+    //        // Select one random question from the group
+    //        let mut rng = thread_rng();
+    //        let random_question: Question = seq::sample_iter(&mut rng, unanswered_questions, 1)
+    //            .map_err(|_| WeekendAtJoesError::InternalServerError)?
+    //            .first()
+    //            .cloned()
+    //            .ok_or(WeekendAtJoesError::NotFound { type_name: "Question" })?;
+    //
+    //        // Get the matching user
+    //        let user: User = users
+    //            .find(random_question.author_id)
+    //            .first::<User>(conn.deref())
+    //            .map_err(User::handle_error)?;
+    //        Ok(QuestionData {
+    //            question: random_question,
+    //            user,
+    //            answers: vec![],
+    //        })
+    //    }
 
     /// Gets groupings of questions, users, and answers for a given bucket id.
     pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> JoeResult<Vec<QuestionData>> {
@@ -265,7 +265,7 @@ impl Question {
         })
     }
 
-    pub fn delete_question(question_id: i32, conn: &Conn) -> JoeResult<Question>{
+    pub fn delete_question(question_id: i32, conn: &Conn) -> JoeResult<Question> {
         Question::delete_by_id(question_id, conn)
     }
 

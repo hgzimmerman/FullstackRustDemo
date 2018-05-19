@@ -40,7 +40,7 @@ impl<CTX: 'static> Component<CTX> for Button {
         Button {
             title: props.title,
             //            color: Color::Primary,
-            disabled: false,
+            disabled: props.disabled,
             onclick: props.onclick,
         }
     }
