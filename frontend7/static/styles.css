@@ -37,6 +37,19 @@ body {
     overflow-y: auto;
 }
 
+
+.bordered {
+    border: solid 1px black;
+}
+
+.bolded {
+    font-weight: bold;
+}
+
+.box-shadow {
+    box-shadow: 10px 10px darkgray;
+}
+
 /* Util visibility*/
 
 
@@ -84,6 +97,9 @@ body {
     flex: 1;
 }
 
+.flexbox-space-between {
+    justify-content: space-between;
+}
 
 
 /*
@@ -440,12 +456,21 @@ button {
     min-width: 350px;
     width: 90%;
     height: 90%;
-    border: 1px solid black;
 }
 
 .questions-container {
-    flex: 2;
+    flex: 3;
 }
 .answers-container {
-    flex: 1;
+    flex: 2;
+}
+
+.new-question-card {
+    background-color: lightsalmon;
+}
+.active-question-card {
+    background-color: lightskyblue;
+}
+.question-list {
+    background-color: gainsboro;
 }

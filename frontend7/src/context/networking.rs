@@ -55,7 +55,9 @@ pub enum RequestWrapper {
     GetRandomQuestion { bucket_id: i32 },
     GetQuestions { bucket_id: i32},
     AnswerQuestion(NewAnswerRequest),
-    CreateQuestion(NewQuestionRequest)
+    CreateQuestion(NewQuestionRequest),
+    DeleteQuestion{question_id: i32},
+    PutQuestionBackInBucket{question_id: i32}
 }
 
 impl RequestWrapper {
@@ -83,6 +85,8 @@ impl RequestWrapper {
             GetQuestions { bucket_id } => format!("question/questions_in_bucket/{}", bucket_id),
             AnswerQuestion(_) => "answer/create".into(),
             CreateQuestion(_) => "question/create".into(),
+            DeleteQuestion {question_id} => format!("question/{}", question_id),
+            PutQuestionBackInBucket {question_id} => format!("question/{}/into_bucket", question_id)
         };
 
         format!("{}/{}", api_base, path)
@@ -108,7 +112,9 @@ impl RequestWrapper {
             GetRandomQuestion {..} => NotRequired,
             GetQuestions {..} => NotRequired,
             AnswerQuestion(_) => Required,
-            CreateQuestion(_) => Required
+            CreateQuestion(_) => Required,
+            DeleteQuestion {..} => Required,
+            PutQuestionBackInBucket {..} => Required
         }
     }
 
@@ -136,7 +142,9 @@ impl RequestWrapper {
             GetRandomQuestion {..} => Get,
             GetQuestions {..} => Get,
             AnswerQuestion(r) => Post(to_body(r)),
-            CreateQuestion(r) => Post(to_body(r))
+            CreateQuestion(r) => Post(to_body(r)),
+            DeleteQuestion {..} => Delete,
+            PutQuestionBackInBucket {..} => Put("".to_string()), // no body
         }
     }
 }
@@ -197,7 +205,11 @@ impl Context {
                 Ok(self.networking.fetch(request, callback))
             }
             HttpMethod::Delete => {
-                unimplemented!()
+                let request = self.prepare_delete_request(
+                    url,
+                    auth_requirement,
+                )?;
+                Ok(self.networking.fetch(request, callback))
             }
         }
 
@@ -294,6 +306,38 @@ impl Context {
                     Auth::NotRequired => {
                         Ok(
                             Request::get(url.as_str())
+                                .header("Content-Type", "application/json")
+                                .body(Nothing)
+                                .unwrap(),
+                        )
+                    }
+                }
+
+            }
+        }
+    }
+    fn prepare_delete_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
+        match self.restore_jwt() {
+            Ok(jwt_string) => {
+                // TODO: possibly check if the jwt is outdated here before sending
+                Ok(
+                    Request::delete(url.as_str())
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", jwt_string.as_str())
+                        .body(Nothing)
+                        .unwrap(),
+                )
+            }
+            Err(e) => {
+                match auth_requirement {
+                    Auth::Required => {
+                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
+                        Err(e)
+                    }
+                    // If the auth wasn't required in the first place
+                    Auth::NotRequired => {
+                        Ok(
+                            Request::delete(url.as_str())
                                 .header("Content-Type", "application/json")
                                 .body(Nothing)
                                 .unwrap(),

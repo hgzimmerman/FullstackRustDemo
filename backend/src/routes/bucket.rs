@@ -7,6 +7,7 @@ use error::JoeResult;
 use db::Conn;
 use wire::bucket::*;
 use auth::user_authorization::AdminUser;
+use auth::user_authorization::NormalUser;
 use routes::convert_vector;
 use db::Creatable;
 
@@ -15,7 +16,6 @@ use db::Creatable;
 /// Get all of the available buckets.
 #[get("/")]
 fn get_buckets(conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
-
     Bucket::get_all(&conn)
         .map(convert_vector)
         .map(Json)
@@ -32,7 +32,7 @@ fn get_bucket(bucket_id: i32, conn: Conn) -> JoeResult<Json<BucketResponse>> {
 /// Creates a new bucket.
 /// The bucket represents a set of questions users can answer.
 #[post("/create", data = "<new_bucket>")]
-fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: AdminUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
+fn create_bucket(new_bucket: Json<NewBucketRequest>, _admin: NormalUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
     Bucket::create(new_bucket.into_inner().into(), &conn)
         .map(BucketResponse::from)
         .map(Json)

@@ -15,6 +15,7 @@ impl From<QuestionData> for QuestionResponse {
                 .into_iter()
                 .map(AnswerResponse::from)
                 .collect(),
+            on_floor: data.question.on_floor
         }
     }
 }
@@ -25,6 +26,7 @@ impl NewQuestion {
             bucket_id: request.bucket_id,
             author_id: user_id,
             question_text: request.question_text,
+            on_floor: false // by default, the question is in the bucket and not in the floor.
         }
     }
 }

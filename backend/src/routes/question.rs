@@ -9,6 +9,7 @@ use db::Conn;
 use wire::question::*;
 use auth::user_authorization::*;
 
+use error::*;
 
 
 
@@ -53,6 +54,18 @@ fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, con
         .map(Json)
 }
 
+#[delete("/<question_id>")]
+fn delete_question(question_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<i32>> {
+    info!("user: {}, deleteting question with id: {}", user.user_id, question_id);
+    Question::delete_question(question_id, &conn)?;
+    Ok(Json(question_id))
+}
+
+#[put("/<question_id>/into_bucket")]
+fn put_question_back_in_bucket(question_id: i32, _user: NormalUser, conn: Conn) -> JoeResult<Json<i32>> {
+    Question::put_question_in_bucket(question_id, &conn)?;
+    Ok(Json(question_id))
+}
 
 
 impl Routable for Question {
@@ -62,6 +75,8 @@ impl Routable for Question {
             get_random_question,
             get_questions_for_bucket,
             get_question,
+            delete_question,
+            put_question_back_in_bucket
         ]
     };
     const PATH: &'static str = "/question/";

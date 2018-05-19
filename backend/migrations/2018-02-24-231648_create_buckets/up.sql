@@ -9,7 +9,8 @@ CREATE TABLE questions (
     id SERIAL PRIMARY KEY,
     bucket_id INTEGER NOT NULL REFERENCES buckets(id) ON DELETE CASCADE,
     author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    question_text VARCHAR NOT NULL
+    question_text VARCHAR NOT NULL,
+    on_floor BOOLEAN NOT NULL
 );
 
 CREATE TABLE answers (

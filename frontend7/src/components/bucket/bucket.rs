@@ -2,6 +2,8 @@ use yew::prelude::*;
 use datatypes::bucket::BucketData;
 use datatypes::question::QuestionData;
 use datatypes::question::NewQuestionData;
+use datatypes::question::QuestionLocation;
+
 use Context;
 use util::loadable::Loadable;
 use util::loading::LoadingType;
@@ -14,8 +16,10 @@ use datatypes::answer::AnswerData;
 
 use yew::format::Json;
 use yew::services::fetch::Response;
+use yew::services::fetch::FetchTask;
 use failure::Error;
 use context::networking::RequestWrapper;
+
 
 use wire::question::QuestionResponse;
 use wire::answer::AnswerResponse;
@@ -31,21 +35,28 @@ pub struct QuestionPackage {
 }
 
 #[derive(Debug, Default, Clone)]
+pub struct QuestionList {
+    list: Vec<QuestionData>,
+    filter: QuestionLocation //show either questions in the bucket or on the floor in the righthand pane.
+}
+
+#[derive(Debug, Default, Clone)]
 struct NewQuestion {
     question_text: InputState
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct BucketLobby {
     bucket_data: BucketData,
     active_question: Loadable<Uploadable<QuestionPackage>>,
     new_question: Uploadable<NewQuestion>,
-    prior_questions_and_answers: Loadable<Vec<QuestionData>>
+    prior_questions_and_answers: Loadable<QuestionList>,
+    misc_ft: Option<FetchTask> // Fetch task for which no loading animation is assigned. only one is expected to run at a time, or invalidation of a prior ft is ok.
 }
 
 
 impl BucketLobby {
-    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<Vec<QuestionData>>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<QuestionList>, bucket_id: i32, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<QuestionResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -154,6 +165,27 @@ impl BucketLobby {
             callback,
         );
     }
+
+    fn put_question_back_in_bucket(question_id: i32, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+        let callback = context.send_back(
+            |response: Response<Json<Result<i32, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                if meta.status.is_success() {
+                    let question_id: i32 = data.unwrap();
+                    Msg::QuestionPutBackInBucketSuccess {question_id}
+                } else {
+                    Msg::QuestionPutBackInBucketFailed
+                }
+            },
+        );
+
+        let ft = context.make_request(
+            RequestWrapper::PutQuestionBackInBucket{question_id},
+            callback,
+        ).expect("user logged in"); // TODO refactor this.
+        Some(ft)
+    }
 }
 
 #[derive(Default, PartialEq, Debug, Clone)]
@@ -176,7 +208,10 @@ pub enum Msg {
     PriorQuestionsReady(Vec<QuestionData>),
     PriorQuestionsFailed,
     PutOldQuestionBackInBucket{question_id: i32},
-    DiscardQuestion
+    QuestionPutBackInBucketSuccess{question_id: i32},
+    QuestionPutBackInBucketFailed,
+    DiscardQuestion,
+    SetListFilter(QuestionLocation)
 }
 
 impl Component<Context> for BucketLobby {
@@ -190,7 +225,6 @@ impl Component<Context> for BucketLobby {
         };
 
         Self::get_prior_questions_and_answers(&mut bucket.prior_questions_and_answers, bucket.bucket_data.id, context);
-
 
         bucket
     }
@@ -208,7 +242,10 @@ impl Component<Context> for BucketLobby {
                     context.log("Error, should not be able to update answer if question not loaded.")
                 }
             }
-            SendAnswerSuccess => self.active_question = Loadable::Unloaded,
+            SendAnswerSuccess => {
+                Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.id, context);
+                self.active_question = Loadable::Unloaded
+            },
             SendAnswerFail => self.active_question = Loadable::Failed(Some(String::from("Failed to submit question"))),
             SubmitAnswer => {
                 if let Loadable::Loaded(ref mut question_package) = self.active_question {
@@ -222,23 +259,46 @@ impl Component<Context> for BucketLobby {
             SubmitNewQuestion => Self::post_new_question(&mut self.new_question, self.bucket_data.id, context),
             ResetCreateQuestionText => self.new_question = Uploadable::default(),
             CreateQuestionFailed => self.new_question.set_failed("Could not create new question"),
-            PriorQuestionsReady(questions) => self.prior_questions_and_answers = Loadable::Loaded(questions),
+            PriorQuestionsReady(questions) =>{
+                if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
+                    old_list.list = questions;
+                } else {
+                    let new_list = QuestionList {
+                        list: questions,
+                        filter: QuestionLocation::Floor
+                    };
+                    self.prior_questions_and_answers = Loadable::Loaded(new_list)
+                }
+            }
             PriorQuestionsFailed => {
                 context.log("Get prior questions failed");
                 self.prior_questions_and_answers = Loadable::Failed(Some(String::from("Could not load old questions")))
             }
-            PutOldQuestionBackInBucket{question_id} => context.log("aoeuaoeu"),
-            DiscardQuestion => context.log("Discard question")
+            PutOldQuestionBackInBucket{question_id} => self.misc_ft = Self::put_question_back_in_bucket(question_id, context),
+            QuestionPutBackInBucketSuccess {question_id} => {
+                if let Loadable::Loaded(ref mut q_list) = self.prior_questions_and_answers {
+                    q_list.list.retain(|x| x.id != question_id) // remove the question with the id of the question now in the bucket again.
+                }
+            },
+            QuestionPutBackInBucketFailed => context.log("failed to put question back in bucket"),
+            DiscardQuestion => context.log("Discard question"),
+            SetListFilter(location) => {
+                if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
+                    old_list.filter = location
+                }
+            }
         }
         true
     }
 
     fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
-        // TODO, this is lazy. properly update this.
+
         *self = BucketLobby {
             bucket_data: props.bucket_data,
             ..Default::default()
         };
+
+        Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.id, context);
         true
     }
 }
@@ -268,6 +328,7 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
             }
         }
 
+        /// This is needed in order to call a default_view within another default_view
         fn uploadable_question_shim_fn(question_package: &Uploadable<QuestionPackage>) -> Html<Context, BucketLobby> {
             question_package.default_view(QuestionPackage::view)
         }
@@ -278,7 +339,7 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
                     <div class=("flexbox-vert", "questions-container", "scrollable", "flexbox-test"),> // Answer question and new question container
 
                         <div class=("full-height", "full-width", "flexbox-center"),>
-                            <div class="question-card",> // Answer question card
+                            <div class=("question-card", "active-question-card"),> // Answer question card
                                 {self.active_question.restricted_custom_view(
                                     empty_question,
                                     LoadingType::Fidget{diameter: 100},
@@ -289,7 +350,7 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
                         </div>
 
                         <div class=("full-height","full-width", "flexbox-center"),>
-                            <div class="question-card",> // new question card
+                            <div class=("question-card", "new-question-card"),> // new question card
                                 {
                                     self.new_question.default_view(NewQuestion::view)
                                 }
@@ -299,7 +360,7 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
                     </div>
                     <div class=("flexbox-vert", "answers-container", "scrollable"),>
                         {
-                            self.prior_questions_and_answers.default_view(Vec::<QuestionData>::view)
+                            self.prior_questions_and_answers.default_view( QuestionList::view)
                         }
                     </div>
                 </div>
@@ -375,8 +436,8 @@ impl Renderable<Context, BucketLobby> for AnswerData {
     fn view(&self) -> Html<Context, BucketLobby> {
         html! {
             <div>
+                {&format!("{}: ",self.author.display_name)}
                 {self.answer_text.clone().unwrap_or("".into())} // TODO possible misuse of clone here
-                {&self.author.display_name}
             </div>
         }
     }
@@ -392,31 +453,26 @@ impl Renderable<Context, BucketLobby> for QuestionData {
 
         let question_id: i32 = self.id;
         html! {
-            <div>
-                <div>
-                    {&self.question_text}
-                </div>
-                <div>
+            <div class=("flexbox-vert", "bordered"),>
+                <div class="padding-left", >
+                    <div class="bolded",>
+                        {&self.question_text}
+                    </div>
+
                     {answers(&self.answers)}
                 </div>
-
                 <Button: title="Put back in Bucket", onclick=move |_| Msg::PutOldQuestionBackInBucket{question_id}, />
             </div>
         }
     }
 }
 
-impl Renderable<Context, BucketLobby> for Vec<QuestionData> {
+impl Renderable<Context, BucketLobby> for QuestionList {
     fn view(&self) -> Html<Context, BucketLobby> {
-        fn answered_questions(questions: &Vec<QuestionData>) -> Html<Context, BucketLobby> {
-             html! {
-                {for questions.iter().map(QuestionData::view)}
-             }
-        }
 
         html! {
-            <div class=("full-height"),>
-                {answered_questions(self)}
+            <div class=("full-height", "question-list"),>
+                {for self.list.iter().filter(|x| x.location == self.filter).map(QuestionData::view)}
             </div>
         }
     }
