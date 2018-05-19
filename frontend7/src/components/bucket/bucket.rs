@@ -28,6 +28,7 @@ use wire::answer::NewAnswerRequest;
 
 use util::input::InputValidator;
 
+use components::link::Link;
 
 
 #[derive(Debug, Default, Clone)]
@@ -506,23 +507,28 @@ impl Renderable<Context, BucketLobby> for QuestionData {
 
         let question_id: i32 = self.id;
         html! {
-            <div class=("flexbox-vert", "bordered"),>
-                <div class="padding-left", >
+            <div class=("flexbox-vert", "bordered", "margin-default"),>
+                <div class=("flexbox-vert", "border-bottom", "padding-default"),>
                     <div class="bolded",>
                         {&self.question_text}
                     </div>
+                    <div>
+                        {
+                            if self.location == QuestionLocation::Floor {
+                                html! {
+                                    <Link<()>: name="Return to bucket", callback=move |_| Msg::PutOldQuestionBackInBucket{question_id}, classes="small-link", />
+                                }
+                            } else {
+                                ::util::empty::empty_vdom_node()
+                            }
+                        }
+                    </div>
+                </div>
 
+                <div class=("padding-default"),>
                     {answers(&self.answers)}
                 </div>
-                {
-                    if self.location == QuestionLocation::Floor {
-                        html! {
-                            <Button: title="Put back in Bucket", onclick=move |_| Msg::PutOldQuestionBackInBucket{question_id}, />
-                        }
-                    } else {
-                        ::util::empty::empty_vdom_node()
-                    }
-                }
+
             </div>
         }
     }
