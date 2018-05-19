@@ -175,7 +175,8 @@ pub enum Msg {
     CreateQuestionFailed,
     PriorQuestionsReady(Vec<QuestionData>),
     PriorQuestionsFailed,
-    PutOldQuestionBackInBucket{question_id: i32}
+    PutOldQuestionBackInBucket{question_id: i32},
+    DiscardQuestion
 }
 
 impl Component<Context> for BucketLobby {
@@ -227,6 +228,7 @@ impl Component<Context> for BucketLobby {
                 self.prior_questions_and_answers = Loadable::Failed(Some(String::from("Could not load old questions")))
             }
             PutOldQuestionBackInBucket{question_id} => context.log("aoeuaoeu"),
+            DiscardQuestion => context.log("Discard question")
         }
         true
     }
@@ -244,23 +246,26 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
     fn view(&self) -> Html<Context, BucketLobby> {
 
         let empty_question = html! {
-            <Button: title="Draw Question", onclick=|_| Msg::DrawQuestion, />
+            <div class=("full-height", "full-width", "flexbox-center"),>
+                <Button: title="Draw Question", onclick=|_| Msg::DrawQuestion, />
+            </div>
         };
 
         fn failed_question_view(error_msg: &Option<String>) -> Html<Context, BucketLobby> {
             if let Some(error_msg) = error_msg {
                 html!{
-                    <div>
+                    <div class=("full-height", "full-width", "flexbox-center"),>
                         {error_msg}
                         <Button: title="Draw Question", onclick=|_| Msg::DrawQuestion, />
                     </div>
                 }
             } else {
                 html! {
-                    <Button: title="Draw Question", onclick=|_| Msg::DrawQuestion, />
+                    <div class=("full-height", "full-width", "flexbox-center"),>
+                        <Button: title="Draw Question", onclick=|_| Msg::DrawQuestion, />
+                    </div>
                 }
             }
-
         }
 
         fn uploadable_question_shim_fn(question_package: &Uploadable<QuestionPackage>) -> Html<Context, BucketLobby> {
@@ -306,21 +311,36 @@ impl Renderable<Context, BucketLobby> for BucketLobby {
 impl Renderable<Context, BucketLobby> for QuestionPackage {
     fn view(&self) -> Html<Context, BucketLobby> {
         html! {
-            <>
-                <div>
-                    <h4>
-                        {&self.question_data.question_text}
-                    </h4>
-                </div>
+            <div class=("full-height", "full-width","flexbox-vert"),>
+                <div class=("padding-left", "padding-right", "flexbox-expand"),>
+                    <div>
+                        <h4>
+                            {&self.question_data.question_text}
+                        </h4>
+                    </div>
 
-                <Input:
-                    placeholder="Answer",
-                    input_state=&self.answer,
-                    on_change=|a| Msg::UpdateAnswer(a),
-                    on_enter=|_| Msg::SubmitAnswer,
-                />
-                <Button: title="Submit Answer", onclick=|_| Msg::SubmitAnswer, />
-            </>
+                    <Input:
+                        placeholder="Answer",
+                        input_state=&self.answer,
+                        on_change=|a| Msg::UpdateAnswer(a),
+                        on_enter=|_| Msg::SubmitAnswer,
+                    />
+                </div>
+                <div class=("flexbox-horiz-reverse"),>
+                    <Button: title="Submit Answer", onclick=|_| Msg::SubmitAnswer, />
+                    <Button: title="Replace Question", onclick=|_| Msg::DrawQuestion, />
+                    {
+                        // You can't delete a question which already has an answer
+                        if self.question_data.answers.len() < 1 {
+                            html! {
+                                <Button: title="Discard", onclick=|_| Msg::DiscardQuestion, />
+                            }
+                        } else {
+                            ::util::empty::empty_vdom_node()
+                        }
+                    }
+                </div>
+            </div>
         }
     }
 }
@@ -328,20 +348,24 @@ impl Renderable<Context, BucketLobby> for QuestionPackage {
 impl Renderable<Context, BucketLobby> for NewQuestion {
     fn view(&self) -> Html<Context, BucketLobby> {
         html! {
-            <>
-                <div>
-                    <h4>
-                        {"New Question"}
-                    </h4>
-                </div>
+            <div class=("full-height", "full-width","flexbox-vert"),>
+                <div class=("padding-left", "padding-right", "flexbox-expand"),>
+                    <div>
+                        <h4>
+                            {"New Question"}
+                        </h4>
+                    </div>
 
-                <Input:
-                    placeholder="New Question",
-                    input_state=&self.question_text,
-                    on_change=|a| Msg::UpdateNewQuestion(a),
-                    on_enter=|_| Msg::SubmitNewQuestion,
-                />
-                <Button: title="Add Question To Bucket", onclick=|_| Msg::SubmitNewQuestion, />
+                    <Input:
+                        placeholder="New Question",
+                        input_state=&self.question_text,
+                        on_change=|a| Msg::UpdateNewQuestion(a),
+                        on_enter=|_| Msg::SubmitNewQuestion,
+                    />
+                </div>
+                <div class=("flexbox-horiz-reverse"),>
+                    <Button: title="Add Question To Bucket", onclick=|_| Msg::SubmitNewQuestion, />
+                </div>
             </>
         }
     }

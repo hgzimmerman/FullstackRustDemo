@@ -60,10 +60,10 @@ impl <T> Loadable<T> {
 
 
     fn custom_view<U, CTX, LoadedFn, FailedFn>(&self,
-                                                   unloaded: Html<CTX,U>,
-                                                   loading: Html<CTX,U>,
-                                                   loaded_fn: LoadedFn,
-                                                   failed_fn: FailedFn
+                                               unloaded: Html<CTX,U>,
+                                               loading: Html<CTX,U>,
+                                               loaded_fn: LoadedFn,
+                                               failed_fn: FailedFn
     ) -> Html<CTX, U>
         where
         CTX: 'static,

@@ -40,7 +40,7 @@ where
             LoadingType::Fidget {diameter} => {
                 let style = format!("width: {}px; height: {}px;", diameter, diameter);
                 html! {
-                    <div class="flexbox-center",>
+                    <div class=("flexbox-center", "full-height", "full-width"),>
                         <div style=style,>
                             {LoadingIcon(FIDGET_SVG).view()}
                         </div>

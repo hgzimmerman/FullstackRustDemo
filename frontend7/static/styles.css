@@ -50,6 +50,11 @@ body {
     display: flex;
     flex-direction: row;
 }
+.flexbox-horiz-reverse {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
 .flexbox-vert {
     display: flex;
     flex-direction: column;
@@ -75,6 +80,9 @@ body {
     justify-content: stretch;
 }
 
+.flexbox-expand {
+    flex: 1;
+}
 
 
 
@@ -114,6 +122,13 @@ It does require the parent to be "display: flex".
     margin-right: 10px;
 }
 
+.padding-left {
+    padding-left: 10px;
+}
+.padding-right {
+    padding-right: 10px;
+}
+
 /* Misc */
 
 .meta-loading-container {
@@ -122,8 +137,10 @@ It does require the parent to be "display: flex".
 }
 /* Container for content and loading overlay */
 .loading-container {
-    width: auto;
-    height: auto;
+    /*width: auto;*/
+    /*height: auto;*/
+    width: 100%;
+    height: 100%;
     position: relative;
 }
 
