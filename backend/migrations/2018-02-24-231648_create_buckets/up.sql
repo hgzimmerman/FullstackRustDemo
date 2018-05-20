@@ -1,8 +1,17 @@
 CREATE TABLE buckets (
     id SERIAL PRIMARY KEY,
-    bucket_name VARCHAR UNIQUE NOT NULL
+    bucket_name VARCHAR UNIQUE NOT NULL,
+    is_public BOOLEAN NOT NULL
 );
 
+-- A junction table between users and buckets
+CREATE TABLE junction_bucket_users (
+    id SERIAL PRIMARY KEY,
+    bucket_id INTEGER NOT NULL REFERENCES buckets(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner BOOLEAN NOT NULL,
+    approved BOOLEAN NOT NULL
+);
 
 
 CREATE TABLE questions (

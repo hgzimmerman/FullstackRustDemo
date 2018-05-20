@@ -25,7 +25,7 @@ pub struct Chat {
 }
 
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, Clone)]
 #[table_name = "chats"]
 pub struct NewChat {
     pub chat_name: String,
