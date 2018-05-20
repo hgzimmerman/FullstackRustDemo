@@ -121,7 +121,7 @@ impl BucketModel {
 
         context.make_logoutable_request(
             buckets,
-            RequestWrapper::GetBuckets,
+            RequestWrapper::GetPublicBuckets,
             threads_callback,
         );
     }

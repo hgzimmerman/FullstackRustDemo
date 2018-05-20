@@ -1,5 +1,6 @@
 use wire::post::PostResponse;
 use datatypes::user::UserData;
+use chrono::NaiveDateTime;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct MinimalNewPostData {
@@ -8,15 +9,29 @@ pub struct MinimalNewPostData {
 }
 
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PostData {
     pub id: i32,
     pub author: UserData,
-    pub created_date: i64,
-    pub modified_date: Option<i64>,
+    pub created_date: NaiveDateTime,
+    pub modified_date: Option<NaiveDateTime>,
     pub content: String,
     pub censored: bool,
     pub children: Vec<PostData>,
+}
+
+impl Default for PostData {
+    fn default() -> Self {
+        PostData {
+            id: i32::default(),
+            author: UserData::default(),
+            created_date: NaiveDateTime::from_timestamp(0,0),
+            modified_date: Option::default(),
+            content: String::default(),
+            censored: bool::default(),
+            children: Vec::default()
+        }
+    }
 }
 
 impl From<PostResponse> for PostData {

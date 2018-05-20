@@ -16,14 +16,14 @@ pub struct Bucket {
     /// The name of the bucket
     pub bucket_name: String,
     /// The is public field indicates if the bucket will allow other users to request to join.
-    pub is_public: bool
+    pub is_public: bool,
 }
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "buckets"]
 pub struct NewBucket {
     pub bucket_name: String,
-    pub is_public: bool
+    pub is_public: bool,
 }
 
 
@@ -34,7 +34,7 @@ pub struct BucketUser {
     pub bucket_id: i32,
     pub user_id: i32,
     pub owner: bool,
-    pub approved: bool
+    pub approved: bool,
 }
 
 #[derive(Insertable, Debug, Clone)]
@@ -43,7 +43,7 @@ pub struct NewBucketUser {
     pub bucket_id: i32,
     pub user_id: i32,
     pub owner: bool,
-    pub approved: bool
+    pub approved: bool,
 }
 
 #[derive(AsChangeset, Clone, Debug, PartialEq)]
@@ -51,12 +51,11 @@ pub struct NewBucketUser {
 pub struct BucketUserChangeset {
     pub id: i32,
     pub owner: bool,
-    pub approved: bool
+    pub approved: bool,
 }
 
 
 impl Bucket {
-
     pub fn get_public_buckets(conn: &Conn) -> JoeResult<Vec<Bucket>> {
         use schema::buckets::dsl::*;
 
@@ -145,11 +144,10 @@ impl Bucket {
             .map_err(Bucket::handle_error)
     }
 
-     pub fn set_bucket_publicity(m_bucket_id: i32, publicity: bool, conn: &Conn) -> JoeResult<()> {
+    pub fn set_bucket_publicity(m_bucket_id: i32, publicity: bool, conn: &Conn) -> JoeResult<()> {
 
         use schema::buckets::dsl::*;
-        let target = buckets
-            .filter(id.eq(m_bucket_id));
+        let target = buckets.filter(id.eq(m_bucket_id));
 
         diesel::update(target)
             .set(is_public.eq(publicity))
@@ -185,5 +183,4 @@ impl Bucket {
             .map_err(Bucket::handle_error)?;
         Ok(())
     }
-
 }

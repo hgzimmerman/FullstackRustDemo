@@ -192,7 +192,7 @@ pub mod user_authorization {
         let key = keys[0];
         let jwt: Jwt = match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
             Ok(token) => {
-                if NaiveDateTime::from_timestamp(token.exp, 0) < Utc::now().naive_utc() {
+                if token.exp < Utc::now().naive_utc() {
                     info!("Token expired.");
                     return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
                 }

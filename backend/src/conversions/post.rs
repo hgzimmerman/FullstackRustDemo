@@ -48,10 +48,8 @@ impl From<ChildlessPostData> for PostResponse {
         PostResponse {
             id: data.post.id,
             author: data.user.into(),
-            created_date: data.post.created_date.timestamp(),
-            modified_date: data.post.modified_date.as_ref().map(
-                NaiveDateTime::timestamp,
-            ),
+            created_date: data.post.created_date,
+            modified_date: data.post.modified_date,
             content: data.post.content,
             censored: data.post.censored,
             children: vec![],
@@ -66,10 +64,8 @@ impl From<PostData> for PostResponse {
         PostResponse {
             id: data.post.id,
             author: data.user.into(),
-            created_date: data.post.created_date.timestamp(),
-            modified_date: data.post.modified_date.as_ref().map(
-                NaiveDateTime::timestamp,
-            ),
+            created_date: data.post.created_date,
+            modified_date: data.post.modified_date,
             content: data.post.content,
             censored: data.post.censored,
             children: data.children

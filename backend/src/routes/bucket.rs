@@ -17,12 +17,12 @@ use rocket::request::FromForm;
 
 #[derive(FromForm)]
 struct UserIdParam {
-    user_id: i32
+    user_id: i32,
 }
 
 #[derive(FromForm)]
 struct PublicParam {
-    is_public: bool
+    is_public: bool,
 }
 
 /// Get all of the available buckets.
@@ -33,6 +33,7 @@ fn get_public_buckets(_user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<Bucke
         .map(Json)
 }
 
+/// Approves the user, allowing them to join the bucket session.
 #[get("/approved")]
 fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
     Bucket::get_buckets_user_belongs_to(user.user_id, &conn)
@@ -45,20 +46,20 @@ fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json
 /// The user being approved already needs to have registered with the bucket in question.
 #[put("/<bucket_id>/approval?<user_id_param>")]
 fn approve_user_for_bucket(bucket_id: i32, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if ! Bucket::is_user_owner(user.user_id, &conn) {
-        let e = WeekendAtJoesError::NotAuthorized{reason: "User must be an owner of the bucket in order to approve users."};
-        return Err(e)
+    if !Bucket::is_user_owner(user.user_id, &conn) {
+        let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
+        return Err(e);
     }
 
-    Bucket::set_user_approval( user_id_param.user_id, bucket_id, true, &conn)
+    Bucket::set_user_approval(user_id_param.user_id, bucket_id, true, &conn)
 }
 
-
+/// Entirely removes the user from the bucket.
 #[delete("/<bucket_id>?<user_id_param>")]
 fn remove_user_from_bucket(bucket_id: i32, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if ! Bucket::is_user_owner(user.user_id, &conn) {
-        let e = WeekendAtJoesError::NotAuthorized{reason: "User must be an owner of the bucket in order to approve users."};
-        return Err(e)
+    if !Bucket::is_user_owner(user.user_id, &conn) {
+        let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
+        return Err(e);
     }
     Bucket::remove_user_from_bucket(user_id_param.user_id, bucket_id, &conn)
 }
@@ -67,9 +68,9 @@ fn remove_user_from_bucket(bucket_id: i32, user_id_param: UserIdParam, user: Nor
 /// This will prevent other buckets from
 #[put("/<bucket_id>/publicity?<is_public_param>")]
 fn set_publicity(bucket_id: i32, is_public_param: PublicParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if ! Bucket::is_user_owner(user.user_id, &conn) {
-        let e = WeekendAtJoesError::NotAuthorized{reason: "User must be an owner of the bucket in order to approve users."};
-        return Err(e)
+    if !Bucket::is_user_owner(user.user_id, &conn) {
+        let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
+        return Err(e);
     }
     Bucket::set_bucket_publicity(bucket_id, is_public_param.is_public, &conn)
 }
@@ -79,9 +80,9 @@ fn set_publicity(bucket_id: i32, is_public_param: PublicParam, user: NormalUser,
 #[get("/<bucket_id>")]
 fn get_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
     // If the user isn't approved then return a 403.
-    if ! Bucket::is_user_approved(user.user_id, &conn) {
-        let e = WeekendAtJoesError::NotAuthorized{reason: "User has not been approved to participate in the bucket questions session."};
-        return Err(e)
+    if !Bucket::is_user_approved(user.user_id, &conn) {
+        let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
+        return Err(e);
     }
 
     Bucket::get_by_id(bucket_id, &conn)
@@ -103,7 +104,7 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Con
         bucket_id: bucket_response.id,
         user_id: user.user_id,
         owner: true,
-        approved: true
+        approved: true,
     };
     Bucket::add_user_to_bucket(new_bucket_user, &conn)?;
 
@@ -114,14 +115,16 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Con
 
 
 impl Routable for Bucket {
-    const ROUTES: &'static Fn() -> Vec<Route> = &|| routes![
-        get_public_buckets,
-        get_approved_buckets_for_user,
-        set_publicity,
-        approve_user_for_bucket,
-        remove_user_from_bucket,
-        get_bucket,
-        create_bucket
-    ];
+    const ROUTES: &'static Fn() -> Vec<Route> = &|| {
+        routes![
+            get_public_buckets,
+            get_approved_buckets_for_user,
+            set_publicity,
+            approve_user_for_bucket,
+            remove_user_from_bucket,
+            get_bucket,
+            create_bucket,
+        ]
+    };
     const PATH: &'static str = "/buckets/";
 }

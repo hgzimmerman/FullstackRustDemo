@@ -102,7 +102,6 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         None => return Err(LoginError::OtherError("Could not calculate offset for token expiry")),
     };
 
-    let exp_timestamp: i64 = new_expire_date.timestamp();
 
     info!("Creating JWT");
     let jwt = Jwt {
@@ -112,7 +111,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
             .iter()
             .map(|role_id| (*role_id).into())
             .collect(),
-        exp: exp_timestamp,
+        exp: new_expire_date,
     };
     let jwt = ServerJwt(jwt);
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {

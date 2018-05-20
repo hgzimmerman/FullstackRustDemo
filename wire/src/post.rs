@@ -1,12 +1,12 @@
 use user::UserResponse;
-//use chrono::NaiveDateTime;
+use chrono::NaiveDateTime;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PostResponse {
     pub id: i32,
     pub author: UserResponse,
-    pub created_date: i64,
-    pub modified_date: Option<i64>,
+    pub created_date: NaiveDateTime,
+    pub modified_date: Option<NaiveDateTime>,
     pub content: String,
     pub censored: bool,
     pub children: Vec<PostResponse>,

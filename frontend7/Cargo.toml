@@ -23,8 +23,13 @@ stdweb = "0.4.2"
 
 base64 = "0.9.0"
 
-#chrono = { version = "0.4", features = ["serde"] }
 
 # For parsing rendering markdown
 pulldown-cmark = { git = "https://github.com/google/pulldown-cmark", rev = "c1ac9123f1653dc774403634696f848ffecbb01c" }
+
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+#chrono = { version = "0.4", features = ["serde"] }
 

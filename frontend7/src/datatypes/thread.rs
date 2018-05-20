@@ -5,13 +5,15 @@ use wire::thread::NewThreadRequest;
 use wire::thread::ThreadResponse;
 use datatypes::user::UserData;
 use datatypes::post::PostData;
+use chrono::NaiveDateTime;
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MinimalThreadData {
     pub id: i32,
     pub title: String,
     pub author: UserData,
-    pub created_date: i64,
+    pub created_date: NaiveDateTime,
     //    pub replies: i32,
     pub locked: bool,
 }
@@ -19,11 +21,11 @@ pub struct MinimalThreadData {
 impl Default for MinimalThreadData {
     fn default() -> MinimalThreadData {
         MinimalThreadData {
-            id: 0,
-            title: "".into(),
+            id: i32::default(),
+            title: String::default(),
             author: UserData::default(),
-            created_date: 0,
-            locked: false,
+            created_date: NaiveDateTime::from_timestamp(0,0),
+            locked: bool::default(),
         }
     }
 }
@@ -57,16 +59,31 @@ impl NewThreadData {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ThreadData {
     pub id: i32,
     pub forum_id: i32,
     pub title: String,
     pub author: UserData,
     pub posts: PostData,
-    pub created_date: i64,
+    pub created_date: NaiveDateTime,
     pub locked: bool,
 }
+
+impl Default for ThreadData {
+    fn default() -> Self {
+        ThreadData {
+            id: i32::default(),
+            forum_id: i32::default(),
+            title: String::default(),
+            author: UserData::default(),
+            posts: PostData::default(),
+            created_date: NaiveDateTime::from_timestamp(0,0),
+            locked: bool::default()
+        }
+    }
+}
+
 impl From<ThreadResponse> for ThreadData {
     fn from(response: ThreadResponse) -> Self {
         ThreadData {

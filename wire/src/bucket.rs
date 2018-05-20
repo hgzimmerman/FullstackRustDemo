@@ -2,11 +2,11 @@
 pub struct BucketResponse {
     pub id: i32,
     pub bucket_name: String,
-    pub is_public: bool
+    pub is_public: bool,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewBucketRequest {
     pub bucket_name: String,
-    pub is_public: bool
+    pub is_public: bool,
 }

@@ -5,14 +5,16 @@ use util::input::InputState;
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BucketData {
     pub id: i32,
-    pub bucket_name: String
+    pub bucket_name: String,
+    pub is_public: bool
 }
 
 impl From<BucketResponse> for BucketData {
     fn from(response: BucketResponse) -> BucketData {
         BucketData {
             id: response.id,
-            bucket_name: response.bucket_name
+            bucket_name: response.bucket_name,
+            is_public: response.is_public
         }
     }
 }
@@ -35,6 +37,7 @@ impl NewBucket {
 
         let request = NewBucketRequest {
             bucket_name: self.name.inner_text().clone(),
+            is_public: true // By default, all buckets are public, but the option to parameterize it in the UI in the future is possible
         };
         Ok(request)
     }

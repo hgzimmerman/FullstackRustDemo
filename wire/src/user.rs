@@ -1,4 +1,4 @@
-//use chrono::NaiveDateTime;
+use chrono::NaiveDateTime;
 
 /// User to be sent over the wire
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -45,7 +45,7 @@ pub struct Jwt {
     pub sub: i32,
     pub user_roles: Vec<UserRole>,
     /// exp is the Expiration date, in unix timestamp form
-    pub exp: i64,
+    pub exp: NaiveDateTime,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

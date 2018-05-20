@@ -11,6 +11,9 @@ use base64;
 
 use wire::user::{UserRole, Jwt};
 
+use chrono::NaiveDateTime;
+
+
 
 #[derive(Fail, Debug)]
 enum JwtError {
@@ -88,7 +91,7 @@ impl Context {
         Ok(payload.user_name)
     }*/
 
-    fn user_auth_expire_date(&mut self) -> Result<i64, Error> {
+    fn user_auth_expire_date(&mut self) -> Result<NaiveDateTime, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
         Ok(payload.exp)
