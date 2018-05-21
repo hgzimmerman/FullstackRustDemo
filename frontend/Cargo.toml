@@ -5,6 +5,7 @@ members = [
     "util",
     "bucket",
     "forum",
+    "auth",
     "routes"
 ]
 exclude = [

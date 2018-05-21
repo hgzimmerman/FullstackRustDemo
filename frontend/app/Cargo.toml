@@ -18,6 +18,7 @@ routes = {path = "../routes"}
 
 bucket = {path = "../bucket"}
 forum = {path = "../forum"}
+auth = {path = "../auth"}
 
 
 failure = "0.1"

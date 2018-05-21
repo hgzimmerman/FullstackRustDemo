@@ -15,12 +15,7 @@ extern crate chrono;
 
 extern crate stdweb;
 
-//extern crate pulldown_cmark;
-
-//extern crate base64;
-
 use yew::prelude::*;
-//mod datatypes;
 use header_component::Header;
 
 mod components;
@@ -37,6 +32,7 @@ extern crate util;
 
 extern crate bucket;
 extern crate forum;
+extern crate auth;
 
 
 use yew::services::route::MainRouter;
@@ -48,6 +44,7 @@ use routes::Route;
 
 use forum::ForumModel;
 use bucket::BucketModel;
+use auth::AuthModel;
 
 
 
@@ -73,6 +70,7 @@ enum Msg {
     /// This should not be called by children, as the actions preformed due to this message don't affect the router state.
     /// This should only be called by the router logic itself.
     Navigate(Route),
+    #[allow(dead_code)]
     UpdateLogin,
     /// This can be called by children te sot the route
     #[allow(dead_code)]
@@ -134,9 +132,10 @@ impl Renderable<Context, Model> for Model {
 
         use self::Route::*;
         let page = |route: &Route| match route {
-            Auth(ref auth_page) => {
-                auth_page.view()
-            }
+            Auth(ref auth_route) => html! {
+                <AuthModel: route=auth_route, />
+//                auth_page.view()
+            },
             Forums(ref forum_list_route) => html! {
                 <ForumModel: route=forum_list_route, />
             },
