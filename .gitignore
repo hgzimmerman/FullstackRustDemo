@@ -1,8 +1,9 @@
 /target/
-/www/target/
 /wire/target/
 /db_proc_macros/target
-/frontend7/target/
+/frontend/target/
+/frontend/frontend7/target/
+/frontend/app/target/
 /backend/target/
 **/*.rs.bk
 /backend/weekend.log

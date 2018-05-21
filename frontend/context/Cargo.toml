@@ -1,0 +1,22 @@
+[package]
+name = "context"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+wire = {path = "../../wire"}
+failure = "0.1"
+failure_derive = "0.1.1"
+
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+
+
+base64 = "0.9.0"
+
+serde_json = "*"
+serde = "1"
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+

@@ -1,0 +1,36 @@
+[package]
+name = "frontend7"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+#yew = { git = "https://github.com/DenisKolodin/yew", rev = "e80d8d564f4b5c8239408f32ec2301e8c629fefa" }
+#yew = { git = "https://github.com/hgzimmerman/yew", rev = "afbdbf2b291ae17beed5a4d7ca77bd86b56f4850" }
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+
+#http = "0.1"
+
+
+wire = {path = "../../wire"}
+context = {path = "../context"}
+util = {path = "../util"}
+routes = {path = "../routes"}
+
+bucket = {path = "../bucket"}
+forum = {path = "../forum"}
+
+
+failure = "0.1"
+
+serde = "1"
+serde_json = "*"
+
+stdweb = "0.4.2"
+
+base64 = "0.9.0"
+
+
+[dependencies.chrono]
+version = "0.4"
+default-features = false
+

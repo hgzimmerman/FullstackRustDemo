@@ -1,0 +1,16 @@
+[package]
+name = "bucket"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+context = {path = "../context"}
+
+wire = {path = "../../wire"}
+util = {path = "../util"}
+routes = {path = "../routes"}
+
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+stdweb = "0.4.2"
+
+failure = "0.1"

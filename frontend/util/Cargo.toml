@@ -1,0 +1,12 @@
+[package]
+name = "util"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+
+context = {path = "../context"}
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+stdweb = "0.4.2"
+
+pulldown-cmark = { git = "https://github.com/google/pulldown-cmark", rev = "c1ac9123f1653dc774403634696f848ffecbb01c" }
