@@ -13,7 +13,7 @@ impl From<Article> for MinimalArticleResponse {
             author_id: article.author_id,
             title: article.title,
             body: article.body,
-            publish_date: article.publish_date
+            publish_date: article.publish_date,
         }
     }
 }
@@ -25,7 +25,7 @@ impl From<ArticleData> for FullArticleResponse {
             author: data.user.into(),
             title: data.article.title,
             body: data.article.body,
-            publish_date: data.article.publish_date
+            publish_date: data.article.publish_date,
         }
     }
 }
@@ -36,7 +36,7 @@ impl From<ArticleData> for ArticlePreviewResponse {
             id: data.article.id,
             author: data.user.into(),
             title: data.article.title,
-            publish_date: data.article.publish_date
+            publish_date: data.article.publish_date,
         }
     }
 }

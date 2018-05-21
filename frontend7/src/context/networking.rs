@@ -40,8 +40,10 @@ enum HttpMethod {
 
 #[derive(Serialize)]
 pub enum RequestWrapper {
+    /*Auth*/
     Login(LoginRequest),
     CreateUser(NewUserRequest),
+    /*Forum*/
     CreateThread(NewThreadRequest),
     GetThreads { forum_id: i32, page_index: usize },
     GetForums,
@@ -49,7 +51,9 @@ pub enum RequestWrapper {
     GetThread { thread_id: i32 },
     CreatePostResponse(NewPostRequest),
     UpdatePost(EditPostRequest),
+    /*Bucket Questions*/
     GetPublicBuckets,
+    GetBucketsForUser,
     GetBucket{bucket_id: i32},
     CreateBucket(NewBucketRequest),
     GetRandomQuestion { bucket_id: i32 },
@@ -57,7 +61,10 @@ pub enum RequestWrapper {
     AnswerQuestion(NewAnswerRequest),
     CreateQuestion(NewQuestionRequest),
     DeleteQuestion{question_id: i32},
-    PutQuestionBackInBucket{question_id: i32}
+    PutQuestionBackInBucket{question_id: i32},
+    SetBucketPublicStatus{bucket_id: i32, is_public: bool},
+    ApproveUserForBucket {bucket_id: i32, user_id: i32},
+    RemoveUserFromBucket {bucket_id: i32, user_id: i32}
 }
 
 impl RequestWrapper {
@@ -79,6 +86,7 @@ impl RequestWrapper {
             CreatePostResponse(_) => "post/create".into(),
             UpdatePost(_) => "post/edit".into(),
             GetPublicBuckets => "buckets/public".into(),
+            GetBucketsForUser => "buckets/approved".into(),
             GetBucket{bucket_id} => format!("buckets/{}", bucket_id),
             CreateBucket(_) => "buckets/create".into(),
             GetRandomQuestion { bucket_id } => format!("question/random_question/{}", bucket_id),
@@ -86,7 +94,10 @@ impl RequestWrapper {
             AnswerQuestion(_) => "answer/create".into(),
             CreateQuestion(_) => "question/create".into(),
             DeleteQuestion {question_id} => format!("question/{}", question_id),
-            PutQuestionBackInBucket {question_id} => format!("question/{}/into_bucket", question_id)
+            PutQuestionBackInBucket {question_id} => format!("question/{}/into_bucket", question_id),
+            SetBucketPublicStatus {bucket_id, is_public} => format!("buckets/{}/publicity?is_public={}", bucket_id, is_public),
+            ApproveUserForBucket {bucket_id, user_id} => format!("buckets/{}/approval?user_id={}",bucket_id, user_id),
+            RemoveUserFromBucket {bucket_id, user_id} => format!("buckets/{}?user_id={}",bucket_id, user_id),
         };
 
         format!("{}/{}", api_base, path)
@@ -107,6 +118,7 @@ impl RequestWrapper {
             CreatePostResponse(_) => Required,
             UpdatePost(_) => Required,
             GetPublicBuckets => Required,
+            GetBucketsForUser => Required,
             GetBucket{..} => Required,
             CreateBucket(_) => Required,
             GetRandomQuestion {..} => NotRequired,
@@ -114,7 +126,11 @@ impl RequestWrapper {
             AnswerQuestion(_) => Required,
             CreateQuestion(_) => Required,
             DeleteQuestion {..} => Required,
-            PutQuestionBackInBucket {..} => Required
+            PutQuestionBackInBucket {..} => Required,
+            SetBucketPublicStatus {..} => Required,
+            ApproveUserForBucket {..} => Required,
+            RemoveUserFromBucket {..} => Required,
+
         }
     }
 
@@ -137,6 +153,7 @@ impl RequestWrapper {
             CreatePostResponse(r) => Post(to_body(r)),
             UpdatePost(r) => Put(to_body(r)),
             GetPublicBuckets => Get,
+            GetBucketsForUser => Get,
             GetBucket {..} => Get,
             CreateBucket(r) => Post(to_body(r)),
             GetRandomQuestion {..} => Get,
@@ -145,6 +162,9 @@ impl RequestWrapper {
             CreateQuestion(r) => Post(to_body(r)),
             DeleteQuestion {..} => Delete,
             PutQuestionBackInBucket {..} => Put("".to_string()), // no body
+            SetBucketPublicStatus {..} => Put("".to_string()),
+            ApproveUserForBucket {..} => Put("".to_string()),
+            RemoveUserFromBucket {..} => Delete
         }
     }
 }
