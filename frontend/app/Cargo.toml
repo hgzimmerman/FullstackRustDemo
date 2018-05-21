@@ -1,5 +1,5 @@
 [package]
-name = "frontend7"
+name = "app"
 version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 

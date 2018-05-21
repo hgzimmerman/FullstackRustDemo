@@ -46,9 +46,6 @@ use routes::Route;
 //use yew::services::route::*;
 
 
-use routes::auth::AuthRoute;
-use routes::forum::ForumRoute;
-use bucket::BucketRoute;
 use forum::ForumModel;
 use bucket::BucketModel;
 
@@ -164,6 +161,7 @@ impl Renderable<Context, Model> for Model {
         }
     }
 }
+
 
 
 

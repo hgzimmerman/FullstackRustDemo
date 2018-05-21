@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "frontend7",
+    "app",
     "context",
     "util",
     "bucket",
@@ -8,5 +8,4 @@ members = [
     "routes"
 ]
 exclude = [
-#    "frontend7" # The frontend needs to be excluded because it can't compile some of the crates in the workspace context for wasm
 ]

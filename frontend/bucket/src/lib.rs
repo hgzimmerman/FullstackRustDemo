@@ -12,15 +12,12 @@ pub use routes::bucket::BucketRoute;
 
 
 use yew::prelude::*;
-use yew::services::route::RouteInfo;
-use yew::services::route::Router;
-use yew::services::route::RouteSection;
 
 mod bucket;
 mod buckets;
 mod new_bucket;
-//use components::bucket::buckets::BucketList;
-use buckets::*;
+
+
 use util::button::Button;
 use bucket::BucketLobby;
 
@@ -37,8 +34,8 @@ use failure::Error;
 use context::networking::RequestWrapper;
 use wire::bucket::BucketResponse;
 
-use util::input::InputValidator;
-use util::input::Input;
+//use util::input::InputValidator;
+//use util::input::Input;
 use util::input::InputState;
 
 use util::uploadable::Uploadable;
@@ -256,7 +253,6 @@ impl Renderable<Context, BucketModel> for BucketModel {
     fn view(&self) -> Html<Context, BucketModel> {
 
         use self::BucketPage::*;
-        use self::buckets;
 
         fn bucket_lobby_fn(bucket: &BucketData) -> Html<Context, BucketModel> {
             html! {

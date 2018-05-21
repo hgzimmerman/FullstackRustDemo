@@ -1,6 +1,6 @@
 use yew::prelude::*;
 use datatypes::bucket::BucketData;
-use util::loadable::Loadable;
+//use util::loadable::Loadable;
 use Context;
 //use Route;
 

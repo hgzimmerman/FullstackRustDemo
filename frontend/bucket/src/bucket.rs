@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use datatypes::bucket::BucketData;
 use datatypes::question::QuestionData;
-use datatypes::question::NewQuestionData;
+//use datatypes::question::NewQuestionData;
 use datatypes::question::QuestionLocation;
 
 use Context;
