@@ -7,6 +7,7 @@ use std::ops::Deref;
 use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
 use error::JoeResult;
+use log;
 
 // TODO, I don't think that this file should have wire types
 use wire::user::*;
@@ -63,7 +64,7 @@ impl User {
     /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &Conn) -> JoeResult<User> {
         use schema::users::dsl::*;
-        info!("Getting user with Name: {}", name);
+        log::info!("Getting user with Name: {}", name);
 
         users
             .filter(user_name.eq(user_name))
@@ -147,7 +148,7 @@ impl User {
     pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &Conn) -> JoeResult<NaiveDateTime> {
         use schema::users::dsl::*;
 
-        info!("record_failed_login: setting the expire time and failure count");
+        log::info!("record_failed_login: setting the expire time and failure count");
         let current_date = Utc::now().naive_utc();
         let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
         let expire_datetime = current_date + Duration::seconds(delay_seconds);
@@ -223,7 +224,7 @@ impl User {
             user_name.eq(request.user_name),
         );
 
-        info!("Updating the user display name");
+        log::info!("Updating the user display name");
         diesel::update(target)
             .set(display_name.eq(
                 request.new_display_name,

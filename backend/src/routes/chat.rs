@@ -11,6 +11,7 @@ use db::Creatable;
 use error::*;
 use db::Retrievable;
 
+use log;
 
 
 /// Creates a new chat.
@@ -21,7 +22,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
     let new_chat: NewChat = new_chat.into_inner().into();
 
     if new_chat.leader_id != user.user_id {
-        info!("User tried to create a chat where they are not the leader");
+        log::info!("User tried to create a chat where they are not the leader");
         return Err(WeekendAtJoesError::BadRequest);
     }
 
@@ -38,7 +39,7 @@ fn add_user_to_chat(request: Json<ChatUserAssociationRequest>, user: NormalUser,
     let association: ChatUserAssociation = request.into_inner().into();
 
     if !Chat::is_user_in_chat(association.chat_id, user.user_id, &conn)? {
-        info!("User not in a chat tried to add a user to that chat.");
+        log::info!("User not in a chat tried to add a user to that chat.");
         return Err(WeekendAtJoesError::BadRequest);
     }
 
@@ -56,7 +57,7 @@ fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: Normal
     let chat: Chat = Chat::get_by_id(association.chat_id, &conn)?;
 
     if chat.leader_id != user.user_id {
-        info!("User without chat leader status tried to remove user");
+        log::info!("User without chat leader status tried to remove user");
         return Err(WeekendAtJoesError::BadRequest);
     }
 

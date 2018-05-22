@@ -139,6 +139,7 @@ impl Renderable<Context, Model> for Model {
                 <BucketModel: route=bucket_route, />
             },
             PageNotFound => html! {
+
                 <>
                     {"Page Not Found"}
                 </>

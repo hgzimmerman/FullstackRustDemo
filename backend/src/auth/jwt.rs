@@ -5,6 +5,7 @@ use serde_json;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
 use chrono::{NaiveDateTime, Utc};
+use log;
 
 use auth::Secret;
 use auth::BannedSet;
@@ -74,7 +75,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     let secret: String = match request.guard::<State<Secret>>() {
         Outcome::Success(ref s) => s.0.clone(),
         _ => {
-            warn!("Couldn't get secret from state.");
+            log::warn!("Couldn't get secret from state.");
             return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
         }
     };
@@ -82,7 +83,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
         Ok(jwt) => Outcome::Success(jwt),
         Err(_) => {
-            info!("Token couldn't be deserialized.");
+            log::info!("Token couldn't be deserialized.");
             Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken))
         }
     }
@@ -90,7 +91,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
 
 fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesError> {
     if jwt.exp < Utc::now().naive_utc() {
-        info!("Token expired.");
+        log::info!("Token expired.");
         return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
     }
     Outcome::Success(jwt)
@@ -112,6 +113,7 @@ pub enum JwtError {
 
 pub mod user_authorization {
     use super::*;
+    use log;
 
     trait FromJwt {
         fn from_jwt(jwt: &Jwt) -> Result<Self, RoleError>
@@ -238,7 +240,7 @@ pub mod user_authorization {
                 }
             }
             _ => {
-                warn!("Couldn't get banned set from state.");
+                log::warn!("Couldn't get banned set from state.");
                 return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
             }
         }

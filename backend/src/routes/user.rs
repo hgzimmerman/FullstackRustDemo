@@ -10,6 +10,7 @@ use error::WeekendAtJoesError;
 use error::JoeResult;
 use auth::user_authorization::*;
 use db::user::NewUser;
+use log;
 
 /// Gets basic info about an user.
 /// Provided they know the id of the user, this information is available to anyone.
@@ -53,7 +54,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> JoeResult<Json
 /// Allow a user to update their display name.
 #[put("/", data = "<data>")]
 fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
-    info!("updating user display name");
+    log::info!("updating user display name");
     let request: UpdateDisplayNameRequest = data.into_inner();
     // TODO, check if this is valid.
     User::update_user_display_name(request, &conn)

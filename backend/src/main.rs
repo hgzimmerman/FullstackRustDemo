@@ -19,7 +19,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-#[macro_use]
+#[macro_use(log)]
 extern crate log;
 extern crate simplelog;
 
@@ -101,7 +101,7 @@ fn main() {
 pub fn init_rocket() -> Rocket {
 
     // Set up CORS for local development using `cargo web start`
-    let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000"]);
+    let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
     assert!(failed_origins.is_empty());
 
     let options = rocket_cors::Cors {
@@ -128,9 +128,9 @@ pub fn init_rocket() -> Rocket {
     // Protect this by not allowing it to run in release mode, or querying for user input if this flag is enabled, just to confirm.34
     let testing = false;
     if testing {
-        warn!("=================");
-        warn!("Launched with testing enabled. This means that Default Users and other entities have been added to the database, compromising security.");
-        warn!("=================");
+        log::warn!("=================");
+        log::warn!("Launched with testing enabled. This means that Default Users and other entities have been added to the database, compromising security.");
+        log::warn!("=================");
         db::testing::generate_test_fixtures(&db::Conn::new(db_pool.get().unwrap()))
             .expect("A test fixture with a unique name already exists, preventing the suite from running");
     }
@@ -139,7 +139,7 @@ pub fn init_rocket() -> Rocket {
         .manage(db_pool)
         .manage(secret)
         .manage(banned_set)
-        .mount("/", routes![static_file::files, static_file::js, static_file::app, static_file::wasm])
+        .mount("/", routes![static_file::files, static_file::js, static_file::wasm])
         .mount(&format_api(User::PATH), User::ROUTES())
         .mount(&format_api(Article::PATH), Article::ROUTES())
         .mount(&format_api(Auth::PATH), Auth::ROUTES())
@@ -151,6 +151,7 @@ pub fn init_rocket() -> Rocket {
         .mount(&format_api(Answer::PATH), Answer::ROUTES())
         .mount(&format_api(Chat::PATH), Chat::ROUTES())
         .mount(&format_api(Message::PATH), Message::ROUTES())
+        .catch(errors![static_file::index_from_404])
         .attach(options)
 }
 

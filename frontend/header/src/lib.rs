@@ -94,14 +94,23 @@ impl Renderable<Context, Header> for Header {
             }
         };
 
+        let bucket_questions = if self.is_logged_in {
+            html! {
+                <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
+            }
+        } else {
+            util::wrappers::empty_vdom_node()
+        };
+
         html! {
             <div class="header",>
                 <div class="nav-title",>
-                    { "WeekendAtJoe's.com" }
+                    { "WeekendAtJoe's" }
                 </div>
                 <div class="nav-links",>
                     <Link<()>: name="Forums", callback=|_| Msg::Forums, classes="nav-link", />
-                    <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
+//                    <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
+                    {bucket_questions}
                     {log_in_out}
                 </div>
             </div>

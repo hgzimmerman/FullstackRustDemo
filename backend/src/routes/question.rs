@@ -10,7 +10,7 @@ use wire::question::*;
 use auth::user_authorization::*;
 
 use error::*;
-
+use log;
 
 
 
@@ -27,7 +27,7 @@ fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<Quest
 /// Gets a random question from the bucket.
 #[get("/random_question/<bucket_id>")]
 fn get_random_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
-    info!("Enter get random question");
+    log::info!("Enter get random question");
     Question::get_random_question(bucket_id, &conn)
         .map(QuestionResponse::from)
         .map(Json)
@@ -56,7 +56,7 @@ fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, con
 
 #[delete("/<question_id>")]
 fn delete_question(question_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<i32>> {
-    info!("user: {}, deleteting question with id: {}", user.user_id, question_id);
+    log::info!("user: {}, deleteting question with id: {}", user.user_id, question_id);
     Question::delete_question(question_id, &conn)?;
     Ok(Json(question_id))
 }

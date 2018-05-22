@@ -12,6 +12,8 @@ mod jwt;
 mod password;
 mod banned_set;
 
+use log;
+
 pub use self::jwt::user_authorization;
 pub use self::jwt::{ServerJwt, JwtError};
 
@@ -55,7 +57,7 @@ pub type LoginResult = Result<String, LoginError>;
 
 /// Logs the user in by validating their password and returning a jwt.
 pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginResult {
-    info!("Logging in for user: {}", &login_request.user_name);
+    log::info!("Logging in for user: {}", &login_request.user_name);
     // get user
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
         .map_err(|_| LoginError::UsernameDoesNotExist)?;
@@ -72,19 +74,19 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         //        return Err(LoginError::AccountLocked);
     }
 
-    info!("verifing password: {}", &login_request.password);
-    info!("against: {}", &user.password_hash);
+    log::info!("verifing password: {}", &login_request.password);
+    log::info!("against: {}", &user.password_hash);
     match verify_hash(&login_request.password, &user.password_hash) {
         Ok(b) => {
             if !b {
-                info!("Wrong password entered for user: {}", &login_request.user_name);
+                log::info!("Wrong password entered for user: {}", &login_request.user_name);
                 User::record_failed_login(user.id, user.failed_login_count, &conn)
                     .map_err(|_| LoginError::OtherError("Login failed, but could not set the login delay"))?;
                 return Err(LoginError::IncorrectPassword);
             } else {
-                info!("Password match verified");
+                log::info!("Password match verified");
                 if user.failed_login_count > 0 {
-                    info!("Resetting login count");
+                    log::info!("Resetting login count");
                     User::reset_login_failure_count(user.id, &conn)
                         .map_err(|_| LoginError::OtherError("DB error"))?;
                 }
@@ -95,7 +97,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 
 
     // generate token
-    info!("Generating JWT Expiry Date");
+    log::info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
@@ -103,7 +105,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     };
 
 
-    info!("Creating JWT");
+    log::info!("Creating JWT");
     let jwt = Jwt {
         //        user_name: user.user_name.clone(),
         sub: user.id.clone(),
@@ -125,7 +127,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 
 pub fn reauth(jwt: Jwt, secret: String) -> LoginResult {
     let mut jwt = jwt;
-    info!("Generating JWT Expiry Date");
+    log::info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
@@ -158,7 +160,7 @@ pub enum LoginError {
 impl<'a> Responder<'a> for LoginError {
     fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
         // TODO: use the string in a custom Status for internal server error
-        info!("User login failed with error: {:?}", &self);
+        log::info!("User login failed with error: {:?}", &self);
         match self {
             LoginError::IncorrectPassword => Err(Status::Unauthorized),
             LoginError::AccountLocked => Err(Status::Unauthorized),
