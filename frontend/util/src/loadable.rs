@@ -7,7 +7,7 @@ use context::networking::FtWrapper;
 
 use loading::LoadingType;
 
-use empty::empty_vdom_node;
+use wrappers::empty_vdom_node;
 
 
 

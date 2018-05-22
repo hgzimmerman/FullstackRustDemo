@@ -16,10 +16,7 @@ extern crate chrono;
 extern crate stdweb;
 
 use yew::prelude::*;
-use header_component::Header;
 
-mod components;
-use components::*;
 
 //mod context;
 extern crate context;
@@ -33,15 +30,15 @@ extern crate util;
 extern crate bucket;
 extern crate forum;
 extern crate auth;
-
+extern crate header;
 
 use yew::services::route::MainRouter;
 use yew::services::route::RouteResult;
 use routes::Route;
 
-//use yew::services::route::*;
 
 
+use header::Header;
 use forum::ForumModel;
 use bucket::BucketModel;
 use auth::AuthModel;
@@ -134,13 +131,11 @@ impl Renderable<Context, Model> for Model {
         let page = |route: &Route| match route {
             Auth(ref auth_route) => html! {
                 <AuthModel: route=auth_route, />
-//                auth_page.view()
             },
             Forums(ref forum_list_route) => html! {
                 <ForumModel: route=forum_list_route, />
             },
             Bucket(ref bucket_route) => html! {
-//                bucket_route.view(),
                 <BucketModel: route=bucket_route, />
             },
             PageNotFound => html! {

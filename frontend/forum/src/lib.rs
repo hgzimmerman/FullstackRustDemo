@@ -10,7 +10,7 @@ pub use context::datatypes;
 pub use context::Context;
 pub use routes::forum::ForumRoute;
 
-use yew::services::route::*;
+//use yew::services::route::*;
 use yew::html::Renderable;
 use yew::prelude::*;
 

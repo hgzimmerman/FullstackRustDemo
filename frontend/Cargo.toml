@@ -6,7 +6,6 @@ members = [
     "bucket",
     "forum",
     "auth",
+    "header",
     "routes"
-]
-exclude = [
 ]

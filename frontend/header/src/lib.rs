@@ -1,12 +1,19 @@
+#[macro_use]
+extern crate yew;
+extern crate failure;
+extern crate context;
+//extern crate wire;
+extern crate util;
+extern crate routes;
+
 use yew::prelude::*;
-// use button::Button;
 use util::link::Link;
 use context::Context;
 
-use Route;
+use routes::Route;
 use routes::auth::AuthRoute;
 use routes::forum::ForumRoute;
-use bucket::BucketRoute;
+use routes::bucket::BucketRoute;
 
 #[derive(Clone, PartialEq)]
 pub struct HeaderLink {

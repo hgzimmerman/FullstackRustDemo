@@ -96,7 +96,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
 
     // generate token
     info!("Generating JWT Expiry Date");
-    let duration: Duration = Duration::days(1);
+    let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
         None => return Err(LoginError::OtherError("Could not calculate offset for token expiry")),
@@ -112,7 +112,28 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
             .map(|role_id| (*role_id).into())
             .collect(),
         exp: new_expire_date,
+        iat: Utc::now().naive_utc()
     };
+    let jwt = ServerJwt(jwt);
+    let jwt_string: String = match jwt.encode_jwt_string(&secret) {
+        Ok(s) => s,
+        Err(e) => return Err(LoginError::JwtError(e)),
+    };
+
+    Ok(jwt_string)
+}
+
+pub fn reauth(jwt: Jwt, secret: String) -> LoginResult {
+    let mut jwt = jwt;
+    info!("Generating JWT Expiry Date");
+    let duration: Duration = Duration::days(7); // Expire after a week
+    let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
+        Some(ndt) => ndt.naive_utc(),
+        None => return Err(LoginError::OtherError("Could not calculate offset for token expiry")),
+    };
+    jwt.exp = new_expire_date;
+    jwt.iat = Utc::now().naive_utc();
+
     let jwt = ServerJwt(jwt);
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {
         Ok(s) => s,

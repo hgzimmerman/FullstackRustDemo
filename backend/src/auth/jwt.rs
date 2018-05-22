@@ -15,14 +15,6 @@ use wire::user::{Jwt, UserRole};
 
 pub struct ServerJwt(pub Jwt);
 
-//#[derive(Clone, Debug, Serialize, Deserialize)]
-//pub struct Jwt {
-//    pub user_name: String,
-//    pub user_id: i32,
-//    pub user_roles: Vec<UserRole>,
-//    pub token_expire_date: NaiveDateTime,
-//}
-
 impl ServerJwt {
     pub fn encode_jwt_string(&self, secret: &String) -> Result<String, JwtError> {
         let header = json!({});
@@ -50,6 +42,63 @@ impl ServerJwt {
         Ok(jwt)
     }
 }
+
+
+/// Raw JWTs can be gotten via the request
+/// This should only be used for reauth.
+impl<'a, 'r> FromRequest<'a, 'r> for ServerJwt {
+    type Error = WeekendAtJoesError;
+
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
+        let jwt = extract_jwt_from_request(request)?;
+        let jwt = validate_jwt_expiry_time(jwt)?;
+
+        Outcome::Success(ServerJwt(jwt))
+    }
+}
+
+
+
+fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<Jwt, WeekendAtJoesError> {
+    let keys: Vec<_> = request
+        .headers()
+        .get("Authorization")
+        .collect();
+    if keys.len() != 1 {
+        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MissingToken));
+    };
+
+    let key = keys[0];
+
+    // You can get the state secret from another request guard
+    let secret: String = match request.guard::<State<Secret>>() {
+        Outcome::Success(ref s) => s.0.clone(),
+        _ => {
+            warn!("Couldn't get secret from state.");
+            return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
+        }
+    };
+
+    match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
+        Ok(jwt) => Outcome::Success(jwt),
+        Err(_) => {
+            info!("Token couldn't be deserialized.");
+            Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken))
+        }
+    }
+}
+
+fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesError> {
+    if jwt.exp < Utc::now().naive_utc() {
+        info!("Token expired.");
+        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
+    }
+    Outcome::Success(jwt)
+}
+
+
+
+
 
 #[derive(Debug, Clone)]
 pub enum JwtError {
@@ -166,43 +215,15 @@ pub mod user_authorization {
         }
     }
 
+
     fn extract_role_from_request<'a, 'r, T>(request: &'a Request<'r>) -> request::Outcome<T, WeekendAtJoesError>
     where
         T: FromJwt,
     {
-        let keys: Vec<_> = request
-            .headers()
-            .get("Authorization")
-            .collect();
-        if keys.len() != 1 {
-            return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MissingToken));
-        };
-
-
-
-        // You can get the state secret from another request guard
-        let secret: String = match request.guard::<State<Secret>>() {
-            Outcome::Success(s) => s.0.clone(),
-            _ => {
-                warn!("Couldn't get secret from state.");
-                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
-            }
-        };
-
-        let key = keys[0];
-        let jwt: Jwt = match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
-            Ok(token) => {
-                if token.exp < Utc::now().naive_utc() {
-                    info!("Token expired.");
-                    return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
-                }
-                token
-            }
-            Err(_) => {
-                info!("Token couldn't be deserialized.");
-                return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken));
-            }
-        };
+        // Get the jwt from the request's header
+        let jwt: Jwt = extract_jwt_from_request(request)?;
+        // Make sure that the JWT falls within the time bounds.
+        let jwt: Jwt = validate_jwt_expiry_time(jwt)?;
 
         let user = match T::from_jwt(&jwt) {
             Ok(user) => user,

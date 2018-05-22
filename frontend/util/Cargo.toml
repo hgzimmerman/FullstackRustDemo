@@ -6,7 +6,8 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 [dependencies]
 
 context = {path = "../context"}
-yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+#yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
 stdweb = "0.4.2"
 
 pulldown-cmark = { git = "https://github.com/google/pulldown-cmark", rev = "c1ac9123f1653dc774403634696f848ffecbb01c" }

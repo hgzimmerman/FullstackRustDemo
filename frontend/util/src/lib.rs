@@ -9,7 +9,7 @@ extern crate pulldown_cmark;
 pub mod loadable;
 pub mod uploadable;
 pub mod loading;
-pub mod empty;
+pub mod wrappers;
 
 pub mod input;
 

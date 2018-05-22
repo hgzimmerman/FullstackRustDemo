@@ -27,7 +27,6 @@ use wire::question::NewQuestionRequest;
 use wire::answer::NewAnswerRequest;
 
 use util::input::InputValidator;
-
 use util::link::Link;
 
 
@@ -450,7 +449,7 @@ impl Renderable<Context, BucketLobby> for QuestionPackage {
                                 <Button: title="Discard", onclick=|_| Msg::DiscardQuestion, />
                             }
                         } else {
-                            ::util::empty::empty_vdom_node()
+                            ::util::wrappers::empty_vdom_node()
                         }
                     }
                 </div>
@@ -519,7 +518,7 @@ impl Renderable<Context, BucketLobby> for QuestionData {
                                     <Link<()>: name="Return to bucket", callback=move |_| Msg::PutOldQuestionBackInBucket{question_id}, classes="small-link", />
                                 }
                             } else {
-                                ::util::empty::empty_vdom_node()
+                                ::util::wrappers::empty_vdom_node()
                             }
                         }
                     </div>

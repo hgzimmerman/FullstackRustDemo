@@ -2,7 +2,7 @@
 use yew::prelude::*;
 use context::Context; // TODO: I don't think that this is necessary
 
-use empty;
+use wrappers;
 
 pub type InputValidator = fn(String) -> Result<String, String>;
 /// Parent components will own input states and pass them to the Input Components.
@@ -185,17 +185,18 @@ impl Renderable<Context, Input> for Input
 {
     fn view(&self) -> Html<Context, Input> {
 
-        fn required_star(is_required: bool) -> Html<Context, Input> {
-            if is_required {
-                html!{
-                    <>
-                        {"*"}
-                    </>
-                }
-            } else {
-                empty::empty_vdom_node()
-            }
-        }
+//        fn required_star(is_required: bool) -> Html<Context, Input> {
+//            if is_required {
+//                html!{
+//
+//                    <>
+//                        {"*"}
+//                    </>
+//                }
+//            } else {
+//                wrappers::empty_vdom_node()
+//            }
+//        }
 
         fn error_view(error: Option<&String>) ->  Html<Context, Input> {
             match error {
@@ -204,7 +205,7 @@ impl Renderable<Context, Input> for Input
                         {e}
                     </div>
                 },
-                None => empty::empty_vdom_node()
+                None => wrappers::empty_vdom_node()
             }
         }
 

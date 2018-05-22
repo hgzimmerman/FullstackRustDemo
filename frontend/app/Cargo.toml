@@ -6,7 +6,8 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 [dependencies]
 #yew = { git = "https://github.com/DenisKolodin/yew", rev = "e80d8d564f4b5c8239408f32ec2301e8c629fefa" }
 #yew = { git = "https://github.com/hgzimmerman/yew", rev = "afbdbf2b291ae17beed5a4d7ca77bd86b56f4850" }
-yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
+#yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
+yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
 
 #http = "0.1"
 
@@ -19,6 +20,7 @@ routes = {path = "../routes"}
 bucket = {path = "../bucket"}
 forum = {path = "../forum"}
 auth = {path = "../auth"}
+header = {path = "../header"}
 
 
 failure = "0.1"

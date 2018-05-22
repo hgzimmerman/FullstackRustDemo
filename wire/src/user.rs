@@ -46,6 +46,8 @@ pub struct Jwt {
     pub user_roles: Vec<UserRole>,
     /// exp is the Expiration date, in unix timestamp form
     pub exp: NaiveDateTime,
+    /// iat is the Issue-At date, it is used for determining if the client should refresh or not.
+    pub iat: NaiveDateTime
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

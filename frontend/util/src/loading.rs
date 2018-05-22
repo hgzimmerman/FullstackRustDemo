@@ -1,6 +1,6 @@
 use yew::virtual_dom::VNode;
 use yew::prelude::*;
-use empty::empty_vdom_node;
+use wrappers::empty_vdom_node;
 use stdweb::web::Node;
 use stdweb::unstable::TryFrom;
 

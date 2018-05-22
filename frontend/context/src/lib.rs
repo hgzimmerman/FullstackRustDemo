@@ -5,6 +5,8 @@ extern crate failure;
 extern crate failure_derive;
 extern crate yew;
 
+#[macro_use]
+extern crate stdweb;
 extern crate base64;
 extern crate chrono;
 
@@ -14,6 +16,7 @@ extern crate serde;
 pub mod networking;
 pub mod storage;
 pub mod user;
+pub mod jwt_service;
 
 pub mod datatypes; // TODO, maybe move this elsewhere.
 
@@ -21,13 +24,15 @@ use yew::services::fetch::FetchService;
 use yew::services::storage::{StorageService, Area};
 use yew::services::route::RouteService;
 use yew::services::console::ConsoleService;
+use jwt_service::JwtService;
 
 pub struct Context {
     /// Don't expose networking field. Make implementation use the Context's networking module instead.
     networking: FetchService,
     pub routing: RouteService,
     local_storage: StorageService,
-    console: ConsoleService
+    console: ConsoleService,
+    jwt_service: JwtService
 }
 
 impl Context {
@@ -36,7 +41,8 @@ impl Context {
             networking: FetchService::new(),
             routing: RouteService::new(),
             local_storage: StorageService::new(Area::Local),
-            console: ConsoleService::new()
+            console: ConsoleService::new(),
+            jwt_service: JwtService::default()
         }
     }
     pub fn log(&mut self, msg: &str) {
