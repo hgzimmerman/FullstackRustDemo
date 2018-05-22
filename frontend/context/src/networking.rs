@@ -42,6 +42,7 @@ enum HttpMethod {
 pub enum RequestWrapper {
     /*Auth*/
     Login(LoginRequest),
+    Reauth,
     CreateUser(NewUserRequest),
     /*Forum*/
     CreateThread(NewThreadRequest),
@@ -68,12 +69,13 @@ pub enum RequestWrapper {
 }
 
 impl RequestWrapper {
-    pub fn resolve_url(request: &RequestWrapper) -> String {
+    pub fn resolve_url(&self) -> String {
         let api_base = "http://localhost:8001/api"; // TODO Make this build-time configurable
 
         use self::RequestWrapper::*;
-        let path: String = match *request {
+        let path: String = match *self {
             Login(_) => "auth/login".into(),
+            Reauth => "auth/reauth".into(),
             CreateUser(_) => "user/".into(),
             CreateThread(_) => "thread/create".into(),
             GetThreads {
@@ -109,6 +111,7 @@ impl RequestWrapper {
         use self::Auth::*;
         match self {
             Login(_) => NotRequired,
+            Reauth => panic!("Reauth requests should not use standard networking infrastructure."),
             CreateUser(_) => NotRequired,
             CreateThread(_) => Required,
             GetThreads {..} =>  NotRequired,
@@ -144,6 +147,7 @@ impl RequestWrapper {
         use self::RequestWrapper::*;
         match self {
             Login(r) => Post(to_body(r)),
+            Reauth => panic!("Reauth requests should not use standard networking infrastructure."),
             CreateUser(r) => Post(to_body(r)),
             CreateThread(r) => Post(to_body(r)),
             GetThreads {..} => Get,
@@ -237,9 +241,8 @@ impl Context {
 
 
     fn prepare_put_request(&mut self, body: String, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
-        match self.restore_jwt() {
+        match self.get_and_refresh_jwt() {
             Ok(jwt_string) => {
-                // TODO: possibly check if the jwt is outdated here before sending
                 Ok(
                     Request::put(url.as_str())
                         .header("Content-Type", "application/json")
@@ -270,11 +273,8 @@ impl Context {
     }
 
     fn prepare_post_request(&mut self, body: String, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
-/*        let body = serde_json::to_string(&request_object)
-            .unwrap();*/
-        match self.restore_jwt() {
+        match self.get_and_refresh_jwt() {
             Ok(jwt_string) => {
-                // TODO: possibly check if the jwt is outdated here before sending
                 Ok(
                     Request::post(url.as_str())
                         .header("Content-Type", "application/json")
@@ -305,9 +305,8 @@ impl Context {
     }
 
     fn prepare_get_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
-        match self.restore_jwt() {
+        match self.get_and_refresh_jwt() {
             Ok(jwt_string) => {
-                // TODO: possibly check if the jwt is outdated here before sending
                 Ok(
                     Request::get(url.as_str())
                         .header("Content-Type", "application/json")
@@ -337,9 +336,8 @@ impl Context {
         }
     }
     fn prepare_delete_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
-        match self.restore_jwt() {
+        match self.get_and_refresh_jwt() {
             Ok(jwt_string) => {
-                // TODO: possibly check if the jwt is outdated here before sending
                 Ok(
                     Request::delete(url.as_str())
                         .header("Content-Type", "application/json")

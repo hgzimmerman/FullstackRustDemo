@@ -112,7 +112,7 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
             .map(|role_id| (*role_id).into())
             .collect(),
         exp: new_expire_date,
-        iat: Utc::now().naive_utc()
+        iat: Utc::now().naive_utc(),
     };
     let jwt = ServerJwt(jwt);
     let jwt_string: String = match jwt.encode_jwt_string(&secret) {

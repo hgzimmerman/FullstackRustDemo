@@ -108,7 +108,5 @@ impl Context {
 //                let now = Utc::now().naive_utc();
 //                if expire_date < now { true } else { false }
 
-        // TODO, handle dates intelligently in frontend.
-
     }
 }
