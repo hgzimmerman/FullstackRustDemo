@@ -13,19 +13,32 @@ use rocket_contrib::Json;
 /// Json 404 override
 #[error(404)]
 pub fn json_404(_req: &Request) -> Json<String> {
-    Json("Could not find the requested resource".into())
+    Json(
+        "Could not find the requested resource"
+            .into(),
+    )
 }
 #[error(500)]
 pub fn json_500(_req: &Request) -> Json<String> {
-    Json("Server encountered an internal error".into())
+    Json(
+        "Server encountered an internal error"
+            .into(),
+    )
 }
 #[error(401)]
 pub fn json_401(_req: &Request) -> Json<String> {
-    Json("User authentication is required. You must log in for the server to accept this request.".into())
+    Json(
+        "User authentication is required. You must log in for the server to accept this request.\
+         It is possible that a server-restart has invalidated your existing authentication token if you provided one."
+            .into(),
+    )
 }
 #[error(403)]
 pub fn json_403(_req: &Request) -> Json<String> {
-    Json("The server understood the request, but is refusing to fulfill it. Authorization will not help.".into())
+    Json(
+        "The server understood the request, but is refusing to fulfill it. Authorization will not help."
+            .into(),
+    )
 }
 
 /// Permit access to files that live in the frontend's build directory
@@ -43,7 +56,9 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
     log::info!("Getting file: {}", file.to_str().unwrap());
 
 
-    match NamedFile::open(Path::new(WEB_DIRECTORY).join(file.clone())) {
+    match NamedFile::open(Path::new(WEB_DIRECTORY).join(
+        file.clone(),
+    )) {
         Ok(file) => Some(file),
         Err(_) => {
             if file.starts_with("api") {

@@ -12,16 +12,6 @@ use log;
 // TODO, I don't think that this file should have wire types
 use wire::user::*;
 
-//#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-//// #[PgType = "Userrole"]
-//pub enum UserRole {
-//    Unprivileged,
-//    Moderator,
-//    Admin,
-//    Publisher,
-//}
-
-
 
 /// The database's representation of a user.
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
@@ -30,7 +20,7 @@ use wire::user::*;
 pub struct User {
     /// The primary key
     pub id: i32,
-    /// The user name of the user. This is used primairily for logging in, and is seldom displayed.
+    /// The user name of the user. This is used primarily for logging in, and is seldom displayed.
     pub user_name: String,
     /// This name will be displayed on data associated with the user, such as forum posts, or as the author of articles.
     pub display_name: String,
@@ -89,12 +79,23 @@ impl User {
 
         let user_role_id: i32 = i32::from(user_role);
 
-        User::get_all(conn).map(|users| {
-            users
-                .into_iter()
-                .filter(|user| user.roles.contains(&user_role_id))
-                .collect()
-        })
+        use schema::users::dsl::*;
+        use schema::users;
+        use diesel::PgArrayExpressionMethods;
+
+        // Diesel can construct queries that operate on the contents of Postgres arrays.
+        users
+            .filter(users::roles.contains(vec![user_role_id]))
+            .load::<User>(conn.deref())
+            .map_err(User::handle_error)
+
+        // This is inefficient because it loads the whole users table into memory to filter on the roles vector
+//        User::get_all(conn).map(|users| {
+//            users
+//                .into_iter()
+//                .filter(|user| user.roles.contains(&user_role_id))
+//                .collect()
+//        })
     }
 
     /// If the user has their banned flag set, this will return true.
@@ -134,7 +135,8 @@ impl User {
     /// This should be called after the user logs in successfully.
     pub fn reset_login_failure_count(user_id: i32, conn: &Conn) -> JoeResult<()> {
         use schema::users::dsl::*;
-        let target = users.filter(id.eq(user_id));
+        use schema::users;
+        let target = users.filter(users::id.eq(user_id));
         diesel::update(target)
             .set(failed_login_count.eq(0))
             .execute(conn.deref())
