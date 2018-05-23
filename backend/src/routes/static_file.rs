@@ -7,31 +7,58 @@ use rocket::response::status;
 use rocket::http::Status;
 
 
-/// This will take any 404 response (that isn't explicitly returned via a normal handler),
-/// and respond with the index.html file.
-/// This allows for users to visit the site at any arbitrary URL and still be directed to the
-/// proper route in the frontend, because responding this way doesn't alter the url,
-/// or indicate any error has occurred.
-///
-/// This does require that the links found in index.html use absolute paths (start with "/"), because
-/// otherwise they will start requesting /frontend/specific/path/js/app.js instead of just /js/app.js
-/// like the backend expects if you load the page with that url.
+use rocket_contrib::Json;
+
+// TODO move this to /error
+/// Json 404 override
 #[error(404)]
-pub fn index_from_404(req: &Request) -> status::Custom<NamedFile> {
-    const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
-    let index = NamedFile::open(Path::new(WEB_DIRECTORY))
-        .unwrap();
-    status::Custom(Status::Ok, index)
+pub fn json_404(_req: &Request) -> Json<String> {
+    Json("Could not find the requested resource".into())
+}
+#[error(500)]
+pub fn json_500(_req: &Request) -> Json<String> {
+    Json("Server encountered an internal error".into())
+}
+#[error(401)]
+pub fn json_401(_req: &Request) -> Json<String> {
+    Json("User authentication is required. You must log in for the server to accept this request.".into())
+}
+#[error(403)]
+pub fn json_403(_req: &Request) -> Json<String> {
+    Json("The server understood the request, but is refusing to fulfill it. Authorization will not help.".into())
 }
 
 /// Permit access to files that live in the frontend's build directory
-/// The rank 2 in the macro allows other ROUTES to match first.
+/// The rank 10 in the macro allows other ROUTES to match first.
+///
+/// If the file can't be found, it will check if the requested path starts with "api".
+/// If it does, then it will return a normal 404 error.
+/// If it doesn't, then it assumes that the request is looking for the index, and will return that.
+/// This behavior allows the frontend webapp to make get requests with the in-app URI and still recieve
+/// the index and therefore the rest of the app. This will preserve the URI and allow the app to route
+/// itself after it loads.
 #[get("/<file..>", rank = 10)]
 pub fn files(file: PathBuf) -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "../frontend/app/static";
     log::info!("Getting file: {}", file.to_str().unwrap());
-    NamedFile::open(Path::new(WEB_DIRECTORY).join(file))
-        .ok()
+
+
+    match NamedFile::open(Path::new(WEB_DIRECTORY).join(file.clone())) {
+        Ok(file) => Some(file),
+        Err(_) => {
+            if file.starts_with("api") {
+                None
+            } else {
+                Some(index())
+            }
+        }
+    }
+}
+
+pub fn index() -> NamedFile {
+    const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
+    NamedFile::open(Path::new(WEB_DIRECTORY))
+        .unwrap()
 }
 
 #[get("/js/app.js", rank = 8)]

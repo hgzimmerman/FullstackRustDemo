@@ -57,7 +57,7 @@ pub struct BucketUserChangeset {
 #[derive(Debug, Clone)]
 pub struct UsersInBucketData {
     pub bucket: Bucket,
-    pub users: Vec<User>
+    pub users: Vec<User>,
 }
 
 
@@ -133,17 +133,12 @@ impl Bucket {
             .map_err(Bucket::handle_error)?;
 
         // This is an ineffecient query. Its time will scale linearly (with a high constant) with the number of buckets the user owns.
-        let bucket_users = buckets.into_iter()
-            .filter_map(|bucket| {
-                if let Ok(users) = Self::get_users_requiring_approval(bucket.id, conn) {
-                     Some(UsersInBucketData {
-                        bucket,
-                        users
-                    })
-                } else {
-                    None
-                }
-
+        let bucket_users = buckets
+            .into_iter()
+            .filter_map(|bucket| if let Ok(users) = Self::get_users_requiring_approval(bucket.id, conn) {
+                Some(UsersInBucketData { bucket, users })
+            } else {
+                None
             })
             .collect();
         Ok(bucket_users)
@@ -222,5 +217,4 @@ impl Bucket {
             .map_err(Bucket::handle_error)?;
         Ok(())
     }
-
 }

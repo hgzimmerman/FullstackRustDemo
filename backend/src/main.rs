@@ -151,7 +151,7 @@ pub fn init_rocket() -> Rocket {
         .mount(&format_api(Answer::PATH), Answer::ROUTES())
         .mount(&format_api(Chat::PATH), Chat::ROUTES())
         .mount(&format_api(Message::PATH), Message::ROUTES())
-        .catch(errors![static_file::index_from_404])
+        .catch(errors![static_file::json_404, static_file::json_500, static_file::json_401, static_file::json_403])
         .attach(options)
 }
 

@@ -70,7 +70,7 @@ fn remove_user_from_bucket(bucket_id: i32, user_id_param: UserIdParam, user: Nor
 /// This will prevent other buckets from
 #[put("/<bucket_id>/publicity?<is_public_param>")]
 fn set_publicity(bucket_id: i32, is_public_param: PublicParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_id,&conn) {
+    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }

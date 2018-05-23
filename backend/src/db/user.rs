@@ -67,7 +67,7 @@ impl User {
         log::info!("Getting user with Name: {}", name);
 
         users
-            .filter(user_name.eq(user_name))
+            .filter(user_name.eq(name))
             .first::<User>(conn.deref())
             .map_err(User::handle_error)
     }

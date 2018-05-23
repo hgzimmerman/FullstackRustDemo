@@ -25,7 +25,10 @@ impl From<UsersInBucketData> for BucketUsersResponse {
     fn from(data: UsersInBucketData) -> BucketUsersResponse {
         BucketUsersResponse {
             bucket: BucketResponse::from(data.bucket),
-            users: data.users.into_iter().map(UserResponse::from).collect(),
+            users: data.users
+                .into_iter()
+                .map(UserResponse::from)
+                .collect(),
         }
     }
 }

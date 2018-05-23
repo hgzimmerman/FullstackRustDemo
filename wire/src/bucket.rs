@@ -17,5 +17,5 @@ pub struct NewBucketRequest {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BucketUsersResponse {
     pub bucket: BucketResponse,
-    pub users: Vec<UserResponse>
+    pub users: Vec<UserResponse>,
 }
