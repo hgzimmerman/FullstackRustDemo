@@ -15,3 +15,8 @@ yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbda
 stdweb = "0.4.2"
 
 failure = "0.1"
+
+[features]
+default = []
+
+development = ["context/development"]

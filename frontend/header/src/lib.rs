@@ -108,10 +108,16 @@ impl Renderable<Context, Header> for Header {
                     { "WeekendAtJoe's" }
                 </div>
                 <div class="nav-links",>
-                    <Link<()>: name="Forums", callback=|_| Msg::Forums, classes="nav-link", />
-//                    <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
-                    {bucket_questions}
-                    {log_in_out}
+                    // Spans are necessary to keep the ordering preserved under different states.
+                    <span>
+                        <Link<()>: name="Forums", callback=|_| Msg::Forums, classes="nav-link", />
+                    </span>
+                    <span>
+                        {bucket_questions}
+                    </span>
+                    <span>
+                        {log_in_out}
+                    </span>
                 </div>
             </div>
         }

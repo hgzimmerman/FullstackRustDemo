@@ -31,6 +31,9 @@ pub struct JwtService {
 impl JwtService {
 
 
+    /// This whole method is is a next-gen level of jankyness,
+    /// but it is what is required in order to be able to divorce the network request from the typical
+    /// component lifetime binding.
     fn refresh_jwt(&mut self, jwt_string: String, fetch_service: &mut FetchService, route_service: &mut RouteService) {
 
         // This gets a mostly complete copy of the route service.
@@ -69,7 +72,8 @@ impl JwtService {
 }
 
 impl Context {
-    /// Gets the JWT.
+
+    /// Gets the JWT string.
     /// If it exists, get the current time and see if it needs to refresh.
     /// Regardless of whether the jwt is refreshing or not, the current jwt string will be returned if it exists.
     /// The refresh will only occur if a JWT already exists.

@@ -69,8 +69,15 @@ pub enum RequestWrapper {
 }
 
 impl RequestWrapper {
+
+    /// Converts the request into a URL string.
     pub fn resolve_url(&self) -> String {
-        let api_base = "http://localhost:8001/api"; // TODO Make this build-time configurable
+
+        let api_base: &str = if cfg!(feature = "development") {
+            "http://localhost:8001/api"
+        } else {
+            ""
+        };
 
         use self::RequestWrapper::*;
         let path: String = match *self {
@@ -105,8 +112,9 @@ impl RequestWrapper {
         format!("{}/{}", api_base, path)
     }
 
+    /// Determines if the request needs a JWT attached to the request or not in order for the
+    /// backend to accept the request.
     fn resolve_auth(&self) -> Auth {
-
         use self::RequestWrapper::*;
         use self::Auth::*;
         match self {
@@ -137,6 +145,9 @@ impl RequestWrapper {
         }
     }
 
+    /// Determines what HTTP method the request should be made with.
+    /// Also converts the associated request structure into a body string for HTTP methods that
+    /// send bodies.
     fn resolve_body_and_method(&self) -> HttpMethod {
 
         fn to_body(r: &impl Serialize) -> String {
@@ -175,20 +186,20 @@ impl RequestWrapper {
 
 
 impl Context {
-
     /// Make a request, that if the conditions to send a JWT aren't met, the user will be logged out.
     /// This will also set the object that encapsulates the fetch task to be in its loading state.
     pub fn make_logoutable_request<W, FTW>(&mut self, ft_wrapper: &mut FTW, request: RequestWrapper, callback: Callback<Response<W>>)
-    where
-        W: From<Result<String, Error>> + 'static,
-        FTW: FtWrapper + Sized
+        where
+            W: From<Result<String, Error>> + 'static,
+            FTW: FtWrapper + Sized
     {
         match self.make_request(request, callback) {
             Ok(ft) => ft_wrapper.set_ft(ft),
             Err(_) => {
-//                use Route;
-//                use components::auth::AuthRoute;
-//                self.routing.set_route(Route::Auth(AuthRoute::Login));
+                // This error indicates that the JWT just isn't present, so there isn't a need
+                // to remove it, as it is already gone.
+                // All this needs to do is redirect the user to the login page.
+                self.routing.set_route_from_string("/auth/login".into());
             }
         }
     }
@@ -196,60 +207,51 @@ impl Context {
     /// The error in the result here should only occur if the JWT is outdated, or not present,
     /// in which case, the caller should redirect to the login screen.
     pub fn make_request<W>(&mut self, request: RequestWrapper, callback: Callback<Response<W>>) -> Result<FetchTask, Error>
-    where
-        W: From<Result<String, Error>> + 'static,
+        where
+            W: From<Result<String, Error>> + 'static,
     {
-
         let url: String = RequestWrapper::resolve_url(&request);
         let auth_requirement: Auth = request.resolve_auth();
         let body_and_method: HttpMethod = request.resolve_body_and_method();
 
-        match body_and_method {
-            HttpMethod::Get => {
-                let request = self.prepare_get_request(
-                    url,
-                    auth_requirement,
-                )?;
-                Ok(self.networking.fetch(request, callback))
-            }
-            HttpMethod::Post(body) => {
-                let request = self.prepare_post_request(
-                    body,
-                    url,
-                    auth_requirement
-                )?;
-                Ok(self.networking.fetch(request, callback))
-            }
-            HttpMethod::Put(body) => {
-                let request = self.prepare_put_request(
-                    body,
-                    url,
-                    auth_requirement
-                )?;
-                Ok(self.networking.fetch(request, callback))
-            }
-            HttpMethod::Delete => {
-                let request = self.prepare_delete_request(
-                    url,
-                    auth_requirement,
-                )?;
-                Ok(self.networking.fetch(request, callback))
-            }
-        }
 
-    }
-
-
-    fn prepare_put_request(&mut self, body: String, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
         match self.get_and_refresh_jwt() {
             Ok(jwt_string) => {
-                Ok(
-                    Request::put(url.as_str())
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", jwt_string.as_str())
-                        .body(body)
-                        .unwrap(),
-                )
+                // If you can attach the auth, do so anyway.
+                match body_and_method {
+                    HttpMethod::Get => {
+                        let request = Request::get(url.as_str())
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", jwt_string.as_str())
+                            .body(Nothing)
+                            .unwrap();
+                        Ok(self.networking.fetch(request, callback))
+                    }
+                    HttpMethod::Post(body) => {
+                        let request = Request::post(url.as_str())
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", jwt_string.as_str())
+                            .body(body)
+                            .unwrap();
+                        Ok(self.networking.fetch(request, callback))
+                    }
+                    HttpMethod::Put(body) => {
+                        let request = Request::put(url.as_str())
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", jwt_string.as_str())
+                            .body(body)
+                            .unwrap();
+                        Ok(self.networking.fetch(request, callback))
+                    }
+                    HttpMethod::Delete => {
+                        let request = Request::put(url.as_str())
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", jwt_string.as_str())
+                            .body(Nothing)
+                            .unwrap();
+                        Ok(self.networking.fetch(request, callback))
+                    }
+                }
             }
             Err(e) => {
                 match auth_requirement {
@@ -259,110 +261,38 @@ impl Context {
                     }
                     // If the auth wasn't required in the first place
                     Auth::NotRequired => {
-                        Ok(
-                            Request::put(url.as_str())
-                                .header("Content-Type", "application/json")
-                                .body(body)
-                                .unwrap(),
-                        )
+                        match body_and_method {
+                            HttpMethod::Get => {
+                                let request = Request::get(url.as_str())
+                                    .header("Content-Type", "application/json")
+                                    .body(Nothing)
+                                    .unwrap();
+                                Ok(self.networking.fetch(request, callback))
+                            }
+                            HttpMethod::Post(body) => {
+                                let request = Request::post(url.as_str())
+                                    .header("Content-Type", "application/json")
+                                    .body(body)
+                                    .unwrap();
+                                Ok(self.networking.fetch(request, callback))
+                            }
+                            HttpMethod::Put(body) => {
+                                let request = Request::put(url.as_str())
+                                    .header("Content-Type", "application/json")
+                                    .body(body)
+                                    .unwrap();
+                                Ok(self.networking.fetch(request, callback))
+                            }
+                            HttpMethod::Delete => {
+                                let request = Request::put(url.as_str())
+                                    .header("Content-Type", "application/json")
+                                    .body(Nothing)
+                                    .unwrap();
+                                Ok(self.networking.fetch(request, callback))
+                            }
+                        }
                     }
                 }
-
-            }
-        }
-    }
-
-    fn prepare_post_request(&mut self, body: String, url: String, auth_requirement: Auth) -> Result<Request<String>, Error> {
-        match self.get_and_refresh_jwt() {
-            Ok(jwt_string) => {
-                Ok(
-                    Request::post(url.as_str())
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", jwt_string.as_str())
-                        .body(body)
-                        .unwrap(),
-                )
-            }
-            Err(e) => {
-                match auth_requirement {
-                    Auth::Required => {
-                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
-                        Err(e)
-                    }
-                    // If the auth wasn't required in the first place
-                    Auth::NotRequired => {
-                        Ok(
-                            Request::post(url.as_str())
-                                .header("Content-Type", "application/json")
-                                .body(body)
-                                .unwrap(),
-                        )
-                    }
-                }
-
-            }
-        }
-    }
-
-    fn prepare_get_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
-        match self.get_and_refresh_jwt() {
-            Ok(jwt_string) => {
-                Ok(
-                    Request::get(url.as_str())
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", jwt_string.as_str())
-                        .body(Nothing)
-                        .unwrap(),
-                )
-            }
-            Err(e) => {
-                match auth_requirement {
-                    Auth::Required => {
-                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
-                        Err(e)
-                    }
-                    // If the auth wasn't required in the first place
-                    Auth::NotRequired => {
-                        Ok(
-                            Request::get(url.as_str())
-                                .header("Content-Type", "application/json")
-                                .body(Nothing)
-                                .unwrap(),
-                        )
-                    }
-                }
-
-            }
-        }
-    }
-    fn prepare_delete_request(&mut self, url: String, auth_requirement: Auth) -> Result<Request<Nothing>, Error> {
-        match self.get_and_refresh_jwt() {
-            Ok(jwt_string) => {
-                Ok(
-                    Request::delete(url.as_str())
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", jwt_string.as_str())
-                        .body(Nothing)
-                        .unwrap(),
-                )
-            }
-            Err(e) => {
-                match auth_requirement {
-                    Auth::Required => {
-                        eprintln!("JWT was not found for a request that requires it: '{}'", url);
-                        Err(e)
-                    }
-                    // If the auth wasn't required in the first place
-                    Auth::NotRequired => {
-                        Ok(
-                            Request::delete(url.as_str())
-                                .header("Content-Type", "application/json")
-                                .body(Nothing)
-                                .unwrap(),
-                        )
-                    }
-                }
-
             }
         }
     }

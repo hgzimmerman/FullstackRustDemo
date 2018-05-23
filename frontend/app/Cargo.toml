@@ -37,3 +37,9 @@ base64 = "0.9.0"
 version = "0.4"
 default-features = false
 
+
+[features]
+default = ["development"]
+
+
+development = ["bucket/development", "forum/development", "auth/development"]
