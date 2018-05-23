@@ -1,3 +1,5 @@
+use user::UserResponse;
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BucketResponse {
     pub id: i32,
@@ -9,4 +11,11 @@ pub struct BucketResponse {
 pub struct NewBucketRequest {
     pub bucket_name: String,
     pub is_public: bool,
+}
+
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct BucketUsersResponse {
+    pub bucket: BucketResponse,
+    pub users: Vec<UserResponse>
 }

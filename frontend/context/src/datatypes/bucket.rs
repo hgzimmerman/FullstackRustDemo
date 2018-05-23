@@ -1,4 +1,5 @@
 use wire::bucket::*;
+use datatypes::user::UserData;
 //use util::input::InputState;
 
 
@@ -19,6 +20,18 @@ impl From<BucketResponse> for BucketData {
     }
 }
 
+pub struct BucketUsersData {
+    bucket: BucketData,
+    users: Vec<UserData>
+}
+impl From<BucketUsersResponse> for BucketUsersData {
+    fn from(response: BucketUsersResponse) -> BucketUsersData {
+        BucketUsersData {
+            bucket: BucketData::from(response.bucket),
+            users: response.users.into_iter().map(UserData::from).collect()
+        }
+    }
+}
 
 
 

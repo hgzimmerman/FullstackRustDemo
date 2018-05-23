@@ -54,6 +54,12 @@ pub struct BucketUserChangeset {
     pub approved: bool,
 }
 
+#[derive(Debug, Clone)]
+pub struct UsersInBucketData {
+    pub bucket: Bucket,
+    pub users: Vec<User>
+}
+
 
 impl Bucket {
     pub fn get_public_buckets(conn: &Conn) -> JoeResult<Vec<Bucket>> {
@@ -113,23 +119,56 @@ impl Bucket {
         Self::get_users_approval(m_bucket_id, false, conn)
     }
 
+    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_id: i32, conn: &Conn) -> JoeResult<Vec<UsersInBucketData>> {
+        use schema::junction_bucket_users::dsl::*;
+        // use schema::users::dsl::*;
+        use schema::buckets;
+
+        let buckets: Vec<Bucket> = junction_bucket_users
+            .filter(user_id.eq(bucket_owner_id))
+            .filter(owner.eq(true))
+            .inner_join(buckets::table)
+            .select(buckets::all_columns)
+            .load::<Bucket>(conn.deref())
+            .map_err(Bucket::handle_error)?;
+
+        // This is an ineffecient query. Its time will scale linearly (with a high constant) with the number of buckets the user owns.
+        let bucket_users = buckets.into_iter()
+            .filter_map(|bucket| {
+                if let Ok(users) = Self::get_users_requiring_approval(bucket.id, conn) {
+                     Some(UsersInBucketData {
+                        bucket,
+                        users
+                    })
+                } else {
+                    None
+                }
+
+            })
+            .collect();
+        Ok(bucket_users)
+
+    }
+
     /// Is the user the owner of the bucket
-    pub fn is_user_owner(m_user_id: i32, conn: &Conn) -> bool {
+    pub fn is_user_owner(m_user_id: i32, m_bucket_id: i32, conn: &Conn) -> bool {
         use schema::junction_bucket_users::dsl::*;
 
         junction_bucket_users
             .filter(user_id.eq(m_user_id))
+            .filter(bucket_id.eq(m_bucket_id))
             .select(owner)
             .first::<bool>(conn.deref())
             .unwrap_or(false)
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?
-    pub fn is_user_approved(m_user_id: i32, conn: &Conn) -> bool {
+    pub fn is_user_approved(m_user_id: i32, m_bucket_id: i32, conn: &Conn) -> bool {
         use schema::junction_bucket_users::dsl::*;
 
         junction_bucket_users
             .filter(user_id.eq(m_user_id))
+            .filter(bucket_id.eq(m_bucket_id))
             .select(approved)
             .first::<bool>(conn.deref())
             .unwrap_or(false)
@@ -183,4 +222,5 @@ impl Bucket {
             .map_err(Bucket::handle_error)?;
         Ok(())
     }
+
 }

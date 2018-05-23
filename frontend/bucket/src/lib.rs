@@ -65,6 +65,10 @@ impl NewBucket {
     }
 }
 
+pub struct Buckets {
+    joinable_buckets: Loadable<Vec<BucketData>>,
+    public_buckets: Loadable<Vec<BucketData>>
+}
 
 
 #[derive(PartialEq, Debug, Clone, Default)]
@@ -274,14 +278,14 @@ impl Renderable<Context, BucketModel> for BucketModel {
 
         let title_content = match self.bucket_page {
             BucketList(_) => html! {
-                <>
-                    <div>
+                <div class=("flexbox-horiz","full-width"),>
+                    <div class="flexbox-expand", >
                         {"Buckets"}
                     </div>
                     <div>
                         <Button: title="Create Bucket", onclick=|_| Msg::NavigateToCreateBucket, />
                     </div>
-                </>
+                </div>
             },
             Bucket(ref bucket) => html! {
                 <div>

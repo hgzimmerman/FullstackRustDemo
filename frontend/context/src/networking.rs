@@ -119,7 +119,7 @@ impl RequestWrapper {
         use self::Auth::*;
         match self {
             Login(_) => NotRequired,
-            Reauth => panic!("Reauth requests should not use standard networking infrastructure."),
+            Reauth => panic!("Reauth requests should not use standard networking infrastructure."), // TODO: I don't know what to think about this, possibly try just using this infra?
             CreateUser(_) => NotRequired,
             CreateThread(_) => Required,
             GetThreads {..} =>  NotRequired,
@@ -158,7 +158,7 @@ impl RequestWrapper {
         use self::RequestWrapper::*;
         match self {
             Login(r) => Post(to_body(r)),
-            Reauth => panic!("Reauth requests should not use standard networking infrastructure."),
+            Reauth => Get,
             CreateUser(r) => Post(to_body(r)),
             CreateThread(r) => Post(to_body(r)),
             GetThreads {..} => Get,
