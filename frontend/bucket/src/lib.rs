@@ -16,6 +16,7 @@ use yew::prelude::*;
 mod bucket;
 mod buckets;
 mod new_bucket;
+mod bucket_participants;
 
 
 use util::button::Button;
@@ -41,7 +42,7 @@ use util::input::InputState;
 use util::uploadable::Uploadable;
 use wire::bucket::NewBucketRequest;
 
-
+use bucket_participants::BucketParticipants;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
@@ -288,7 +289,8 @@ impl Renderable<Context, BucketModel> for BucketModel {
                 </div>
             },
             Bucket(ref bucket) => html! {
-                <div>
+                <div class=("flexbox-horiz","full-width"),>
+                    <div class="flexbox-expand",>
                     {
                         &if let Loadable::Loaded(bucket_data) = bucket {
                             format!("Bucket: {}", bucket_data.bucket_name)
@@ -296,6 +298,8 @@ impl Renderable<Context, BucketModel> for BucketModel {
                             "Bucket: ".into()
                         }
                     }
+                    </div>
+                    <BucketParticipants: bucket_data=bucket,/>
                 </div>
             },
             Create(_) => html! {

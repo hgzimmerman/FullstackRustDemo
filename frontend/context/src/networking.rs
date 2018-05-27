@@ -65,7 +65,8 @@ pub enum RequestWrapper {
     PutQuestionBackInBucket{question_id: i32},
     SetBucketPublicStatus{bucket_id: i32, is_public: bool},
     ApproveUserForBucket {bucket_id: i32, user_id: i32},
-    RemoveUserFromBucket {bucket_id: i32, user_id: i32}
+    RemoveUserFromBucket {bucket_id: i32, user_id: i32},
+    GetUsersInBucket{bucket_id: i32},
 }
 
 impl RequestWrapper {
@@ -107,6 +108,7 @@ impl RequestWrapper {
             SetBucketPublicStatus {bucket_id, is_public} => format!("buckets/{}/publicity?is_public={}", bucket_id, is_public),
             ApproveUserForBucket {bucket_id, user_id} => format!("buckets/{}/approval?user_id={}",bucket_id, user_id),
             RemoveUserFromBucket {bucket_id, user_id} => format!("buckets/{}?user_id={}",bucket_id, user_id),
+            GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id)
         };
 
         format!("{}/{}", api_base, path)
@@ -141,7 +143,7 @@ impl RequestWrapper {
             SetBucketPublicStatus {..} => Required,
             ApproveUserForBucket {..} => Required,
             RemoveUserFromBucket {..} => Required,
-
+            GetUsersInBucket {..} => Required
         }
     }
 
@@ -179,7 +181,8 @@ impl RequestWrapper {
             PutQuestionBackInBucket {..} => Put("".to_string()), // no body
             SetBucketPublicStatus {..} => Put("".to_string()),
             ApproveUserForBucket {..} => Put("".to_string()),
-            RemoveUserFromBucket {..} => Delete
+            RemoveUserFromBucket {..} => Delete,
+            GetUsersInBucket {..} => Get
         }
     }
 }

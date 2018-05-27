@@ -1,13 +1,9 @@
-use context::datatypes::bucket::*;
+use context::datatypes::bucket::BucketUsersData;
 
 
+/// A component for approving and rejecting requests to join buckets.
 pub struct BucketManagement {
-    users:  Loadable<BucketUsersData>
-}
-
-#[derive(Default, PartialEq, Debug, Clone)]
-pub struct Props {
-    pub bucket_data: Option<BucketData>
+    bucket_users:  Loadable<Vec<BucketUsersData>>
 }
 
 pub enum Msg {

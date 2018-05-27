@@ -85,17 +85,19 @@ impl User {
 
         // Diesel can construct queries that operate on the contents of Postgres arrays.
         users
-            .filter(users::roles.contains(vec![user_role_id]))
+            .filter(users::roles.contains(
+                vec![user_role_id],
+            ))
             .load::<User>(conn.deref())
             .map_err(User::handle_error)
 
         // This is inefficient because it loads the whole users table into memory to filter on the roles vector
-//        User::get_all(conn).map(|users| {
-//            users
-//                .into_iter()
-//                .filter(|user| user.roles.contains(&user_role_id))
-//                .collect()
-//        })
+        //        User::get_all(conn).map(|users| {
+        //            users
+        //                .into_iter()
+        //                .filter(|user| user.roles.contains(&user_role_id))
+        //                .collect()
+        //        })
     }
 
     /// If the user has their banned flag set, this will return true.

@@ -18,6 +18,37 @@ pub enum Loadable<T> {
     Failed(Option<String>)
 }
 
+impl<T> PartialEq for Loadable<T> where T: PartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        match *self {
+            Loadable::Unloaded => {
+                if let Loadable::Unloaded = other {
+                    true
+                } else {
+                    false
+                }
+            }
+            Loadable::Loading(_) => true, // Just make the assumption that if something is loading its representation does not need to change
+            Loadable::Loaded(ref t) => {
+                if let Loadable::Loaded(ref t_other) = other {
+                    return t == t_other
+                } else {
+                    false
+                }
+            }
+            Loadable::Failed(ref f) => {
+                if let Loadable::Failed(ref f_other) = other {
+                   return f == f_other
+                } else {
+                    false
+                }
+
+            }
+        }
+    }
+
+}
+
 impl <T> FtWrapper for Loadable<T> where T: Default {
     fn set_ft(&mut self, ft: FetchTask) {
         *self = Loadable::Loading(ft)

@@ -20,6 +20,7 @@ impl From<BucketResponse> for BucketData {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct BucketUsersData {
     bucket: BucketData,
     users: Vec<UserData>
