@@ -48,7 +48,7 @@ fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json
 /// The user being approved already needs to have registered with the bucket in question.
 #[put("/<bucket_id>/approval?<user_id_param>")]
 fn approve_user_for_bucket(bucket_id: i32, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn) {
+    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -59,7 +59,7 @@ fn approve_user_for_bucket(bucket_id: i32, user_id_param: UserIdParam, user: Nor
 /// Entirely removes the user from the bucket.
 #[delete("/<bucket_id>?<user_id_param>")]
 fn remove_user_from_bucket(bucket_id: i32, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn) {
+    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -70,7 +70,7 @@ fn remove_user_from_bucket(bucket_id: i32, user_id_param: UserIdParam, user: Nor
 /// This will prevent other buckets from
 #[put("/<bucket_id>/publicity?<is_public_param>")]
 fn set_publicity(bucket_id: i32, is_public_param: PublicParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn) {
+    if !Bucket::is_user_owner(user.user_id, bucket_id, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -100,6 +100,8 @@ fn get_unapproved_users_in_buckets_owned_by_user(user: NormalUser, conn: Conn) -
         .map(Json)
 }
 
+/// Gets all of the users in the bucket, excluding the user that made the request
+///
 #[get("/<bucket_id>/users")]
 fn get_users_in_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<UserResponse>>> {
     if !Bucket::is_user_approved(user.user_id, bucket_id, &conn) {
@@ -107,8 +109,22 @@ fn get_users_in_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResul
         return Err(e);
     }
 
-    Bucket::get_users_with_approval(bucket_id, &conn)
-        .map(convert_vector)
+    let users = Bucket::get_users_with_approval(bucket_id, &conn)?
+        .into_iter()
+        .filter( |m_user| m_user.id != user.user_id ) // Filter out the user making the request.
+        .map(UserResponse::from)
+        .collect();
+    Ok(Json(users))
+}
+
+#[get("/<bucket_id>/user_owner_status")]
+fn get_is_current_user_owner(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<bool>> {
+    if !Bucket::is_user_approved(user.user_id, bucket_id, &conn) {
+        let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
+        return Err(e);
+    }
+
+    Bucket::is_user_owner(user.user_id, bucket_id, &conn)
         .map(Json)
 }
 
@@ -148,6 +164,7 @@ impl Routable for Bucket {
             create_bucket,
             get_users_in_bucket,
             get_unapproved_users_in_buckets_owned_by_user,
+            get_is_current_user_owner,
         ]
     };
     const PATH: &'static str = "/buckets/";

@@ -22,8 +22,8 @@ impl From<BucketResponse> for BucketData {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BucketUsersData {
-    bucket: BucketData,
-    users: Vec<UserData>
+    pub bucket: BucketData,
+    pub users: Vec<UserData>
 }
 impl From<BucketUsersResponse> for BucketUsersData {
     fn from(response: BucketUsersResponse) -> BucketUsersData {

@@ -112,6 +112,7 @@ impl Bucket {
     }
 
 
+    /// This function gets all players that are part of the bucket, excluding the active user
     pub fn get_users_with_approval(m_bucket_id: i32, conn: &Conn) -> JoeResult<Vec<User>> {
         Self::get_users_approval(m_bucket_id, true, conn)
     }
@@ -146,7 +147,7 @@ impl Bucket {
     }
 
     /// Is the user the owner of the bucket
-    pub fn is_user_owner(m_user_id: i32, m_bucket_id: i32, conn: &Conn) -> bool {
+    pub fn is_user_owner(m_user_id: i32, m_bucket_id: i32, conn: &Conn) -> JoeResult<bool> {
         use schema::junction_bucket_users::dsl::*;
 
         junction_bucket_users
@@ -154,7 +155,7 @@ impl Bucket {
             .filter(bucket_id.eq(m_bucket_id))
             .select(owner)
             .first::<bool>(conn.deref())
-            .unwrap_or(false)
+            .map_err(Bucket::handle_error)
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?

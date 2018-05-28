@@ -17,6 +17,7 @@ mod bucket;
 mod buckets;
 mod new_bucket;
 mod bucket_participants;
+mod bucket_management;
 
 
 use util::button::Button;
@@ -43,6 +44,8 @@ use util::uploadable::Uploadable;
 use wire::bucket::NewBucketRequest;
 
 use bucket_participants::BucketParticipants;
+use bucket_management::BucketManagement;
+
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
@@ -66,6 +69,13 @@ impl NewBucket {
     }
 }
 
+#[derive(PartialEq, Clone, Debug)]
+pub enum DropDownPaneVariant {
+    ManageBuckets,
+    ViewParticipants,
+    Closed
+}
+
 pub struct Buckets {
     joinable_buckets: Loadable<Vec<BucketData>>,
     public_buckets: Loadable<Vec<BucketData>>
@@ -78,7 +88,8 @@ pub struct Props {
 }
 
 pub struct BucketModel {
-    bucket_page: BucketPage
+    bucket_page: BucketPage,
+    drop_down_state: DropDownPaneVariant
 }
 
 pub enum BucketPage {
@@ -97,6 +108,7 @@ pub enum Msg {
     NavigateToCreateBucket,
     CreateBucket,
     UpdateBucketName(InputState),
+    ChangeDropDownState(DropDownPaneVariant)
 }
 
 impl BucketModel {
@@ -205,7 +217,8 @@ impl Component<Context> for BucketModel {
 
 
         BucketModel {
-            bucket_page
+            bucket_page,
+            drop_down_state: DropDownPaneVariant::Closed
         }
     }
 
@@ -229,6 +242,13 @@ impl Component<Context> for BucketModel {
                 } else {
                     context.log("Incoherent state. Expected page to be /create");
                     return false
+                }
+            }
+            ChangeDropDownState(drop_down_state) => {
+                if self.drop_down_state == drop_down_state {
+                    self.drop_down_state = DropDownPaneVariant::Closed // close the drop down pane if the current one is already selected
+                } else {
+                    self.drop_down_state = drop_down_state
                 }
             }
         }
@@ -277,6 +297,24 @@ impl Renderable<Context, BucketModel> for BucketModel {
             }
         };
 
+
+        let pane = match self.drop_down_state {
+            DropDownPaneVariant::Closed => ::util::wrappers::empty_vdom_node(),
+            DropDownPaneVariant::ManageBuckets => html! {
+                <BucketManagement: />
+            },
+            DropDownPaneVariant::ViewParticipants => {
+                if let Bucket(ref bucket) = self.bucket_page {
+                    html! {
+                        <BucketParticipants: bucket_data=bucket,/>
+                    }
+                } else {
+                    ::util::wrappers::empty_vdom_node()
+                }
+            }
+        };
+
+
         let title_content = match self.bucket_page {
             BucketList(_) => html! {
                 <div class=("flexbox-horiz","full-width"),>
@@ -285,6 +323,10 @@ impl Renderable<Context, BucketModel> for BucketModel {
                     </div>
                     <div>
                         <Button: title="Create Bucket", onclick=|_| Msg::NavigateToCreateBucket, />
+                    </div>
+                    <div style="position: relative",>
+                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
+                        {pane}
                     </div>
                 </div>
             },
@@ -299,7 +341,13 @@ impl Renderable<Context, BucketModel> for BucketModel {
                         }
                     }
                     </div>
-                    <BucketParticipants: bucket_data=bucket,/>
+                    <div style="position: relative",>
+
+                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
+                        <Button: title="Participants", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ViewParticipants), />
+                        {pane}
+                    </div>
+//                    <BucketParticipants: bucket_data=bucket,/>
                 </div>
             },
             Create(_) => html! {

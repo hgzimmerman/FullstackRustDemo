@@ -38,7 +38,7 @@ enum HttpMethod {
 }
 
 
-//#[derive(Serialize)]
+/// A wrapper that encapsulates every required piece of data needed to make any request.
 pub enum RequestWrapper {
     /*Auth*/
     Login(LoginRequest),
@@ -66,7 +66,9 @@ pub enum RequestWrapper {
     SetBucketPublicStatus{bucket_id: i32, is_public: bool},
     ApproveUserForBucket {bucket_id: i32, user_id: i32},
     RemoveUserFromBucket {bucket_id: i32, user_id: i32},
+    GetUnapprovedUsersForOwnedBuckets,
     GetUsersInBucket{bucket_id: i32},
+    GetIsUserOwnerOfBucket{bucket_id: i32},
 }
 
 impl RequestWrapper {
@@ -108,7 +110,9 @@ impl RequestWrapper {
             SetBucketPublicStatus {bucket_id, is_public} => format!("buckets/{}/publicity?is_public={}", bucket_id, is_public),
             ApproveUserForBucket {bucket_id, user_id} => format!("buckets/{}/approval?user_id={}",bucket_id, user_id),
             RemoveUserFromBucket {bucket_id, user_id} => format!("buckets/{}?user_id={}",bucket_id, user_id),
-            GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id)
+            GetUnapprovedUsersForOwnedBuckets => "buckets/unapproved_users_for_owned_buckets".into(),
+            GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id),
+            GetIsUserOwnerOfBucket {bucket_id}  => format!{"buckets/{}/user_owner_status", bucket_id}
         };
 
         format!("{}/{}", api_base, path)
@@ -143,7 +147,9 @@ impl RequestWrapper {
             SetBucketPublicStatus {..} => Required,
             ApproveUserForBucket {..} => Required,
             RemoveUserFromBucket {..} => Required,
-            GetUsersInBucket {..} => Required
+            GetUnapprovedUsersForOwnedBuckets => Required,
+            GetUsersInBucket {..} => Required,
+            GetIsUserOwnerOfBucket {..} => Required,
         }
     }
 
@@ -182,7 +188,10 @@ impl RequestWrapper {
             SetBucketPublicStatus {..} => Put("".to_string()),
             ApproveUserForBucket {..} => Put("".to_string()),
             RemoveUserFromBucket {..} => Delete,
-            GetUsersInBucket {..} => Get
+            GetUnapprovedUsersForOwnedBuckets => Get,
+            GetUsersInBucket {..} => Get,
+            GetIsUserOwnerOfBucket {..} => Get,
+
         }
     }
 }
