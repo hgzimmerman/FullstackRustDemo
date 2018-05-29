@@ -177,7 +177,7 @@ impl Routable for Bucket {
             get_users_in_bucket,
             get_unapproved_users_in_buckets_owned_by_user,
             get_is_current_user_owner,
-            request_to_join_bucket
+            request_to_join_bucket,
         ]
     };
     const PATH: &'static str = "/buckets/";
