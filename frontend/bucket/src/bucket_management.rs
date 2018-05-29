@@ -173,7 +173,7 @@ impl Renderable<Context, BucketManagement> for BucketManagement {
     fn view(&self) -> Html<Context, BucketManagement> {
 
         html! {
-            <div style="position: absolute; top: 40px; width: 300px; right: 0; border: 1px solid black; min-height: 200px; background-color: white; font-size: medium",>
+            <div class="bucket-action-pane",>
                 { self.bucket_users.default_view( Self::buckets_view ) }
             </div>
         }

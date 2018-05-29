@@ -518,3 +518,14 @@ button::-moz-focus-inner { border: 0; }
 .light-gray {
     background-color: lightgray;
 }
+
+.bucket-action-pane {
+    position: absolute;
+    top: 40px;
+    width: 250px;
+    right: 0; /* Align right */
+    border: 1px solid black;
+    min-height: 200px;
+    background-color: white;
+    font-size: medium;
+}

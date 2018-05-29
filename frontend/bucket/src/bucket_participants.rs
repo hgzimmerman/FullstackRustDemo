@@ -166,7 +166,7 @@ impl Renderable<Context, BucketParticipants> for BucketParticipants {
     fn view(&self) -> Html<Context, BucketParticipants> {
 
         html! {
-            <div style="position: absolute; top: 40px; width: 250px; right: 0; border: 1px solid black; min-height: 200px; background-color: white",>
+            <div class="bucket-action-pane",>
                 {
                     if let Loadable::Loaded(is_owner) = self.is_user_bucket_owner {
                         if is_owner {
