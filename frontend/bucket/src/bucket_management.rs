@@ -22,7 +22,8 @@ pub struct BucketManagement {
     bucket_users:  Loadable<Vec<BucketUsersData>>,
     is_open: bool,
     remove_user_action: Uploadable<()>,
-    approve_user_action: Uploadable<()>
+    approve_user_action: Uploadable<()>,
+    set_public_or_private_action: Uploadable<()>
 }
 
 impl Default for BucketManagement {
@@ -31,7 +32,8 @@ impl Default for BucketManagement {
             bucket_users: Loadable::default(),
             is_open: false,
             remove_user_action: Uploadable::default(),
-            approve_user_action: Uploadable::default()
+            approve_user_action: Uploadable::default(),
+            set_public_or_private_action: Uploadable::default()
         }
     }
 }

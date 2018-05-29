@@ -46,11 +46,16 @@ use wire::bucket::NewBucketRequest;
 use bucket_participants::BucketParticipants;
 use bucket_management::BucketManagement;
 
+use buckets::BucketLists;
+
+use buckets::ApprovedBucket;
+use buckets::PublicBucket;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
     pub name: InputState
 }
+
 impl NewBucket {
     pub fn validate_name(name: String) -> Result<String, String> {
         if name.len() < 1 {
@@ -76,10 +81,10 @@ pub enum DropDownPaneVariant {
     Closed
 }
 
-pub struct Buckets {
-    joinable_buckets: Loadable<Vec<BucketData>>,
-    public_buckets: Loadable<Vec<BucketData>>
-}
+//pub struct Buckets {
+//    joinable_buckets: Loadable<Vec<BucketData>>,
+//    public_buckets: Loadable<Vec<BucketData>>
+//}
 
 
 #[derive(PartialEq, Debug, Clone, Default)]
@@ -92,8 +97,10 @@ pub struct BucketModel {
     drop_down_state: DropDownPaneVariant
 }
 
+
+
 pub enum BucketPage {
-    BucketList(Loadable<Vec<BucketData>>),
+    BucketList(BucketLists),
     Bucket(Loadable<BucketData>),
     Create(Uploadable<NewBucket>)
 }
@@ -101,8 +108,10 @@ pub enum BucketPage {
 
 pub enum Msg {
     NavigateToBucket{bucket_id: i32},
-    BucketsReady(Vec<BucketData>),
-    BucketsFailed,
+    PublicBucketsReady(Vec<PublicBucket>),
+    PublicBucketsFailed,
+    ApprovedBucketsReady(Vec<ApprovedBucket>),
+    ApprovedBucketsFailed,
     BucketReady(BucketData),
     BucketFailed,
     NavigateToCreateBucket,
@@ -112,20 +121,21 @@ pub enum Msg {
 }
 
 impl BucketModel {
-    fn get_buckets(buckets: &mut Loadable<Vec<BucketData>>, context: &mut Env<Context, Self>) {
+    fn get_public_buckets(buckets: &mut Loadable<Vec<PublicBucket>>, context: &mut Env<Context, Self>) {
         let threads_callback = context.send_back(
             |response: Response<Json<Result<Vec<BucketResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    Msg::BucketsReady(
+                    Msg::PublicBucketsReady(
                         data.unwrap()
                             .into_iter()
                             .map(BucketData::from)
+                            .map(PublicBucket)
                             .collect(),
                     )
                 } else {
-                    Msg::BucketsFailed
+                    Msg::PublicBucketsFailed
                 }
             },
         );
@@ -133,6 +143,33 @@ impl BucketModel {
         context.make_logoutable_request(
             buckets,
             RequestWrapper::GetPublicBuckets,
+            threads_callback,
+        );
+    }
+
+    /// Gets the list of buckets the user can join.
+    fn get_approved_buckets(buckets: &mut Loadable<Vec<ApprovedBucket>>, context: &mut Env<Context, Self>) {
+        let threads_callback = context.send_back(
+            |response: Response<Json<Result<Vec<BucketResponse>, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                if meta.status.is_success() {
+                    Msg::ApprovedBucketsReady(
+                        data.unwrap()
+                            .into_iter()
+                            .map(BucketData::from)
+                            .map(ApprovedBucket)
+                            .collect(),
+                    )
+                } else {
+                    Msg::ApprovedBucketsFailed
+                }
+            },
+        );
+
+        context.make_logoutable_request(
+            buckets,
+            RequestWrapper::GetBucketsForUser,
             threads_callback,
         );
     }
@@ -201,9 +238,10 @@ impl Component<Context> for BucketModel {
 
         let bucket_page: BucketPage = match props.route {
             BucketRoute::BucketList => {
-                let mut buckets = Loadable::default();
-                Self::get_buckets(&mut buckets, context);
-                BucketPage::BucketList(buckets)
+                let mut bucket_lists = BucketLists::default();
+                Self::get_public_buckets(&mut bucket_lists.public_buckets, context);
+                Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
+                BucketPage::BucketList(bucket_lists)
             }
             BucketRoute::Bucket{bucket_id} => {
                 let mut bucket = Loadable::default();
@@ -226,8 +264,42 @@ impl Component<Context> for BucketModel {
         use self::Msg::*;
         match msg {
             NavigateToBucket {bucket_id} => context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_id})),
-            BucketsReady(buckets) => self.bucket_page = BucketPage::BucketList(Loadable::Loaded(buckets)),
-            BucketsFailed => self.bucket_page = BucketPage::BucketList(Loadable::Failed(Some("Failed to load buckets.".to_string()))),
+            PublicBucketsReady(buckets) => {
+                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+                    bucket_list.public_buckets = Loadable::Loaded(buckets)
+                } else {
+                    let mut bucket_lists = BucketLists::default();
+                    bucket_lists.public_buckets = Loadable::Loaded(buckets);
+                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+                }
+            },
+            PublicBucketsFailed => {
+                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+                   bucket_list.public_buckets = Loadable::Failed(Some("Failed to load buckets.".to_string()))
+                } else {
+                    let mut bucket_lists = BucketLists::default();
+                    bucket_lists.public_buckets = Loadable::Failed(Some("Failed to load buckets.".to_string()));
+                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+                }
+            },
+            ApprovedBucketsReady(buckets) => {
+                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+                    bucket_list.approved_buckets = Loadable::Loaded(buckets)
+                } else {
+                    let mut bucket_lists = BucketLists::default();
+                    bucket_lists.approved_buckets = Loadable::Loaded(buckets);
+                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+                }
+            },
+            ApprovedBucketsFailed => {
+                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+                   bucket_list.approved_buckets = Loadable::Failed(Some("Failed to load buckets.".to_string()))
+                } else {
+                    let mut bucket_lists = BucketLists::default();
+                    bucket_lists.approved_buckets = Loadable::Failed(Some("Failed to load buckets.".to_string()));
+                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+                }
+            },
             BucketReady(bucket) => self.bucket_page = BucketPage::Bucket(Loadable::Loaded(bucket)),
             BucketFailed => self.bucket_page = BucketPage::Bucket(Loadable::Failed(Some("Failed to load bucket.".to_string()))),
             NavigateToCreateBucket => context.routing.set_route(Route::Bucket(BucketRoute::Create)),
@@ -257,9 +329,10 @@ impl Component<Context> for BucketModel {
     fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
         let bucket_page: BucketPage = match props.route {
             BucketRoute::BucketList => {
-                let mut buckets = Loadable::default();
-                Self::get_buckets(&mut buckets, context);
-                BucketPage::BucketList(buckets)
+                let mut bucket_lists = BucketLists::default();
+                Self::get_public_buckets(&mut bucket_lists.public_buckets, context);
+                Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
+                BucketPage::BucketList(bucket_lists)
             }
             BucketRoute::Bucket{bucket_id} => {
                 let mut bucket = Loadable::default();
@@ -288,7 +361,7 @@ impl Renderable<Context, BucketModel> for BucketModel {
         }
 
         let page = match self.bucket_page {
-            BucketList(ref buckets) => buckets.default_view(Vec::<BucketData>::view),
+            BucketList(ref buckets) => buckets.view(),
             Bucket(ref bucket) => bucket.default_view(bucket_lobby_fn),
             Create(ref new_bucket) => html! {
                 <div class="flexbox-center-item",>
