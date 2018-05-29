@@ -28,8 +28,8 @@ struct PublicParam {
 
 /// Get all of the available buckets.
 #[get("/public")]
-fn get_public_buckets(_user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
-    Bucket::get_public_buckets(&conn)
+fn get_public_buckets(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
+    Bucket::get_public_buckets(user.user_id, &conn)
         .map(convert_vector)
         .map(Json)
 }

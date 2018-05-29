@@ -1,7 +1,7 @@
 CREATE TABLE buckets (
     id SERIAL PRIMARY KEY,
     bucket_name VARCHAR UNIQUE NOT NULL,
-    is_public BOOLEAN NOT NULL
+    is_public_until TIMESTAMP
 );
 
 -- A junction table between users and buckets

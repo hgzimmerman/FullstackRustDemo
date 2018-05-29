@@ -6,6 +6,7 @@ use std::ops::Deref;
 use error::JoeResult;
 use diesel::prelude::*;
 use diesel;
+use chrono::{NaiveDateTime, Utc, Duration};
 
 #[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
 #[insertable = "NewBucket"]
@@ -16,14 +17,14 @@ pub struct Bucket {
     /// The name of the bucket
     pub bucket_name: String,
     /// The is public field indicates if the bucket will allow other users to request to join.
-    pub is_public: bool,
+    pub is_public_until: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "buckets"]
 pub struct NewBucket {
     pub bucket_name: String,
-    pub is_public: bool,
+    pub is_public_until: Option<NaiveDateTime>,
 }
 
 
@@ -62,11 +63,26 @@ pub struct UsersInBucketData {
 
 
 impl Bucket {
-    pub fn get_public_buckets(conn: &Conn) -> JoeResult<Vec<Bucket>> {
+
+    /// Get buckets that are public, but the user is not a member of
+    pub fn get_public_buckets(user_id: i32, conn: &Conn) -> JoeResult<Vec<Bucket>> {
         use schema::buckets::dsl::*;
+        use schema::buckets;
+        use schema::junction_bucket_users as junctions;
+        use schema::junction_bucket_users::dsl::*;
+        use diesel::query_dsl::InternalJoinDsl;
+
+        // Don't return any buckets with these ids
+        let bucket_ids_in_which_the_user_is_already_a_member_or_has_requested_to_join: Vec<i32> = junction_bucket_users
+            .filter(junctions::user_id.eq(user_id))
+            .select(junctions::bucket_id)
+            .load::<i32>(conn.deref())
+            .map_err(User::handle_error)?;
 
         buckets
-            .filter(is_public.eq(true))
+            .filter(is_public_until.gt(Utc::now().naive_utc())) // Get buckets with an expiry date in the future.
+            .filter(buckets::id.ne_all(bucket_ids_in_which_the_user_is_already_a_member_or_has_requested_to_join))
+            .select(buckets::all_columns)
             .load::<Bucket>(conn.deref())
             .map_err(User::handle_error)
     }
@@ -184,8 +200,14 @@ impl Bucket {
         use schema::buckets::dsl::*;
         let target = buckets.filter(id.eq(m_bucket_id));
 
+        let expire_time: Option<NaiveDateTime> = if publicity {
+            Some( Utc::now().naive_utc() + Duration::days(1))
+        } else {
+            None
+        };
+
         diesel::update(target)
-            .set(is_public.eq(publicity))
+            .set(is_public_until.eq(expire_time))
             .execute(conn.deref())
             .map_err(Bucket::handle_error)?;
 
