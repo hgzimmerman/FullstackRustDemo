@@ -261,7 +261,7 @@ impl Context {
                         Ok(self.networking.fetch(request, callback))
                     }
                     HttpMethod::Delete => {
-                        let request = Request::put(url.as_str())
+                        let request = Request::delete(url.as_str())
                             .header("Content-Type", "application/json")
                             .header("Authorization", jwt_string.as_str())
                             .body(Nothing)

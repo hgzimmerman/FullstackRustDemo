@@ -22,7 +22,7 @@ impl From<Bucket> for BucketResponse {
 
 impl From<NewBucketRequest> for NewBucket {
     fn from(new_bucket_request: NewBucketRequest) -> NewBucket {
-        let is_public_until: Option<NaiveDateTime> =  if new_bucket_request.is_public {
+        let is_public_until: Option<NaiveDateTime> = if new_bucket_request.is_public {
             Some(Utc::now().naive_utc() + Duration::days(1))
         } else {
             None

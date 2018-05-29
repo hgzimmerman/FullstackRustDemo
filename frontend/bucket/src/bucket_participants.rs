@@ -104,6 +104,8 @@ impl BucketParticipants {
             },
         );
 
+        context.log(&format!("Removing user from bucket:{}-{}",user_id,bucket_id));
+
         context.make_logoutable_request(
             remove_user_action,
             RequestWrapper::RemoveUserFromBucket{bucket_id, user_id},
@@ -121,8 +123,9 @@ impl Component<Context> for BucketParticipants {
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         let mut participants: BucketParticipants = BucketParticipants::default();
         if let Loadable::Loaded(bucket_data) = props.bucket_data {
-             Self::get_participants_in_bucket(bucket_data.id, &mut participants.users, context); // TODO Possibly don't load this on startup, only do this when opening the pane
-             Self::determine_if_user_is_owner(bucket_data.id, &mut participants.is_user_bucket_owner, context)
+            Self::get_participants_in_bucket(bucket_data.id, &mut participants.users, context); // TODO Possibly don't load this on startup, only do this when opening the pane
+            Self::determine_if_user_is_owner(bucket_data.id, &mut participants.is_user_bucket_owner, context);
+            participants.bucket_id = Some(bucket_data.id);
         }
         participants
     }
@@ -134,13 +137,15 @@ impl Component<Context> for BucketParticipants {
                 Self::get_participants_in_bucket(bucket_id, &mut self.users, context);
             }
             BucketUserDataLoaded(bucket_user_data) => {
-                self.users = Loadable::Loaded(bucket_user_data)
+                self.users = Loadable::Loaded(bucket_user_data);
             },
             BucketUserDataFailed => context.log("Failed to get bucket user data"),
             SetIsUserOwner(is_owner) => self.is_user_bucket_owner = Loadable::Loaded(is_owner),
             RemoveUserFromBucket{user_id} => {
                 if let Some(bucket_id) = self.bucket_id {
                     Self::remove_user_from_bucket(bucket_id, user_id, &mut self.remove_user_action, context)
+                } else {
+                    context.log("Couldn't remove user because bucket id is unknown.")
                 }
             }
         }
