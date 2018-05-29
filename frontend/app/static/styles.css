@@ -474,10 +474,16 @@ button::-moz-focus-inner { border: 0; }
 }
 
 /*Bucket*/
-.bucket-card {
+.approved-bucket-card {
     min-height: 150px;
     min-width: 200px;
     background: aquamarine;
+}
+
+.public-bucket-card {
+    min-height: 150px;
+    min-width: 200px;
+    background: cornflowerblue;
 }
 
 .bucket-card:hover {
@@ -506,4 +512,9 @@ button::-moz-focus-inner { border: 0; }
 }
 .question-list {
     background-color: gainsboro;
+}
+
+
+.light-gray {
+    background-color: lightgray;
 }

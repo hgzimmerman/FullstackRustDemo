@@ -128,6 +128,18 @@ fn get_is_current_user_owner(bucket_id: i32, user: NormalUser, conn: Conn) -> Jo
         .map(Json)
 }
 
+#[post("/<bucket_id>/user_join_request")]
+fn request_to_join_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<()> {
+    let new_bucket_user = NewBucketUser {
+        bucket_id,
+        user_id: user.user_id,
+        owner: false,
+        approved: false,
+    };
+
+    Bucket::add_user_to_bucket(new_bucket_user, &conn)
+}
+
 /// Creates a new bucket.
 /// The bucket represents a set of questions users can answer.
 #[post("/create", data = "<new_bucket>")]
@@ -165,6 +177,7 @@ impl Routable for Bucket {
             get_users_in_bucket,
             get_unapproved_users_in_buckets_owned_by_user,
             get_is_current_user_owner,
+            request_to_join_bucket
         ]
     };
     const PATH: &'static str = "/buckets/";

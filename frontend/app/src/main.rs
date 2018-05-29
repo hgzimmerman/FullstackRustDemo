@@ -75,8 +75,6 @@ enum Msg {
 }
 
 
-
-
 impl Component<Context> for Model {
     type Msg = Msg;
     type Properties = ();
@@ -138,12 +136,7 @@ impl Renderable<Context, Model> for Model {
             Bucket(ref bucket_route) => html! {
                 <BucketModel: route=bucket_route, />
             },
-            PageNotFound => html! {
-
-                <>
-                    {"Page Not Found"}
-                </>
-            }
+            PageNotFound => util::wrappers::html_string("Page Not Found".into())
         };
 
         html! {

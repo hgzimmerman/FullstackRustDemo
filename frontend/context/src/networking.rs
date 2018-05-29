@@ -69,6 +69,7 @@ pub enum RequestWrapper {
     GetUnapprovedUsersForOwnedBuckets,
     GetUsersInBucket{bucket_id: i32},
     GetIsUserOwnerOfBucket{bucket_id: i32},
+    CreateJoinBucketRequest {bucket_id: i32},
 }
 
 impl RequestWrapper {
@@ -112,7 +113,8 @@ impl RequestWrapper {
             RemoveUserFromBucket {bucket_id, user_id} => format!("buckets/{}?user_id={}",bucket_id, user_id),
             GetUnapprovedUsersForOwnedBuckets => "buckets/unapproved_users_for_owned_buckets".into(),
             GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id),
-            GetIsUserOwnerOfBucket {bucket_id}  => format!{"buckets/{}/user_owner_status", bucket_id}
+            GetIsUserOwnerOfBucket {bucket_id}  => format!{"buckets/{}/user_owner_status", bucket_id},
+            CreateJoinBucketRequest {bucket_id} => format!{"buckets/{}/user_join_request", bucket_id},
         };
 
         format!("{}/{}", api_base, path)
@@ -150,6 +152,7 @@ impl RequestWrapper {
             GetUnapprovedUsersForOwnedBuckets => Required,
             GetUsersInBucket {..} => Required,
             GetIsUserOwnerOfBucket {..} => Required,
+            CreateJoinBucketRequest {..} => Required,
         }
     }
 
@@ -161,6 +164,8 @@ impl RequestWrapper {
         fn to_body(r: &impl Serialize) -> String {
             serde_json::to_string(r).unwrap()
         }
+
+        let empty: String = "".to_string();
 
         use self::HttpMethod::*;
         use self::RequestWrapper::*;
@@ -184,14 +189,14 @@ impl RequestWrapper {
             AnswerQuestion(r) => Post(to_body(r)),
             CreateQuestion(r) => Post(to_body(r)),
             DeleteQuestion {..} => Delete,
-            PutQuestionBackInBucket {..} => Put("".to_string()), // no body
-            SetBucketPublicStatus {..} => Put("".to_string()),
-            ApproveUserForBucket {..} => Put("".to_string()),
+            PutQuestionBackInBucket {..} => Put(empty), // no body
+            SetBucketPublicStatus {..} => Put(empty),
+            ApproveUserForBucket {..} => Put(empty),
             RemoveUserFromBucket {..} => Delete,
             GetUnapprovedUsersForOwnedBuckets => Get,
             GetUsersInBucket {..} => Get,
             GetIsUserOwnerOfBucket {..} => Get,
-
+            CreateJoinBucketRequest {..} => Post(empty)
         }
     }
 }

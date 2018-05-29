@@ -4,9 +4,11 @@ use datatypes::bucket::BucketData;
 use Context;
 //use Route;
 use util::loadable::Loadable;
-
+use util::uploadable::Uploadable;
 use super::BucketModel;
 use super::Msg;
+
+use util::button::Button;
 
 
 
@@ -39,8 +41,15 @@ impl Renderable<Context, BucketModel> for PublicBucket {
     fn view(&self) -> Html<Context, BucketModel> {
         let bucket_id = self.as_ref().id.clone();
         html! {
-            <div class="bucket-card", /* onclick=move |_| Msg::NavigateToBucket{bucket_id},*/ >
-                {&self.as_ref().bucket_name}
+            <div class="public-bucket-card",>
+                <div class=("flexbox-vert", "full-height"),>
+                    <div class="flexbox-expand",>
+                        {&self.as_ref().bucket_name}
+                    </div>
+                    <div class="flexbox-horiz",>
+                        <Button: title="Request Access", onclick=move |_| Msg::RequestToJoinBucket{bucket_id} ,/>
+                    </div>
+                </div>
             </div>
         }
     }
@@ -50,7 +59,7 @@ impl Renderable<Context, BucketModel> for ApprovedBucket {
     fn view(&self) -> Html<Context, BucketModel> {
         let bucket_id = self.as_ref().id.clone();
         html! {
-            <div class="bucket-card", onclick=move |_| Msg::NavigateToBucket{bucket_id}, >
+            <div class="approved-bucket-card", onclick=move |_| Msg::NavigateToBucket{bucket_id}, >
                 {&self.as_ref().bucket_name}
             </div>
         }
@@ -77,21 +86,23 @@ pub struct BucketLists {
     pub approved_buckets: Loadable<Vec<ApprovedBucket>>,
     /// The public buckets are buckets that bucket owners have made public.
     /// Users must ask to join these buckets, and they will be approved by the owners of the bucket before the bucket appears in the public bucket list.
-    pub public_buckets: Loadable<Vec<PublicBucket>>
+    pub public_buckets: Loadable<Vec<PublicBucket>>,
+    /// This is just a dumb container for the FT that makes the request to join a bucket.
+    pub request_to_join_bucket_action: Uploadable<()>,
 }
 
 impl Renderable<Context, BucketModel> for BucketLists {
     fn view(&self) -> Html<Context, BucketModel> {
         html! {
             <div class=("full-height", "full-width", "flexbox-vert", "scrollable"),>
-                <div>
-                    <div class="full-width",>
+                <div class="flexbox-expand",>
+                    <div class=("full-width","light-gray"),>
                         {"Approved Buckets"}
                     </div>
                     {self.approved_buckets.default_view(Vec::<ApprovedBucket>::view)}
                 </div>
-                <div>
-                    <div class="full-width",>
+                <div class="flexbox-expand",>
+                    <div class=("full-width","light-gray"),>
                         {"Public Buckets"}
                     </div>
                     {self.public_buckets.default_view(Vec::<PublicBucket>::view)}

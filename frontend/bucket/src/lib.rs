@@ -117,7 +117,9 @@ pub enum Msg {
     NavigateToCreateBucket,
     CreateBucket,
     UpdateBucketName(InputState),
-    ChangeDropDownState(DropDownPaneVariant)
+    ChangeDropDownState(DropDownPaneVariant),
+    RequestToJoinBucket{bucket_id: i32},
+    NoOp // TODO remove me
 }
 
 impl BucketModel {
@@ -227,6 +229,26 @@ impl BucketModel {
         }
 
 
+
+    }
+    fn request_to_join_bucket(bucket_id: i32, request_to_join_bucket_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let callback = context.send_back(
+            |response: Response<Json<Result<BucketResponse, Error>>>| {
+                let (meta, Json(data)) = response.into_parts();
+                println!("META: {:?}, {:?}", meta, data);
+                if meta.status.is_success() {
+                    Msg::NoOp
+                } else {
+                    Msg::BucketFailed
+                }
+            },
+        );
+
+        context.make_logoutable_request(
+            request_to_join_bucket_action,
+            RequestWrapper::CreateJoinBucketRequest{bucket_id},
+            callback,
+        );
     }
 }
 
@@ -323,6 +345,12 @@ impl Component<Context> for BucketModel {
                     self.drop_down_state = drop_down_state
                 }
             }
+            RequestToJoinBucket {bucket_id} => {
+                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
+                    Self::request_to_join_bucket(bucket_id, &mut bucket_lists.request_to_join_bucket_action, context)
+                }
+            }
+            NoOp => {}// TODO remove me.
         }
         true
     }
@@ -420,7 +448,6 @@ impl Renderable<Context, BucketModel> for BucketModel {
                         <Button: title="Participants", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ViewParticipants), />
                         {pane}
                     </div>
-//                    <BucketParticipants: bucket_data=bucket,/>
                 </div>
             },
             Create(_) => html! {
