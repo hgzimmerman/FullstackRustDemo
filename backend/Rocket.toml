@@ -5,16 +5,19 @@ workers = 4
 log = "debug"
 limits = { forms = 32768 }
 
+
 [staging]
 address = "0.0.0.0"
 port = 80
 workers = 4
 log = "normal"
 limits = { forms = 32768 }
+tls = { certs = "/tls/certs.pem", key = "/tls/key.pem" }
 
 [production]
 address = "0.0.0.0"
-port = 8000
+port = 80
 workers = 4
 log = "normal"
 limits = { forms = 32768 }
+tls = { certs = "/tls/certs.pem", key = "/tls/key.pem" }

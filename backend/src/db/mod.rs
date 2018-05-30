@@ -147,12 +147,13 @@ pub mod testing {
         let mut user: NewUser = NewUserRequest {
             user_name: "Admin".into(),
             display_name: "Admin".into(),
-            plaintext_password: "12345".into(),
+            plaintext_password: "Admin".into(),
         }.into();
         user.roles.push(UserRole::Admin.into());
         user.roles.push(
             UserRole::Moderator.into(),
         );
+        user.roles.push(UserRole::Publisher.into());
         let user: User = User::create(user, conn)?;
 
         // Create forums

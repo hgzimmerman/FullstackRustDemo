@@ -13,22 +13,26 @@ use error::*;
 use log;
 
 
-
+#[derive(FromForm)]
+struct BucketIdParam {
+    bucket_id: i32,
+}
 
 /// Get all questions in a given bucket.
-#[get("/questions_in_bucket/<bucket_id>")]
-fn get_questions_for_bucket(bucket_id: i32, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
+#[get("/?<bucket_id_param>")]
+fn get_questions_for_bucket(bucket_id_param: BucketIdParam, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
 
-    Question::get_questions_for_bucket(bucket_id, &conn)
+    Question::get_questions_for_bucket(bucket_id_param.bucket_id, &conn)
         .map_vec::<QuestionResponse>()
         .map(Json)
 }
 
+// TODO use a query parameter
 /// Gets a random question from the bucket.
-#[get("/random_question/<bucket_id>")]
-fn get_random_question(bucket_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+#[get("/random_question?<bucket_id_param>")]
+fn get_random_question(bucket_id_param: BucketIdParam, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     log::info!("Enter get random question");
-    Question::get_random_question(bucket_id, &conn)
+    Question::get_random_question(bucket_id_param.bucket_id, &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
@@ -67,6 +71,11 @@ fn put_question_back_in_bucket(question_id: i32, _user: NormalUser, conn: Conn) 
     Ok(Json(question_id))
 }
 
+#[get("/quantity_in_bucket?<bucket_id_param>")]
+fn questions_in_bucket(bucket_id_param: BucketIdParam, _user: NormalUser, conn: Conn) -> JoeResult<Json<i64>> {
+    Question::get_number_of_questions_in_bucket(bucket_id_param.bucket_id, &conn)
+        .map(Json)
+}
 
 impl Routable for Question {
     const ROUTES: &'static Fn() -> Vec<Route> = &|| {
@@ -77,6 +86,7 @@ impl Routable for Question {
             get_question,
             delete_question,
             put_question_back_in_bucket,
+            questions_in_bucket
         ]
     };
     const PATH: &'static str = "/question/";

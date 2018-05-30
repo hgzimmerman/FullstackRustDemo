@@ -40,3 +40,13 @@ rust-crypto = "0.2.36"
 slug = "0.1.2"
 
 rocket_cors = "0.2.3"
+
+
+clap = "~2.31"
+
+[features]
+default = ["production"]
+
+development = []
+staging = ["production"]
+production = ["rocket/tls"]

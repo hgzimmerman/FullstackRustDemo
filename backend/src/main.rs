@@ -48,6 +48,9 @@ extern crate rocket_cors;
 
 extern crate rand;
 
+extern crate clap;
+use clap::{Arg, App, SubCommand};
+
 use rocket::Rocket;
 
 mod conversions;
@@ -79,6 +82,15 @@ pub use db::schema; // schema internals can be accessed via db::schema::, or via
 use rocket::http::Method;
 use rocket_cors::{AllowedHeaders, AllowedOrigins};
 
+#[derive(Clone)]
+pub struct ConfigObject {
+    create_admin: bool,
+    /// If a secret key is not provided, one will be randomly generated.
+    /// A warning will be emitted if the key is less than 256 characters long.
+    /// The server should fail to start if the secret key is less than 128 characters long.
+    secret_key: Option<String>
+}
+
 fn main() {
 
     const LOGFILE_NAME: &'static str = "weekend.log";
@@ -94,47 +106,88 @@ fn main() {
         ),
     ]).expect("Cant get logger.");
 
-    init_rocket().launch();
+    let matches = App::new("Weekend At Joes Backend")
+        .version("0.1.0")
+        .author("Henry Zimmerman")
+        .about("Monolithic server for the API and frontend of the Weekend at Joes website.")
+        .arg(Arg::with_name("create_admin")
+            .long("create_admin")
+            .help("Creates an administrator user if one doesn't already exist.")
+            .takes_value(false)
+        )
+        .arg(Arg::with_name("secret_key")
+            .long("secret")
+            .short("s")
+            .value_name("KEY")
+            .help("A key string that is used to sign and verify user tokens. By specifying the same key across restarts, user tokens will not be invalidated. If no key is provided, then a random one is generated.")
+            .takes_value(true)
+        )
+        .get_matches();
+
+    let create_admin: bool = matches.is_present("create_admin");
+    let secret_key: Option<String> = matches.value_of("secret_key").map(String::from);
+    let config = ConfigObject {
+        create_admin,
+        secret_key
+    };
+
+    init_rocket(config).launch();
 }
 
 ///Initialize the webserver
-pub fn init_rocket() -> Rocket {
+pub fn init_rocket(config: ConfigObject) -> Rocket {
 
-    // Set up CORS for local development using `cargo web start`
-    let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
-    assert!(failed_origins.is_empty());
-
-    let options = rocket_cors::Cors {
-        allowed_origins,
-        allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
-            .into_iter()
-            .map(From::from)
-            .collect(),
-        //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
-        allow_credentials: true,
-        ..Default::default()
+    // CORS handling is a compile-time feature. It should be disabled in production builds.
+    // This can be done by removing the `development` feature from the backend's `Cargo.toml`.
+    let options = if cfg!(feature = "development") {
+        log::warn!("Development mode enabled. Enabling CORS.");
+        let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
+        assert!(failed_origins.is_empty());
+        rocket_cors::Cors {
+            allowed_origins,
+            allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
+                .into_iter()
+                .map(From::from)
+                .collect(),
+            //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
+            allow_credentials: true,
+            ..Default::default()
+        }
+    } else {
+        log::info!("Development not enabled. Using default CORS.");
+        let (allowed_origins, _failed_origins) = AllowedOrigins::some(&[]);
+        rocket_cors::Cors {
+           allowed_origins,
+           ..Default::default()
+        }
+    };
+    // The secret is used to generate and verify JWTs.
+    let secret: Secret = if let Some(key) = config.secret_key {
+        log::info!("Using a user-supplied secret key.");
+        Secret::from_user_supplied_string(key)
+    } else {
+        log::info!("Generating a random 256 character secret key.");
+        Secret::generate()
     };
 
-    // The secret is used to generate and verify JWTs.
-    let secret = Secret::generate();
     // The banned set is a set of user ids that are kept in memory.
     // This is done to prevent banned users with active JWTs from being authenticated, all without every
     // authentication attempt having to check the database.
     let banned_set = BannedSet::new();
 
+    // A pool of database connections. These will be distributed to threads as they service requests.
     let db_pool = db::init_pool();
 
-    // TODO, add some config value for this.
-    // Protect this by not allowing it to run in release mode, or querying for user input if this flag is enabled, just to confirm.34
-    let testing = false;
-    if testing {
-        log::warn!("=================");
-        log::warn!("Launched with testing enabled. This means that Default Users and other entities have been added to the database, compromising security.");
-        log::warn!("=================");
-        db::testing::generate_test_fixtures(&db::Conn::new(db_pool.get().unwrap()))
-            .expect("A test fixture with a unique name already exists, preventing the suite from running");
+    // Create a default Admin user if configured to do so.
+    if config.create_admin {
+        let conn = db::Conn::new(db_pool.get().unwrap());
+        match configuration::create_admin(&conn) {
+            Ok(user) => log::warn!("Admin created"),
+            Err(e) => log::error!("Failed to create Admin: {:?}",e),
+        }
     }
 
+    // Initialize Rocket.
     rocket::ignite()
         .manage(db_pool)
         .manage(secret)
@@ -182,4 +235,28 @@ pub fn test_setup() {
             WriteLogger::new(LevelFilter::Trace, Config::default(), File::create(LOGFILE_NAME).unwrap()),
         ]).unwrap();
     });
+}
+
+
+mod configuration {
+    use wire::user::*;
+    use db::user::{NewUser, User};
+    use db::Conn;
+    use error::JoeResult;
+    use db::Creatable;
+
+    pub fn create_admin(conn: &Conn) -> JoeResult<User> {
+        let mut user: NewUser = NewUserRequest {
+            user_name: "Admin".into(),
+            display_name: "Admin".into(),
+            plaintext_password: "Admin".into(),
+        }.into();
+        user.roles = vec![
+            UserRole::Admin.into(),
+            UserRole::Moderator.into(),
+            UserRole::Publisher.into(),
+            UserRole::Unprivileged.into()
+        ];
+        User::create(user, conn)
+    }
 }

@@ -82,11 +82,11 @@ impl Bucket {
             .load::<i32>(conn.deref())
             .map_err(User::handle_error)?;
 
-//        use log;
-//        log::info!("Dont include buckets: {:?}", bucket_ids_in_which_the_user_is_already_a_member_or_has_requested_to_join);
-//
-//        let all_junctions = junction_bucket_users.load::<BucketUser>(conn.deref()).map_err(User::handle_error)?;
-//        log::info!("All junctions: {:?}", all_junctions);
+        //        use log;
+        //        log::info!("Dont include buckets: {:?}", bucket_ids_in_which_the_user_is_already_a_member_or_has_requested_to_join);
+        //
+        //        let all_junctions = junction_bucket_users.load::<BucketUser>(conn.deref()).map_err(User::handle_error)?;
+        //        log::info!("All junctions: {:?}", all_junctions);
 
 
         buckets

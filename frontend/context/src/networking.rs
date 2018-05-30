@@ -70,6 +70,7 @@ pub enum RequestWrapper {
     GetUsersInBucket{bucket_id: i32},
     GetIsUserOwnerOfBucket{bucket_id: i32},
     CreateJoinBucketRequest {bucket_id: i32},
+    GetNumberOfQuestionsInBucket {bucket_id: i32}
 }
 
 impl RequestWrapper {
@@ -102,8 +103,8 @@ impl RequestWrapper {
             GetBucketsForUser => "buckets/approved".into(),
             GetBucket{bucket_id} => format!("buckets/{}", bucket_id),
             CreateBucket(_) => "buckets/create".into(),
-            GetRandomQuestion { bucket_id } => format!("question/random_question/{}", bucket_id),
-            GetQuestions { bucket_id } => format!("question/questions_in_bucket/{}", bucket_id),
+            GetRandomQuestion { bucket_id } => format!("question/random_question?bucket_id={}", bucket_id),
+            GetQuestions { bucket_id } => format!("question?bucket_id={}", bucket_id),
             AnswerQuestion(_) => "answer/create".into(),
             CreateQuestion(_) => "question/create".into(),
             DeleteQuestion {question_id} => format!("question/{}", question_id),
@@ -115,6 +116,7 @@ impl RequestWrapper {
             GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id),
             GetIsUserOwnerOfBucket {bucket_id}  => format!{"buckets/{}/user_owner_status", bucket_id},
             CreateJoinBucketRequest {bucket_id} => format!{"buckets/{}/user_join_request", bucket_id},
+            GetNumberOfQuestionsInBucket {bucket_id} => format!("/api/question/quantity_in_bucket?bucket_id={}", bucket_id)
         };
 
         format!("{}/{}", api_base, path)
@@ -153,6 +155,7 @@ impl RequestWrapper {
             GetUsersInBucket {..} => Required,
             GetIsUserOwnerOfBucket {..} => Required,
             CreateJoinBucketRequest {..} => Required,
+            GetNumberOfQuestionsInBucket {..} => Required
         }
     }
 
@@ -196,7 +199,8 @@ impl RequestWrapper {
             GetUnapprovedUsersForOwnedBuckets => Get,
             GetUsersInBucket {..} => Get,
             GetIsUserOwnerOfBucket {..} => Get,
-            CreateJoinBucketRequest {..} => Post(empty)
+            CreateJoinBucketRequest {..} => Post(empty),
+            GetNumberOfQuestionsInBucket {..} => Get
         }
     }
 }

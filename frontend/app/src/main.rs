@@ -3,17 +3,17 @@
 
 #[macro_use]
 extern crate yew;
-extern crate wire;
+//extern crate wire;
 //#[macro_use]
 //extern crate failure_derive;
-extern crate failure;
-extern crate serde;
+//extern crate failure;
+//extern crate serde;
 //#[macro_use]
-extern crate serde_json;
+//extern crate serde_json;
 
-extern crate chrono;
+//extern crate chrono;
 
-extern crate stdweb;
+//extern crate stdweb;
 
 use yew::prelude::*;
 
@@ -35,8 +35,6 @@ extern crate header;
 use yew::services::route::MainRouter;
 use yew::services::route::RouteResult;
 use routes::Route;
-
-
 
 use header::Header;
 use forum::ForumModel;
@@ -155,7 +153,7 @@ impl Renderable<Context, Model> for Model {
 
 fn main() {
     yew::initialize();
-    stdweb::initialize(); // I need this in order to use my route service
+//    stdweb::initialize(); // I need this in order to use my route service
     let context = Context::new();
 
     let app: App<Context, Model> = App::new(context);

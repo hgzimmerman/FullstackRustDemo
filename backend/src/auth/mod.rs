@@ -49,6 +49,15 @@ impl Secret {
             .collect::<String>();
         Secret(key)
     }
+
+    pub fn from_user_supplied_string(key: String) -> Secret {
+        if key.len() <= 128 {
+            panic!("The secret key must be equal to or greater than 128 characters.")
+        } else if key.len() < 256 {
+            log::warn!("The secret key should be longer than 256 characters. It is {} characters long", key.len());
+        }
+        Secret(key)
+    }
 }
 
 

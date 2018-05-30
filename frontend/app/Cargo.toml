@@ -12,7 +12,7 @@ yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbda
 #http = "0.1"
 
 
-wire = {path = "../../wire"}
+#wire = {path = "../../wire"}
 context = {path = "../context"}
 util = {path = "../util"}
 routes = {path = "../routes"}
@@ -23,23 +23,15 @@ auth = {path = "../auth"}
 header = {path = "../header"}
 
 
-failure = "0.1"
-
-serde = "1"
-serde_json = "*"
-
-stdweb = "0.4.2"
-
-base64 = "0.9.0"
+#failure = "0.1"
+#stdweb = "0.4.2"
 
 
-[dependencies.chrono]
-version = "0.4"
-default-features = false
+#[dependencies.chrono]
+#version = "0.4"
+#default-features = false
 
 
 [features]
 default = ["development"]
-
-
 development = ["bucket/development", "forum/development", "auth/development"]

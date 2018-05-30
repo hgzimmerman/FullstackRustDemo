@@ -230,6 +230,19 @@ impl Question {
         Ok(question_data)
     }
 
+    /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
+    /// This does not tightly correspond to the total number of questions associated with the bucket session.
+    pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &Conn) -> JoeResult<i64> {
+//        use schema::questions::dsl::*;
+        use schema::questions;
+        use diesel::dsl::count;
+        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
+        Question::belonging_to(&bucket)
+            .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
+            .count()
+            .get_result(conn.deref())
+            .map_err(Question::handle_error)
+    }
 
     /// Given a question's id, get the question, its answers and user
     pub fn get_full_question(q_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
