@@ -45,7 +45,7 @@ rocket_cors = "0.2.3"
 clap = "~2.31"
 
 [features]
-default = ["production"]
+default = ["development"]
 
 development = []
 staging = ["production"]

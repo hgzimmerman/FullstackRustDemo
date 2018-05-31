@@ -225,6 +225,9 @@ impl Context {
         }
     }
 
+
+
+
     /// The error in the result here should only occur if the JWT is outdated, or not present,
     /// in which case, the caller should redirect to the login screen.
     pub fn make_request<W>(&mut self, request: RequestWrapper, callback: Callback<Response<W>>) -> Result<FetchTask, Error>
@@ -236,85 +239,80 @@ impl Context {
         let body_and_method: HttpMethod = request.resolve_body_and_method();
 
 
-        match self.get_and_refresh_jwt() {
-            Ok(jwt_string) => {
-                // If you can attach the auth, do so anyway.
-                match body_and_method {
-                    HttpMethod::Get => {
-                        let request = Request::get(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .header("Authorization", jwt_string.as_str())
-                            .body(Nothing)
-                            .unwrap();
-                        Ok(self.networking.fetch(request, callback))
-                    }
-                    HttpMethod::Post(body) => {
-                        let request = Request::post(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .header("Authorization", jwt_string.as_str())
-                            .body(body)
-                            .unwrap();
-                        Ok(self.networking.fetch(request, callback))
-                    }
-                    HttpMethod::Put(body) => {
-                        let request = Request::put(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .header("Authorization", jwt_string.as_str())
-                            .body(body)
-                            .unwrap();
-                        Ok(self.networking.fetch(request, callback))
-                    }
-                    HttpMethod::Delete => {
-                        let request = Request::delete(url.as_str())
-                            .header("Content-Type", "application/json")
-                            .header("Authorization", jwt_string.as_str())
-                            .body(Nothing)
-                            .unwrap();
-                        Ok(self.networking.fetch(request, callback))
-                    }
+        // First clone :/
+        let rs = self.routing.clone_without_listener();
+
+        // Take a look inside the response and check if it is a 401 response, indicating that the login has expired.
+        let interceptor_closure = move |response: Response<Result<String, Error>>| {
+                let (meta, data) = response.into_parts();
+                if meta.status == 401 {
+                    // Redirect to login
+                    let mut rs = rs.clone_without_listener(); // TODO this is a pretty bad pattern of having to clone this twice...
+                    rs.set_route_from_string("/auth/login".into())
                 }
-            }
+                let data = data.into();
+                callback.emit(Response::from_parts(meta, data))
+            };
+        let interceptor_callback = Callback::from(interceptor_closure);
+
+        let auth: Option<String> = match self.get_and_refresh_jwt() {
+            Ok(auth) => Some(auth),
             Err(e) => {
                 match auth_requirement {
-                    Auth::Required => {
+                    Auth::Required =>  {
                         eprintln!("JWT was not found for a request that requires it: '{}'", url);
-                        Err(e)
+                        return Err(e)
                     }
-                    // If the auth wasn't required in the first place
                     Auth::NotRequired => {
-                        match body_and_method {
-                            HttpMethod::Get => {
-                                let request = Request::get(url.as_str())
-                                    .header("Content-Type", "application/json")
-                                    .body(Nothing)
-                                    .unwrap();
-                                Ok(self.networking.fetch(request, callback))
-                            }
-                            HttpMethod::Post(body) => {
-                                let request = Request::post(url.as_str())
-                                    .header("Content-Type", "application/json")
-                                    .body(body)
-                                    .unwrap();
-                                Ok(self.networking.fetch(request, callback))
-                            }
-                            HttpMethod::Put(body) => {
-                                let request = Request::put(url.as_str())
-                                    .header("Content-Type", "application/json")
-                                    .body(body)
-                                    .unwrap();
-                                Ok(self.networking.fetch(request, callback))
-                            }
-                            HttpMethod::Delete => {
-                                let request = Request::put(url.as_str())
-                                    .header("Content-Type", "application/json")
-                                    .body(Nothing)
-                                    .unwrap();
-                                Ok(self.networking.fetch(request, callback))
-                            }
-                        }
+                        None
                     }
                 }
             }
+        };
+
+        let mut request_builder = Request::builder();
+        match body_and_method {
+            HttpMethod::Get => {
+                request_builder.method("GET")
+            }
+            HttpMethod::Post(_) => {
+                request_builder.method("POST")
+            }
+            HttpMethod::Put(_) => {
+                request_builder.method("PUT")
+            }
+            HttpMethod::Delete => {
+                request_builder.method("DELETE")
+            }
+        };
+        request_builder.uri(url.as_str());
+        request_builder.header("Content-Type", "application/json");
+
+        if let Some(jwt_string) = auth {
+            request_builder.header("Authorization", jwt_string.as_str());
+        }
+
+        let body: Option<String> = match body_and_method {
+            HttpMethod::Get => {
+                None
+            }
+            HttpMethod::Post(body) => {
+                Some(body)
+            }
+            HttpMethod::Put(body) => {
+                Some(body)
+            }
+            HttpMethod::Delete => {
+                None
+            }
+        };
+
+        if let Some(body) = body {
+            let request = request_builder.body(body).unwrap();
+            Ok(self.networking.fetch(request, interceptor_callback))
+        } else {
+            let request = request_builder.body(Nothing).unwrap();
+            Ok(self.networking.fetch(request, interceptor_callback))
         }
     }
 }

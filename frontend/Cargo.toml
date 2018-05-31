@@ -1,4 +1,6 @@
 [workspace]
+
+
 members = [
     "app",
     "context",
@@ -9,3 +11,8 @@ members = [
     "header",
     "routes"
 ]
+
+[profile.release]
+#lto = true
+#panic = 'abort'
+

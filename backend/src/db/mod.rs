@@ -153,7 +153,9 @@ pub mod testing {
         user.roles.push(
             UserRole::Moderator.into(),
         );
-        user.roles.push(UserRole::Publisher.into());
+        user.roles.push(
+            UserRole::Publisher.into(),
+        );
         let user: User = User::create(user, conn)?;
 
         // Create forums

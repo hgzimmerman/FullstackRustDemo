@@ -86,7 +86,7 @@ impl Routable for Question {
             get_question,
             delete_question,
             put_question_back_in_bucket,
-            questions_in_bucket
+            questions_in_bucket,
         ]
     };
     const PATH: &'static str = "/question/";

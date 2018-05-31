@@ -233,7 +233,7 @@ impl Question {
     /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
     /// This does not tightly correspond to the total number of questions associated with the bucket session.
     pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &Conn) -> JoeResult<i64> {
-//        use schema::questions::dsl::*;
+        //        use schema::questions::dsl::*;
         use schema::questions;
         use diesel::dsl::count;
         let bucket = Bucket::get_by_id(bucket_id, &conn)?;

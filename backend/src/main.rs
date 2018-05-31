@@ -49,7 +49,7 @@ extern crate rocket_cors;
 extern crate rand;
 
 extern crate clap;
-use clap::{Arg, App, SubCommand};
+use clap::{Arg, App};
 
 use rocket::Rocket;
 
@@ -84,11 +84,12 @@ use rocket_cors::{AllowedHeaders, AllowedOrigins};
 
 #[derive(Clone)]
 pub struct ConfigObject {
+    /// If this is true, an Admin account will be created at app startup if it has not been done so already.
     create_admin: bool,
     /// If a secret key is not provided, one will be randomly generated.
     /// A warning will be emitted if the key is less than 256 characters long.
     /// The server should fail to start if the secret key is less than 128 characters long.
-    secret_key: Option<String>
+    secret_key: Option<String>,
 }
 
 fn main() {
@@ -110,25 +111,31 @@ fn main() {
         .version("0.1.0")
         .author("Henry Zimmerman")
         .about("Monolithic server for the API and frontend of the Weekend at Joes website.")
-        .arg(Arg::with_name("create_admin")
-            .long("create_admin")
-            .help("Creates an administrator user if one doesn't already exist.")
-            .takes_value(false)
+        .arg(
+            Arg::with_name("create_admin")
+                .long("create_admin")
+                .help("Creates an administrator user if one doesn't already exist.")
+                .takes_value(false),
         )
-        .arg(Arg::with_name("secret_key")
-            .long("secret")
-            .short("s")
-            .value_name("KEY")
-            .help("A key string that is used to sign and verify user tokens. By specifying the same key across restarts, user tokens will not be invalidated. If no key is provided, then a random one is generated.")
-            .takes_value(true)
+        .arg(
+            Arg::with_name("secret_key")
+                .long("secret")
+                .short("s")
+                .value_name("KEY")
+                .help(
+                    "A key string that is used to sign and verify user tokens. By specifying the same key across restarts, user tokens will not be invalidated. If no key is provided, then a random one is generated.",
+                )
+                .takes_value(true),
         )
         .get_matches();
 
     let create_admin: bool = matches.is_present("create_admin");
-    let secret_key: Option<String> = matches.value_of("secret_key").map(String::from);
+    let secret_key: Option<String> = matches.value_of("secret_key").map(
+        String::from,
+    );
     let config = ConfigObject {
         create_admin,
-        secret_key
+        secret_key,
     };
 
     init_rocket(config).launch();
@@ -157,8 +164,8 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
         log::info!("Development not enabled. Using default CORS.");
         let (allowed_origins, _failed_origins) = AllowedOrigins::some(&[]);
         rocket_cors::Cors {
-           allowed_origins,
-           ..Default::default()
+            allowed_origins,
+            ..Default::default()
         }
     };
     // The secret is used to generate and verify JWTs.
@@ -182,8 +189,8 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
     if config.create_admin {
         let conn = db::Conn::new(db_pool.get().unwrap());
         match configuration::create_admin(&conn) {
-            Ok(user) => log::warn!("Admin created"),
-            Err(e) => log::error!("Failed to create Admin: {:?}",e),
+            Ok(user) => log::warn!("Admin created. You should change its password."),
+            Err(e) => log::error!("Failed to create Admin: {:?}", e),
         }
     }
 
@@ -255,7 +262,7 @@ mod configuration {
             UserRole::Admin.into(),
             UserRole::Moderator.into(),
             UserRole::Publisher.into(),
-            UserRole::Unprivileged.into()
+            UserRole::Unprivileged.into(),
         ];
         User::create(user, conn)
     }
