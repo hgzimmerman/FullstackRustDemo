@@ -207,7 +207,9 @@ impl Bucket {
         use schema::buckets::dsl::*;
         use schema::buckets;
 
-        let target = buckets.filter(buckets::id.eq(m_bucket_id));
+        let target = buckets.filter(
+            buckets::id.eq(m_bucket_id),
+        );
 
         let expire_time: Option<NaiveDateTime> = if publicity {
             Some(Utc::now().naive_utc() + Duration::days(1))

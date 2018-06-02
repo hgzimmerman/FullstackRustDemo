@@ -213,7 +213,7 @@ impl User {
 
     /// Gets a number of users at specified offsets.
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
-//        use schema::users::dsl::*;
+        //        use schema::users::dsl::*;
         use schema::users;
         use db::diesel_extensions::pagination::Paginate;
 
