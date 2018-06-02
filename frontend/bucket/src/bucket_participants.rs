@@ -66,7 +66,7 @@ impl BucketParticipants {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             participants,
             RequestWrapper::GetUsersInBucket{bucket_id},
             callback,
@@ -87,7 +87,7 @@ impl BucketParticipants {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             is_owner,
             RequestWrapper::GetIsUserOwnerOfBucket{bucket_id},
             callback,
@@ -106,7 +106,7 @@ impl BucketParticipants {
 
         context.log(&format!("Removing user from bucket:{}-{}",user_id,bucket_id));
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             remove_user_action,
             RequestWrapper::RemoveUserFromBucket{bucket_id, user_id},
             callback,

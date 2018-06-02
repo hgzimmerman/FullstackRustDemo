@@ -86,7 +86,7 @@ impl Component<Context> for CreateAccount {
 
                 match self.data.cloned_inner().validate()  {
                     Ok(new_user_request) => {
-                        context.make_logoutable_request(
+                        context.make_request_and_set_ft(
                             &mut self.data,
                             RequestWrapper::CreateUser(
                                 new_user_request,

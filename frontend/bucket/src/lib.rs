@@ -142,7 +142,7 @@ impl BucketModel {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             buckets,
             RequestWrapper::GetPublicBuckets,
             threads_callback,
@@ -169,7 +169,7 @@ impl BucketModel {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             buckets,
             RequestWrapper::GetBucketsForUser,
             threads_callback,
@@ -191,7 +191,7 @@ impl BucketModel {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             bucket,
             RequestWrapper::GetBucket{bucket_id},
             callback,
@@ -217,7 +217,7 @@ impl BucketModel {
 
         match bucket.validate() {
             Ok(new_bucket_request) => {
-                 context.make_logoutable_request(
+                 context.make_request_and_set_ft(
                     new_bucket,
                     RequestWrapper::CreateBucket(new_bucket_request),
                     callback,
@@ -244,7 +244,7 @@ impl BucketModel {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             request_to_join_bucket_action,
             RequestWrapper::CreateJoinBucketRequest{bucket_id},
             callback,

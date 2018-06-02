@@ -209,12 +209,12 @@ impl RequestWrapper {
 impl Context {
     /// Make a request, that if the conditions to send a JWT aren't met, the user will be logged out.
     /// This will also set the object that encapsulates the fetch task to be in its loading state.
-    pub fn make_logoutable_request<W, FTW>(&mut self, ft_wrapper: &mut FTW, request: RequestWrapper, callback: Callback<Response<W>>)
+    pub fn make_request_and_set_ft<W, FTW>(&mut self, ft_wrapper: &mut FTW, request: RequestWrapper, callback: Callback<Response<W>>)
         where
             W: From<Result<String, Error>> + 'static,
             FTW: FtWrapper + Sized
     {
-        match self.make_request(request, callback) {
+        match self.initiate_request(request, callback) {
             Ok(ft) => ft_wrapper.set_ft(ft),
             Err(_) => {
                 // This error indicates that the JWT just isn't present, so there isn't a need
@@ -226,8 +226,7 @@ impl Context {
     }
 
 
-
-
+    // TODO make this private
     /// The error in the result here should only occur if the JWT is outdated, or not present,
     /// in which case, the caller should redirect to the login screen.
     pub fn make_request<W>(&mut self, request: RequestWrapper, callback: Callback<Response<W>>) -> Result<FetchTask, Error>

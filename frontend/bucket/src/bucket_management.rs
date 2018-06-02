@@ -62,7 +62,7 @@ impl BucketManagement {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             loadable_bucket_users,
             RequestWrapper::GetUnapprovedUsersForOwnedBuckets,
             callback,
@@ -78,7 +78,7 @@ impl BucketManagement {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             approve_user_action,
             RequestWrapper::ApproveUserForBucket{bucket_id, user_id},
             callback,
@@ -95,7 +95,7 @@ impl BucketManagement {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             remove_user_action,
             RequestWrapper::RemoveUserFromBucket{bucket_id, user_id},
             callback,
@@ -117,7 +117,7 @@ impl BucketManagement {
             PublicOrPrivate::Private => false
         };
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             set_public_or_private_action,
             RequestWrapper::SetBucketPublicStatus{bucket_id, is_public},
             callback,

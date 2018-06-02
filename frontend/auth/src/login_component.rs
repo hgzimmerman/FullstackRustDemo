@@ -89,7 +89,7 @@ impl Component<Context> for Login {
                     password: login_data.password,
                 };
 
-                context.make_logoutable_request(
+                context.make_request_and_set_ft(
                     &mut self.login_data,
                     RequestWrapper::Login(
                         login_request,

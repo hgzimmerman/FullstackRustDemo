@@ -84,7 +84,7 @@ impl BucketLobby {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             prior_questions,
             RequestWrapper::GetQuestions{bucket_id},
             callback,
@@ -110,7 +110,7 @@ impl BucketLobby {
             },
         );
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             question_package,
             RequestWrapper::GetRandomQuestion{bucket_id},
             callback,
@@ -136,7 +136,7 @@ impl BucketLobby {
             question_text
         };
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             new_question,
             RequestWrapper::CreateQuestion( new_question_request),
             callback,
@@ -169,7 +169,7 @@ impl BucketLobby {
             answer_text
         };
 
-        context.make_logoutable_request(
+        context.make_request_and_set_ft(
             question_package,
             RequestWrapper::AnswerQuestion(request),
             callback,
