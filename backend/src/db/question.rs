@@ -1,6 +1,4 @@
 use schema::questions;
-use db::Conn;
-use std::ops::Deref;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use db::user::User;
@@ -13,6 +11,7 @@ use error::JoeResult;
 
 use diesel;
 use diesel::ExpressionMethods;
+use diesel::PgConnection;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[insertable = "NewQuestion"]
@@ -45,7 +44,7 @@ pub struct QuestionData {
 
 impl Question {
     /// Creates a new bucket
-    pub fn create_data(new_question: NewQuestion, conn: &Conn) -> JoeResult<QuestionData> {
+    pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
 
         let question: Question = Question::create(new_question, conn)?;
         let user = User::get_by_id(question.author_id, conn)?;
@@ -59,12 +58,12 @@ impl Question {
     }
 
     /// Gets a list of all questions across all buckets.
-    pub fn get_questions(conn: &Conn) -> JoeResult<Vec<QuestionData>> {
+    pub fn get_questions(conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
         use schema::questions::dsl::*;
         use schema::users::dsl::*;
         let questions_and_users = questions
             .inner_join(users)
-            .load::<(Question, User)>(conn.deref())
+            .load::<(Question, User)>(conn)
             .map_err(Question::handle_error)?;
 
         let question_data: Vec<QuestionData> = questions_and_users
@@ -82,7 +81,7 @@ impl Question {
 
 
     /// Gets a random question that may have already been answered
-    pub fn get_random_question(bucket_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
+    pub fn get_random_question(bucket_id: i32, conn: &PgConnection) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         use db::schema::questions::columns::on_floor;
@@ -96,17 +95,17 @@ impl Question {
         let question: Question = Question::belonging_to(&bucket)
             .order(RANDOM)
             .filter(on_floor.eq(false)) // Only get a question if it is not on the "floor" (and therefore in the bucket)
-            .first::<Question>(conn.deref())
+            .first::<Question>(conn)
             .map_err(Question::handle_error)?;
         // Get the answers associated with the question.
         let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
             .inner_join(users)
-            .load::<(Answer, User)>(conn.deref())
+            .load::<(Answer, User)>(conn)
             .map_err(Answer::handle_error)?;
         // Get the author of the question.
         let user: User = users
             .find(question.author_id)
-            .first::<User>(conn.deref())
+            .first::<User>(conn)
             .map_err(User::handle_error)?;
         // Get them all together.
 
@@ -180,13 +179,13 @@ impl Question {
     //    }
 
     /// Gets groupings of questions, users, and answers for a given bucket id.
-    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &Conn) -> JoeResult<Vec<QuestionData>> {
+    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
         use schema::users::dsl::*;
         let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
 
         let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
             .inner_join(users)
-            .load::<(Question, User)>(conn.deref())
+            .load::<(Question, User)>(conn)
             .map_err(Question::handle_error)?;
 
         let questions: Vec<Question> = questions_and_users
@@ -196,7 +195,7 @@ impl Question {
 
         let answers: Vec<(Answer, User)> = Answer::belonging_to(&questions)
             .inner_join(users)
-            .load::<(Answer, User)>(conn.deref())
+            .load::<(Answer, User)>(conn)
             .map_err(Answer::handle_error)?;
         let grouped_answers: Vec<Vec<(Answer, User)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
 
@@ -230,19 +229,19 @@ impl Question {
 
     /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
     /// This does not tightly correspond to the total number of questions associated with the bucket session.
-    pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &Conn) -> JoeResult<i64> {
+    pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &PgConnection) -> JoeResult<i64> {
         //        use schema::questions::dsl::*;
         use schema::questions;
         let bucket = Bucket::get_by_id(bucket_id, &conn)?;
         Question::belonging_to(&bucket)
             .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
             .count()
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Question::handle_error)
     }
 
     /// Given a question's id, get the question, its answers and user
-    pub fn get_full_question(q_id: i32, conn: &Conn) -> JoeResult<QuestionData> {
+    pub fn get_full_question(q_id: i32, conn: &PgConnection) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the question
@@ -251,7 +250,7 @@ impl Question {
         // Get the answers and their associated users and format them into answer data.
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
             .inner_join(users)
-            .load::<(Answer, User)>(conn.deref())
+            .load::<(Answer, User)>(conn)
             .map_err(Answer::handle_error)?
             .into_iter()
             .map(|x| {
@@ -265,7 +264,7 @@ impl Question {
         // Get the matching user
         let user: User = users
             .find(question.author_id)
-            .first::<User>(conn.deref())
+            .first::<User>(conn)
             .map_err(User::handle_error)?;
 
         Ok(QuestionData {
@@ -275,32 +274,36 @@ impl Question {
         })
     }
 
-    pub fn delete_question(question_id: i32, conn: &Conn) -> JoeResult<Question> {
+    pub fn delete_question(question_id: i32, conn: &PgConnection) -> JoeResult<Question> {
         Question::delete_by_id(question_id, conn)
     }
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
-    pub fn put_question_in_bucket(question_id: i32, conn: &Conn) -> JoeResult<i32> {
+    pub fn put_question_in_bucket(question_id: i32, conn: &PgConnection) -> JoeResult<i32> {
         use schema::questions::dsl::*;
         use schema::questions;
 
-        let target = questions.filter(questions::id.eq(question_id));
+        let target = questions.filter(
+            questions::id.eq(question_id),
+        );
         diesel::update(target)
             .set(on_floor.eq(false))
-            .execute(conn.deref())
+            .execute(conn)
             .map_err(Question::handle_error)?;
         Ok(question_id)
     }
 
-    pub fn put_question_on_floor(question_id: i32, conn: &Conn) -> JoeResult<i32> {
+    pub fn put_question_on_floor(question_id: i32, conn: &PgConnection) -> JoeResult<i32> {
         use schema::questions::dsl::*;
         use schema::questions;
 
-        let target = questions.filter(questions::id.eq(question_id));
+        let target = questions.filter(
+            questions::id.eq(question_id),
+        );
         diesel::update(target)
             .set(on_floor.eq(true))
-            .execute(conn.deref())
+            .execute(conn)
             .map_err(Question::handle_error)?;
         Ok(question_id)
     }

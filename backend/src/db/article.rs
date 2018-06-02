@@ -1,6 +1,4 @@
 use schema::articles;
-use std::ops::Deref;
-use db::Conn;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
@@ -9,6 +7,7 @@ use chrono::{NaiveDateTime, Utc};
 use db::user::User;
 use diesel::BelongingToDsl;
 use error::JoeResult;
+use diesel::PgConnection;
 
 
 /// The database's representation of an article
@@ -76,14 +75,14 @@ impl Article {
     //     ))
     // }
 
-    pub fn get_article_data(article_id: i32, conn: &Conn) -> JoeResult<ArticleData> {
+    pub fn get_article_data(article_id: i32, conn: &PgConnection) -> JoeResult<ArticleData> {
 
         let article = Article::get_by_id(article_id, conn)?;
         let user = User::get_by_id(article.author_id, conn)?;
         Ok(ArticleData { article, user })
     }
 
-    pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<ArticleData>> {
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<ArticleData>> {
         use schema::articles::dsl::*;
         use db::diesel_extensions::pagination::*;
         use schema::users;
@@ -94,7 +93,7 @@ impl Article {
             .order(publish_date)
             .paginate(page_index.into())
             .per_page(page_size.into())
-            .load_and_count_pages::<(Article, User)>(conn.deref())
+            .load_and_count_pages::<(Article, User)>(conn)
             .map_err(Article::handle_error)?;
 
         let article_data = articles_and_users
@@ -115,21 +114,21 @@ impl Article {
 
     /// Gets the unpublished articles for a given user
     // TODO, consiter switching this interface to take a user_id instead of a string
-    pub fn get_unpublished_articles_for_user(user_id: i32, conn: &Conn) -> JoeResult<Vec<Article>> {
+    pub fn get_unpublished_articles_for_user(user_id: i32, conn: &PgConnection) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
         use schema::users;
 
         let user: User = users
             .filter(users::id.eq(user_id))
-            .get_result::<User>(conn.deref())
+            .get_result::<User>(conn)
             .map_err(User::handle_error)?;
 
 
         Article::belonging_to(&user)
             .filter(publish_date.is_null())
             .order(publish_date)
-            .load::<Article>(conn.deref())
+            .load::<Article>(conn)
             .map_err(Article::handle_error)
 
     }
@@ -137,7 +136,7 @@ impl Article {
     /// Sets the date for the article's publish date.
     /// If true, it will set the publish datetime to the current time, indicating it is published.
     /// If false, it will set the publish column to Null, indicating that it has not been published.
-    pub fn set_publish_status(article_id: i32, publish: bool, conn: &Conn) -> JoeResult<Article> {
+    pub fn set_publish_status(article_id: i32, publish: bool, conn: &PgConnection) -> JoeResult<Article> {
         use schema::articles::dsl::*;
         use schema::articles;
 
@@ -150,17 +149,17 @@ impl Article {
         diesel::update(articles::table)
             .filter(id.eq(article_id))
             .set(publish_date.eq(publish_value))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Article::handle_error)
     }
 
 
     /// Applies the changeset to its corresponding article.
-    pub fn update_article(changeset: ArticleChangeset, conn: &Conn) -> JoeResult<Article> {
+    pub fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> JoeResult<Article> {
         use schema::articles;
         diesel::update(articles::table)
             .set(&changeset)
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Article::handle_error)
     }
 }

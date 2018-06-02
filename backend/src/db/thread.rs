@@ -2,14 +2,13 @@ use schema::threads;
 use chrono::NaiveDateTime;
 use db::user::User;
 use db::forum::Forum;
-use db::Conn;
-use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
 use error::JoeResult;
+use diesel::PgConnection;
 
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
@@ -61,13 +60,13 @@ pub struct MinimalThreadData {
 
 impl Thread {
     /// Locks or unlocks the thread, preventing posting and editing if locked
-    pub fn set_lock_status(thread_id: i32, is_locked: bool, conn: &Conn) -> JoeResult<MinimalThreadData> {
+    pub fn set_lock_status(thread_id: i32, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
             .set(locked.eq(is_locked))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Thread::handle_error)?;
         let user: User = User::get_by_id(thread.author_id, conn)?;
 
@@ -75,13 +74,13 @@ impl Thread {
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
-    pub fn archive_thread(thread_id: i32, conn: &Conn) -> JoeResult<MinimalThreadData> {
+    pub fn archive_thread(thread_id: i32, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
             .filter(id.eq(thread_id))
             .set(archived.eq(true))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Thread::handle_error)?;
         let user: User = User::get_by_id(thread.author_id, conn)?;
 
@@ -91,7 +90,7 @@ impl Thread {
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
     // TODO add a step to enable pagination
-    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &Conn) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
         use schema::users::dsl::*;
@@ -104,7 +103,7 @@ impl Thread {
             .order(created_date)
             .limit(num_threads)
             .inner_join(users)
-            .load::<(Thread, User)>(conn.deref())
+            .load::<(Thread, User)>(conn)
             .map_err(Thread::handle_error)?;
 
 
@@ -121,7 +120,7 @@ impl Thread {
     }
 
     /// Gets threads based on page size and index.
-    pub fn get_paginated(requested_forum_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_paginated(requested_forum_id: i32, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
         use db::diesel_extensions::pagination::*;
@@ -135,7 +134,7 @@ impl Thread {
             .filter(archived.eq(false))
             .paginate(page_index.into())
             .per_page(page_size.into())
-            .load_and_count_pages::<(Thread, User)>(conn.deref())
+            .load_and_count_pages::<(Thread, User)>(conn)
             .map_err(Thread::handle_error)?;
 
         let minimal_threads = thread_users
@@ -155,7 +154,7 @@ impl Thread {
 
 
     /// Creates a thread with an initial post.
-    pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &Conn) -> JoeResult<ThreadData> {
+    pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &PgConnection) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::create(new_thread, conn)?;
 
         let new_post: NewPost = NewPost::from((thread.clone(), post_content));
@@ -170,7 +169,7 @@ impl Thread {
     }
 
     /// Gets every bit of data related to a thread.
-    pub fn get_full_thread(thread_id: i32, conn: &Conn) -> JoeResult<ThreadData> {
+    pub fn get_full_thread(thread_id: i32, conn: &PgConnection) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::get_by_id(thread_id, conn)?;
         let root_post: Post = Post::get_root_post(thread_id, conn)?;
         let post: PostData = root_post.get_post_data(conn)?;

@@ -1,6 +1,4 @@
 use schema::messages;
-use db::Conn;
-use std::ops::Deref;
 use chrono::NaiveDateTime;
 // use diesel::RunQueryDsl;
 // use diesel::ExpressionMethods;
@@ -11,6 +9,7 @@ use db::chat::Chat;
 // use diesel::GroupedBy;
 use db::diesel_extensions::pagination::*;
 use error::JoeResult;
+use diesel::PgConnection;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
 #[belongs_to(Message, foreign_key = "reply_id")]
@@ -81,12 +80,12 @@ impl Message {
     //     unimplemented!()
     // }
 
-    pub fn create_message(new_message: NewMessage, conn: &Conn) -> JoeResult<MessageData> {
+    pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::create(new_message, conn)?;
         let author = User::get_by_id(message.author_id, conn)?;
         // Get only the first reply in the possible chain of replies.
         if message.reply_id.is_some() {
-            // The unwrap is safe because the if_some contition was checked above
+            // The unwrap is safe because the if_some condition was checked above
             let reply = Message::get_message(message.reply_id.unwrap(), false, conn)?;
             Ok(MessageData {
                 message,
@@ -102,12 +101,12 @@ impl Message {
         }
     }
 
-    fn get_message(id: i32, with_reply: bool, conn: &Conn) -> JoeResult<MessageData> {
+    fn get_message(id: i32, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::get_by_id(id, conn)?;
         let author = User::get_by_id(message.author_id, conn)?;
         // If the parameter instructs to get the reply, and the reply id exists, get it.
         if with_reply && message.reply_id.is_some() {
-            // The unwrap is safe because the if_some contition was checked above
+            // The unwrap is safe because the if_some condition was checked above
             let reply: MessageData = Message::get_message(message.reply_id.unwrap(), with_reply, conn)?;
             Ok(MessageData {
                 message,
@@ -123,7 +122,7 @@ impl Message {
         }
     }
 
-    pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MessageData>> {
+    pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
         use schema::messages;
         use schema::users;
@@ -136,7 +135,7 @@ impl Message {
             .select((messages::all_columns, users::all_columns))
             .paginate(page_index.into())
             .per_page(page_size.into())
-            .load_and_count_pages::<(Message, User)>(conn.deref()) // Apparently just `load` doesn't work, so we use this instead and throw away the count.
+            .load_and_count_pages::<(Message, User)>(conn) // Apparently just `load` doesn't work, so we use this instead and throw away the count.
             .map_err(Message::handle_error)?;
 
         let collected_messages: Vec<Message> = messages_and_users
@@ -147,7 +146,7 @@ impl Message {
         // not every message will have a corresponding reply, so this vec should be sparce
         let replied = Message::belonging_to(&collected_messages) // I'm not 100% sure that this gets the intended messages. Write a test to check.
             .inner_join(users::table)
-            .load::<(Message, User)>(conn.deref())
+            .load::<(Message, User)>(conn)
             .map_err(Message::handle_error)?
             .grouped_by(&collected_messages);
 

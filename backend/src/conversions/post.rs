@@ -1,6 +1,6 @@
 use db::post::*;
 use wire::post::*;
-use chrono::{Utc};
+use chrono::Utc;
 use db::thread::Thread;
 
 

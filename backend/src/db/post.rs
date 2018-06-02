@@ -3,8 +3,6 @@ use chrono::NaiveDateTime;
 use db::user::User;
 use db::thread::Thread;
 use error::*;
-use db::Conn;
-use std::ops::Deref;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
@@ -12,6 +10,7 @@ use diesel::BelongingToDsl;
 use diesel::QueryDsl;
 use error::JoeResult;
 use diesel::SaveChangesDsl;
+use diesel::PgConnection;
 
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
@@ -73,8 +72,8 @@ pub struct ChildlessPostData {
 impl Post {
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
-    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> JoeResult<ChildlessPostData> {
-//        use schema::posts;
+    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+        //        use schema::posts;
 
         let target_thread = Thread::get_by_id(thread_id, conn)?;
         if target_thread.locked {
@@ -83,7 +82,7 @@ impl Post {
 
 
         let modified_post: Post = edit_post_changeset
-            .save_changes(conn.deref())
+            .save_changes(conn)
             .map_err(Post::handle_error)?;
         let user = User::get_by_id(modified_post.author_id, conn)?;
         Ok(ChildlessPostData {
@@ -94,20 +93,20 @@ impl Post {
 
 
     /// Creates a post, and also gets the associated author for the post.
-    pub fn create_and_get_user(new_post: NewPost, conn: &Conn) -> JoeResult<ChildlessPostData> {
+    pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         let post: Post = Post::create(new_post, conn)?;
         let user: User = User::get_by_id(post.author_id, conn)?;
         Ok(ChildlessPostData { post, user })
     }
 
     /// Censors the post, preventing users from seeing it by default.
-    pub fn censor_post(post_id: i32, conn: &Conn) -> JoeResult<ChildlessPostData> {
+    pub fn censor_post(post_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         use schema::posts::dsl::*;
         use schema::posts;
         let censored_post: Post = diesel::update(posts::table)
             .filter(posts::id.eq(post_id))
             .set(censored.eq(true))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(Post::handle_error)?;
         let user = User::get_by_id(censored_post.author_id, conn)?;
 
@@ -119,13 +118,13 @@ impl Post {
     }
 
     /// Gets all of the posts associated with a given user.
-    pub fn get_posts_by_user(user_id: i32, conn: &Conn) -> JoeResult<Vec<ChildlessPostData>> {
+    pub fn get_posts_by_user(user_id: i32, conn: &PgConnection) -> JoeResult<Vec<ChildlessPostData>> {
         use schema::posts::dsl::*;
         let user: User = User::get_by_id(user_id, conn)?;
 
         let user_posts: Vec<Post> = Post::belonging_to(&user)
             .order(created_date)
-            .load::<Post>(conn.deref())
+            .load::<Post>(conn)
             .map_err(Post::handle_error)?;
 
         return Ok(
@@ -143,25 +142,25 @@ impl Post {
 
 
     /// Gets the user associated with a given post
-    pub fn get_user_by_post(post_id: i32, conn: &Conn) -> JoeResult<User> {
+    pub fn get_user_by_post(post_id: i32, conn: &PgConnection) -> JoeResult<User> {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
         // TODO consider using a select to just pull out the author id
         let post: Post = posts
             .find(post_id)
-            .first::<Post>(conn.deref())
+            .first::<Post>(conn)
             .map_err(Post::handle_error)?;
 
         users
             .find(post.author_id)
-            .first(conn.deref())
+            .first(conn)
             .map_err(User::handle_error)
     }
 
     /// Gets the first post associated with a thread.
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
-    pub fn get_root_post(requested_thread_id: i32, conn: &Conn) -> JoeResult<Post> {
+    pub fn get_root_post(requested_thread_id: i32, conn: &PgConnection) -> JoeResult<Post> {
         use schema::posts::dsl::*;
         use db::thread::Thread;
 
@@ -171,11 +170,11 @@ impl Post {
             .filter(
                 parent_id.is_null(), // There should only be one thread that has a null parent, and that is the OP/root post
             )
-            .first::<Post>(conn.deref())
+            .first::<Post>(conn)
             .map_err(Post::handle_error)
     }
 
-    pub fn get_individual_post(post_id: i32, conn: &Conn) -> JoeResult<ChildlessPostData> {
+    pub fn get_individual_post(post_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         let post = Post::get_by_id(post_id, conn)?;
         let user = User::get_by_id(post.author_id, conn)?;
         Ok(ChildlessPostData { post, user })
@@ -184,7 +183,7 @@ impl Post {
     /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
     /// This will make recursive calls into the database.
     /// This method should be the target of significant scrutiny.
-    pub fn get_post_data(self, conn: &Conn) -> JoeResult<PostData> {
+    pub fn get_post_data(self, conn: &PgConnection) -> JoeResult<PostData> {
         let user: User = User::get_by_id(self.author_id, conn)?;
         let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
         // turns the children into PostData
@@ -201,9 +200,9 @@ impl Post {
     }
 
     /// Gets all of the posts that belong to the post.
-    pub fn get_post_children(&self, conn: &Conn) -> Result<Vec<Post>, WeekendAtJoesError> {
+    pub fn get_post_children(&self, conn: &PgConnection) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
-            .load::<Post>(conn.deref())
+            .load::<Post>(conn)
             .map_err(Post::handle_error)
     }
 }

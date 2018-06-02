@@ -80,7 +80,7 @@ use std::fs::File;
 pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
 
 use rocket::http::Method;
-use rocket_cors::{/*AllowedHeaders,*/ AllowedOrigins};
+use rocket_cors::AllowedOrigins;
 
 use log::{info, error, warn};
 

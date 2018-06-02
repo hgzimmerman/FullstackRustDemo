@@ -1,13 +1,12 @@
-use db::Conn;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-use std::ops::Deref;
 use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
 use error::JoeResult;
 use log;
+use diesel::PgConnection;
 
 // TODO, I don't think that this file should have wire types
 use wire::user::*;
@@ -52,13 +51,13 @@ pub struct NewUser {
 
 impl User {
     /// Gets the user by their user name.
-    pub fn get_user_by_user_name(name: &str, conn: &Conn) -> JoeResult<User> {
+    pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
         log::info!("Getting user with Name: {}", name);
 
         users
             .filter(user_name.eq(name))
-            .first::<User>(conn.deref())
+            .first::<User>(conn)
             .map_err(User::handle_error)
     }
 
@@ -66,17 +65,17 @@ impl User {
 
     /// Gets a vector of users of length n.
     // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
-    pub fn get_users(num_users: i64, conn: &Conn) -> JoeResult<Vec<User>> {
+    pub fn get_users(num_users: i64, conn: &PgConnection) -> JoeResult<Vec<User>> {
         use schema::users::dsl::*;
         users
             .limit(num_users)
-            .load::<User>(conn.deref())
+            .load::<User>(conn)
             .map_err(User::handle_error)
     }
 
     // TODO make this take a list of roles.
     /// For the given role, get all users with the that role.
-    pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> JoeResult<Vec<User>> {
+    pub fn get_users_with_role(user_role: UserRole, conn: &PgConnection) -> JoeResult<Vec<User>> {
 
         let user_role_id: i32 = i32::from(user_role);
 
@@ -89,7 +88,7 @@ impl User {
             .filter(users::roles.contains(
                 vec![user_role_id],
             ))
-            .load::<User>(conn.deref())
+            .load::<User>(conn)
             .map_err(User::handle_error)
 
         // This is inefficient because it loads the whole users table into memory to filter on the roles vector
@@ -102,17 +101,17 @@ impl User {
     }
 
     /// If the user has their banned flag set, this will return true.
-    pub fn is_user_banned(user_id: i32, conn: &Conn) -> JoeResult<bool> {
+    pub fn is_user_banned(user_id: i32, conn: &PgConnection) -> JoeResult<bool> {
         use schema::users::dsl::*;
         users
             .find(user_id)
             .select(banned)
-            .first::<bool>(conn.deref())
+            .first::<bool>(conn)
             .map_err(User::handle_error)
     }
 
     // TODO, refactor this, only implement the db transaction, logic can go in the login method
-    pub fn check_if_locked(&self, conn: &Conn) -> JoeResult<bool> {
+    pub fn check_if_locked(&self, conn: &PgConnection) -> JoeResult<bool> {
         use schema::users::dsl::*;
 
         if let Some(l) = self.locked {
@@ -124,7 +123,7 @@ impl User {
                 let target = users.filter(id.eq(self.id));
                 diesel::update(target)
                     .set(locked.eq(None::<NaiveDateTime>))
-                    .execute(conn.deref())
+                    .execute(conn)
                     .map_err(User::handle_error)?;
                 Ok(false)
             }
@@ -136,13 +135,13 @@ impl User {
 
     /// Resets the login failure count to 0.
     /// This should be called after the user logs in successfully.
-    pub fn reset_login_failure_count(user_id: i32, conn: &Conn) -> JoeResult<()> {
+    pub fn reset_login_failure_count(user_id: i32, conn: &PgConnection) -> JoeResult<()> {
         use schema::users::dsl::*;
         use schema::users;
         let target = users.filter(users::id.eq(user_id));
         diesel::update(target)
             .set(failed_login_count.eq(0))
-            .execute(conn.deref())
+            .execute(conn)
             .map_err(User::handle_error)?;
         Ok(())
     }
@@ -150,7 +149,7 @@ impl User {
     /// This method is to be called after a user has failed to log in.
     /// Based on the number of current failed login attempts in a row, it will calculate the locked period.
     /// It will then store the datetime of unlock, along with an incremented failure count, so that next time it will take longer.
-    pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &Conn) -> JoeResult<NaiveDateTime> {
+    pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &PgConnection) -> JoeResult<NaiveDateTime> {
         use schema::users::dsl::*;
 
         log::info!("record_failed_login: setting the expire time and failure count");
@@ -167,24 +166,24 @@ impl User {
                         1,
                 ), // Increment the failed count
             ))
-            .execute(conn.deref())
+            .execute(conn)
             .map_err(User::handle_error)?;
 
         return Ok(expire_datetime);
     }
 
-    pub fn set_ban_status(user_id: i32, is_banned: bool, conn: &Conn) -> JoeResult<User> {
+    pub fn set_ban_status(user_id: i32, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
         let target = users.filter(id.eq(user_id));
         diesel::update(target)
             .set(banned.eq(is_banned))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(User::handle_error)
 
     }
 
     /// Adds a role to the user.
-    pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &Conn) -> JoeResult<User> {
+    pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &PgConnection) -> JoeResult<User> {
 
         use schema::users::dsl::*;
 
@@ -202,13 +201,13 @@ impl User {
             let target = users.filter(id.eq(user_id));
             diesel::update(target)
                 .set(roles.eq(new_roles))
-                .get_result(conn.deref())
+                .get_result(conn)
                 .map_err(User::handle_error)
         }
     }
 
     /// Gets a number of users at specified offsets.
-    pub fn get_paginated(page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<(Vec<User>, i64)> {
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
         use schema::users::dsl::*;
         use schema::users;
         use db::diesel_extensions::pagination::Paginate;
@@ -217,12 +216,12 @@ impl User {
             .filter(id.gt(0)) // NoOp filter to get the paginate function to work.
             .paginate(page_index.into())
             .per_page(page_size.into())
-            .load_and_count_pages::<User>(conn.deref())
+            .load_and_count_pages::<User>(conn)
             .map_err(User::handle_error)
     }
 
     /// Updates the user's display name.
-    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &Conn) -> JoeResult<User> {
+    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &PgConnection) -> JoeResult<User> {
 
         use schema::users::dsl::*;
         let target = users.filter(
@@ -234,18 +233,18 @@ impl User {
             .set(display_name.eq(
                 request.new_display_name,
             ))
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(User::handle_error)
     }
 
     /// Deletes the user by their name.
-    pub fn delete_user_by_name(name: String, conn: &Conn) -> JoeResult<User> {
+    pub fn delete_user_by_name(name: String, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
 
         let target = users.filter(user_name.eq(name));
 
         diesel::delete(target)
-            .get_result(conn.deref())
+            .get_result(conn)
             .map_err(User::handle_error)
     }
 }

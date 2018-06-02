@@ -21,7 +21,7 @@ pub use self::password::{hash_password, verify_hash};
 pub use self::banned_set::BannedSet;
 
 use rand::{self, Rng};
-use chrono::{NaiveDateTime, Utc, };
+use chrono::{NaiveDateTime, Utc};
 use chrono::Duration;
 use rocket::http::Status;
 use rocket::Response;

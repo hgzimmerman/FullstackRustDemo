@@ -35,42 +35,43 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         use db::Creatable as macro_Creatable;
         use db::Deletable as macro_Deletable;
         use error::JoeResult as macro_JoeResult;
+        use diesel::PgConnection as macro_PgConnection;
 
         impl macro_Creatable<#insertable> for #name {
-            fn create(insert: #insertable, conn: &Conn) -> macro_JoeResult<Self> {
+            fn create(insert: #insertable, conn: &macro_PgConnection) -> macro_JoeResult<Self> {
                 use schema::#table_name;
                 use diesel;
                 use diesel::RunQueryDsl;
 
                 diesel::insert_into(#table_name ::table)
                     .values(&insert)
-                    .get_result(conn.deref())
+                    .get_result(conn)
                     .map_err(#name::handle_error)
             }
 
         }
 
         impl<'a> macro_Retrievable<'a> for #name {
-            fn get_by_id(item_id: i32, conn: &Conn) -> macro_JoeResult<#name> {
+            fn get_by_id(item_id: i32, conn: &macro_PgConnection) -> macro_JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
 
                 #table_name
                     .find(item_id)
-                    .first::<#name>(conn.deref())
+                    .first::<#name>(conn)
                     .map_err(#name::handle_error)
             }
 
-            fn get_all(conn: &Conn) -> macro_JoeResult<Vec<#name>> {
+            fn get_all(conn: &macro_PgConnection) -> macro_JoeResult<Vec<#name>> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 #table_name
-                    .load::<#name>(conn.deref())
+                    .load::<#name>(conn)
                     .map_err(#name::handle_error)
             }
 
-            fn exists(item_id: i32, conn: &Conn) -> macro_JoeResult<bool> {
+            fn exists(item_id: i32, conn: &macro_PgConnection) -> macro_JoeResult<bool> {
                 use schema::#table_name;
                 use schema::#table_name::dsl::*;
                 use diesel::select;
@@ -80,7 +81,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                 use diesel::ExpressionMethods;
 
                 select(exists(#table_name.filter(#table_name::id.eq(item_id))))
-                    .get_result::<bool>(conn.deref())
+                    .get_result::<bool>(conn)
                     .map_err(#name::handle_error)
             }
             // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<#name>, WeekendAtJoesError> {
@@ -101,7 +102,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_Deletable<'a> for #name {
-            fn delete_by_id(item_id: i32, conn: &Conn) -> macro_JoeResult<#name> {
+            fn delete_by_id(item_id: i32, conn: &macro_PgConnection) -> macro_JoeResult<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::ExpressionMethods;
                 use diesel;
@@ -111,7 +112,7 @@ fn impl_crd( ast: &syn::DeriveInput) -> quote::Tokens {
                 let target = #table_name.filter(id.eq(item_id));
 
                 diesel::delete(target)
-                    .get_result(conn.deref())
+                    .get_result(conn)
                     .map_err(#name::handle_error)
             }
         }

@@ -87,23 +87,23 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
 
 
 pub trait Creatable<T> {
-    fn create(insert: T, conn: &Conn) -> JoeResult<Self>
+    fn create(insert: T, conn: &PgConnection) -> JoeResult<Self>
     where
         Self: Sized;
 }
 
 pub trait Retrievable<'a> {
-    fn get_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
+    fn get_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
 
-    fn get_all(conn: &Conn) -> JoeResult<Vec<Self>>
+    fn get_all(conn: &PgConnection) -> JoeResult<Vec<Self>>
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
 
-    fn exists(id: i32, conn: &Conn) -> JoeResult<bool>
+    fn exists(id: i32, conn: &PgConnection) -> JoeResult<bool>
     where
         Self: 'a + Sized,
         &'a Self: Identifiable;
@@ -116,7 +116,7 @@ pub trait Retrievable<'a> {
 trait Deletable<'a> {
     /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
     /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
-    fn delete_by_id(id: i32, conn: &Conn) -> JoeResult<Self>
+    fn delete_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
     where
         Self: ErrorFormatter,
         Self: 'a + Sized,
