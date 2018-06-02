@@ -81,7 +81,7 @@ impl RequestWrapper {
         let api_base: &str = if cfg!(feature = "development") {
             "http://localhost:8001/api"
         } else {
-            ""
+            "http://10.0.0.187/api" // TODO make this the website url
         };
 
         use self::RequestWrapper::*;
