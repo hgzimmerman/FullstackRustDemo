@@ -214,7 +214,7 @@ impl Context {
             W: From<Result<String, Error>> + 'static,
             FTW: FtWrapper + Sized
     {
-        match self.initiate_request(request, callback) {
+        match self.make_request(request, callback) {
             Ok(ft) => ft_wrapper.set_ft(ft),
             Err(_) => {
                 // This error indicates that the JWT just isn't present, so there isn't a need
