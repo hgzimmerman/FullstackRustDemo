@@ -140,6 +140,8 @@ pub mod testing {
     use db::forum::*;
     use db::thread::*;
     use wire::user::*;
+
+    #[allow(dead_code)]
     /// Create a bunch of entries for every data type in the backend.
     pub fn generate_test_fixtures(conn: &Conn) -> Result<(), WeekendAtJoesError> {
 

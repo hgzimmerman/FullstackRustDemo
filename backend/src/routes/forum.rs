@@ -21,6 +21,8 @@ fn get_forums(conn: Conn) -> JoeResult<Json<Vec<ForumResponse>>> {
         .map(convert_vector)
         .map(Json)
 }
+
+/// Gets a single forum.
 #[get("/<forum_id>")]
 fn get_forum(forum_id: i32, conn: Conn) -> JoeResult<Json<ForumResponse>> {
     Forum::get_by_id(forum_id, &conn)

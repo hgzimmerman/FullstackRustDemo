@@ -21,6 +21,7 @@ fn get_article(article_id: i32, conn: Conn) -> Result<Json<FullArticleResponse>,
 }
 
 
+/// Gets the published articles.
 #[get("/articles/<index>/<page_size>", rank = 0)]
 fn get_published_articles(index: i32, page_size: i32, conn: Conn) -> Result<Json<Vec<ArticlePreviewResponse>>, WeekendAtJoesError> {
     Article::get_paginated(index, page_size, &conn)

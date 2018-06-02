@@ -74,7 +74,7 @@ impl Post {
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &Conn) -> JoeResult<ChildlessPostData> {
-        use schema::posts;
+//        use schema::posts;
 
         let target_thread = Thread::get_by_id(thread_id, conn)?;
         if target_thread.locked {
@@ -93,6 +93,7 @@ impl Post {
     }
 
 
+    /// Creates a post, and also gets the associated author for the post.
     pub fn create_and_get_user(new_post: NewPost, conn: &Conn) -> JoeResult<ChildlessPostData> {
         let post: Post = Post::create(new_post, conn)?;
         let user: User = User::get_by_id(post.author_id, conn)?;
@@ -104,7 +105,7 @@ impl Post {
         use schema::posts::dsl::*;
         use schema::posts;
         let censored_post: Post = diesel::update(posts::table)
-            .filter(id.eq(post_id))
+            .filter(posts::id.eq(post_id))
             .set(censored.eq(true))
             .get_result(conn.deref())
             .map_err(Post::handle_error)?;

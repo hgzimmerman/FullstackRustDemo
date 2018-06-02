@@ -17,9 +17,11 @@ use auth::ServerJwt;
 /// If successful, it generates a JWT which is used to verify other actions.
 #[post("/login", data = "<login_request>")]
 fn login(login_request: Json<LoginRequest>, secret: State<Secret>, conn: Conn) -> LoginResult {
-    auth::login(login_request.0, &secret, &conn)
+    auth::login(login_request.into_inner(), &secret, &conn)
 }
 
+/// Given just a JWT from the header, verify the JWT,
+/// and produce another JWT with an expiry time farther out in the future.
 #[get("/reauth")]
 fn reauth(jwt: ServerJwt, secret: State<Secret>) -> LoginResult {
     auth::reauth(jwt, &secret)

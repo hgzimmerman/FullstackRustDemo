@@ -1,5 +1,4 @@
 use schema::questions;
-use error::*;
 use db::Conn;
 use std::ops::Deref;
 use diesel::RunQueryDsl;
@@ -9,7 +8,6 @@ use db::bucket::Bucket;
 use diesel::BelongingToDsl;
 use db::answer::Answer;
 use diesel::GroupedBy;
-use rand::{thread_rng, seq};
 use db::answer::AnswerData;
 use error::JoeResult;
 
@@ -235,7 +233,6 @@ impl Question {
     pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &Conn) -> JoeResult<i64> {
         //        use schema::questions::dsl::*;
         use schema::questions;
-        use diesel::dsl::count;
         let bucket = Bucket::get_by_id(bucket_id, &conn)?;
         Question::belonging_to(&bucket)
             .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
@@ -286,7 +283,9 @@ impl Question {
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
     pub fn put_question_in_bucket(question_id: i32, conn: &Conn) -> JoeResult<i32> {
         use schema::questions::dsl::*;
-        let target = questions.filter(id.eq(question_id));
+        use schema::questions;
+
+        let target = questions.filter(questions::id.eq(question_id));
         diesel::update(target)
             .set(on_floor.eq(false))
             .execute(conn.deref())
@@ -296,7 +295,9 @@ impl Question {
 
     pub fn put_question_on_floor(question_id: i32, conn: &Conn) -> JoeResult<i32> {
         use schema::questions::dsl::*;
-        let target = questions.filter(id.eq(question_id));
+        use schema::questions;
+
+        let target = questions.filter(questions::id.eq(question_id));
         diesel::update(target)
             .set(on_floor.eq(true))
             .execute(conn.deref())

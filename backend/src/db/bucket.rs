@@ -73,7 +73,7 @@ impl Bucket {
         use schema::buckets;
         use schema::junction_bucket_users as junctions;
         use schema::junction_bucket_users::dsl::*;
-        use diesel::query_dsl::InternalJoinDsl;
+//        use diesel::query_dsl::InternalJoinDsl;
 
         // Don't return any buckets with these ids
         let bucket_ids_in_which_the_user_is_already_a_member_or_has_requested_to_join: Vec<i32> = junction_bucket_users
@@ -110,10 +110,10 @@ impl Bucket {
     pub fn get_buckets_user_belongs_to(m_user_id: i32, conn: &Conn) -> JoeResult<Vec<Bucket>> {
         use schema::junction_bucket_users::dsl::*;
         // use schema::users::dsl::*;
-        use schema::users;
+        use schema::junction_bucket_users as junction;
 
         junction_bucket_users
-            .filter(user_id.eq(m_user_id))
+            .filter(junction::user_id.eq(m_user_id))
             .filter(approved.eq(true))
             .inner_join(buckets::table)
             .select(buckets::all_columns)

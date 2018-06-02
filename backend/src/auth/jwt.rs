@@ -4,7 +4,7 @@ use rocket::http::Status;
 use serde_json;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
-use chrono::{NaiveDateTime, Utc};
+use chrono::{Utc};
 use log;
 
 use auth::Secret;
@@ -142,9 +142,7 @@ pub mod user_authorization {
                 &UserRole::Unprivileged,
             )
             {
-                Ok(NormalUser {
-                    user_id: jwt.sub,
-                })
+                Ok(NormalUser { user_id: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }
@@ -170,9 +168,7 @@ pub mod user_authorization {
                 &UserRole::Admin,
             )
             {
-                Ok(AdminUser {
-                    user_id: jwt.sub,
-                })
+                Ok(AdminUser { user_id: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }
@@ -198,9 +194,7 @@ pub mod user_authorization {
                 &UserRole::Moderator,
             )
             {
-                Ok(ModeratorUser {
-                    user_id: jwt.sub,
-                })
+                Ok(ModeratorUser { user_id: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }

@@ -7,7 +7,6 @@
 //! They will only succeed in creating themselves if the JWT contains the role the user type corresponds to.
 //! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the jwt in the request header.
 
-
 mod jwt;
 mod password;
 mod banned_set;
@@ -22,7 +21,8 @@ pub use self::password::{hash_password, verify_hash};
 pub use self::banned_set::BannedSet;
 
 use rand::{self, Rng};
-use chrono::{NaiveDateTime, Utc, Duration};
+use chrono::{NaiveDateTime, Utc, };
+use chrono::Duration;
 use rocket::http::Status;
 use rocket::Response;
 use rocket::request::Request;
@@ -32,6 +32,8 @@ use db::Conn;
 
 use wire::login::*;
 use wire::user::Jwt;
+
+use log::{info, warn};
 
 
 /// The secret contains a random string that is generated at startup.
@@ -54,7 +56,7 @@ impl Secret {
         if key.len() <= 128 {
             panic!("The secret key must be equal to or greater than 128 characters.")
         } else if key.len() < 256 {
-            log::warn!("The secret key should be longer than 256 characters. It is {} characters long", key.len());
+            warn!("The secret key should be longer than 256 characters. It is {} characters long", key.len());
         }
         Secret(key)
     }
@@ -66,8 +68,8 @@ pub type LoginResult = Result<String, LoginError>;
 
 /// Logs the user in by validating their password and returning a jwt.
 pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> LoginResult {
-    log::info!("Logging in for user: {}", &login_request.user_name);
-    // get user
+    info!("Logging in for user: {}", &login_request.user_name);
+
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
         .map_err(|_| LoginError::UsernameDoesNotExist)?;
 
@@ -82,18 +84,18 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
         return Err(LoginError::AccountLocked);
     }
 
-    log::info!("Verifing password against hash");
+    info!("Verifying password against hash");
     match verify_hash(&login_request.password, &user.password_hash) {
         Ok(b) => {
             if !b {
-                log::info!("Wrong password entered for user: {}", &login_request.user_name);
+                info!("Wrong password entered for user: {}", &login_request.user_name);
                 User::record_failed_login(user.id, user.failed_login_count, &conn)
                     .map_err(|_| LoginError::OtherError("Login failed, but could not set the login delay"))?;
                 return Err(LoginError::IncorrectPassword);
             } else {
-                log::info!("Password match verified");
+                info!("Password match verified");
                 if user.failed_login_count > 0 {
-                    log::info!("Resetting login count");
+                    info!("Resetting login count");
                     User::reset_login_failure_count(user.id, &conn)
                         .map_err(|_| LoginError::OtherError("DB error"))?;
                 }
@@ -104,7 +106,7 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
 
 
     // generate token
-    log::info!("Generating JWT Expiry Date");
+    info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
@@ -134,7 +136,7 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
 
 pub fn reauth(jwt: ServerJwt, secret: &Secret) -> LoginResult {
     let mut jwt = jwt.0;
-    log::info!("Generating JWT Expiry Date");
+    info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
         Some(ndt) => ndt.naive_utc(),
@@ -166,7 +168,7 @@ pub enum LoginError {
 impl<'a> Responder<'a> for LoginError {
     fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
         // TODO: use the string in a custom Status for internal server error
-        log::info!("User login failed with error: {:?}", &self);
+        info!("User login failed with error: {:?}", &self);
         match self {
             LoginError::IncorrectPassword => Err(Status::Unauthorized),
             LoginError::AccountLocked => Err(Status::Unauthorized),
@@ -182,17 +184,18 @@ impl<'a> Responder<'a> for LoginError {
 mod test {
     use super::*;
     use db::user::{User, UserRole};
-    use requests_and_responses::user::UserResponse;
-    use requests_and_responses::user::NewUserRequest;
+    use wire::user::UserResponse;
+    use wire::user::NewUserRequest;
     use db;
 
     use rocket::local::Client;
-    use requests_and_responses::user::UpdateDisplayNameRequest;
+    use wire::user::UpdateDisplayNameRequest;
     use serde_json;
     use rocket::http::Header;
     use rocket::http::ContentType;
     use init_rocket;
     use db::Creatable;
+
     #[test]
     fn login_test() {
 
@@ -238,7 +241,7 @@ mod test {
         let _ = User::delete_user_by_name(user_name.clone(), &conn);
 
         // Create a user
-        let new_user = NewUserRequest {
+        let new_user = NewUserResponse {
             user_name: user_name.clone(),
             display_name: "DisplayName".into(),
             plaintext_password: "TestPassword".into(),

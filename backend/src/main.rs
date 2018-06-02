@@ -80,7 +80,9 @@ use std::fs::File;
 pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
 
 use rocket::http::Method;
-use rocket_cors::{AllowedHeaders, AllowedOrigins};
+use rocket_cors::{/*AllowedHeaders,*/ AllowedOrigins};
+
+use log::{info, error, warn};
 
 #[derive(Clone)]
 pub struct ConfigObject {
@@ -146,7 +148,7 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
 
     let optionally_attach_cors = |rocket: Rocket| {
         if cfg!(feature = "development") {
-            log::warn!("Development mode enabled. Enabling CORS.");
+            warn!("Development mode enabled. Enabling CORS.");
             let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
             assert!(failed_origins.is_empty());
             let options = rocket_cors::Cors {
@@ -161,7 +163,7 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
             };
             rocket.attach(options)
         } else {
-            log::info!("Development not enabled. Using default CORS.");
+            info!("Development not enabled. Using default CORS.");
             rocket
         }
     };
@@ -169,10 +171,10 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
 
     // The secret is used to generate and verify JWTs.
     let secret: Secret = if let Some(key) = config.secret_key {
-        log::info!("Using a user-supplied secret key.");
+        info!("Using a user-supplied secret key.");
         Secret::from_user_supplied_string(key)
     } else {
-        log::info!("Generating a random 256 character secret key.");
+        info!("Generating a random 256 character secret key.");
         Secret::generate()
     };
 
@@ -188,8 +190,8 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
     if config.create_admin {
         let conn = db::Conn::new(db_pool.get().unwrap());
         match configuration::create_admin(&conn) {
-            Ok(user) => log::warn!("Admin created. You should change its password."),
-            Err(e) => log::error!("Failed to create Admin: {:?}", e),
+            Ok(user) => warn!("Admin created. You should change its password. The name of the Admin user is: '{}'", user.user_name),
+            Err(e) => error!("Failed to create Admin: {:?}", e),
         }
     }
 

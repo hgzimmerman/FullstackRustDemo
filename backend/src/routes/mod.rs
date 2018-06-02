@@ -20,8 +20,6 @@ pub use self::user::*;
 pub use self::auth::*;
 // these are mostly unused
 pub use self::forum::*;
-// pub use self::post::*;
-// pub use self::thread::*;
 pub use self::bucket::*;
 
 

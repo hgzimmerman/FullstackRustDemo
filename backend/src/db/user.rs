@@ -74,6 +74,7 @@ impl User {
             .map_err(User::handle_error)
     }
 
+    // TODO make this take a list of roles.
     /// For the given role, get all users with the that role.
     pub fn get_users_with_role(user_role: UserRole, conn: &Conn) -> JoeResult<Vec<User>> {
 

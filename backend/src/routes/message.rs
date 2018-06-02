@@ -27,6 +27,7 @@ fn get_messages_for_chat(chat_id: i32, index: i32, user: NormalUser, conn: Conn)
         .map(Json)
 }
 
+/// Sends a message to the group.
 #[post("/send", data = "<new_message>")]
 fn send_message(new_message: Json<NewMessageRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<MessageResponse>> {
     let new_message: NewMessage = new_message.into_inner().into();

@@ -2,9 +2,9 @@ use rocket::response::NamedFile;
 use std::path::{Path, PathBuf};
 
 use rocket::Request;
-use log;
-use rocket::response::status;
-use rocket::http::Status;
+use log::info;
+//use rocket::response::status;
+//use rocket::http::Status;
 
 
 use rocket_contrib::Json;
@@ -53,7 +53,7 @@ pub fn json_403(_req: &Request) -> Json<String> {
 #[get("/<file..>", rank = 10)]
 pub fn files(file: PathBuf) -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "../frontend/app/static";
-    log::info!("Getting file: {}", file.to_str().unwrap());
+    info!("Getting file: {}", file.to_str().unwrap());
 
 
     match NamedFile::open(Path::new(WEB_DIRECTORY).join(
@@ -64,7 +64,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
             if file.starts_with("api") {
                 None
             } else {
-                log::info!("Could not find file, returning index");
+                info!("Could not find file, returning index");
                 Some(index())
             }
         }
@@ -73,7 +73,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
 
 #[get("/", rank = 10)]
 pub fn index() -> NamedFile {
-    log::info!("Getting index.html");
+    info!("Getting index.html");
     const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
     NamedFile::open(Path::new(WEB_DIRECTORY))
         .unwrap()

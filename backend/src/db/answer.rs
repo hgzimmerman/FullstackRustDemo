@@ -3,7 +3,7 @@ use db::user::User;
 use db::question::Question;
 use db::Conn;
 use std::ops::Deref;
-use error::JoeResult;
+//use error::JoeResult;
 
 
 

@@ -1,6 +1,5 @@
 use db::article::*;
 use wire::article::*;
-use chrono::NaiveDateTime;
 
 use slug;
 use rand;

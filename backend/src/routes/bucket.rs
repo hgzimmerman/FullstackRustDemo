@@ -7,14 +7,11 @@ use error::JoeResult;
 use db::Conn;
 use wire::bucket::*;
 use wire::user::UserResponse;
-use auth::user_authorization::AdminUser;
 use auth::user_authorization::NormalUser;
 use routes::convert_vector;
 use db::Creatable;
 
 use error::*;
-
-use rocket::request::FromForm;
 
 #[derive(FromForm)]
 struct UserIdParam {
@@ -93,6 +90,8 @@ fn get_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Bu
 }
 
 
+/// For the buckets that the active user owns, return the list of users that have requested to join the bucket,
+/// but require the active user to approve their request.
 #[get("/unapproved_users_for_owned_buckets")]
 fn get_unapproved_users_in_buckets_owned_by_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketUsersResponse>>> {
     Bucket::get_users_requiring_approval_for_owned_buckets(user.user_id, &conn)
@@ -101,7 +100,6 @@ fn get_unapproved_users_in_buckets_owned_by_user(user: NormalUser, conn: Conn) -
 }
 
 /// Gets all of the users in the bucket, excluding the user that made the request
-///
 #[get("/<bucket_id>/users")]
 fn get_users_in_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<UserResponse>>> {
     if !Bucket::is_user_approved(user.user_id, bucket_id, &conn) {
@@ -117,6 +115,7 @@ fn get_users_in_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResul
     Ok(Json(users))
 }
 
+/// Given a bucket id, determine if the current user owns the bucket.
 #[get("/<bucket_id>/user_owner_status")]
 fn get_is_current_user_owner(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<bool>> {
     if !Bucket::is_user_approved(user.user_id, bucket_id, &conn) {
@@ -128,6 +127,9 @@ fn get_is_current_user_owner(bucket_id: i32, user: NormalUser, conn: Conn) -> Jo
         .map(Json)
 }
 
+/// Make a request to join the bucket.
+/// The user will not immediately be able to join the bucket, but after the owner of the bucket approves them
+/// they will gain access to internal bucket information.
 #[post("/<bucket_id>/user_join_request")]
 fn request_to_join_bucket(bucket_id: i32, user: NormalUser, conn: Conn) -> JoeResult<()> {
     let new_bucket_user = NewBucketUser {

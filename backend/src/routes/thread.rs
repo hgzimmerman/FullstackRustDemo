@@ -67,6 +67,8 @@ fn get_threads_by_forum_id(forum_id: i32, index: i32, conn: Conn) -> JoeResult<J
         .map(Json)
 }
 
+/// Gets the entire contents of a thread.
+/// The thread info, the posts, and the author of the thread.
 #[get("/<thread_id>")]
 fn get_thread_contents(thread_id: i32, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
     Thread::get_full_thread(thread_id, &conn)

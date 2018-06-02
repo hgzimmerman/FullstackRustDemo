@@ -120,6 +120,7 @@ impl Thread {
         Ok(min_threads)
     }
 
+    /// Gets threads based on page size and index.
     pub fn get_paginated(requested_forum_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
@@ -168,6 +169,7 @@ impl Thread {
         })
     }
 
+    /// Gets every bit of data related to a thread.
     pub fn get_full_thread(thread_id: i32, conn: &Conn) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::get_by_id(thread_id, conn)?;
         let root_post: Post = Post::get_root_post(thread_id, conn)?;

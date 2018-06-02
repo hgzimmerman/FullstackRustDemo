@@ -33,7 +33,7 @@ pub enum WeekendAtJoesError {
     BadRequest,
     /// The used did not have privalages to access the given method.
     NotAuthorized { reason: &'static str },
-    // The thread being posted to or edited was locked by an admin.
+    /// The thread being posted to or edited was locked by an admin.
     ThreadLocked,
     /// Used to indicate that the signature does not match the hashed contents + secret
     IllegalToken,

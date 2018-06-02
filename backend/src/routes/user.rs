@@ -11,6 +11,8 @@ use error::JoeResult;
 use auth::user_authorization::*;
 use db::user::NewUser;
 use log;
+use auth::BannedSet;
+use rocket::State;
 
 /// Gets basic info about an user.
 /// Provided they know the id of the user, this information is available to anyone.
@@ -73,9 +75,10 @@ fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> Jo
 }
 
 
-use auth::BannedSet;
-use rocket::State;
-/// Ban the user.
+
+/// Ban the user. This prevents the user from being able to log in.
+/// Because the user's identifier is immediately added to the banned set,
+/// JWTs can cease to be validated as soon as the user is banned.
 #[put("/ban/<user_id>")]
 fn ban_user(user_id: i32, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
 
@@ -87,6 +90,9 @@ fn ban_user(user_id: i32, _admin: AdminUser, banned_set: State<BannedSet>, conn:
         .map(Json)
 }
 
+/// Unbans the user. This will allow them to log in again.
+/// Because the user id is removed from the banned set,
+/// any outstanding JWTs the banned user may have become viable again.
 #[put("/unban/<user_id>")]
 fn unban_user(user_id: i32, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
 
