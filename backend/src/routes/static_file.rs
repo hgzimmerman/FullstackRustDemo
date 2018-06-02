@@ -70,6 +70,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
     }
 }
 
+#[get("/")]
 pub fn index() -> NamedFile {
     const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
     NamedFile::open(Path::new(WEB_DIRECTORY))

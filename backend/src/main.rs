@@ -146,28 +146,52 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
 
     // CORS handling is a compile-time feature. It should be disabled in production builds.
     // This can be done by removing the `development` feature from the backend's `Cargo.toml`.
-    let options = if cfg!(feature = "development") {
-        log::warn!("Development mode enabled. Enabling CORS.");
-        let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
-        assert!(failed_origins.is_empty());
-        rocket_cors::Cors {
-            allowed_origins,
-            allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
-                .into_iter()
-                .map(From::from)
-                .collect(),
-            //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
-            allow_credentials: true,
-            ..Default::default()
-        }
-    } else {
-        log::info!("Development not enabled. Using default CORS.");
-        let (allowed_origins, _failed_origins) = AllowedOrigins::some(&[]);
-        rocket_cors::Cors {
-            allowed_origins,
-            ..Default::default()
+//    let options = if cfg!(feature = "development") {
+//        log::warn!("Development mode enabled. Enabling CORS.");
+//        let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
+//        assert!(failed_origins.is_empty());
+//        rocket_cors::Cors {
+//            allowed_origins,
+//            allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
+//                .into_iter()
+//                .map(From::from)
+//                .collect(),
+//            //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
+//            allow_credentials: true,
+//            ..Default::default()
+//        }
+//    } else {
+//        log::info!("Development not enabled. Using default CORS.");
+//        let (allowed_origins, _failed_origins) = AllowedOrigins::some(&[]);
+//        rocket_cors::Cors {
+//            allowed_origins,
+//            ..Default::default()
+//        }
+//    };
+
+    let optionally_attach_cors = | rocket: Rocket| {
+        if cfg!(feature = "development") {
+            log::warn!("Development mode enabled. Enabling CORS.");
+            let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
+            assert!(failed_origins.is_empty());
+            let options = rocket_cors::Cors {
+                allowed_origins,
+                allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Options, Method::Delete]
+                    .into_iter()
+                    .map(From::from)
+                    .collect(),
+                //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
+                allow_credentials: true,
+                ..Default::default()
+            };
+            rocket.attach(options)
+        } else {
+            log::info!("Development not enabled. Using default CORS.");
+            rocket
         }
     };
+
+
     // The secret is used to generate and verify JWTs.
     let secret: Secret = if let Some(key) = config.secret_key {
         log::info!("Using a user-supplied secret key.");
@@ -195,11 +219,11 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
     }
 
     // Initialize Rocket.
-    rocket::ignite()
+    let rocket = rocket::ignite()
         .manage(db_pool)
         .manage(secret)
         .manage(banned_set)
-        .mount("/", routes![static_file::files, static_file::js, static_file::wasm])
+        .mount("/", routes![static_file::files, static_file::js, static_file::wasm, static_file::index])
         .mount(&format_api(User::PATH), User::ROUTES())
         .mount(&format_api(Article::PATH), Article::ROUTES())
         .mount(&format_api(Auth::PATH), Auth::ROUTES())
@@ -216,8 +240,12 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
             static_file::json_500,
             static_file::json_401,
             static_file::json_403,
-        ])
-        .attach(options)
+        ]);
+
+        optionally_attach_cors(rocket)
+//        .attach(options)
+
+
 }
 
 
