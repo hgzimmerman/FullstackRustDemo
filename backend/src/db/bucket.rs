@@ -204,9 +204,10 @@ impl Bucket {
     }
 
     pub fn set_bucket_publicity(m_bucket_id: i32, publicity: bool, conn: &PgConnection) -> JoeResult<()> {
-
         use schema::buckets::dsl::*;
-        let target = buckets.filter(id.eq(m_bucket_id));
+        use schema::buckets;
+
+        let target = buckets.filter(buckets::id.eq(m_bucket_id));
 
         let expire_time: Option<NaiveDateTime> = if publicity {
             Some(Utc::now().naive_utc() + Duration::days(1))

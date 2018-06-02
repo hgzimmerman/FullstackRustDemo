@@ -5,8 +5,9 @@ use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc, Duration};
 use schema::users;
 use error::JoeResult;
-use log;
 use diesel::PgConnection;
+
+use log::info;
 
 // TODO, I don't think that this file should have wire types
 use wire::user::*;
@@ -53,7 +54,7 @@ impl User {
     /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
-        log::info!("Getting user with Name: {}", name);
+        info!("Getting user with Name: {}", name);
 
         users
             .filter(user_name.eq(name))
@@ -113,6 +114,7 @@ impl User {
     // TODO, refactor this, only implement the db transaction, logic can go in the login method
     pub fn check_if_locked(&self, conn: &PgConnection) -> JoeResult<bool> {
         use schema::users::dsl::*;
+        use schema::users;
 
         if let Some(l) = self.locked {
             let current_date = Utc::now().naive_utc();
@@ -120,7 +122,7 @@ impl User {
                 Ok(true)
             } else {
                 // Remove the locked status
-                let target = users.filter(id.eq(self.id));
+                let target = users.filter(users::id.eq(self.id));
                 diesel::update(target)
                     .set(locked.eq(None::<NaiveDateTime>))
                     .execute(conn)
@@ -151,13 +153,14 @@ impl User {
     /// It will then store the datetime of unlock, along with an incremented failure count, so that next time it will take longer.
     pub fn record_failed_login(user_id: i32, current_failed_attempts: i32, conn: &PgConnection) -> JoeResult<NaiveDateTime> {
         use schema::users::dsl::*;
+        use schema::users;
 
-        log::info!("record_failed_login: setting the expire time and failure count");
+        info!("record_failed_login: setting the expire time and failure count");
         let current_date = Utc::now().naive_utc();
         let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
         let expire_datetime = current_date + Duration::seconds(delay_seconds);
 
-        let target = users.filter(id.eq(user_id));
+        let target = users.filter(users::id.eq(user_id));
         let _ = diesel::update(target)
             .set((
                 locked.eq(expire_datetime),
@@ -174,7 +177,8 @@ impl User {
 
     pub fn set_ban_status(user_id: i32, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
-        let target = users.filter(id.eq(user_id));
+        use schema::users;
+        let target = users.filter(users::id.eq(user_id));
         diesel::update(target)
             .set(banned.eq(is_banned))
             .get_result(conn)
@@ -186,6 +190,7 @@ impl User {
     pub fn add_role_to_user(user_id: i32, user_role: UserRole, conn: &PgConnection) -> JoeResult<User> {
 
         use schema::users::dsl::*;
+        use schema::users;
 
         let user = User::get_by_id(user_id, conn)?;
 
@@ -198,7 +203,7 @@ impl User {
             let mut new_roles = user.roles.clone();
             new_roles.push(user_role_id);
 
-            let target = users.filter(id.eq(user_id));
+            let target = users.filter(users::id.eq(user_id));
             diesel::update(target)
                 .set(roles.eq(new_roles))
                 .get_result(conn)
@@ -208,12 +213,12 @@ impl User {
 
     /// Gets a number of users at specified offsets.
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
-        use schema::users::dsl::*;
+//        use schema::users::dsl::*;
         use schema::users;
         use db::diesel_extensions::pagination::Paginate;
 
         users::table
-            .filter(id.gt(0)) // NoOp filter to get the paginate function to work.
+            .filter(users::id.gt(0)) // NoOp filter to get the paginate function to work.
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<User>(conn)
@@ -228,7 +233,7 @@ impl User {
             user_name.eq(request.user_name),
         );
 
-        log::info!("Updating the user display name");
+        info!("Updating the user display name");
         diesel::update(target)
             .set(display_name.eq(
                 request.new_display_name,

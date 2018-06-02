@@ -147,7 +147,7 @@ impl Article {
         };
 
         diesel::update(articles::table)
-            .filter(id.eq(article_id))
+            .filter(articles::id.eq(article_id))
             .set(publish_date.eq(publish_value))
             .get_result(conn)
             .map_err(Article::handle_error)

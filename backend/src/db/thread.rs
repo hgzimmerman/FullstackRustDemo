@@ -64,7 +64,7 @@ impl Thread {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
-            .filter(id.eq(thread_id))
+            .filter(threads::id.eq(thread_id))
             .set(locked.eq(is_locked))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
@@ -78,7 +78,7 @@ impl Thread {
         use schema::threads;
         use schema::threads::dsl::*;
         let thread: Thread = diesel::update(threads::table)
-            .filter(id.eq(thread_id))
+            .filter(threads::id.eq(thread_id))
             .set(archived.eq(true))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
