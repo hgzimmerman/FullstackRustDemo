@@ -15,14 +15,14 @@ use rocket_contrib::Json;
 pub fn json_404(_req: &Request) -> Json<String> {
     Json(
         "Could not find the requested resource"
-            .into(),
+            .to_string(),
     )
 }
 #[error(500)]
 pub fn json_500(_req: &Request) -> Json<String> {
     Json(
         "Server encountered an internal error"
-            .into(),
+            .to_string(),
     )
 }
 #[error(401)]
@@ -30,14 +30,14 @@ pub fn json_401(_req: &Request) -> Json<String> {
     Json(
         "User authentication is required. You must log in for the server to accept this request.\
          It is possible that a server-restart has invalidated your existing authentication token if you provided one."
-            .into(),
+            .to_string(),
     )
 }
 #[error(403)]
 pub fn json_403(_req: &Request) -> Json<String> {
     Json(
         "The server understood the request, but is refusing to fulfill it. Authorization will not help."
-            .into(),
+            .to_string(),
     )
 }
 
@@ -64,6 +64,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
             if file.starts_with("api") {
                 None
             } else {
+                log::info!("Could not find file, returning index");
                 Some(index())
             }
         }
@@ -72,6 +73,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
 
 #[get("/", rank = 10)]
 pub fn index() -> NamedFile {
+    log::info!("Getting index.html");
     const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
     NamedFile::open(Path::new(WEB_DIRECTORY))
         .unwrap()

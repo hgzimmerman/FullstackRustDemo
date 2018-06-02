@@ -14,12 +14,17 @@ use error::WeekendAtJoesError;
 
 use wire::user::{Jwt, UserRole};
 
+/// Because the JWT struct lives in the wire crate,
+/// this NewType is used to define other functions on it.
 pub struct ServerJwt(pub Jwt);
 
 impl ServerJwt {
-    pub fn encode_jwt_string(&self, secret: &String) -> Result<String, JwtError> {
+    /// Encodes the JWT, producing a string.
+    pub fn encode_jwt_string(&self, secret: &Secret) -> Result<String, JwtError> {
         let header = json!({});
         use rocket_contrib::Value;
+
+        let secret: &String = &secret.0;
 
         let payload: Value = match serde_json::to_value(&self.0) {
             Ok(x) => x,
@@ -31,7 +36,8 @@ impl ServerJwt {
         }
     }
 
-    pub fn decode_jwt_string(jwt_str: String, secret: &String) -> Result<Jwt, JwtError> {
+    pub fn decode_jwt_string(jwt_str: String, secret: &Secret) -> Result<Jwt, JwtError> {
+        let secret: &String = &secret.0;
         let (_header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
             Ok(x) => x,
             Err(_) => return Err(JwtError::DecodeError),
@@ -59,7 +65,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for ServerJwt {
 }
 
 
-
+/// Given a request, extract the JWT struct from the headers in the request.
 fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<Jwt, WeekendAtJoesError> {
     let keys: Vec<_> = request
         .headers()
@@ -72,15 +78,15 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     let key = keys[0];
 
     // You can get the state secret from another request guard
-    let secret: String = match request.guard::<State<Secret>>() {
-        Outcome::Success(ref s) => s.0.clone(),
+    let secret: &Secret = match request.guard::<State<Secret>>() {
+        Outcome::Success(s) => s.inner(),
         _ => {
             log::warn!("Couldn't get secret from state.");
             return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
         }
     };
 
-    match ServerJwt::decode_jwt_string(key.to_string(), &secret) {
+    match ServerJwt::decode_jwt_string(key.to_string(), secret) {
         Ok(jwt) => Outcome::Success(jwt),
         Err(_) => {
             log::info!("Token couldn't be deserialized.");
@@ -89,6 +95,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     }
 }
 
+/// Make sure that the JWT hasn't expired yet.
 fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesError> {
     if jwt.exp < Utc::now().naive_utc() {
         log::info!("Token expired.");
@@ -100,7 +107,7 @@ fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesErro
 
 
 
-
+/// An error that can ocurr in the course of handling JWTs.
 #[derive(Debug, Clone)]
 pub enum JwtError {
     DecodeError,
@@ -127,7 +134,6 @@ pub mod user_authorization {
     }
 
     pub struct NormalUser {
-        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for NormalUser {
@@ -137,7 +143,6 @@ pub mod user_authorization {
             )
             {
                 Ok(NormalUser {
-                    //                    user_name: jwt.user_name.clone(),
                     user_id: jwt.sub,
                 })
             } else {
@@ -157,7 +162,6 @@ pub mod user_authorization {
     }
 
     pub struct AdminUser {
-        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for AdminUser {
@@ -167,7 +171,6 @@ pub mod user_authorization {
             )
             {
                 Ok(AdminUser {
-                    //                    user_name: jwt.user_name.clone(),
                     user_id: jwt.sub,
                 })
             } else {
@@ -187,7 +190,6 @@ pub mod user_authorization {
     }
 
     pub struct ModeratorUser {
-        //        pub user_name: String,
         pub user_id: i32,
     }
     impl FromJwt for ModeratorUser {
@@ -197,7 +199,6 @@ pub mod user_authorization {
             )
             {
                 Ok(ModeratorUser {
-                    //                    user_name: jwt.user_name.clone(),
                     user_id: jwt.sub,
                 })
             } else {

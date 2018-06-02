@@ -65,7 +65,7 @@ impl Secret {
 pub type LoginResult = Result<String, LoginError>;
 
 /// Logs the user in by validating their password and returning a jwt.
-pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginResult {
+pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> LoginResult {
     log::info!("Logging in for user: {}", &login_request.user_name);
     // get user
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
@@ -79,12 +79,10 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
         },
     )?
     {
-        //TODO: THIS SHOULD ABSOLUTELY BE IN ANY RELEASE BUILD, I accidentally locked my own account at one point, so I uncommented this to fix it
-        //        return Err(LoginError::AccountLocked);
+        return Err(LoginError::AccountLocked);
     }
 
-    log::info!("verifing password: {}", &login_request.password);
-    log::info!("against: {}", &user.password_hash);
+    log::info!("Verifing password against hash");
     match verify_hash(&login_request.password, &user.password_hash) {
         Ok(b) => {
             if !b {
@@ -134,8 +132,8 @@ pub fn login(login_request: LoginRequest, secret: String, conn: &Conn) -> LoginR
     Ok(jwt_string)
 }
 
-pub fn reauth(jwt: Jwt, secret: String) -> LoginResult {
-    let mut jwt = jwt;
+pub fn reauth(jwt: ServerJwt, secret: &Secret) -> LoginResult {
+    let mut jwt = jwt.0;
     log::info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
     let new_expire_date: NaiveDateTime = match Utc::now().checked_add_signed(duration) {
@@ -152,7 +150,6 @@ pub fn reauth(jwt: Jwt, secret: String) -> LoginResult {
     };
 
     Ok(jwt_string)
-
 }
 
 
