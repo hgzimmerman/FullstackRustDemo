@@ -4,7 +4,7 @@ use uuid::Uuid;
 pub struct QuestionUuid(pub Uuid);
 
 
-#[cfg(feature="rocket_support")]
+#[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;
     use rocket::http::RawStr;
@@ -22,14 +22,15 @@ mod rocket {
         }
     }
 
-    const PARAM_NAME: &'static str ="question_uuid";
+    const PARAM_NAME: &'static str = "question_uuid";
 
     impl<'f> FromForm<'f> for QuestionUuid {
         type Error = ();
 
         #[inline]
         fn from_form(items: &mut FormItems<'f>, strict: bool) -> Result<Self, ()> {
-            uuid_from_form(items, strict, PARAM_NAME).map(QuestionUuid)
+            uuid_from_form(items, strict, PARAM_NAME)
+                .map(QuestionUuid)
         }
     }
 }

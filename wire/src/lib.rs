@@ -8,7 +8,7 @@ extern crate serde_derive;
 extern crate chrono;
 extern crate uuid;
 
-#[cfg(feature="rocket_support")]
+#[cfg(feature = "rocket_support")]
 extern crate rocket;
 
 pub mod user;
@@ -37,5 +37,3 @@ where
 {
     vec.into_iter().map(W::from).collect()
 }
-
-

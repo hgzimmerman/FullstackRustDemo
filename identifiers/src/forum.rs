@@ -3,7 +3,7 @@ use uuid::Uuid;
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ForumUuid(pub Uuid);
 
-#[cfg(feature="rocket_support")]
+#[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;
     use rocket::http::RawStr;
@@ -21,14 +21,15 @@ mod rocket {
         }
     }
 
-    const PARAM_NAME: &'static str ="forum_uuid";
+    const PARAM_NAME: &'static str = "forum_uuid";
 
     impl<'f> FromForm<'f> for ForumUuid {
         type Error = ();
 
         #[inline]
         fn from_form(items: &mut FormItems<'f>, strict: bool) -> Result<Self, ()> {
-            uuid_from_form(items, strict, PARAM_NAME).map(ForumUuid)
+            uuid_from_form(items, strict, PARAM_NAME)
+                .map(ForumUuid)
         }
     }
 }
