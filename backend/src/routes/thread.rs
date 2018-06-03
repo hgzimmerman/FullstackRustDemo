@@ -9,6 +9,8 @@ use wire::thread::MinimalThreadResponse;
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use error::*;
+use identifiers::thread::ThreadUuid;
+use identifiers::forum::ForumUuid;
 
 
 /// Creates a new thread with an Original Post (OP).
@@ -32,46 +34,46 @@ fn create_thread(new_thread_request: Json<NewThreadRequest>, user: NormalUser, c
 /// This locks the thread, preventing further discussion.
 /// This operation is available to moderators.
 // TODO, consider creating a lock thread where the author of the thread can lock their own thread.
-#[put("/lock/<thread_id>")]
-fn lock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
-    Thread::set_lock_status(thread_id, true, &conn)
+#[put("/lock/<thread_uuid>")]
+fn lock_thread(thread_uuid: ThreadUuid, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
+    Thread::set_lock_status(thread_uuid, true, &conn)
         .map(MinimalThreadResponse::from)
         .map(Json)
 }
 
 /// Unlocks a thread, allowing posting and editing again.
 /// This operation is available to moderators.
-#[put("/unlock/<thread_id>")]
-fn unlock_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
-    Thread::set_lock_status(thread_id, false, &conn)
+#[put("/unlock/<thread_uuid>")]
+fn unlock_thread(thread_uuid: ThreadUuid, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
+    Thread::set_lock_status(thread_uuid, false, &conn)
         .map(MinimalThreadResponse::from)
         .map(Json)
 }
 
 /// Marks the thread as tombstoned, preventing it from showing up in requests and forbidding other operations on the thread.
 /// This operation is available to moderators.
-#[delete("/archive/<thread_id>")]
-fn archive_thread(thread_id: i32, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
-    Thread::archive_thread(thread_id, &conn)
+#[delete("/archive/<thread_uuid>")]
+fn archive_thread(thread_uuid: ThreadUuid, _moderator: ModeratorUser, conn: Conn) -> JoeResult<Json<MinimalThreadResponse>> {
+    Thread::archive_thread(thread_uuid, &conn)
         .map(MinimalThreadResponse::from)
         .map(Json)
 }
 
 /// Gets the threads in the specified forum.
 /// This operation is available to anyone.
-#[get("/get/<forum_id>/<index>")]
-fn get_threads_by_forum_id(forum_id: i32, index: i32, conn: Conn) -> JoeResult<Json<Vec<MinimalThreadResponse>>> {
-    let results_per_page = 25;
-    Thread::get_paginated(forum_id, index, results_per_page, &conn)
+#[get("/get/<forum_uuid>/<index>")]
+fn get_threads_by_forum_id(forum_uuid: ForumUuid, index: i32, conn: Conn) -> JoeResult<Json<Vec<MinimalThreadResponse>>> {
+    let results_per_page: i32 = 25;
+    Thread::get_paginated(forum_uuid, index, results_per_page, &conn)
         .map_vec::<MinimalThreadResponse>()
         .map(Json)
 }
 
 /// Gets the entire contents of a thread.
 /// The thread info, the posts, and the author of the thread.
-#[get("/<thread_id>")]
-fn get_thread_contents(thread_id: i32, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
-    Thread::get_full_thread(thread_id, &conn)
+#[get("/<thread_uuid>")]
+fn get_thread_contents(thread_uuid: ThreadUuid, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
+    Thread::get_full_thread(thread_uuid, &conn)
         .map(ThreadResponse::from)
         .map(Json)
 }

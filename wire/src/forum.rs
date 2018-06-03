@@ -1,10 +1,10 @@
-
+use identifiers::forum::ForumUuid;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ForumResponse {
+    pub id: ForumUuid,
     pub title: String,
     pub description: String,
-    pub id: i32,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

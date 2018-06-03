@@ -9,20 +9,24 @@ use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
 use error::JoeResult;
 use diesel::PgConnection;
+use uuid::Uuid;
+use identifiers::thread::ThreadUuid;
+use db::Retrievable;
 
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
+use identifiers::forum::ForumUuid;
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
 #[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Forum, foreign_key = "forum_id")]
 #[table_name = "threads"]
 pub struct Thread {
     /// Primary Key
-    pub id: i32,
+    pub id: Uuid,
     /// Foreign Key to which the thread belongs to.
-    pub forum_id: i32,
+    pub forum_id: Uuid,
     /// Foreign Kay of the user who created the thread.
     pub author_id: i32,
     /// Timestamp of when the thread was created.
@@ -39,7 +43,7 @@ pub struct Thread {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "threads"]
 pub struct NewThread {
-    pub forum_id: i32,
+    pub forum_id: Uuid,
     pub author_id: i32,
     pub created_date: NaiveDateTime,
     pub locked: bool,
@@ -60,11 +64,14 @@ pub struct MinimalThreadData {
 
 impl Thread {
     /// Locks or unlocks the thread, preventing posting and editing if locked
-    pub fn set_lock_status(thread_id: i32, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
+    pub fn set_lock_status(thread_uuid: ThreadUuid, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
+
+        let m_thread_uuid: Uuid = thread_uuid.0;
+
         let thread: Thread = diesel::update(threads::table)
-            .filter(threads::id.eq(thread_id))
+            .filter(threads::id.eq(m_thread_uuid))
             .set(locked.eq(is_locked))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
@@ -74,11 +81,14 @@ impl Thread {
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
-    pub fn archive_thread(thread_id: i32, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
+    pub fn archive_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
+
+        let m_thread_uuid: Uuid = thread_uuid.0;
+
         let thread: Thread = diesel::update(threads::table)
-            .filter(threads::id.eq(thread_id))
+            .filter(threads::id.eq(m_thread_uuid))
             .set(archived.eq(true))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
@@ -90,12 +100,12 @@ impl Thread {
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
     // TODO add a step to enable pagination
-    pub fn get_threads_in_forum(requested_forum_id: i32, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_threads_in_forum(requested_forum_uuid: ForumUuid, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
         use schema::users::dsl::*;
 
-        let forum: Forum = Forum::get_by_id(requested_forum_id, conn)?;
+        let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
 
         // Get the threads that belong to the forum, and then get the users that are associated with the threads.
         let threads_and_users: Vec<(Thread, User)> = Thread::belonging_to(&forum)
@@ -120,13 +130,13 @@ impl Thread {
     }
 
     /// Gets threads based on page size and index.
-    pub fn get_paginated(requested_forum_id: i32, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_paginated(requested_forum_uuid: ForumUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use db::forum::Forum;
         use db::diesel_extensions::pagination::*;
         use schema::users;
 
-        let forum: Forum = Forum::get_by_id(requested_forum_id, conn)?;
+        let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
 
         let (thread_users, _count) = Thread::belonging_to(&forum)
             .inner_join(users::table)
@@ -169,9 +179,9 @@ impl Thread {
     }
 
     /// Gets every bit of data related to a thread.
-    pub fn get_full_thread(thread_id: i32, conn: &PgConnection) -> JoeResult<ThreadData> {
-        let thread: Thread = Thread::get_by_id(thread_id, conn)?;
-        let root_post: Post = Post::get_root_post(thread_id, conn)?;
+    pub fn get_full_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<ThreadData> {
+        let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
+        let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
         let post: PostData = root_post.get_post_data(conn)?;
         let user = User::get_by_id(thread.author_id, conn)?;
         Ok(ThreadData { thread, post, user })

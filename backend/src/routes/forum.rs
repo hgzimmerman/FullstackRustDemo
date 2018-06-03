@@ -1,8 +1,7 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-use db::Retrievable;
-use db::Creatable;
+use db::CreatableUuid;
 use db::forum::Forum;
 use error::JoeResult;
 use db::Conn;
@@ -10,6 +9,8 @@ use wire::forum::ForumResponse;
 use wire::forum::NewForumRequest;
 use auth::user_authorization::AdminUser;
 use routes::convert_vector;
+use identifiers::forum::ForumUuid;
+use db::RetrievableUuid;
 
 
 /// Gets all of the forums.
@@ -23,9 +24,9 @@ fn get_forums(conn: Conn) -> JoeResult<Json<Vec<ForumResponse>>> {
 }
 
 /// Gets a single forum.
-#[get("/<forum_id>")]
-fn get_forum(forum_id: i32, conn: Conn) -> JoeResult<Json<ForumResponse>> {
-    Forum::get_by_id(forum_id, &conn)
+#[get("/<forum_uuid>")]
+fn get_forum(forum_uuid: ForumUuid, conn: Conn) -> JoeResult<Json<ForumResponse>> {
+    Forum::get_by_uuid(forum_uuid.0, &conn)
         .map(ForumResponse::from)
         .map(Json)
 }

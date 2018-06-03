@@ -1,10 +1,11 @@
 use db::forum::*;
 use wire::forum::*;
+use identifiers::forum::ForumUuid;
 
 impl From<Forum> for ForumResponse {
     fn from(forum: Forum) -> ForumResponse {
         ForumResponse {
-            id: forum.id,
+            id: ForumUuid(forum.id),
             title: forum.title,
             description: forum.description,
         }

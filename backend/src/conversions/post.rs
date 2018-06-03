@@ -2,14 +2,15 @@ use db::post::*;
 use wire::post::*;
 use chrono::Utc;
 use db::thread::Thread;
+use identifiers::post::PostUuid;
 
 
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest) -> NewPost {
         NewPost {
-            thread_id: request.thread_id,
+            thread_id: request.thread_id.0,
             author_id: request.author_id,
-            parent_id: request.parent_id,
+            parent_id: request.parent_id.map(|x|x.0),
             created_date: Utc::now().naive_utc(),
             content: request.content,
             censored: false,
@@ -34,7 +35,7 @@ impl From<(Thread, String)> for NewPost {
 impl From<EditPostRequest> for EditPostChangeset {
     fn from(request: EditPostRequest) -> EditPostChangeset {
         EditPostChangeset {
-            id: request.id,
+            id: request.id.0,
             modified_date: Utc::now().naive_utc(),
             content: request.content,
         }
@@ -46,7 +47,7 @@ impl From<EditPostRequest> for EditPostChangeset {
 impl From<ChildlessPostData> for PostResponse {
     fn from(data: ChildlessPostData) -> PostResponse {
         PostResponse {
-            id: data.post.id,
+            id: PostUuid(data.post.id),
             author: data.user.into(),
             created_date: data.post.created_date,
             modified_date: data.post.modified_date,
@@ -62,7 +63,7 @@ impl From<ChildlessPostData> for PostResponse {
 impl From<PostData> for PostResponse {
     fn from(data: PostData) -> PostResponse {
         PostResponse {
-            id: data.post.id,
+            id: PostUuid(data.post.id),
             author: data.user.into(),
             created_date: data.post.created_date,
             modified_date: data.post.modified_date,

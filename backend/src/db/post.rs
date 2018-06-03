@@ -11,9 +11,13 @@ use diesel::QueryDsl;
 use error::JoeResult;
 use diesel::SaveChangesDsl;
 use diesel::PgConnection;
+use identifiers::post::PostUuid;
+use identifiers::thread::ThreadUuid;
+use uuid::Uuid;
 
+use db::Retrievable;
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, Crd, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
 #[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Thread, foreign_key = "thread_id")]
@@ -21,13 +25,13 @@ use diesel::PgConnection;
 #[table_name = "posts"]
 pub struct Post {
     /// Primary Key
-    pub id: i32,
+    pub id: Uuid,
     /// The Foreign Key of the thread the post belongs to.
-    pub thread_id: i32,
+    pub thread_id: Uuid,
     /// The Foreign Key of the user that created the post.
     pub author_id: i32,
     /// The Foreign Key of the post to which this post is replying to.
-    pub parent_id: Option<i32>,
+    pub parent_id: Option<Uuid>,
     /// The timestamp of when the post was created.
     pub created_date: NaiveDateTime,
     /// If the post was edited, the most recent edit time will be attached to the post.
@@ -41,9 +45,9 @@ pub struct Post {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "posts"]
 pub struct NewPost {
-    pub thread_id: i32,
+    pub thread_id: Uuid,
     pub author_id: i32,
-    pub parent_id: Option<i32>, // this will always be None, try removing this.
+    pub parent_id: Option<Uuid>, // this will always be None, try removing this.
     pub created_date: NaiveDateTime,
     pub content: String,
     pub censored: bool,
@@ -52,7 +56,7 @@ pub struct NewPost {
 #[derive(Serialize, Deserialize, AsChangeset, Debug, Identifiable)]
 #[table_name = "posts"]
 pub struct EditPostChangeset {
-    pub id: i32,
+    pub id: Uuid,
     pub modified_date: NaiveDateTime,
     pub content: String,
 }
@@ -72,10 +76,10 @@ pub struct ChildlessPostData {
 impl Post {
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
-    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         //        use schema::posts;
 
-        let target_thread = Thread::get_by_id(thread_id, conn)?;
+        let target_thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
         if target_thread.locked {
             return Err(WeekendAtJoesError::ThreadLocked);
         }
@@ -100,11 +104,14 @@ impl Post {
     }
 
     /// Censors the post, preventing users from seeing it by default.
-    pub fn censor_post(post_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn censor_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         use schema::posts::dsl::*;
         use schema::posts;
+
+        let m_post_uuid: Uuid = post_uuid.0;
+
         let censored_post: Post = diesel::update(posts::table)
-            .filter(posts::id.eq(post_id))
+            .filter(posts::id.eq(m_post_uuid))
             .set(censored.eq(true))
             .get_result(conn)
             .map_err(Post::handle_error)?;
@@ -142,12 +149,15 @@ impl Post {
 
 
     /// Gets the user associated with a given post
-    pub fn get_user_by_post(post_id: i32, conn: &PgConnection) -> JoeResult<User> {
+    pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<User> {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
+
+        let m_post_uuid: Uuid = post_uuid.0;
+
         // TODO consider using a select to just pull out the author id
         let post: Post = posts
-            .find(post_id)
+            .find(m_post_uuid)
             .first::<Post>(conn)
             .map_err(Post::handle_error)?;
 
@@ -160,11 +170,11 @@ impl Post {
     /// Gets the first post associated with a thread.
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
-    pub fn get_root_post(requested_thread_id: i32, conn: &PgConnection) -> JoeResult<Post> {
+    pub fn get_root_post(requested_thread_id: ThreadUuid, conn: &PgConnection) -> JoeResult<Post> {
         use schema::posts::dsl::*;
         use db::thread::Thread;
 
-        let thread: Thread = Thread::get_by_id(requested_thread_id, conn)?;
+        let thread: Thread = Thread::get_by_uuid(requested_thread_id.0, conn)?;
 
         Post::belonging_to(&thread)
             .filter(
@@ -174,8 +184,8 @@ impl Post {
             .map_err(Post::handle_error)
     }
 
-    pub fn get_individual_post(post_id: i32, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
-        let post = Post::get_by_id(post_id, conn)?;
+    pub fn get_individual_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+        let post = Post::get_by_uuid(post_uuid.0, conn)?;
         let user = User::get_by_id(post.author_id, conn)?;
         Ok(ChildlessPostData { post, user })
     }

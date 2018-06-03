@@ -3,14 +3,15 @@ use routes::Routable;
 use rocket::Route;
 
 use db::post::*;
-use db::Retrievable;
 use error::WeekendAtJoesError;
 use db::Conn;
 use wire::post::{PostResponse, NewPostRequest, EditPostRequest};
 use auth::user_authorization::NormalUser;
 use auth::user_authorization::ModeratorUser;
 use error::VectorMappable;
-
+use db::RetrievableUuid;
+use identifiers::post::PostUuid;
+use identifiers::thread::ThreadUuid;
 
 
 /// Creates a new post.
@@ -35,14 +36,14 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
-    let existing_post = Post::get_by_id(edit_post_request.0.id, &conn)?;
+    let existing_post = Post::get_by_uuid(edit_post_request.0.id.0, &conn)?;
     if login_user.user_id != existing_post.author_id {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
     let edit_post_changeset: EditPostChangeset = edit_post_request.clone().into();
-    let thread_id: i32 = edit_post_request.thread_id;
+    let thread_id: ThreadUuid  = edit_post_request.thread_id;
     Post::modify_post(edit_post_changeset, thread_id, &conn)
         .map(PostResponse::from)
         .map(Json)
@@ -50,9 +51,9 @@ fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, c
 
 /// Censors a post, preventing it from being seen immediately.
 /// This operation is available to moderators.
-#[put("/censor/<post_id>")]
-fn censor_post(post_id: i32, _moderator: ModeratorUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
-    Post::censor_post(post_id, &conn)
+#[put("/censor/<post_uuid>")]
+fn censor_post(post_uuid: PostUuid, _moderator: ModeratorUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
+    Post::censor_post(post_uuid, &conn)
         .map(PostResponse::from)
         .map(Json)
 }

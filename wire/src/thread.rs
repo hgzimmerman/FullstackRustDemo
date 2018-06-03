@@ -1,12 +1,14 @@
 use user::UserResponse;
 use post::PostResponse;
 use chrono::NaiveDateTime;
+use identifiers::thread::ThreadUuid;
+use identifiers::forum::ForumUuid;
 
 
 /// Used when requesting that a thread be created.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewThreadRequest {
-    pub forum_id: i32,
+    pub forum_id: ForumUuid,
     pub author_id: i32,
     pub title: String,
     pub post_content: String,
@@ -15,8 +17,8 @@ pub struct NewThreadRequest {
 /// Used when viewing an individual thread.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ThreadResponse {
-    pub id: i32,
-    pub forum_id: i32,
+    pub id: ThreadUuid,
+    pub forum_id: ForumUuid,
     pub title: String,
     pub author: UserResponse,
     pub posts: PostResponse,
@@ -27,7 +29,7 @@ pub struct ThreadResponse {
 /// Used when returning a list of threads for perusing
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MinimalThreadResponse {
-    pub id: i32,
+    pub id: ThreadUuid,
     pub title: String,
     pub author: UserResponse,
     pub created_date: NaiveDateTime,
