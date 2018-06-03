@@ -1,15 +1,18 @@
 
+use identifiers::forum::ForumUuid;
+use identifiers::thread::ThreadUuid;
+
 use yew::services::route::*;
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForumRoute {
     ForumList,
-    Forum{forum_id: i32},
+    Forum{forum_id: ForumUuid},
     Thread {
-        forum_id: i32,
-        thread_id: i32
+        forum_id: ForumUuid,
+        thread_id: ThreadUuid
     },
     CreateThread {
-        forum_id: i32
+        forum_id: ForumUuid
     }
 }
 
@@ -37,11 +40,11 @@ impl Router for ForumRoute {
     }
     fn from_route(route: &mut RouteInfo) -> Option<Self> {
         if let Some(RouteSection::Node { segment }) = route.next() {
-            if let Ok(forum_id) = segment.parse::<i32>() {
+            if let Ok(forum_id) = ForumUuid::parse_str(&segment) {
                 if let Some(RouteSection::Node {segment}) = route.next() {
                     if &segment == "create" {
                         Some(ForumRoute::CreateThread {forum_id})
-                    } else if let Ok(thread_id) = segment.parse::<i32>() {
+                    } else if let Ok(thread_id) = ThreadUuid::parse_str(&segment) {
                         Some(ForumRoute::Thread {forum_id, thread_id})
                     } else {
                         None

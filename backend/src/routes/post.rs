@@ -43,7 +43,7 @@ fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, c
 
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
     let edit_post_changeset: EditPostChangeset = edit_post_request.clone().into();
-    let thread_id: ThreadUuid  = edit_post_request.thread_id;
+    let thread_id: ThreadUuid = edit_post_request.thread_id;
     Post::modify_post(edit_post_changeset, thread_id, &conn)
         .map(PostResponse::from)
         .map(Json)

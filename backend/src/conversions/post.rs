@@ -10,7 +10,7 @@ impl From<NewPostRequest> for NewPost {
         NewPost {
             thread_id: request.thread_id.0,
             author_id: request.author_id,
-            parent_id: request.parent_id.map(|x|x.0),
+            parent_id: request.parent_id.map(|x| x.0),
             created_date: Utc::now().naive_utc(),
             content: request.content,
             censored: false,

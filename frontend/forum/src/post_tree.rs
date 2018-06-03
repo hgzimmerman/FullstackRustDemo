@@ -16,6 +16,7 @@ use wire::post::EditPostRequest;
 use context::networking::RequestWrapper;
 use wire::post::NewPostRequest;
 use util::markdown;
+use identifiers::thread::ThreadUuid;
 
 
 
@@ -25,7 +26,7 @@ pub struct PostTree {
     post: PostData,
     is_reply_active: bool,
     reply_content: String,
-    thread_id: i32,
+    thread_id: ThreadUuid,
     ft: Option<FetchTask>,
     edit_instance: Option<String>,
     /// Logged in user, unrelated to the post in question. This is a proxy for if a user is logged in.
@@ -48,7 +49,7 @@ pub enum Msg {
 #[derive(PartialEq, Clone)]
 pub struct Props {
     pub post: PostData,
-    pub thread_id: i32,
+    pub thread_id: ThreadUuid,
     pub user_id: Option<i32>
 }
 
@@ -56,7 +57,7 @@ impl Default for Props {
     fn default() -> Self {
         Props {
             post: PostData::default(),
-            thread_id: -1,
+            thread_id: ThreadUuid::default(),
             user_id: None
         }
     }

@@ -19,6 +19,8 @@ use serde::Serialize;
 
 use identifiers::bucket::BucketUuid;
 use identifiers::question::QuestionUuid;
+use identifiers::forum::ForumUuid;
+use identifiers::thread::ThreadUuid;
 
 //use context::storage;
 
@@ -49,10 +51,10 @@ pub enum RequestWrapper {
     CreateUser(NewUserRequest),
     /*Forum*/
     CreateThread(NewThreadRequest),
-    GetThreads { forum_id: i32, page_index: usize },
+    GetThreads { forum_id: ForumUuid, page_index: usize },
     GetForums,
-    GetForum { forum_id: i32 },
-    GetThread { thread_id: i32 },
+    GetForum { forum_uuid: ForumUuid },
+    GetThread { thread_id: ThreadUuid },
     CreatePostResponse(NewPostRequest),
     UpdatePost(EditPostRequest),
     /*Bucket Questions*/
@@ -98,7 +100,7 @@ impl RequestWrapper {
                 page_index,
             } => format!("thread/get/{}/{}", forum_id, page_index),
             GetForums => "forum/forums".into(),
-            GetForum { forum_id } => format!("forum/{}", forum_id),
+            GetForum { forum_uuid } => format!("forum/{}", forum_uuid),
             GetThread { thread_id } => format!("thread/{}", thread_id),
             CreatePostResponse(_) => "post/create".into(),
             UpdatePost(_) => "post/edit".into(),

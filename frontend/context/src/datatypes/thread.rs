@@ -6,11 +6,13 @@ use wire::thread::ThreadResponse;
 use datatypes::user::UserData;
 use datatypes::post::PostData;
 use chrono::NaiveDateTime;
+use identifiers::thread::ThreadUuid;
+use identifiers::forum::ForumUuid;
 
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MinimalThreadData {
-    pub id: i32,
+    pub id: ThreadUuid,
     pub title: String,
     pub author: UserData,
     pub created_date: NaiveDateTime,
@@ -21,7 +23,7 @@ pub struct MinimalThreadData {
 impl Default for MinimalThreadData {
     fn default() -> MinimalThreadData {
         MinimalThreadData {
-            id: i32::default(),
+            id: ThreadUuid::default(),
             title: String::default(),
             author: UserData::default(),
             created_date: NaiveDateTime::from_timestamp(0,0),
@@ -49,7 +51,7 @@ pub struct NewThreadData {
 }
 
 impl NewThreadData {
-    pub fn attach_info(&self, forum_id: i32, user_id: i32) -> NewThreadRequest {
+    pub fn attach_info(&self, forum_id: ForumUuid, user_id: i32) -> NewThreadRequest {
         NewThreadRequest {
             forum_id,
             author_id: user_id,
@@ -61,8 +63,8 @@ impl NewThreadData {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ThreadData {
-    pub id: i32,
-    pub forum_id: i32,
+    pub id: ThreadUuid,
+    pub forum_id: ForumUuid,
     pub title: String,
     pub author: UserData,
     pub posts: PostData,
@@ -73,8 +75,8 @@ pub struct ThreadData {
 impl Default for ThreadData {
     fn default() -> Self {
         ThreadData {
-            id: i32::default(),
-            forum_id: i32::default(),
+            id: ThreadUuid::default(),
+            forum_id: ForumUuid::default(),
             title: String::default(),
             author: UserData::default(),
             posts: PostData::default(),

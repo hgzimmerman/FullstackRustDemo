@@ -5,6 +5,7 @@ extern crate context;
 extern crate wire;
 extern crate util;
 extern crate routes;
+extern crate identifiers;
 
 pub use context::datatypes;
 pub use context::Context;
@@ -47,6 +48,9 @@ use datatypes::forum::ForumData;
 use datatypes::thread::NewThreadData;
 use datatypes::thread::SelectableMinimalThreadData;
 
+use identifiers::forum::ForumUuid;
+use identifiers::thread::ThreadUuid;
+
 
 pub enum Msg {
     ForumsReady(Vec<ForumData>),
@@ -59,7 +63,7 @@ pub enum Msg {
     NewThreadReady(ThreadData),
     ThreadFailed,
     SetCreateThread,
-    SetThread{thread_id: i32},
+    SetThread{thread_id: ThreadUuid},
     SetForum{forum_data: ForumData},
     PostNewThread{new_thread: NewThreadData}
 }
@@ -126,7 +130,7 @@ impl ForumModel {
         }
     }
 
-    fn get_forum(forum_id: i32, context: &mut Env<Context, Self>) -> Loadable<ForumData> {
+    fn get_forum(forum_uuid: ForumUuid, context: &mut Env<Context, Self>) -> Loadable<ForumData> {
         let forum_callback = context.send_back(
             |response: Response<Json<Result<ForumResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -141,7 +145,7 @@ impl ForumModel {
 
         let forum_task = context.make_request(
             RequestWrapper::GetForum {
-                forum_id,
+                forum_uuid,
             },
             forum_callback,
         );
@@ -153,7 +157,7 @@ impl ForumModel {
 
     }
 
-    fn get_threads(forum_id: i32, context: &mut Env<Context, Self>) -> Loadable<Vec<SelectableMinimalThreadData>> {
+    fn get_threads(forum_id: ForumUuid, context: &mut Env<Context, Self>) -> Loadable<Vec<SelectableMinimalThreadData>> {
         let threads_callback = context.send_back(
             |response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -187,7 +191,7 @@ impl ForumModel {
         }
     }
 
-    fn get_thread(thread_id: i32, context: &mut Env<Context, Self>) -> Loadable<ThreadData> {
+    fn get_thread(thread_id: ThreadUuid, context: &mut Env<Context, Self>) -> Loadable<ThreadData> {
         let callback = context.send_back(
             |response: Response<Json<Result<ThreadResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -213,7 +217,7 @@ impl ForumModel {
         }
     }
 
-    fn upload_new_thread(new_thread: NewThreadData, forum_id: i32, context: &mut Env<Context, Self>) -> Uploadable<NewThreadData>
+    fn upload_new_thread(new_thread: NewThreadData, forum_id: ForumUuid, context: &mut Env<Context, Self>) -> Uploadable<NewThreadData>
     {
         if let Ok(user_id) = context.user_id() {
 
