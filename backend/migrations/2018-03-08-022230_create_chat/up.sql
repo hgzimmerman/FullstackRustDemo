@@ -7,7 +7,6 @@ CREATE TABLE chats (
 CREATE TABLE junction_chat_users (
     id UUID PRIMARY KEY NOT NULL Default gen_random_uuid(),
     chat_id UUID NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
---    chat_id INTEGER NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 

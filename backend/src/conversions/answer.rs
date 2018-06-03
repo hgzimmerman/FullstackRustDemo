@@ -1,10 +1,11 @@
 use db::answer::*;
 use wire::answer::*;
+use identifiers::answer::AnswerUuid;
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {
         AnswerResponse {
-            id: data.answer.id,
+            id: AnswerUuid(data.answer.id),
             answer_text: data.answer.answer_text,
             author: data.user.into(),
         }
@@ -25,7 +26,7 @@ impl NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
             author_id: user_id,
-            question_id: request.question_id,
+            question_id: request.question_id.0,
         }
     }
 }

@@ -11,35 +11,31 @@ use auth::user_authorization::*;
 
 use error::*;
 use log::info;
-
-
-#[derive(FromForm)]
-struct BucketIdParam {
-    bucket_id: i32,
-}
+use identifiers::question::QuestionUuid;
+use identifiers::bucket::BucketUuid;
 
 /// Get all questions in a given bucket.
-#[get("/?<bucket_id_param>")]
-fn get_questions_for_bucket(bucket_id_param: BucketIdParam, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
+#[get("/?<bucket_uuid>")]
+fn get_questions_for_bucket(bucket_uuid: BucketUuid, conn: Conn) -> Result<Json<Vec<QuestionResponse>>, WeekendAtJoesError> {
 
-    Question::get_questions_for_bucket(bucket_id_param.bucket_id, &conn)
+    Question::get_questions_for_bucket(bucket_uuid, &conn)
         .map_vec::<QuestionResponse>()
         .map(Json)
 }
 
 /// Gets a random question from the bucket.
-#[get("/random_question?<bucket_id_param>")]
-fn get_random_question(bucket_id_param: BucketIdParam, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+#[get("/random_question?<bucket_uuid>")]
+fn get_random_question(bucket_uuid: BucketUuid, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     info!("Enter get random question");
-    Question::get_random_question(bucket_id_param.bucket_id, &conn)
+    Question::get_random_question(bucket_uuid, &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
 
 /// Gets a question from the bucket by id.
-#[get("/<question_id>")]
-fn get_question(question_id: i32, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
-    Question::get_full_question(question_id, &conn)
+#[get("/<question_uuid>")]
+fn get_question(question_uuid: QuestionUuid, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
+    Question::get_full_question(question_uuid, &conn)
         .map(QuestionResponse::from)
         .map(Json)
 }
@@ -58,27 +54,27 @@ fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, con
 }
 
 /// Permanently deletes the question from the database.
-#[delete("/<question_id>")]
-fn delete_question(question_id: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<i32>> {
-    info!("user: {}, deleteting question with id: {}", user.user_id, question_id);
-    Question::delete_question(question_id, &conn)?;
-    Ok(Json(question_id))
+#[delete("/<question_uuid>")]
+fn delete_question(question_uuid: QuestionUuid, user: NormalUser, conn: Conn) -> JoeResult<Json<QuestionUuid>> {
+    info!("user: {}, deleteting question with id: {:?}", user.user_id, question_uuid);
+    Question::delete_question(question_uuid.clone(), &conn)?; // spurious clone
+    Ok(Json(question_uuid))
 }
 
 /// Takes a question that may have been on the floor and puts it back in the bucket.
-#[put("/<question_id>/into_bucket")]
-fn put_question_back_in_bucket(question_id: i32, _user: NormalUser, conn: Conn) -> JoeResult<Json<i32>> {
-    Question::put_question_in_bucket(question_id, &conn)?;
-    Ok(Json(question_id))
+#[put("/<question_uuid>/into_bucket")]
+fn put_question_back_in_bucket(question_uuid: QuestionUuid, _user: NormalUser, conn: Conn) -> JoeResult<Json<QuestionUuid>> {
+    Question::put_question_in_bucket(question_uuid.clone(), &conn)?; // spurious clone
+    Ok(Json(question_uuid))
 }
 
 /// Gets the _number_ of questions that currently are in the bucket.
 /// Being in the bucket is distinct from being on the floor.
 /// Questions _in_ the bucket are eligible to be randomly selected, while those on the floor are not.
 /// If the value returned by this endpoint is 0, then the client should not request random questions.
-#[get("/quantity_in_bucket?<bucket_id_param>")]
-fn questions_in_bucket(bucket_id_param: BucketIdParam, _user: NormalUser, conn: Conn) -> JoeResult<Json<i64>> {
-    Question::get_number_of_questions_in_bucket(bucket_id_param.bucket_id, &conn)
+#[get("/quantity_in_bucket?<bucket_uuid>")]
+fn questions_in_bucket(bucket_uuid: BucketUuid, _user: NormalUser, conn: Conn) -> JoeResult<Json<i64>> {
+    Question::get_number_of_questions_in_bucket(bucket_uuid, &conn)
         .map(Json)
 }
 

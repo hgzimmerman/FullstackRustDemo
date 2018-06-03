@@ -8,20 +8,23 @@ use db::answer::Answer;
 use diesel::GroupedBy;
 use db::answer::AnswerData;
 use error::JoeResult;
+use uuid::Uuid;
+use identifiers::question::QuestionUuid;
+use identifiers::bucket::BucketUuid;
 
 use diesel;
 use diesel::ExpressionMethods;
 use diesel::PgConnection;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
 #[insertable = "NewQuestion"]
 #[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_id")]
 #[belongs_to(User, foreign_key = "author_id")]
 pub struct Question {
     /// Primary Key.
-    pub id: i32,
-    pub bucket_id: i32,
+    pub id: Uuid,
+    pub bucket_id: Uuid,
     pub author_id: i32,
     pub question_text: String,
     pub on_floor: bool,
@@ -30,7 +33,7 @@ pub struct Question {
 #[derive(Insertable, Debug)]
 #[table_name = "questions"]
 pub struct NewQuestion {
-    pub bucket_id: i32,
+    pub bucket_id: Uuid,
     pub author_id: i32,
     pub question_text: String,
     pub on_floor: bool, // Should be false by default
@@ -45,6 +48,7 @@ pub struct QuestionData {
 impl Question {
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
+        use db::Retrievable;
 
         let question: Question = Question::create(new_question, conn)?;
         let user = User::get_by_id(question.author_id, conn)?;
@@ -81,13 +85,13 @@ impl Question {
 
 
     /// Gets a random question that may have already been answered
-    pub fn get_random_question(bucket_id: i32, conn: &PgConnection) -> JoeResult<QuestionData> {
+    pub fn get_random_question(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         use db::schema::questions::columns::on_floor;
 
         // Get the bucket from which questions will be retrieved.
-        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
+        let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
 
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
 
@@ -179,9 +183,9 @@ impl Question {
     //    }
 
     /// Gets groupings of questions, users, and answers for a given bucket id.
-    pub fn get_questions_for_bucket(owning_bucket_id: i32, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
+    pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
         use schema::users::dsl::*;
-        let bucket = Bucket::get_by_id(owning_bucket_id, &conn)?;
+        let bucket = Bucket::get_by_uuid(owning_bucket_uuid.0, &conn)?;
 
         let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
             .inner_join(users)
@@ -229,10 +233,11 @@ impl Question {
 
     /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
     /// This does not tightly correspond to the total number of questions associated with the bucket session.
-    pub fn get_number_of_questions_in_bucket(bucket_id: i32, conn: &PgConnection) -> JoeResult<i64> {
+    pub fn get_number_of_questions_in_bucket(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<i64> {
         //        use schema::questions::dsl::*;
         use schema::questions;
-        let bucket = Bucket::get_by_id(bucket_id, &conn)?;
+
+        let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
         Question::belonging_to(&bucket)
             .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
             .count()
@@ -241,11 +246,11 @@ impl Question {
     }
 
     /// Given a question's id, get the question, its answers and user
-    pub fn get_full_question(q_id: i32, conn: &PgConnection) -> JoeResult<QuestionData> {
+    pub fn get_full_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
         use schema::users::dsl::*;
 
         // Get the question
-        let question: Question = Question::get_by_id(q_id, conn)?;
+        let question: Question = Question::get_by_uuid(question_uuid.0, conn)?;
 
         // Get the answers and their associated users and format them into answer data.
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
@@ -274,37 +279,43 @@ impl Question {
         })
     }
 
-    pub fn delete_question(question_id: i32, conn: &PgConnection) -> JoeResult<Question> {
-        Question::delete_by_id(question_id, conn)
+    pub fn delete_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
+        let question_uuid = question_uuid.0;
+        Question::delete_by_id(question_uuid, conn)
     }
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
-    pub fn put_question_in_bucket(question_id: i32, conn: &PgConnection) -> JoeResult<i32> {
+    pub fn put_question_in_bucket(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
         use schema::questions::dsl::*;
         use schema::questions;
 
+
+        let m_question_uuid: Uuid = question_uuid.0;
+
         let target = questions.filter(
-            questions::id.eq(question_id),
+            questions::id.eq(m_question_uuid),
         );
         diesel::update(target)
             .set(on_floor.eq(false))
             .execute(conn)
             .map_err(Question::handle_error)?;
-        Ok(question_id)
+        Ok(question_uuid)
     }
 
-    pub fn put_question_on_floor(question_id: i32, conn: &PgConnection) -> JoeResult<i32> {
+    pub fn put_question_on_floor(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
         use schema::questions::dsl::*;
         use schema::questions;
 
+        let m_question_uuid: Uuid = question_uuid.0;
+
         let target = questions.filter(
-            questions::id.eq(question_id),
+            questions::id.eq(m_question_uuid),
         );
         diesel::update(target)
             .set(on_floor.eq(true))
             .execute(conn)
             .map_err(Question::handle_error)?;
-        Ok(question_id)
+        Ok(question_uuid)
     }
 }

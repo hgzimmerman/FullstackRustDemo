@@ -1,10 +1,10 @@
 use user::UserResponse;
-
+use identifiers::bucket::BucketUuid;
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BucketResponse {
-    pub id: i32,
+    pub id: BucketUuid,
     pub bucket_name: String,
     pub is_public: bool,
 }

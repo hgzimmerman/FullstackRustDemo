@@ -1,11 +1,13 @@
 use user::UserResponse;
 use answer::AnswerResponse;
+use identifiers::question::QuestionUuid;
+use identifiers::bucket::BucketUuid;
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct QuestionResponse {
-    pub id: i32,
-    pub bucket_id: i32,
+    pub id: QuestionUuid,
+    pub bucket_id: BucketUuid,
     pub question_text: String,
     pub author: UserResponse,
     pub answers: Vec<AnswerResponse>,
@@ -14,6 +16,6 @@ pub struct QuestionResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewQuestionRequest {
-    pub bucket_id: i32,
+    pub bucket_id: BucketUuid,
     pub question_text: String,
 }

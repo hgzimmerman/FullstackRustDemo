@@ -2,7 +2,7 @@
 use uuid::Uuid;
 
 
-#[derive(Deserialize, Serialize, Clone, Debug)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq)]
 pub struct AnswerUuid(pub Uuid);
 
 #[cfg(feature = "rocket_support")]

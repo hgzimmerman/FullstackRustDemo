@@ -1,6 +1,7 @@
 use db::bucket::*;
 use wire::bucket::*;
 use wire::user::*;
+use identifiers::bucket::BucketUuid;
 
 use chrono::{NaiveDateTime, Utc, Duration};
 
@@ -13,9 +14,9 @@ impl From<Bucket> for BucketResponse {
         };
 
         BucketResponse {
-            id: bucket.id,
+            id: BucketUuid(bucket.id),
             bucket_name: bucket.bucket_name,
-            is_public: is_public,
+            is_public,
         }
     }
 }
