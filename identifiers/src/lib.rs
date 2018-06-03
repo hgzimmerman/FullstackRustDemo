@@ -1,3 +1,4 @@
+
 #[cfg(feature = "rocket_support")]
 extern crate rocket;
 
@@ -51,9 +52,11 @@ fn uuid_from_form<'f>(items: &mut FormItems<'f>, strict: bool, param_name: &'sta
     let mut uuid = None;
 
     for (key, value) in items {
+        println!("{},{}", key, value);
 
         if key.as_str() == param_name {
-            let uuid_str = value.url_decode().map_err(|_| ())?;
+            let uuid_str: String = value.url_decode().map_err(|_| ())?;
+            println!("uuid_str:{}", uuid_str);
             let parsed_uuid: Uuid = Uuid::parse_str(&uuid_str).map_err(
                 |_| (),
             )?;

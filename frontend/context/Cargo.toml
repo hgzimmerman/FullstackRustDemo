@@ -5,6 +5,7 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
 wire = {path = "../../wire"}
+identifiers = {path = "../../identifiers"}
 failure = "0.1"
 failure_derive = "0.1.1"
 
@@ -22,7 +23,7 @@ stdweb = "0.4.2"
 version = "0.4"
 default-features = false
 
+
 [features]
 default = []
-
 development = []

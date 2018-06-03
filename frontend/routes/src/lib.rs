@@ -2,6 +2,7 @@
 extern crate yew;
 
 use yew::services::route::*;
+extern crate identifiers;
 
 pub mod auth;
 pub mod bucket;

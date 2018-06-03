@@ -8,7 +8,9 @@ serde = "1.0.56"
 serde_json = "1.0.3"
 serde_derive = "1.0.14"
 
-rocket = "0.3.11"
+[dependencies.rocket]
+version = "0.3.11"
+optional = true
 
 [dependencies.uuid]
 version = "0.6.5"
@@ -17,6 +19,6 @@ features = ["serde"]
 
 [features]
 default = []
-rocket_support = []
+rocket_support = ["rocket"]
 
 

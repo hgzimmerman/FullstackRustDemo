@@ -1,5 +1,6 @@
 //use self::route_service::RouteService;
 extern crate wire;
+extern crate identifiers;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;

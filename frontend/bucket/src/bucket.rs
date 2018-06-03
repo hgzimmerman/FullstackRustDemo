@@ -29,6 +29,8 @@ use wire::answer::NewAnswerRequest;
 use util::input::InputValidator;
 use util::link::Link;
 
+use identifiers::question::QuestionUuid;
+use identifiers::bucket::BucketUuid;
 
 #[derive(Debug, Default, Clone)]
 pub struct QuestionPackage {
@@ -66,7 +68,7 @@ pub struct BucketLobby {
 
 
 impl BucketLobby {
-    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<QuestionList>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<QuestionList>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<QuestionResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -90,7 +92,7 @@ impl BucketLobby {
             callback,
         );
     }
-    fn get_random_question(question_package: &mut Loadable<Uploadable<QuestionPackage>>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn get_random_question(question_package: &mut Loadable<Uploadable<QuestionPackage>>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -116,7 +118,7 @@ impl BucketLobby {
             callback,
         );
     }
-    fn post_new_question(new_question: &mut Uploadable<NewQuestion>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn post_new_question(new_question: &mut Uploadable<NewQuestion>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -176,13 +178,13 @@ impl BucketLobby {
         );
     }
 
-    fn put_question_back_in_bucket(question_id: i32, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+    fn put_question_back_in_bucket(question_id: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
         let callback = context.send_back(
-            |response: Response<Json<Result<i32, Error>>>| {
+            |response: Response<Json<Result<QuestionUuid, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let question_id: i32 = data.unwrap();
+                    let question_id: QuestionUuid = data.unwrap();
                     Msg::QuestionPutBackInBucketSuccess {question_id}
                 } else {
                     Msg::QuestionPutBackInBucketFailed
@@ -197,13 +199,13 @@ impl BucketLobby {
         Some(ft)
     }
 
-    fn delete_question(question_id: i32, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+    fn delete_question(question_id: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
         let callback = context.send_back(
-            |response: Response<Json<Result<i32, Error>>>| {
+            |response: Response<Json<Result<QuestionUuid, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let question_id: i32 = data.unwrap();
+                    let question_id: QuestionUuid = data.unwrap();
                     Msg::DiscardQuestionSucceeded {question_id}
                 } else {
                     Msg::DiscardQuestionFailed
@@ -238,11 +240,11 @@ pub enum Msg {
     CreateQuestionFailed,
     PriorQuestionsReady(Vec<QuestionData>),
     PriorQuestionsFailed,
-    PutOldQuestionBackInBucket{question_id: i32},
-    QuestionPutBackInBucketSuccess{question_id: i32},
+    PutOldQuestionBackInBucket{question_id: QuestionUuid},
+    QuestionPutBackInBucketSuccess{question_id: QuestionUuid},
     QuestionPutBackInBucketFailed,
     DiscardQuestion,
-    DiscardQuestionSucceeded {question_id: i32},
+    DiscardQuestionSucceeded {question_id: QuestionUuid},
     DiscardQuestionFailed,
     SetListFilter(QuestionLocation)
 }
@@ -504,7 +506,7 @@ impl Renderable<Context, BucketLobby> for QuestionData {
              }
         }
 
-        let question_id: i32 = self.id;
+        let question_id: QuestionUuid = self.id;
         html! {
             <div class=("flexbox-vert", "bordered", "margin-default"),>
                 <div class=("flexbox-vert", "border-bottom", "padding-default"),>

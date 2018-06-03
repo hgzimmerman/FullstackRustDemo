@@ -3,12 +3,14 @@ extern crate yew;
 extern crate failure;
 extern crate context;
 extern crate wire;
+extern crate identifiers;
 extern crate util;
 extern crate routes;
 
 pub use context::datatypes;
 pub use context::Context;
 pub use routes::bucket::BucketRoute;
+
 
 
 use yew::prelude::*;
@@ -50,6 +52,7 @@ use buckets::BucketLists;
 
 use buckets::ApprovedBucket;
 use buckets::PublicBucket;
+use identifiers::bucket::BucketUuid;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
@@ -107,7 +110,7 @@ pub enum BucketPage {
 
 
 pub enum Msg {
-    NavigateToBucket{bucket_id: i32},
+    NavigateToBucket{bucket_id: BucketUuid},
     PublicBucketsReady(Vec<PublicBucket>),
     PublicBucketsFailed,
     ApprovedBucketsReady(Vec<ApprovedBucket>),
@@ -118,7 +121,7 @@ pub enum Msg {
     CreateBucket,
     UpdateBucketName(InputState),
     ChangeDropDownState(DropDownPaneVariant),
-    RequestToJoinBucket{bucket_id: i32},
+    RequestToJoinBucket{bucket_id: BucketUuid},
     NoOp // TODO remove me
 }
 
@@ -176,7 +179,7 @@ impl BucketModel {
         );
     }
 
-    fn get_bucket(bucket: &mut Loadable<BucketData>, bucket_id: i32, context: &mut Env<Context, Self>) {
+    fn get_bucket(bucket: &mut Loadable<BucketData>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<BucketResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -231,7 +234,7 @@ impl BucketModel {
 
 
     }
-    fn request_to_join_bucket(bucket_id: i32, request_to_join_bucket_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+    fn request_to_join_bucket(bucket_id: BucketUuid, request_to_join_bucket_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<BucketResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();

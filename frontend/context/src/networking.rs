@@ -17,6 +17,9 @@ use failure::Error;
 use serde_json;
 use serde::Serialize;
 
+use identifiers::bucket::BucketUuid;
+use identifiers::question::QuestionUuid;
+
 //use context::storage;
 
 pub trait FtWrapper{
@@ -55,22 +58,22 @@ pub enum RequestWrapper {
     /*Bucket Questions*/
     GetPublicBuckets,
     GetBucketsForUser,
-    GetBucket{bucket_id: i32},
+    GetBucket{bucket_id: BucketUuid},
     CreateBucket(NewBucketRequest),
-    GetRandomQuestion { bucket_id: i32 },
-    GetQuestions { bucket_id: i32},
+    GetRandomQuestion { bucket_id: BucketUuid },
+    GetQuestions { bucket_id: BucketUuid},
     AnswerQuestion(NewAnswerRequest),
     CreateQuestion(NewQuestionRequest),
-    DeleteQuestion{question_id: i32},
-    PutQuestionBackInBucket{question_id: i32},
-    SetBucketPublicStatus{bucket_id: i32, is_public: bool},
-    ApproveUserForBucket {bucket_id: i32, user_id: i32},
-    RemoveUserFromBucket {bucket_id: i32, user_id: i32},
+    DeleteQuestion{question_id: QuestionUuid},
+    PutQuestionBackInBucket{question_id: QuestionUuid},
+    SetBucketPublicStatus{bucket_id: BucketUuid, is_public: bool},
+    ApproveUserForBucket {bucket_id: BucketUuid, user_id: i32},
+    RemoveUserFromBucket {bucket_id: BucketUuid, user_id: i32},
     GetUnapprovedUsersForOwnedBuckets,
-    GetUsersInBucket{bucket_id: i32},
-    GetIsUserOwnerOfBucket{bucket_id: i32},
-    CreateJoinBucketRequest {bucket_id: i32},
-    GetNumberOfQuestionsInBucket {bucket_id: i32}
+    GetUsersInBucket{bucket_id: BucketUuid},
+    GetIsUserOwnerOfBucket{bucket_id: BucketUuid},
+    CreateJoinBucketRequest {bucket_id: BucketUuid},
+    GetNumberOfQuestionsInBucket {bucket_id: BucketUuid}
 }
 
 impl RequestWrapper {
@@ -103,8 +106,8 @@ impl RequestWrapper {
             GetBucketsForUser => "buckets/approved".into(),
             GetBucket{bucket_id} => format!("buckets/{}", bucket_id),
             CreateBucket(_) => "buckets/create".into(),
-            GetRandomQuestion { bucket_id } => format!("question/random_question?bucket_id={}", bucket_id),
-            GetQuestions { bucket_id } => format!("question?bucket_id={}", bucket_id),
+            GetRandomQuestion { bucket_id } => format!("question/random_question?bucket_uuid={}", bucket_id),
+            GetQuestions { bucket_id } => format!("question?bucket_uuid={}", bucket_id),
             AnswerQuestion(_) => "answer/create".into(),
             CreateQuestion(_) => "question/create".into(),
             DeleteQuestion {question_id} => format!("question/{}", question_id),
@@ -116,7 +119,7 @@ impl RequestWrapper {
             GetUsersInBucket {bucket_id} => format!("buckets/{}/users",bucket_id),
             GetIsUserOwnerOfBucket {bucket_id}  => format!{"buckets/{}/user_owner_status", bucket_id},
             CreateJoinBucketRequest {bucket_id} => format!{"buckets/{}/user_join_request", bucket_id},
-            GetNumberOfQuestionsInBucket {bucket_id} => format!("/api/question/quantity_in_bucket?bucket_id={}", bucket_id)
+            GetNumberOfQuestionsInBucket {bucket_id} => format!("/api/question/quantity_in_bucket?bucket_uuid={}", bucket_id)
         };
 
         format!("{}/{}", api_base, path)

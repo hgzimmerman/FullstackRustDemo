@@ -1,6 +1,8 @@
 use datatypes::answer::AnswerData;
 use datatypes::user::UserData;
 use wire::question::QuestionResponse;
+use identifiers::bucket::BucketUuid;
+use identifiers::question::QuestionUuid;
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -17,8 +19,8 @@ impl Default for QuestionLocation {
 
 #[derive(Clone, Debug, Default)]
 pub struct QuestionData {
-    pub id: i32,
-    pub bucket_id: i32,
+    pub id: QuestionUuid,
+    pub bucket_id: BucketUuid,
     pub question_text: String,
     pub author: UserData,
     pub answers: Vec<AnswerData>,

@@ -1,8 +1,27 @@
 use uuid::Uuid;
+use std::fmt::{Display, Formatter};
+use std::fmt::Result as FormatResult;
+use uuid::ParseError;
 
-#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default)]
 pub struct BucketUuid(pub Uuid);
 
+const PARAM_NAME: &'static str = "bucket_uuid";
+
+impl BucketUuid {
+    pub fn to_query_parameter(self) -> String {
+        format!("{}={}", PARAM_NAME, self.0 )
+    }
+    pub fn parse_str(input: &str) -> Result<Self, ParseError> {
+        Uuid::parse_str(input).map(BucketUuid)
+    }
+}
+
+impl Display for BucketUuid {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[cfg(feature = "rocket_support")]
 mod rocket {
@@ -22,7 +41,6 @@ mod rocket {
         }
     }
 
-    const PARAM_NAME: &'static str = "bucket_uuid";
 
     impl<'f> FromForm<'f> for BucketUuid {
         type Error = ();

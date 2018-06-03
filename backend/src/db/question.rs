@@ -293,9 +293,9 @@ impl Question {
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(
-            questions::id.eq(m_question_uuid),
-        );
+        let target = questions.filter(questions::id.eq(
+            m_question_uuid,
+        ));
         diesel::update(target)
             .set(on_floor.eq(false))
             .execute(conn)
@@ -309,9 +309,9 @@ impl Question {
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(
-            questions::id.eq(m_question_uuid),
-        );
+        let target = questions.filter(questions::id.eq(
+            m_question_uuid,
+        ));
         diesel::update(target)
             .set(on_floor.eq(true))
             .execute(conn)

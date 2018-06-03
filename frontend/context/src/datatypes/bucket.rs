@@ -1,11 +1,11 @@
 use wire::bucket::*;
 use datatypes::user::UserData;
 //use util::input::InputState;
-
+use identifiers::bucket::BucketUuid;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BucketData {
-    pub id: i32,
+    pub id: BucketUuid,
     pub bucket_name: String,
     pub is_public: bool
 }

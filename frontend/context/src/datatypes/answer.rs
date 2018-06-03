@@ -2,11 +2,12 @@
 
 use datatypes::user::UserData;
 use wire::answer::AnswerResponse;
+use identifiers::answer::AnswerUuid;
 
 
 #[derive(Clone, Debug, Default)]
 pub struct AnswerData {
-    pub id: i32,
+    pub id: AnswerUuid,
     pub answer_text: Option<String>,
     pub author: UserData,
 }

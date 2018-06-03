@@ -13,6 +13,7 @@ use context::datatypes::bucket::BucketData;
 use context::networking::RequestWrapper;
 use context::datatypes::user::UserData;
 use wire::user::UserResponse;
+use identifiers::bucket::BucketUuid;
 
 
 
@@ -22,7 +23,7 @@ use wire::user::UserResponse;
 pub struct BucketParticipants {
     users:  Loadable<Vec<UserData>>,
     is_user_bucket_owner: Loadable<bool>,
-    bucket_id: Option<i32>,
+    bucket_id: Option<BucketUuid>,
     remove_user_action: Uploadable<()>
 }
 
@@ -44,7 +45,7 @@ impl Default for BucketParticipants {
 }
 
 pub enum Msg {
-    GetBucketUserData{bucket_id: i32},
+    GetBucketUserData{bucket_id: BucketUuid},
     BucketUserDataLoaded(Vec<UserData>),
     BucketUserDataFailed,
     SetIsUserOwner(bool),
@@ -52,7 +53,7 @@ pub enum Msg {
 }
 
 impl BucketParticipants {
-    fn get_participants_in_bucket(bucket_id: i32, participants: &mut Loadable<Vec<UserData>>, context: &mut Env<Context, Self>) {
+    fn get_participants_in_bucket(bucket_id: BucketUuid, participants: &mut Loadable<Vec<UserData>>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<UserResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -73,7 +74,7 @@ impl BucketParticipants {
         );
     }
 
-    fn determine_if_user_is_owner(bucket_id: i32, is_owner: &mut Loadable<bool>, context: &mut Env<Context, Self>) {
+    fn determine_if_user_is_owner(bucket_id: BucketUuid, is_owner: &mut Loadable<bool>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<bool, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -94,8 +95,8 @@ impl BucketParticipants {
         );
     }
 
-    fn remove_user_from_bucket(bucket_id: i32, user_id: i32, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: i32 = bucket_id;
+    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: i32, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_id: BucketUuid = bucket_id;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();

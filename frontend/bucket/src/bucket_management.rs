@@ -14,6 +14,7 @@ use util::uploadable::Uploadable;
 use context::networking::RequestWrapper;
 
 use context::datatypes::user::UserData;
+use identifiers::bucket::BucketUuid;
 
 /// A component for approving and rejecting requests to join buckets.
 pub struct BucketManagement {
@@ -42,9 +43,9 @@ pub enum Msg {
     GetBucketUsersData,
     BucketUsersDataLoaded(Vec<BucketUsersData>),
     BucketUsersDataFailed,
-    GrantUserAccessToBucket{user_id: i32, bucket_id: i32},
-    DenyUserAccessToBucket{user_id: i32, bucket_id: i32},
-    SetPublicOrPrivate{bucket_id: i32, pub_or_priv: PublicOrPrivate}
+    GrantUserAccessToBucket{user_id: i32, bucket_id: BucketUuid},
+    DenyUserAccessToBucket{user_id: i32, bucket_id: BucketUuid},
+    SetPublicOrPrivate{bucket_id: BucketUuid, pub_or_priv: PublicOrPrivate}
 }
 
 impl BucketManagement {
@@ -69,7 +70,7 @@ impl BucketManagement {
         );
     }
 
-    fn grant_access_to_user_for_bucket(bucket_id: i32, user_id: i32, approve_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+    fn grant_access_to_user_for_bucket(bucket_id: BucketUuid, user_id: i32, approve_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -85,8 +86,8 @@ impl BucketManagement {
         );
     }
 
-    fn remove_user_from_bucket(bucket_id: i32, user_id: i32, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: i32 = bucket_id;
+    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: i32, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_id: BucketUuid = bucket_id;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -102,8 +103,8 @@ impl BucketManagement {
         );
     }
 
-    fn set_public_or_private(bucket_id: i32, pub_or_priv: PublicOrPrivate, set_public_or_private_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: i32 = bucket_id;
+    fn set_public_or_private(bucket_id: BucketUuid, pub_or_priv: PublicOrPrivate, set_public_or_private_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_id: BucketUuid = bucket_id;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -215,9 +216,9 @@ impl BucketManagement {
         }
     }
 
-    fn users_view(users: &Vec<UserData>, bucket_id: i32) -> Html<Context, BucketManagement> {
+    fn users_view(users: &Vec<UserData>, bucket_id: BucketUuid) -> Html<Context, BucketManagement> {
 
-        fn user_view(user: &UserData, bucket_id: i32) -> Html<Context, BucketManagement> {
+        fn user_view(user: &UserData, bucket_id: BucketUuid) -> Html<Context, BucketManagement> {
             let user_id = user.id;
 
             html!{
