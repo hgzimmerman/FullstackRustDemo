@@ -2,20 +2,21 @@ use rocket::Route;
 use rocket_contrib::Json;
 use super::{Routable, convert_vector};
 use db::Conn;
-use db::Retrievable;
-use db::Creatable;
 
 use db::article::*;
 use wire::article::*;
 use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
 use auth::user_authorization::NormalUser;
+use identifiers::article::ArticleUuid;
+use db::RetrievableUuid;
+use db::CreatableUuid;
 
 
 /// Gets an article by id.
-#[get("/<article_id>", rank = 0)]
-fn get_article(article_id: i32, conn: Conn) -> Result<Json<FullArticleResponse>, WeekendAtJoesError> {
-    Article::get_article_data(article_id, &conn)
+#[get("/<article_uuid>", rank = 0)]
+fn get_article(article_uuid: ArticleUuid, conn: Conn) -> Result<Json<FullArticleResponse>, WeekendAtJoesError> {
+    Article::get_article_data(article_uuid, &conn)
         .map(FullArticleResponse::from)
         .map(Json)
 }
@@ -58,7 +59,7 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
 /// The user id of the user must match the article being updated.
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<MinimalArticleResponse>, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_id(update_article_request.id, &conn)?;
+    let article_to_update: Article = Article::get_by_uuid(update_article_request.id.0, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
@@ -71,26 +72,26 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 
 
 /// Given an article id, set the corresponding article's date_published column to contain the current date.
-#[put("/publish/<article_id>")]
-fn publish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
+#[put("/publish/<article_uuid>")]
+fn publish_article(article_uuid: ArticleUuid, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
 
-    Article::set_publish_status(article_id, true, &conn)
+    Article::set_publish_status(article_uuid, true, &conn)
         .map(|_| NoContent)
 }
 
 /// Given an article id, set the corresponding article's date_published colum to NULL.
-#[put("/unpublish/<article_id>")]
-fn unpublish_article(article_id: i32, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_id(article_id, &conn)?;
+#[put("/unpublish/<article_uuid>")]
+fn unpublish_article(article_uuid: ArticleUuid, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
+    let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)?;
     if article_to_update.author_id != user.user_id {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
 
-    Article::set_publish_status(article_id, false, &conn)
+    Article::set_publish_status(article_uuid, false, &conn)
         .map(|_| NoContent)
 }
 

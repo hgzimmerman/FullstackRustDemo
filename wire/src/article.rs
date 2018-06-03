@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use user::UserResponse;
+use identifiers::article::ArticleUuid;
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -11,15 +12,15 @@ pub struct NewArticleRequest {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UpdateArticleRequest {
+    pub id: ArticleUuid,
     pub title: Option<String>,
     pub body: Option<String>,
-    pub id: i32,
 }
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MinimalArticleResponse {
-    pub id: i32,
+    pub id: ArticleUuid,
     pub author_id: i32,
     pub title: String,
     pub body: String,
@@ -30,7 +31,7 @@ pub struct MinimalArticleResponse {
 /// This makes it ideal for returning many preview articles.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ArticlePreviewResponse {
-    pub id: i32,
+    pub id: ArticleUuid,
     pub author: UserResponse,
     pub title: String,
     pub publish_date: Option<NaiveDateTime>,
@@ -39,7 +40,7 @@ pub struct ArticlePreviewResponse {
 /// All relevant information is attached.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct FullArticleResponse {
-    pub id: i32,
+    pub id: ArticleUuid,
     pub author: UserResponse,
     pub title: String,
     pub body: String,

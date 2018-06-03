@@ -8,16 +8,18 @@ use db::user::User;
 use diesel::BelongingToDsl;
 use error::JoeResult;
 use diesel::PgConnection;
-
+use uuid::Uuid;
+use identifiers::article::ArticleUuid;
+use db::Retrievable;
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, Crd, ErrorHandler, Debug, PartialEq)]
+#[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq)]
 #[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_id")]
 #[table_name = "articles"]
 pub struct Article {
     /// The public key for the article.
-    pub id: i32,
+    pub id: Uuid,
     /// The key of the user that authored the article.
     pub author_id: i32,
     /// The title of the article. This will be used to when showing the article in "Suggested Articles" panes.
@@ -35,7 +37,7 @@ pub struct Article {
 #[derive(AsChangeset, Clone, Debug, PartialEq)]
 #[table_name = "articles"]
 pub struct ArticleChangeset {
-    pub id: i32,
+    pub id: Uuid,
     pub title: Option<String>,
     pub body: Option<String>,
 }
@@ -75,9 +77,9 @@ impl Article {
     //     ))
     // }
 
-    pub fn get_article_data(article_id: i32, conn: &PgConnection) -> JoeResult<ArticleData> {
+    pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<ArticleData> {
 
-        let article = Article::get_by_id(article_id, conn)?;
+        let article = Article::get_by_uuid(article_uuid.0, conn)?;
         let user = User::get_by_id(article.author_id, conn)?;
         Ok(ArticleData { article, user })
     }
@@ -136,7 +138,7 @@ impl Article {
     /// Sets the date for the article's publish date.
     /// If true, it will set the publish datetime to the current time, indicating it is published.
     /// If false, it will set the publish column to Null, indicating that it has not been published.
-    pub fn set_publish_status(article_id: i32, publish: bool, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn set_publish_status(article_uuid: ArticleUuid, publish: bool, conn: &PgConnection) -> JoeResult<Article> {
         use schema::articles::dsl::*;
         use schema::articles;
 
@@ -146,8 +148,10 @@ impl Article {
             None
         };
 
+        let m_article_uuid: Uuid = article_uuid.0;
+
         diesel::update(articles::table)
-            .filter(articles::id.eq(article_id))
+            .filter(articles::id.eq(m_article_uuid))
             .set(publish_date.eq(publish_value))
             .get_result(conn)
             .map_err(Article::handle_error)
