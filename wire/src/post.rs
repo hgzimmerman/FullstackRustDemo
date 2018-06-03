@@ -1,6 +1,7 @@
 use user::UserResponse;
 use chrono::NaiveDateTime;
 
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PostResponse {
     pub id: i32,

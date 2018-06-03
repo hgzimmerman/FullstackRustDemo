@@ -131,6 +131,49 @@ where
 {
 }
 
+
+
+use uuid::Uuid;
+
+pub trait CreatableUuid<T> {
+    fn create(insert: T, conn: &PgConnection) -> JoeResult<Self>
+    where
+        Self: Sized;
+}
+
+pub trait RetrievableUuid<'a> {
+    fn get_by_uuid(id: Uuid, conn: &PgConnection) -> JoeResult<Self>
+    where
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
+
+    fn get_all(conn: &PgConnection) -> JoeResult<Vec<Self>>
+    where
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
+
+    fn exists(id: Uuid, conn: &PgConnection) -> JoeResult<bool>
+    where
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
+
+    // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
+    //     where
+    //         Self: Sized;
+}
+
+trait DeletableUuid<'a> {
+    /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
+    /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
+    fn delete_by_id(id: Uuid, conn: &PgConnection) -> JoeResult<Self>
+    where
+        Self: ErrorFormatter,
+        Self: 'a + Sized,
+        &'a Self: Identifiable;
+}
+
+
+
 pub mod testing {
 
     use super::*;

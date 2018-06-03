@@ -1,5 +1,7 @@
 use user::UserResponse;
 use answer::AnswerResponse;
+
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct QuestionResponse {
     pub id: i32,

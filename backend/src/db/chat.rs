@@ -11,13 +11,18 @@ use diesel::ExpressionMethods;
 // use diesel::query_dsl::InternalJoinDsl;
 use error::JoeResult;
 use diesel::PgConnection;
+use uuid::Uuid;
+use identifiers::chat::ChatUuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Crd, ErrorHandler)]
+use db::Retrievable;
+
+
+#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
 #[insertable = "NewChat"]
 #[table_name = "chats"]
 pub struct Chat {
     /// Primary Key.
-    pub id: i32,
+    pub id: Uuid,
     /// The name of the chat
     pub chat_name: String,
     pub leader_id: i32,
@@ -32,18 +37,17 @@ pub struct NewChat {
 }
 
 #[derive(Debug, Clone, Identifiable, Queryable)]
-// #[insertable = "NewJunctionChatUsers"]
 #[table_name = "junction_chat_users"]
 pub struct JunctionChatUsers {
-    pub id: i32,
-    pub chat_id: i32,
+    pub id: Uuid,
+    pub chat_id: Uuid,
     pub user_id: i32,
 }
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "junction_chat_users"]
 pub struct ChatUserAssociation {
-    pub chat_id: i32,
+    pub chat_id: Uuid,
     pub user_id: i32,
 }
 
@@ -52,6 +56,10 @@ pub struct ChatData {
     pub leader: User,
     pub members: Vec<User>,
 }
+
+
+
+
 
 impl Chat {
     pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
@@ -77,7 +85,7 @@ impl Chat {
         Ok(())
     }
 
-    fn get_users_in_chat(m_chat_id: i32, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    fn get_users_in_chat(m_chat_id: Uuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
         use schema::junction_chat_users::dsl::*;
         // use schema::users::dsl::*;
         use schema::users;
@@ -90,8 +98,11 @@ impl Chat {
             .map_err(Chat::handle_error)
     }
 
-    pub fn is_user_in_chat(m_chat_id: i32, m_user_id: i32, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn is_user_in_chat(m_chat_id: &ChatUuid, m_user_id: i32, conn: &PgConnection) -> JoeResult<bool> {
         use schema::junction_chat_users::dsl::*;
+
+        let m_chat_id = m_chat_id.0;
+
         let junction = junction_chat_users
             .filter(user_id.eq(m_user_id))
             .filter(chat_id.eq(m_chat_id))
@@ -100,10 +111,12 @@ impl Chat {
         Ok(junction.get(0).is_some())
     }
 
-    pub fn get_full_chat(chat_id: i32, conn: &PgConnection) -> JoeResult<ChatData> {
-        let chat: Chat = Chat::get_by_id(chat_id, &conn)?;
+
+    pub fn get_full_chat(chat_id: ChatUuid, conn: &PgConnection) -> JoeResult<ChatData> {
+        let chat_uuid: Uuid = chat_id.0;
+        let chat: Chat = Chat::get_by_uuid(chat_uuid, &conn)?;
         let leader: User = User::get_by_id(chat.leader_id, &conn)?;
-        let chat_users: Vec<User> = Chat::get_users_in_chat(chat_id, &conn)?;
+        let chat_users: Vec<User> = Chat::get_users_in_chat(chat_uuid, &conn)?;
 
         Ok(ChatData {
             chat,

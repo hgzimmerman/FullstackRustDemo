@@ -1,8 +1,15 @@
 //! Contains all types that will be send between the frontend and the backend.
 //! This allows both the frontend and the backend to use the same types.
+
+extern crate identifiers;
+
 #[macro_use]
 extern crate serde_derive;
 extern crate chrono;
+extern crate uuid;
+
+#[cfg(feature="rocket_support")]
+extern crate rocket;
 
 pub mod user;
 pub mod article;
@@ -17,6 +24,8 @@ pub mod message;
 pub mod login;
 
 
+
+
 /// Abstracts away a common closure that is used to convert the wrapped values of a vector
 /// into another type.
 ///
@@ -28,3 +37,5 @@ where
 {
     vec.into_iter().map(W::from).collect()
 }
+
+

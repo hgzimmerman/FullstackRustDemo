@@ -72,6 +72,7 @@ use db::chat::Chat;
 use db::message::Message;
 
 extern crate wire;
+extern crate identifiers;
 
 
 use simplelog::*;

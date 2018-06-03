@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 
+
 /// User to be sent over the wire
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserResponse {

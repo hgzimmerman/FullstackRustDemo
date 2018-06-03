@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use user::UserResponse;
 
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewArticleRequest {
     pub title: String,

@@ -11,6 +11,105 @@ use proc_macro::TokenStream;
 /// CRD stands for Create, Read, Delete.
 /// This macro takes a given type and derives methods that allow it to be
 /// inserted, read from, and deleted from a database.
+#[proc_macro_derive(CrdUuid, attributes(table_name, insertable))]
+pub fn crd_uuid(input: TokenStream) -> TokenStream {
+    // Parse the string representation
+    let ast = syn::parse(input).unwrap();
+
+    // Build the impl
+    let gen = impl_crd_uuid(&ast);
+    // Return the generated impl
+    gen.into()
+}
+
+fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
+    let name: &syn::Ident = &ast.ident;
+
+    let table_name: syn::Ident = get_value_from_attributes("table_name", &ast.attrs);
+    let insertable: syn::Ident = get_value_from_attributes("insertable", &ast.attrs);
+
+    quote! {
+
+//        use db::CRDUuid as macro_CRD_uuid;
+        use db::RetrievableUuid as macro_RetrievableUuid;
+        use db::CreatableUuid as macro_CreatableUuid;
+        use db::DeletableUuid as macro_DeletableUuid;
+        use error::JoeResult as macro_JoeResult_uuid;
+        use diesel::PgConnection as macro_PgConnection_uuid;
+        use uuid::Uuid as macro_Uuid;
+
+        impl macro_CreatableUuid<#insertable> for #name {
+            fn create(insert: #insertable, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<Self> {
+                use schema::#table_name;
+                use diesel;
+                use diesel::RunQueryDsl;
+
+                diesel::insert_into(#table_name ::table)
+                    .values(&insert)
+                    .get_result(conn)
+                    .map_err(#name::handle_error)
+            }
+
+        }
+
+        impl<'a> macro_RetrievableUuid<'a> for #name {
+            fn get_by_uuid(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
+                use schema::#table_name::dsl::*;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
+
+                #table_name
+                    .find(item_id)
+                    .first::<#name>(conn)
+                    .map_err(#name::handle_error)
+            }
+
+            fn get_all(conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<Vec<#name>> {
+                use schema::#table_name::dsl::*;
+                use diesel::RunQueryDsl;
+                #table_name
+                    .load::<#name>(conn)
+                    .map_err(#name::handle_error)
+            }
+
+            fn exists(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<bool> {
+                use schema::#table_name;
+                use schema::#table_name::dsl::*;
+                use diesel::select;
+                use diesel::dsl::exists;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
+                use diesel::ExpressionMethods;
+
+                select(exists(#table_name.filter(#table_name::id.eq(item_id))))
+                    .get_result::<bool>(conn)
+                    .map_err(#name::handle_error)
+            }
+        }
+
+        impl<'a> macro_DeletableUuid<'a> for #name {
+            fn delete_by_id(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
+                use schema::#table_name::dsl::*;
+                use diesel::ExpressionMethods;
+                use diesel;
+                use diesel::RunQueryDsl;
+                use diesel::QueryDsl;
+
+                let target = #table_name.filter(id.eq(item_id));
+
+                diesel::delete(target)
+                    .get_result(conn)
+                    .map_err(#name::handle_error)
+            }
+        }
+    }
+}
+
+
+
+/// CRD stands for Create, Read, Delete.
+/// This macro takes a given type and derives methods that allow it to be
+/// inserted, read from, and deleted from a database.
 #[proc_macro_derive(Crd, attributes(table_name, insertable))]
 pub fn crd(input: TokenStream) -> TokenStream {
     // Parse the string representation
@@ -158,7 +257,7 @@ fn impl_error_handler( ast: &syn::DeriveInput) -> quote::Tokens {
 /// Given a string that coreesponds to the ident specified in the attributes section in the proc_macro_derive(...) above
 /// extract the value that corresponds to it.
 fn get_value_from_attributes(attribute_name: &'static str, attrs: &Vec<syn::Attribute>) -> syn::Ident {
-    attrs
+    *attrs
         .into_iter()
         .map(|x| x.interpret_meta(). unwrap())
         .filter(|x| {
@@ -188,5 +287,6 @@ fn get_value_from_attributes(attribute_name: &'static str, attrs: &Vec<syn::Attr
         .collect::<Vec<syn::Ident>>()
         .first()
         .expect(format!("The attribute '{}' could not be found", attribute_name).as_ref())
-        .clone()
+
+//    ident.clone()
 }

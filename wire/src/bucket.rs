@@ -1,5 +1,7 @@
 use user::UserResponse;
 
+
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct BucketResponse {
     pub id: i32,

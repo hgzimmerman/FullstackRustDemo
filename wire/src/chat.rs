@@ -1,9 +1,11 @@
 use user::UserResponse;
+use identifiers::chat::ChatUuid;
+
 
 /// Messages will be sent in a separate response.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ChatResponse {
-    pub id: i32,
+    pub id: ChatUuid,
     pub name: String,
     pub leader: UserResponse,
     pub members: Vec<UserResponse>,
@@ -11,7 +13,7 @@ pub struct ChatResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MinimalChatResponse {
-    pub id: i32,
+    pub id: ChatUuid,
     pub name: String,
 }
 
@@ -23,6 +25,6 @@ pub struct NewChatRequest {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ChatUserAssociationRequest {
-    pub chat_id: i32,
+    pub chat_id: ChatUuid,
     pub user_id: i32,
 }

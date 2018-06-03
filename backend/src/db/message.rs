@@ -10,8 +10,15 @@ use db::chat::Chat;
 use db::diesel_extensions::pagination::*;
 use error::JoeResult;
 use diesel::PgConnection;
+use uuid::Uuid;
+//use diesel::sql_types::Uuid;
+//use diesel::pg::types::sql_types::Uuid;
+use db::Retrievable;
+use identifiers::message::MessageUuid;
+use identifiers::chat::ChatUuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, Crd, ErrorHandler)]
+
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
 #[belongs_to(Message, foreign_key = "reply_id")]
 #[belongs_to(User, foreign_key = "author_id")]
 #[belongs_to(Chat, foreign_key = "chat_id")]
@@ -19,10 +26,10 @@ use diesel::PgConnection;
 #[table_name = "messages"]
 pub struct Message {
     /// Primary Key.
-    pub id: i32,
+    pub id: Uuid,
     pub author_id: i32,
-    pub chat_id: i32,
-    pub reply_id: Option<i32>,
+    pub chat_id: Uuid,
+    pub reply_id: Option<Uuid>,
     pub message_content: String,
     pub read_flag: bool,
     pub create_date: NaiveDateTime,
@@ -33,8 +40,8 @@ pub struct Message {
 #[table_name = "messages"]
 pub struct NewMessage {
     pub author_id: i32,
-    pub chat_id: i32,
-    pub reply_id: Option<i32>,
+    pub chat_id: Uuid,
+    pub reply_id: Option<Uuid>,
     pub message_content: String,
     pub read_flag: bool,
     pub create_date: NaiveDateTime,
@@ -86,7 +93,8 @@ impl Message {
         // Get only the first reply in the possible chain of replies.
         if message.reply_id.is_some() {
             // The unwrap is safe because the if_some condition was checked above
-            let reply = Message::get_message(message.reply_id.unwrap(), false, conn)?;
+            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_id.unwrap());
+            let reply = Message::get_message(reply_message_uuid, false, conn)?;
             Ok(MessageData {
                 message,
                 author,
@@ -101,13 +109,14 @@ impl Message {
         }
     }
 
-    fn get_message(id: i32, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
-        let message = Message::get_by_id(id, conn)?;
+    fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
+        let message = Message::get_by_uuid(uuid.0, conn)?;
         let author = User::get_by_id(message.author_id, conn)?;
         // If the parameter instructs to get the reply, and the reply id exists, get it.
         if with_reply && message.reply_id.is_some() {
             // The unwrap is safe because the if_some condition was checked above
-            let reply: MessageData = Message::get_message(message.reply_id.unwrap(), with_reply, conn)?;
+            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_id.unwrap());
+            let reply: MessageData = Message::get_message(reply_message_uuid, with_reply, conn)?;
             Ok(MessageData {
                 message,
                 author,
@@ -122,11 +131,13 @@ impl Message {
         }
     }
 
-    pub fn get_messages_for_chat(m_chat_id: i32, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
+    pub fn get_messages_for_chat(m_chat_id: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
         use schema::messages;
         use schema::users;
         use diesel::prelude::*;
+
+        let m_chat_id: Uuid = m_chat_id.0;
 
         let (messages_and_users, _count): (Vec<(Message, User)>, i64) = messages::table
             .inner_join(users::table)
