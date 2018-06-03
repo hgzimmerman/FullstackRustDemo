@@ -9,7 +9,7 @@ pub struct QuestionUuid(pub Uuid);
 const PARAM_NAME: &'static str = "question_uuid";
 impl QuestionUuid {
     pub fn to_query_parameter(self) -> String {
-        format!("{}={}",PARAM_NAME, self.0 )
+        format!("{}={}", PARAM_NAME, self.0)
     }
     pub fn parse_str(input: &str) -> Result<Self, ParseError> {
         Uuid::parse_str(input).map(QuestionUuid)

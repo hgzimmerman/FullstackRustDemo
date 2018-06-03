@@ -11,7 +11,7 @@ const PARAM_NAME: &'static str = "answer_uuid";
 
 impl AnswerUuid {
     pub fn to_query_parameter(self) -> String {
-        format!("{}={}",PARAM_NAME, self.0 )
+        format!("{}={}", PARAM_NAME, self.0)
     }
     pub fn parse_str(input: &str) -> Result<Self, ParseError> {
         Uuid::parse_str(input).map(AnswerUuid)
