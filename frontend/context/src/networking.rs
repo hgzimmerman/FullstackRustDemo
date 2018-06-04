@@ -294,7 +294,7 @@ impl Context {
         request_builder.header("Content-Type", "application/json");
 
         if let Some(jwt_string) = auth {
-            request_builder.header("Authorization", jwt_string.as_str());
+            request_builder.header("Authorization", format!("{} {}", BEARER, jwt_string).as_str());
         }
 
         let body: Option<String> = match body_and_method {

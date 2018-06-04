@@ -12,7 +12,8 @@ use auth::BannedSet;
 
 use error::WeekendAtJoesError;
 
-use wire::user::{Jwt, UserRole};
+use wire::user::{Jwt, UserRole, BEARER};
+
 
 use identifiers::user::UserUuid;
 
@@ -38,9 +39,9 @@ impl ServerJwt {
         }
     }
 
-    pub fn decode_jwt_string(jwt_str: String, secret: &Secret) -> Result<Jwt, JwtError> {
+    pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<Jwt, JwtError> {
         let secret: &String = &secret.0;
-        let (_header, payload) = match decode(&jwt_str, secret, Algorithm::HS256) {
+        let (_header, payload) = match decode(&jwt_str.to_string(), secret, Algorithm::HS256) {
             Ok(x) => x,
             Err(_) => return Err(JwtError::DecodeError),
         };
@@ -88,7 +89,17 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
         }
     };
 
-    match ServerJwt::decode_jwt_string(key.to_string(), secret) {
+    let authorization_words: Vec<String> = key.to_string().split_whitespace().map(String::from).collect();
+
+    if authorization_words.len() != 2 {
+        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MalformedToken));
+    }
+    if authorization_words[0] != BEARER {
+        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MalformedToken));
+    }
+    let jwt_str: &str = &authorization_words[1];
+
+    match ServerJwt::decode_jwt_string(jwt_str, secret) {
         Ok(jwt) => Outcome::Success(jwt),
         Err(_) => {
             info!("Token couldn't be deserialized.");

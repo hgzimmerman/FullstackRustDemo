@@ -41,6 +41,8 @@ pub enum WeekendAtJoesError {
     ExpiredToken,
     /// The request did not have a token.
     MissingToken,
+    /// The JWT 'bearer schema' was not followed.
+    MalformedToken,
 }
 
 pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) -> WeekendAtJoesError {
@@ -122,6 +124,14 @@ impl<'r> Responder<'r> for WeekendAtJoesError {
             MissingToken => {
                 build
                     .merge("Login token not supplied.".respond_to(
+                        req,
+                    )?)
+                    .status(Status::Unauthorized)
+                    .ok()
+            }
+            MalformedToken => {
+                build
+                    .merge("Login token was not specified correctly.".respond_to(
                         req,
                     )?)
                     .status(Status::Unauthorized)
