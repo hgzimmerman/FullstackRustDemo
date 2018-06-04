@@ -9,8 +9,8 @@ use identifiers::user::UserUuid;
 /// Used when requesting that a thread be created.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewThreadRequest {
-    pub forum_id: ForumUuid,
-    pub author_id: UserUuid,
+    pub forum_uuid: ForumUuid,
+    pub author_uuid: UserUuid,
     pub title: String,
     pub post_content: String,
 }
@@ -18,8 +18,8 @@ pub struct NewThreadRequest {
 /// Used when viewing an individual thread.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ThreadResponse {
-    pub id: ThreadUuid,
-    pub forum_id: ForumUuid,
+    pub uuid: ThreadUuid,
+    pub forum_uuid: ForumUuid,
     pub title: String,
     pub author: UserResponse,
     pub posts: PostResponse,
@@ -30,7 +30,7 @@ pub struct ThreadResponse {
 /// Used when returning a list of threads for perusing
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MinimalThreadResponse {
-    pub id: ThreadUuid,
+    pub uuid: ThreadUuid,
     pub title: String,
     pub author: UserResponse,
     pub created_date: NaiveDateTime,

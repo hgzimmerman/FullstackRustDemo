@@ -6,7 +6,7 @@ use identifiers::user::UserUuid;
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {
         AnswerResponse {
-            id: AnswerUuid(data.answer.uuid),
+            uuid: AnswerUuid(data.answer.uuid),
             answer_text: data.answer.answer_text,
             author: data.user.into(),
         }
@@ -27,7 +27,7 @@ impl NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
             author_uuid: user_uuid.0,
-            question_uuid: request.question_id.0,
+            question_uuid: request.question_uuid.0,
         }
     }
 }

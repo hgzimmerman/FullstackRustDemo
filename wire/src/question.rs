@@ -6,8 +6,8 @@ use identifiers::bucket::BucketUuid;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct QuestionResponse {
-    pub id: QuestionUuid,
-    pub bucket_id: BucketUuid,
+    pub uuid: QuestionUuid,
+    pub bucket_uuid: BucketUuid,
     pub question_text: String,
     pub author: UserResponse,
     pub answers: Vec<AnswerResponse>,
@@ -16,6 +16,6 @@ pub struct QuestionResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewQuestionRequest {
-    pub bucket_id: BucketUuid,
+    pub bucket_uuid: BucketUuid,
     pub question_text: String,
 }

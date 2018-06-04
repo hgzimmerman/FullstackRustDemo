@@ -13,7 +13,7 @@ pub struct NewArticleRequest {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct UpdateArticleRequest {
-    pub id: ArticleUuid,
+    pub uuid: ArticleUuid,
     pub title: Option<String>,
     pub body: Option<String>,
 }
@@ -21,8 +21,8 @@ pub struct UpdateArticleRequest {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MinimalArticleResponse {
-    pub id: ArticleUuid,
-    pub author_id: UserUuid,
+    pub uuid: ArticleUuid,
+    pub author_uuid: UserUuid,
     pub title: String,
     pub body: String,
     pub publish_date: Option<NaiveDateTime>,
@@ -32,7 +32,7 @@ pub struct MinimalArticleResponse {
 /// This makes it ideal for returning many preview articles.
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ArticlePreviewResponse {
-    pub id: ArticleUuid,
+    pub uuid: ArticleUuid,
     pub author: UserResponse,
     pub title: String,
     pub publish_date: Option<NaiveDateTime>,

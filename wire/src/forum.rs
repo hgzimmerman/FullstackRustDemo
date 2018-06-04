@@ -2,7 +2,7 @@ use identifiers::forum::ForumUuid;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct ForumResponse {
-    pub id: ForumUuid,
+    pub uuid: ForumUuid,
     pub title: String,
     pub description: String,
 }

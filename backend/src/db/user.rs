@@ -138,7 +138,9 @@ impl User {
         use schema::users::dsl::*;
         use schema::users;
 
-        let target = users.filter(users::uuid.eq(user_uuid.0));
+        let target = users.filter(
+            users::uuid.eq(user_uuid.0),
+        );
         diesel::update(target)
             .set(failed_login_count.eq(0))
             .execute(conn)
@@ -158,7 +160,9 @@ impl User {
         let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
         let expire_datetime = current_date + Duration::seconds(delay_seconds);
 
-        let target = users.filter(users::uuid.eq(user_uuid.0));
+        let target = users.filter(
+            users::uuid.eq(user_uuid.0),
+        );
         let _ = diesel::update(target)
             .set((
                 locked.eq(expire_datetime),
@@ -176,7 +180,9 @@ impl User {
     pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
         use schema::users;
-        let target = users.filter(users::uuid.eq(user_uuid.0));
+        let target = users.filter(
+            users::uuid.eq(user_uuid.0),
+        );
         diesel::update(target)
             .set(banned.eq(is_banned))
             .get_result(conn)
@@ -202,7 +208,9 @@ impl User {
             let mut new_roles = user.roles.clone();
             new_roles.push(user_role_id);
 
-            let target = users.filter(users::uuid.eq(user_uuid.0));
+            let target = users.filter(
+                users::uuid.eq(user_uuid.0),
+            );
             diesel::update(target)
                 .set(roles.eq(new_roles))
                 .get_result(conn)

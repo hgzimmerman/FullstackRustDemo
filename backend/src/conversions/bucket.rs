@@ -14,7 +14,7 @@ impl From<Bucket> for BucketResponse {
         };
 
         BucketResponse {
-            id: BucketUuid(bucket.uuid),
+            uuid: BucketUuid(bucket.uuid),
             bucket_name: bucket.bucket_name,
             is_public,
         }

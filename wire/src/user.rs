@@ -6,14 +6,14 @@ use identifiers::user::UserUuid;
 pub struct UserResponse {
     pub user_name: String,
     pub display_name: String,
-    pub id: UserUuid,
+    pub uuid: UserUuid,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FullUserResponse {
     pub user_name: String,
     pub display_name: String,
-    pub id: UserUuid,
+    pub uuid: UserUuid,
     pub locked: bool,
     pub banned: bool,
     // pub roles: UserRoleResponse
@@ -35,7 +35,7 @@ pub struct UpdateDisplayNameRequest {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserRoleRequest {
-    pub id: UserUuid,
+    pub uuid: UserUuid,
     pub user_role: i32,
 }
 

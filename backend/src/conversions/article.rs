@@ -10,8 +10,8 @@ use identifiers::user::UserUuid;
 impl From<Article> for MinimalArticleResponse {
     fn from(article: Article) -> MinimalArticleResponse {
         MinimalArticleResponse {
-            id: ArticleUuid(article.uuid),
-            author_id: UserUuid(article.author_uuid),
+            uuid: ArticleUuid(article.uuid),
+            author_uuid: UserUuid(article.author_uuid),
             title: article.title,
             body: article.body,
             publish_date: article.publish_date,
@@ -34,7 +34,7 @@ impl From<ArticleData> for FullArticleResponse {
 impl From<ArticleData> for ArticlePreviewResponse {
     fn from(data: ArticleData) -> ArticlePreviewResponse {
         ArticlePreviewResponse {
-            id: ArticleUuid(data.article.uuid),
+            uuid: ArticleUuid(data.article.uuid),
             author: data.user.into(),
             title: data.article.title,
             publish_date: data.article.publish_date,
@@ -45,7 +45,7 @@ impl From<ArticleData> for ArticlePreviewResponse {
 impl From<UpdateArticleRequest> for ArticleChangeset {
     fn from(request: UpdateArticleRequest) -> ArticleChangeset {
         ArticleChangeset {
-            uuid: request.id.0,
+            uuid: request.uuid.0,
             title: request.title,
             body: request.body,
         }

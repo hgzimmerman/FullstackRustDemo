@@ -10,7 +10,7 @@ impl From<User> for UserResponse {
         UserResponse {
             user_name: user.user_name,
             display_name: user.display_name,
-            id: UserUuid(user.uuid),
+            uuid: UserUuid(user.uuid),
         }
     }
 }
@@ -35,7 +35,7 @@ impl From<User> for FullUserResponse {
         FullUserResponse {
             user_name: user.user_name,
             display_name: user.display_name,
-            id: UserUuid(user.uuid),
+            uuid: UserUuid(user.uuid),
             banned: user.banned,
             locked: user.locked.is_some(),
         }

@@ -9,7 +9,7 @@ use identifiers::user::UserUuid;
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MessageResponse {
-    pub id: MessageUuid,
+    pub uuid: MessageUuid,
     pub author: UserResponse,
     pub reply: Option<Box<MessageResponse>>,
     pub content: String,
@@ -20,8 +20,8 @@ pub struct MessageResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewMessageRequest {
-    pub author_id: UserUuid,
-    pub chat_id: ChatUuid,
-    pub reply_id: Option<Uuid>,
+    pub author_uuid: UserUuid,
+    pub chat_uuid: ChatUuid,
+    pub reply_uuid: Option<Uuid>,
     pub content: String,
 }

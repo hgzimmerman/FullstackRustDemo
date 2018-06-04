@@ -148,7 +148,9 @@ impl Bucket {
         use schema::buckets;
 
         let buckets: Vec<Bucket> = junction_bucket_users
-            .filter(junctions::user_uuid.eq(bucket_owner_uuid.0))
+            .filter(junctions::user_uuid.eq(
+                bucket_owner_uuid.0,
+            ))
             .filter(owner.eq(true))
             .inner_join(buckets::table)
             .select(buckets::all_columns)

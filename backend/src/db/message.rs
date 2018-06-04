@@ -132,7 +132,7 @@ impl Message {
     }
 
     pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
-//        use schema::messages::dsl::*;
+        //        use schema::messages::dsl::*;
         use schema::messages;
         use schema::users;
         use diesel::prelude::*;

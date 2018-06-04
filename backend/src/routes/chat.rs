@@ -37,7 +37,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
 /// This operation is available to any user.
 #[put("/add_user", data = "<association>")]
 fn add_user_to_chat(association: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
-    if !Chat::is_user_in_chat(&association.chat_id, user.user_uuid, &conn)? {
+    if !Chat::is_user_in_chat(&association.chat_uuid, user.user_uuid, &conn)? {
         info!("User not in a chat tried to add a user to that chat.");
         return Err(WeekendAtJoesError::BadRequest);
     }

@@ -37,14 +37,14 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
-    let existing_post = Post::get_by_uuid(edit_post_request.0.id.0, &conn)?;
+    let existing_post = Post::get_by_uuid(edit_post_request.0.uuid.0, &conn)?;
     if login_user.user_uuid.0 != existing_post.author_uuid {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
     let edit_post_request: EditPostRequest = edit_post_request.into_inner();
     let edit_post_changeset: EditPostChangeset = edit_post_request.clone().into();
-    let thread_id: ThreadUuid = edit_post_request.thread_id;
+    let thread_id: ThreadUuid = edit_post_request.thread_uuid;
     Post::modify_post(edit_post_changeset, thread_id, &conn)
         .map(PostResponse::from)
         .map(Json)

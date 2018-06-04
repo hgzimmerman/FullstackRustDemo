@@ -154,7 +154,7 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Con
 
     // Add the user who made the request to the bucket as the owner
     let new_bucket_user = NewBucketUser {
-        bucket_uuid: bucket_response.id.0,
+        bucket_uuid: bucket_response.uuid.0,
         user_uuid: user.user_uuid.0,
         owner: true,
         approved: true,

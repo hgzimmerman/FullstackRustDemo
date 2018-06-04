@@ -7,7 +7,7 @@ use identifiers::user::UserUuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PostResponse {
-    pub id: PostUuid,
+    pub uuid: PostUuid,
     pub author: UserResponse,
     pub created_date: NaiveDateTime,
     pub modified_date: Option<NaiveDateTime>,
@@ -18,16 +18,16 @@ pub struct PostResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewPostRequest {
-    pub author_id: UserUuid,
-    pub thread_id: ThreadUuid,
-    pub parent_id: Option<PostUuid>,
+    pub author_uuid: UserUuid,
+    pub thread_uuid: ThreadUuid,
+    pub parent_uuid: Option<PostUuid>,
     pub content: String,
 }
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EditPostRequest {
-    pub id: PostUuid,
-    pub thread_id: ThreadUuid,
+    pub uuid: PostUuid,
+    pub thread_uuid: ThreadUuid,
     pub content: String,
 }

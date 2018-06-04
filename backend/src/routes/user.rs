@@ -71,7 +71,7 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalU
 #[put("/assign_role", data = "<data>")]
 fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
 
-    User::add_role_to_user(data.id, data.user_role.into(), &conn)
+    User::add_role_to_user(data.uuid, data.user_role.into(), &conn)
         .map(UserResponse::from)
         .map(Json)
 }
