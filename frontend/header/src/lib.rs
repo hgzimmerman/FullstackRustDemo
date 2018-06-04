@@ -105,7 +105,7 @@ impl Renderable<Context, Header> for Header {
         html! {
             <div class="header",>
                 <div class="nav-title",>
-                    { "WeekendAtJoe's" }
+                    { "WeekendAtJoe's ALPHA" }
                 </div>
                 <div class="nav-links",>
                     // Spans are necessary to keep the ordering preserved under different states.
