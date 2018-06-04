@@ -189,7 +189,7 @@ impl User {
         use schema::users::dsl::*;
         use schema::users;
 
-//        let m_user_uuid: Uuid = user_id.0;
+        //        let m_user_uuid: Uuid = user_id.0;
         let user = User::get_by_uuid(user_uuid.0, conn)?;
 
         let user_role_id: i32 = i32::from(user_role);

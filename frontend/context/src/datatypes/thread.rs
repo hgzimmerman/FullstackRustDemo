@@ -8,6 +8,8 @@ use datatypes::post::PostData;
 use chrono::NaiveDateTime;
 use identifiers::thread::ThreadUuid;
 use identifiers::forum::ForumUuid;
+use identifiers::user::UserUuid;
+
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -51,10 +53,10 @@ pub struct NewThreadData {
 }
 
 impl NewThreadData {
-    pub fn attach_info(&self, forum_id: ForumUuid, user_id: i32) -> NewThreadRequest {
+    pub fn attach_info(&self, forum_id: ForumUuid, user_uuid: UserUuid) -> NewThreadRequest {
         NewThreadRequest {
             forum_id,
-            author_id: user_id,
+            author_id: user_uuid,
             title: self.title.clone(),
             post_content: self.post_content.clone(),
         }

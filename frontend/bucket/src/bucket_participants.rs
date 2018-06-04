@@ -14,6 +14,7 @@ use context::networking::RequestWrapper;
 use context::datatypes::user::UserData;
 use wire::user::UserResponse;
 use identifiers::bucket::BucketUuid;
+use identifiers::user::UserUuid;
 
 
 
@@ -49,7 +50,7 @@ pub enum Msg {
     BucketUserDataLoaded(Vec<UserData>),
     BucketUserDataFailed,
     SetIsUserOwner(bool),
-    RemoveUserFromBucket{user_id: i32}
+    RemoveUserFromBucket{user_id: UserUuid}
 }
 
 impl BucketParticipants {
@@ -95,7 +96,7 @@ impl BucketParticipants {
         );
     }
 
-    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: i32, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
         let bucket_id: BucketUuid = bucket_id;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {

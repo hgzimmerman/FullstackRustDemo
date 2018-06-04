@@ -17,6 +17,7 @@ use context::networking::RequestWrapper;
 use wire::post::NewPostRequest;
 use util::markdown;
 use identifiers::thread::ThreadUuid;
+use identifiers::user::UserUuid;
 
 
 
@@ -30,7 +31,7 @@ pub struct PostTree {
     ft: Option<FetchTask>,
     edit_instance: Option<String>,
     /// Logged in user, unrelated to the post in question. This is a proxy for if a user is logged in.
-    user_id: Option<i32>,
+    user_id: Option<UserUuid>,
 }
 
 pub enum Msg {
@@ -50,7 +51,7 @@ pub enum Msg {
 pub struct Props {
     pub post: PostData,
     pub thread_id: ThreadUuid,
-    pub user_id: Option<i32>
+    pub user_id: Option<UserUuid>
 }
 
 impl Default for Props {

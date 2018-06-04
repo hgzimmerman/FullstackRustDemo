@@ -21,6 +21,7 @@ use identifiers::bucket::BucketUuid;
 use identifiers::question::QuestionUuid;
 use identifiers::forum::ForumUuid;
 use identifiers::thread::ThreadUuid;
+use identifiers::user::UserUuid;
 
 //use context::storage;
 
@@ -69,8 +70,8 @@ pub enum RequestWrapper {
     DeleteQuestion{question_id: QuestionUuid},
     PutQuestionBackInBucket{question_id: QuestionUuid},
     SetBucketPublicStatus{bucket_id: BucketUuid, is_public: bool},
-    ApproveUserForBucket {bucket_id: BucketUuid, user_id: i32},
-    RemoveUserFromBucket {bucket_id: BucketUuid, user_id: i32},
+    ApproveUserForBucket {bucket_id: BucketUuid, user_id: UserUuid},
+    RemoveUserFromBucket {bucket_id: BucketUuid, user_id: UserUuid},
     GetUnapprovedUsersForOwnedBuckets,
     GetUsersInBucket{bucket_id: BucketUuid},
     GetIsUserOwnerOfBucket{bucket_id: BucketUuid},

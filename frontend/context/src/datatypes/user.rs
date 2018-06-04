@@ -1,11 +1,12 @@
 
 use wire::user::*;
+use identifiers::user::UserUuid;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UserData {
     pub user_name: String,
     pub display_name: String,
-    pub id: i32,
+    pub id: UserUuid,
 }
 
 impl From<UserResponse> for UserData {

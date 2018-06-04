@@ -113,7 +113,7 @@ impl Chat {
 
 
     pub fn get_full_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> JoeResult<ChatData> {
-//        let chat_uuid: Uuid = chat_uuid.0;
+        //        let chat_uuid: Uuid = chat_uuid.0;
         let chat: Chat = Chat::get_by_uuid(chat_uuid.0, &conn)?;
         let leader: User = User::get_by_uuid(chat.leader_id, &conn)?;
         let chat_users: Vec<User> = Chat::get_users_in_chat(chat_uuid, &conn)?;

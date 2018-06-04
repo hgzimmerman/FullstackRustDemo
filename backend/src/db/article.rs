@@ -119,7 +119,7 @@ impl Article {
     pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
-//        use schema::users;
+        //        use schema::users;
 
         let user: User = users
             .find(user_uuid.0)

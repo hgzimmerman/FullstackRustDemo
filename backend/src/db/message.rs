@@ -136,7 +136,7 @@ impl Message {
         use schema::users;
         use diesel::prelude::*;
 
-//        let m_chat_id: Uuid = m_chat_id.0;
+        //        let m_chat_id: Uuid = m_chat_id.0;
 
         let (messages_and_users, _count): (Vec<(Message, User)>, i64) = messages::table
             .inner_join(users::table)

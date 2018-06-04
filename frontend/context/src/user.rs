@@ -12,6 +12,7 @@ use base64;
 use wire::user::{UserRole, Jwt};
 
 use chrono::NaiveDateTime;
+use identifiers::user::UserUuid;
 
 
 
@@ -79,7 +80,7 @@ impl Context {
     }
 
 
-    pub fn user_id(&mut self) -> Result<i32, Error> {
+    pub fn user_id(&mut self) -> Result<UserUuid, Error> {
         let token = self.restore_jwt()?;
         let payload = extract_payload_from_jwt(token)?;
         Ok(payload.sub)
