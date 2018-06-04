@@ -34,6 +34,7 @@ use wire::login::*;
 use wire::user::Jwt;
 
 use log::{info, warn};
+use identifiers::user::UserUuid;
 
 
 /// The secret contains a random string that is generated at startup.
@@ -84,19 +85,20 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
         return Err(LoginError::AccountLocked);
     }
 
+    let user_uuid = UserUuid(user.id);
     info!("Verifying password against hash");
     match verify_hash(&login_request.password, &user.password_hash) {
         Ok(b) => {
             if !b {
                 info!("Wrong password entered for user: {}", &login_request.user_name);
-                User::record_failed_login(user.id, user.failed_login_count, &conn)
+                User::record_failed_login(user_uuid, user.failed_login_count, &conn)
                     .map_err(|_| LoginError::OtherError("Login failed, but could not set the login delay"))?;
                 return Err(LoginError::IncorrectPassword);
             } else {
                 info!("Password match verified");
                 if user.failed_login_count > 0 {
                     info!("Resetting login count");
-                    User::reset_login_failure_count(user.id, &conn)
+                    User::reset_login_failure_count(user_uuid, &conn)
                         .map_err(|_| LoginError::OtherError("DB error"))?;
                 }
             }
@@ -117,7 +119,7 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
     log::info!("Creating JWT");
     let jwt = Jwt {
         //        user_name: user.user_name.clone(),
-        sub: user.id.clone(),
+        sub: UserUuid(user.id.clone()),
         user_roles: user.roles
             .iter()
             .map(|role_id| (*role_id).into())

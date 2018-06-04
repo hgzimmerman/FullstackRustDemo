@@ -25,7 +25,7 @@ pub struct Question {
     /// Primary Key.
     pub id: Uuid,
     pub bucket_id: Uuid,
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub question_text: String,
     pub on_floor: bool,
 }
@@ -34,7 +34,7 @@ pub struct Question {
 #[table_name = "questions"]
 pub struct NewQuestion {
     pub bucket_id: Uuid,
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub question_text: String,
     pub on_floor: bool, // Should be false by default
 }
@@ -48,10 +48,8 @@ pub struct QuestionData {
 impl Question {
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
-        use db::Retrievable;
-
         let question: Question = Question::create(new_question, conn)?;
-        let user = User::get_by_id(question.author_id, conn)?;
+        let user = User::get_by_uuid(question.author_id, conn)?;
 
         Ok(QuestionData {
             question,

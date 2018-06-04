@@ -11,14 +11,10 @@ use auth::user_authorization::NormalUser;
 use routes::convert_vector;
 use db::CreatableUuid;
 use identifiers::bucket::BucketUuid;
+use identifiers::user::UserUuid;
 use uuid::Uuid;
 
 use error::*;
-
-#[derive(FromForm)]
-struct UserIdParam {
-    user_id: i32,
-}
 
 #[derive(FromForm)]
 struct PublicParam {
@@ -45,24 +41,24 @@ fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json
 /// Only a one way set transformation.
 /// You need to remove the user from the bucket.
 /// The user being approved already needs to have registered with the bucket in question.
-#[put("/<bucket_uuid>/approval?<user_id_param>")]
-fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
+#[put("/<bucket_uuid>/approval?<user_uuid>")]
+fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
     if !Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
 
-    Bucket::set_user_approval(user_id_param.user_id, bucket_uuid, true, &conn)
+    Bucket::set_user_approval(user_uuid, bucket_uuid, true, &conn)
 }
 
 /// Entirely removes the user from the bucket.
-#[delete("/<bucket_uuid>?<user_id_param>")]
-fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_id_param: UserIdParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
+#[delete("/<bucket_uuid>?<user_uuid>")]
+fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
     if !Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
-    Bucket::remove_user_from_bucket(user_id_param.user_id, bucket_uuid, &conn)
+    Bucket::remove_user_from_bucket(user_uuid, bucket_uuid, &conn)
 }
 
 /// Allows the owners of buckets to set the is_public flag for their buckets
@@ -111,7 +107,7 @@ fn get_users_in_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) ->
 
     let users = Bucket::get_users_with_approval(bucket_uuid, &conn)?
         .into_iter()
-        .filter( |m_user| m_user.id != user.user_id ) // Filter out the user making the request.
+        .filter( |m_user| m_user.id != user.user_id.0 ) // Filter out the user making the request.
         .map(UserResponse::from)
         .collect();
     Ok(Json(users))
@@ -135,9 +131,10 @@ fn get_is_current_user_owner(bucket_uuid: BucketUuid, user: NormalUser, conn: Co
 #[post("/<bucket_uuid>/user_join_request")]
 fn request_to_join_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
     let bucket_id: Uuid = bucket_uuid.0;
+    let user_uuid: Uuid = user.user_id.0;
     let new_bucket_user = NewBucketUser {
         bucket_id,
-        user_id: user.user_id,
+        user_id: user_uuid,
         owner: false,
         approved: false,
     };
@@ -157,7 +154,7 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Con
     // Add the user who made the request to the bucket as the owner
     let new_bucket_user = NewBucketUser {
         bucket_id: bucket_response.id.0,
-        user_id: user.user_id,
+        user_id: user.user_id.0,
         owner: true,
         approved: true,
     };

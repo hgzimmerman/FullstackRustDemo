@@ -23,7 +23,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
 
     let new_chat: NewChat = new_chat.into_inner().into();
 
-    if new_chat.leader_id != user.user_id {
+    if new_chat.leader_id != user.user_id.0 {
         info!("User tried to create a chat where they are not the leader");
         return Err(WeekendAtJoesError::BadRequest);
     }
@@ -56,7 +56,7 @@ fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: Normal
     let association: ChatUserAssociation = request.into_inner().into();
     let chat: Chat = Chat::get_by_uuid(association.chat_id, &conn)?;
 
-    if chat.leader_id != user.user_id {
+    if chat.leader_id != user.user_id.0 {
         info!("User without chat leader status tried to remove user");
         return Err(WeekendAtJoesError::BadRequest);
     }

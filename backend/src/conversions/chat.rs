@@ -7,7 +7,7 @@ use identifiers::chat::ChatUuid;
 impl From<ChatUserAssociationRequest> for ChatUserAssociation {
     fn from(request: ChatUserAssociationRequest) -> ChatUserAssociation {
         ChatUserAssociation {
-            user_id: request.user_id,
+            user_id: request.user_id.0,
             chat_id: request.chat_id.0,
         }
     }
@@ -40,7 +40,7 @@ impl From<NewChatRequest> for NewChat {
     fn from(request: NewChatRequest) -> NewChat {
         NewChat {
             chat_name: request.name,
-            leader_id: request.leader_id,
+            leader_id: request.leader_id.0,
         }
     }
 }

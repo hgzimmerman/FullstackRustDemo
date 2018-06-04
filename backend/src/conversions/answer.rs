@@ -1,6 +1,7 @@
 use db::answer::*;
 use wire::answer::*;
 use identifiers::answer::AnswerUuid;
+use identifiers::user::UserUuid;
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {
@@ -22,10 +23,10 @@ impl From<AnswerData> for AnswerResponse {
 //    }
 //}
 impl NewAnswer {
-    pub fn attach_user_id(request: NewAnswerRequest, user_id: i32) -> NewAnswer {
+    pub fn attach_user_id(request: NewAnswerRequest, user_id: UserUuid) -> NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
-            author_id: user_id,
+            author_id: user_id.0,
             question_id: request.question_id.0,
         }
     }

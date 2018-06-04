@@ -15,14 +15,14 @@ pub struct Answer {
     /// Primary Key.
     pub id: Uuid,
     pub question_id: Uuid,
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub answer_text: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
 #[table_name = "answers"]
 pub struct NewAnswer {
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub question_id: Uuid,
     pub answer_text: Option<String>,
 }

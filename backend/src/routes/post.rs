@@ -12,6 +12,7 @@ use error::VectorMappable;
 use db::RetrievableUuid;
 use identifiers::post::PostUuid;
 use identifiers::thread::ThreadUuid;
+use identifiers::user::UserUuid;
 
 
 /// Creates a new post.
@@ -21,7 +22,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
     // check if token user id matches the request user id.
     // This prevents users from creating posts under other user's names.
     let new_post: NewPost = new_post.into_inner().into();
-    if new_post.author_id != login_user.user_id {
+    if new_post.author_id != login_user.user_id.0 {
         return Err(WeekendAtJoesError::BadRequest);
     }
     Post::create_and_get_user(new_post, &conn)
@@ -37,7 +38,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
     let existing_post = Post::get_by_uuid(edit_post_request.0.id.0, &conn)?;
-    if login_user.user_id != existing_post.author_id {
+    if login_user.user_id.0 != existing_post.author_id {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
@@ -60,9 +61,9 @@ fn censor_post(post_uuid: PostUuid, _moderator: ModeratorUser, conn: Conn) -> Re
 
 /// Gets the posts associated with a user.
 /// Anyone can perform this operation.
-#[get("/users_posts/<user_id>")]
-fn get_posts_by_user(user_id: i32, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
-    Post::get_posts_by_user(user_id, &conn)
+#[get("/users_posts/<user_uuid>")]
+fn get_posts_by_user(user_uuid: UserUuid, conn: Conn) -> Result<Json<Vec<PostResponse>>, WeekendAtJoesError> {
+    Post::get_posts_by_user(user_uuid, &conn)
         .map_vec::<PostResponse>()
         .map(Json)
 }

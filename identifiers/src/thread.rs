@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::fmt::Result as FormatResult;
 use uuid::ParseError;
 
-#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct ThreadUuid(pub Uuid);
 
 impl ThreadUuid {

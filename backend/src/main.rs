@@ -253,7 +253,7 @@ mod configuration {
     use db::user::{NewUser, User};
     use db::Conn;
     use error::JoeResult;
-    use db::Creatable;
+    use db::CreatableUuid;
 
     pub fn create_admin(conn: &Conn) -> JoeResult<User> {
         let mut user: NewUser = NewUserRequest {

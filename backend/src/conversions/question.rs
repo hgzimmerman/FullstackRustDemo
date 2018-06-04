@@ -3,7 +3,7 @@ use wire::question::*;
 use wire::answer::AnswerResponse;
 use identifiers::question::QuestionUuid;
 use identifiers::bucket::BucketUuid;
-
+use identifiers::user::UserUuid;
 
 impl From<QuestionData> for QuestionResponse {
     fn from(data: QuestionData) -> QuestionResponse {
@@ -23,10 +23,10 @@ impl From<QuestionData> for QuestionResponse {
 }
 
 impl NewQuestion {
-    pub fn attach_user_id(request: NewQuestionRequest, user_id: i32) -> NewQuestion {
+    pub fn attach_user_id(request: NewQuestionRequest, user_id: UserUuid) -> NewQuestion {
         NewQuestion {
             bucket_id: request.bucket_id.0,
-            author_id: user_id,
+            author_id: user_id.0,
             question_text: request.question_text,
             on_floor: false, // by default, the question is in the bucket and not in the floor.
         }

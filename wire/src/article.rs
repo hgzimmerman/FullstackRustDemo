@@ -1,13 +1,14 @@
 use chrono::NaiveDateTime;
 use user::UserResponse;
 use identifiers::article::ArticleUuid;
+use identifiers::user::UserUuid;
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewArticleRequest {
     pub title: String,
     pub body: String,
-    pub author_id: i32,
+    pub author_id: UserUuid,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -21,7 +22,7 @@ pub struct UpdateArticleRequest {
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct MinimalArticleResponse {
     pub id: ArticleUuid,
-    pub author_id: i32,
+    pub author_id: UserUuid,
     pub title: String,
     pub body: String,
     pub publish_date: Option<NaiveDateTime>,

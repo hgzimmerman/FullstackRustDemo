@@ -4,7 +4,7 @@ use std::fmt::Result as FormatResult;
 use uuid::ParseError;
 
 
-#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct UserUuid(pub Uuid);
 
 impl UserUuid {

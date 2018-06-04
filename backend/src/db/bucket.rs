@@ -7,6 +7,7 @@ use diesel;
 use chrono::{NaiveDateTime, Utc, Duration};
 use uuid::Uuid;
 use identifiers::bucket::BucketUuid;
+use identifiers::user::UserUuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
 #[insertable = "NewBucket"]
@@ -36,7 +37,7 @@ pub struct NewBucket {
 pub struct BucketUser {
     pub id: Uuid,
     pub bucket_id: Uuid,
-    pub user_id: i32,
+    pub user_id: Uuid,
     pub owner: bool,
     pub approved: bool,
 }
@@ -46,7 +47,7 @@ pub struct BucketUser {
 #[table_name = "junction_bucket_users"]
 pub struct NewBucketUser {
     pub bucket_id: Uuid,
-    pub user_id: i32,
+    pub user_id: Uuid,
     pub owner: bool,
     pub approved: bool,
 }
@@ -68,7 +69,7 @@ pub struct UsersInBucketData {
 
 impl Bucket {
     /// Get buckets that are public, but the user is not a member of
-    pub fn get_public_buckets(m_user_id: i32, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
+    pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
         use schema::buckets::dsl::*;
         use schema::buckets;
         use schema::junction_bucket_users as junctions;
@@ -77,7 +78,7 @@ impl Bucket {
 
         // Don't return any buckets with these ids
         let bucket_uuids_in_which_the_user_is_already_a_member_or_has_requested_to_join: Vec<Uuid> = junction_bucket_users
-            .filter(junctions::user_id.eq(m_user_id))
+            .filter(junctions::user_id.eq(user_uuid.0))
             .select(junctions::bucket_id)
             .load::<Uuid>(conn)
             .map_err(User::handle_error)?;
@@ -107,13 +108,13 @@ impl Bucket {
         Ok(())
     }
 
-    pub fn get_buckets_user_belongs_to(m_user_id: i32, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
+    pub fn get_buckets_user_belongs_to(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
         use schema::junction_bucket_users::dsl::*;
         // use schema::users::dsl::*;
         use schema::junction_bucket_users as junction;
 
         junction_bucket_users
-            .filter(junction::user_id.eq(m_user_id))
+            .filter(junction::user_id.eq(user_uuid.0))
             .filter(approved.eq(true))
             .inner_join(buckets::table)
             .select(buckets::all_columns)
@@ -148,13 +149,13 @@ impl Bucket {
         Self::get_users_approval(bucket_uuid, false, conn)
     }
 
-    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_id: i32, conn: &PgConnection) -> JoeResult<Vec<UsersInBucketData>> {
+    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_id: UserUuid, conn: &PgConnection) -> JoeResult<Vec<UsersInBucketData>> {
         use schema::junction_bucket_users::dsl::*;
         // use schema::users::dsl::*;
         use schema::buckets;
 
         let buckets: Vec<Bucket> = junction_bucket_users
-            .filter(user_id.eq(bucket_owner_id))
+            .filter(user_id.eq(bucket_owner_id.0))
             .filter(owner.eq(true))
             .inner_join(buckets::table)
             .select(buckets::all_columns)
@@ -175,13 +176,13 @@ impl Bucket {
     }
 
     /// Is the user the owner of the bucket
-    pub fn is_user_owner(m_user_id: i32, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn is_user_owner(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<bool> {
         use schema::junction_bucket_users::dsl::*;
 
         let m_bucket_uuid: Uuid = bucket_uuid.0;
 
         junction_bucket_users
-            .filter(user_id.eq(m_user_id))
+            .filter(user_id.eq(user_uuid.0))
             .filter(bucket_id.eq(m_bucket_uuid))
             .select(owner)
             .first::<bool>(conn)
@@ -189,13 +190,13 @@ impl Bucket {
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?
-    pub fn is_user_approved(m_user_id: i32, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
+    pub fn is_user_approved(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
         use schema::junction_bucket_users::dsl::*;
 
         let m_bucket_uuid: Uuid = bucket_uuid.0;
 
         junction_bucket_users
-            .filter(user_id.eq(m_user_id))
+            .filter(user_id.eq(user_uuid.0))
             .filter(bucket_id.eq(m_bucket_uuid))
             .select(approved)
             .first::<bool>(conn)
@@ -235,13 +236,13 @@ impl Bucket {
         Ok(())
     }
 
-    pub fn set_user_approval(m_user_id: i32, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> JoeResult<()> {
+    pub fn set_user_approval(user_uuid: UserUuid, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> JoeResult<()> {
         use schema::junction_bucket_users::dsl::*;
 
         let m_bucket_uuid: Uuid = bucket_uuid.0;
 
         let target = junction_bucket_users
-            .filter(user_id.eq(m_user_id))
+            .filter(user_id.eq(user_uuid.0))
             .filter(bucket_id.eq(m_bucket_uuid));
 
         diesel::update(target)
@@ -254,7 +255,7 @@ impl Bucket {
 
     /// Removes the user from the junction table for the given bucket.
     /// This has the effect of denying any request to join the bucket, as well as kicking a user out of the bucket.
-    pub fn remove_user_from_bucket(m_user_id: i32, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<()> {
+    pub fn remove_user_from_bucket(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<()> {
         use schema::junction_bucket_users::dsl::*;
         use schema::junction_bucket_users;
 
@@ -262,7 +263,7 @@ impl Bucket {
 
         diesel::delete(junction_bucket_users::table)
             .filter(bucket_id.eq(m_bucket_uuid))
-            .filter(user_id.eq(m_user_id))
+            .filter(user_id.eq(user_uuid.0))
             .execute(conn)
             .map_err(Bucket::handle_error)?;
         Ok(())

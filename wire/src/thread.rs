@@ -3,13 +3,14 @@ use post::PostResponse;
 use chrono::NaiveDateTime;
 use identifiers::thread::ThreadUuid;
 use identifiers::forum::ForumUuid;
+use identifiers::user::UserUuid;
 
 
 /// Used when requesting that a thread be created.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewThreadRequest {
     pub forum_id: ForumUuid,
-    pub author_id: i32,
+    pub author_id: UserUuid,
     pub title: String,
     pub post_content: String,
 }

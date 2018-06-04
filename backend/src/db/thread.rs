@@ -11,7 +11,6 @@ use error::JoeResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::thread::ThreadUuid;
-use db::Retrievable;
 
 use db::post::{Post, NewPost};
 use db::post::{PostData, ChildlessPostData};
@@ -28,7 +27,7 @@ pub struct Thread {
     /// Foreign Key to which the thread belongs to.
     pub forum_id: Uuid,
     /// Foreign Kay of the user who created the thread.
-    pub author_id: i32,
+    pub author_id: Uuid,
     /// Timestamp of when the thread was created.
     pub created_date: NaiveDateTime,
     /// If the thread is locked, then it cannot be edited, nor can any of its posts.
@@ -44,7 +43,7 @@ pub struct Thread {
 #[table_name = "threads"]
 pub struct NewThread {
     pub forum_id: Uuid,
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub created_date: NaiveDateTime,
     pub locked: bool,
     pub archived: bool,
@@ -75,7 +74,7 @@ impl Thread {
             .set(locked.eq(is_locked))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_id(thread.author_id, conn)?;
+        let user: User = User::get_by_uuid(thread.author_id, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -92,7 +91,7 @@ impl Thread {
             .set(archived.eq(true))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_id(thread.author_id, conn)?;
+        let user: User = User::get_by_uuid(thread.author_id, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -183,7 +182,7 @@ impl Thread {
         let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
         let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
         let post: PostData = root_post.get_post_data(conn)?;
-        let user = User::get_by_id(thread.author_id, conn)?;
+        let user = User::get_by_uuid(thread.author_id, conn)?;
         Ok(ThreadData { thread, post, user })
     }
 }

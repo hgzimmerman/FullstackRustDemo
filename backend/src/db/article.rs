@@ -10,7 +10,8 @@ use error::JoeResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::article::ArticleUuid;
-use db::Retrievable;
+use identifiers::user::UserUuid;
+
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq)]
@@ -21,7 +22,7 @@ pub struct Article {
     /// The public key for the article.
     pub id: Uuid,
     /// The key of the user that authored the article.
-    pub author_id: i32,
+    pub author_id: Uuid,
     /// The title of the article. This will be used to when showing the article in "Suggested Articles" panes.
     pub title: String,
     /// Converted title + suffix for use in urls
@@ -51,7 +52,7 @@ pub struct NewArticle {
     pub title: String,
     pub slug: String,
     pub body: String,
-    pub author_id: i32,
+    pub author_id: Uuid,
 }
 
 pub struct ArticleData {
@@ -80,7 +81,7 @@ impl Article {
     pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<ArticleData> {
 
         let article = Article::get_by_uuid(article_uuid.0, conn)?;
-        let user = User::get_by_id(article.author_id, conn)?;
+        let user = User::get_by_uuid(article.author_id, conn)?;
         Ok(ArticleData { article, user })
     }
 
@@ -115,14 +116,13 @@ impl Article {
 
 
     /// Gets the unpublished articles for a given user
-    // TODO, consiter switching this interface to take a user_id instead of a string
-    pub fn get_unpublished_articles_for_user(user_id: i32, conn: &PgConnection) -> JoeResult<Vec<Article>> {
+    pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Article>> {
         use schema::articles::dsl::*;
         use schema::users::dsl::*;
-        use schema::users;
+//        use schema::users;
 
         let user: User = users
-            .filter(users::id.eq(user_id))
+            .find(user_uuid.0)
             .get_result::<User>(conn)
             .map_err(User::handle_error)?;
 
@@ -148,10 +148,8 @@ impl Article {
             None
         };
 
-        let m_article_uuid: Uuid = article_uuid.0;
-
         diesel::update(articles::table)
-            .filter(articles::id.eq(m_article_uuid))
+            .filter(articles::id.eq(article_uuid.0))
             .set(publish_date.eq(publish_value))
             .get_result(conn)
             .map_err(Article::handle_error)

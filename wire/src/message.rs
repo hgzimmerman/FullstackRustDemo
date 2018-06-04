@@ -3,6 +3,7 @@ use chrono::NaiveDateTime;
 use uuid::Uuid;
 use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
+use identifiers::user::UserUuid;
 
 
 
@@ -19,7 +20,7 @@ pub struct MessageResponse {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct NewMessageRequest {
-    pub author_id: i32,
+    pub author_id: UserUuid,
     pub chat_id: ChatUuid,
     pub reply_id: Option<Uuid>,
     pub content: String,

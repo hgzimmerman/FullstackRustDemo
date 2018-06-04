@@ -1,5 +1,6 @@
 use db::user::*;
 use wire::user::*;
+use identifiers::user::UserUuid;
 
 use auth::hash_password;
 
@@ -9,7 +10,7 @@ impl From<User> for UserResponse {
         UserResponse {
             user_name: user.user_name,
             display_name: user.display_name,
-            id: user.id,
+            id: UserUuid(user.id),
         }
     }
 }
@@ -34,7 +35,7 @@ impl From<User> for FullUserResponse {
         FullUserResponse {
             user_name: user.user_name,
             display_name: user.display_name,
-            id: user.id,
+            id: UserUuid(user.id),
             banned: user.banned,
             locked: user.locked.is_some(),
         }

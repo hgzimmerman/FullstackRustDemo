@@ -4,7 +4,7 @@ use uuid::Uuid;
 use uuid::ParseError;
 
 
-#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct AnswerUuid(pub Uuid);
 
 const PARAM_NAME: &'static str = "answer_uuid";

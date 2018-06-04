@@ -2,6 +2,7 @@ use user::UserResponse;
 use chrono::NaiveDateTime;
 use identifiers::post::PostUuid;
 use identifiers::thread::ThreadUuid;
+use identifiers::user::UserUuid;
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -17,7 +18,7 @@ pub struct PostResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewPostRequest {
-    pub author_id: i32,
+    pub author_id: UserUuid,
     pub thread_id: ThreadUuid,
     pub parent_id: Option<PostUuid>,
     pub content: String,

@@ -14,6 +14,8 @@ use error::WeekendAtJoesError;
 
 use wire::user::{Jwt, UserRole};
 
+use identifiers::user::UserUuid;
+
 /// Because the JWT struct lives in the wire crate,
 /// this NewType is used to define other functions on it.
 pub struct ServerJwt(pub Jwt);
@@ -126,7 +128,7 @@ pub mod user_authorization {
         fn from_jwt(jwt: &Jwt) -> Result<Self, RoleError>
         where
             Self: Sized;
-        fn get_id(&self) -> i32;
+        fn get_id(&self) -> UserUuid;
     }
 
     pub enum RoleError {
@@ -134,7 +136,7 @@ pub mod user_authorization {
     }
 
     pub struct NormalUser {
-        pub user_id: i32,
+        pub user_id: UserUuid,
     }
     impl FromJwt for NormalUser {
         fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
@@ -147,7 +149,7 @@ pub mod user_authorization {
                 Err(RoleError::InsufficientRights)
             }
         }
-        fn get_id(&self) -> i32 {
+        fn get_id(&self) -> UserUuid {
             self.user_id
         }
     }
@@ -160,7 +162,7 @@ pub mod user_authorization {
     }
 
     pub struct AdminUser {
-        pub user_id: i32,
+        pub user_id: UserUuid,
     }
     impl FromJwt for AdminUser {
         fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
@@ -173,7 +175,7 @@ pub mod user_authorization {
                 Err(RoleError::InsufficientRights)
             }
         }
-        fn get_id(&self) -> i32 {
+        fn get_id(&self) -> UserUuid {
             self.user_id
         }
     }
@@ -186,7 +188,7 @@ pub mod user_authorization {
     }
 
     pub struct ModeratorUser {
-        pub user_id: i32,
+        pub user_id: UserUuid,
     }
     impl FromJwt for ModeratorUser {
         fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
@@ -200,7 +202,7 @@ pub mod user_authorization {
             }
         }
 
-        fn get_id(&self) -> i32 {
+        fn get_id(&self) -> UserUuid {
             self.user_id
         }
     }

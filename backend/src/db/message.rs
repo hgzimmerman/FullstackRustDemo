@@ -13,7 +13,6 @@ use diesel::PgConnection;
 use uuid::Uuid;
 //use diesel::sql_types::Uuid;
 //use diesel::pg::types::sql_types::Uuid;
-use db::Retrievable;
 use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
 
@@ -27,7 +26,7 @@ use identifiers::chat::ChatUuid;
 pub struct Message {
     /// Primary Key.
     pub id: Uuid,
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub chat_id: Uuid,
     pub reply_id: Option<Uuid>,
     pub message_content: String,
@@ -39,7 +38,7 @@ pub struct Message {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "messages"]
 pub struct NewMessage {
-    pub author_id: i32,
+    pub author_id: Uuid,
     pub chat_id: Uuid,
     pub reply_id: Option<Uuid>,
     pub message_content: String,
@@ -89,7 +88,7 @@ impl Message {
 
     pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::create(new_message, conn)?;
-        let author = User::get_by_id(message.author_id, conn)?;
+        let author = User::get_by_uuid(message.author_id, conn)?;
         // Get only the first reply in the possible chain of replies.
         if message.reply_id.is_some() {
             // The unwrap is safe because the if_some condition was checked above
@@ -111,7 +110,7 @@ impl Message {
 
     fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::get_by_uuid(uuid.0, conn)?;
-        let author = User::get_by_id(message.author_id, conn)?;
+        let author = User::get_by_uuid(message.author_id, conn)?;
         // If the parameter instructs to get the reply, and the reply id exists, get it.
         if with_reply && message.reply_id.is_some() {
             // The unwrap is safe because the if_some condition was checked above
@@ -131,18 +130,18 @@ impl Message {
         }
     }
 
-    pub fn get_messages_for_chat(m_chat_id: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
+    pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
         use schema::messages::dsl::*;
         use schema::messages;
         use schema::users;
         use diesel::prelude::*;
 
-        let m_chat_id: Uuid = m_chat_id.0;
+//        let m_chat_id: Uuid = m_chat_id.0;
 
         let (messages_and_users, _count): (Vec<(Message, User)>, i64) = messages::table
             .inner_join(users::table)
             .order(messages::create_date)
-            .filter(chat_id.eq(m_chat_id))
+            .filter(chat_id.eq(chat_uuid.0))
             .select((messages::all_columns, users::all_columns))
             .paginate(page_index.into())
             .per_page(page_size.into())

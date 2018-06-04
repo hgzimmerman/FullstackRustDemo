@@ -5,12 +5,13 @@ use slug;
 use rand;
 use rand::Rng;
 use identifiers::article::ArticleUuid;
+use identifiers::user::UserUuid;
 
 impl From<Article> for MinimalArticleResponse {
     fn from(article: Article) -> MinimalArticleResponse {
         MinimalArticleResponse {
             id: ArticleUuid(article.id),
-            author_id: article.author_id,
+            author_id: UserUuid(article.author_id),
             title: article.title,
             body: article.body,
             publish_date: article.publish_date,
@@ -57,7 +58,7 @@ impl From<NewArticleRequest> for NewArticle {
             title: new_article_request.title.clone(),
             slug: slugify(&new_article_request.title),
             body: new_article_request.body,
-            author_id: new_article_request.author_id,
+            author_id: new_article_request.author_id.0,
         }
     }
 }

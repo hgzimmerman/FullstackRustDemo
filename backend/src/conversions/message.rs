@@ -22,7 +22,7 @@ impl From<MessageData> for MessageResponse {
 impl From<NewMessageRequest> for NewMessage {
     fn from(request: NewMessageRequest) -> NewMessage {
         NewMessage {
-            author_id: request.author_id,
+            author_id: request.author_id.0,
             chat_id: request.chat_id.0,
             reply_id: request.reply_id,
             create_date: Utc::now().naive_utc(),

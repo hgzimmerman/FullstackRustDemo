@@ -8,7 +8,7 @@ impl From<NewThreadRequest> for NewThread {
     fn from(request: NewThreadRequest) -> NewThread {
         NewThread {
             forum_id: request.forum_id.0,
-            author_id: request.author_id,
+            author_id: request.author_id.0,
             created_date: Utc::now().naive_utc(),
             locked: false,
             archived: false,
