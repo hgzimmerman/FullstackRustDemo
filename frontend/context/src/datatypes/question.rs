@@ -30,8 +30,8 @@ pub struct QuestionData {
 impl From<QuestionResponse> for QuestionData {
     fn from(response: QuestionResponse) -> QuestionData {
         QuestionData {
-            id: response.id,
-            bucket_id: response.bucket_id,
+            id: response.uuid,
+            bucket_id: response.bucket_uuid,
             question_text: response.question_text,
             author: UserData::from(response.author),
             answers: response.answers.into_iter().map(AnswerData::from).collect(),

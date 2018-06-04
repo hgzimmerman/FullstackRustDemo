@@ -5,7 +5,7 @@ use identifiers::post::PostUuid;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct MinimalNewPostData {
-    pub author_id: i32,
+    pub author_id: i32, // TODO what is this?
     pub content: String,
 }
 
@@ -38,7 +38,7 @@ impl Default for PostData {
 impl From<PostResponse> for PostData {
     fn from(response: PostResponse) -> Self{
         PostData {
-            id: response.id,
+            id: response.uuid,
             author: UserData::from(response.author),
             created_date: response.created_date,
             modified_date: response.modified_date,

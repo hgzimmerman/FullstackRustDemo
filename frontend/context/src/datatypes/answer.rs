@@ -15,7 +15,7 @@ pub struct AnswerData {
 impl From<AnswerResponse> for AnswerData {
     fn from(response: AnswerResponse) -> Self {
         AnswerData {
-            id: response.id,
+            id: response.uuid,
             answer_text: response.answer_text,
             author: UserData::from(response.author),
         }

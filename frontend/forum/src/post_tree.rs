@@ -116,9 +116,9 @@ impl Component<Context> for PostTree {
                 );
                 if let Ok(user_id) = context.user_id() {
                      let post_reply =  NewPostRequest {
-                        author_id: user_id,
-                        thread_id: self.thread_id,
-                        parent_id: Some(self.post.id),
+                        author_uuid: user_id,
+                        thread_uuid: self.thread_id,
+                        parent_uuid: Some(self.post.id),
                         content: self.reply_content.clone(),
                     };
 
@@ -168,8 +168,8 @@ impl Component<Context> for PostTree {
                         },
                     );
                     let post_edit = EditPostRequest {
-                        id: self.post.id,
-                        thread_id: self.thread_id,
+                        uuid: self.post.id,
+                        thread_uuid: self.thread_id,
                         content: edit_text.clone(),
                     };
 

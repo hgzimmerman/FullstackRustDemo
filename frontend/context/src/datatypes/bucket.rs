@@ -13,7 +13,7 @@ pub struct BucketData {
 impl From<BucketResponse> for BucketData {
     fn from(response: BucketResponse) -> BucketData {
         BucketData {
-            id: response.id,
+            id: response.uuid,
             bucket_name: response.bucket_name,
             is_public: response.is_public
         }

@@ -118,7 +118,7 @@ impl BucketLobby {
             callback,
         );
     }
-    fn post_new_question(new_question: &mut Uploadable<NewQuestion>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
+    fn post_new_question(new_question: &mut Uploadable<NewQuestion>, bucket_uuid: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -134,7 +134,7 @@ impl BucketLobby {
 
         let question_text = new_question.as_ref().question_text.inner_text();
         let new_question_request = NewQuestionRequest {
-            bucket_id,
+            bucket_uuid,
             question_text
         };
 
@@ -167,7 +167,7 @@ impl BucketLobby {
         };
 
         let request = NewAnswerRequest {
-            question_id: question_package.as_ref().question_data.id,
+            question_uuid: question_package.as_ref().question_data.id,
             answer_text
         };
 

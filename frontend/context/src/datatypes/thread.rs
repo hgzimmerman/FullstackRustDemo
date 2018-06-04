@@ -37,7 +37,7 @@ impl Default for MinimalThreadData {
 impl From<MinimalThreadResponse> for MinimalThreadData {
     fn from(response: MinimalThreadResponse) -> Self {
         MinimalThreadData {
-            id: response.id,
+            id: response.uuid,
             title: response.title,
             author: response.author.into(),
             created_date: response.created_date,
@@ -53,10 +53,10 @@ pub struct NewThreadData {
 }
 
 impl NewThreadData {
-    pub fn attach_info(&self, forum_id: ForumUuid, user_uuid: UserUuid) -> NewThreadRequest {
+    pub fn attach_info(&self, forum_uuid: ForumUuid, user_uuid: UserUuid) -> NewThreadRequest {
         NewThreadRequest {
-            forum_id,
-            author_id: user_uuid,
+            forum_uuid,
+            author_uuid: user_uuid,
             title: self.title.clone(),
             post_content: self.post_content.clone(),
         }
@@ -91,8 +91,8 @@ impl Default for ThreadData {
 impl From<ThreadResponse> for ThreadData {
     fn from(response: ThreadResponse) -> Self {
         ThreadData {
-            id: response.id,
-            forum_id: response.forum_id,
+            id: response.uuid,
+            forum_id: response.forum_uuid,
             title: response.title,
             author: UserData::from(response.author),
             posts: PostData::from(response.posts),

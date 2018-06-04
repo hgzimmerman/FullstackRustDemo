@@ -11,7 +11,7 @@ pub struct ForumData {
 impl From<ForumResponse> for ForumData {
     fn from(response: ForumResponse) -> Self {
         ForumData {
-            id: response.id,
+            id: response.uuid,
             title: response.title,
             description: response.description,
         }
