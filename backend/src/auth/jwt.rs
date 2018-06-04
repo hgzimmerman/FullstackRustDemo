@@ -89,7 +89,10 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
         }
     };
 
-    let authorization_words: Vec<String> = key.to_string().split_whitespace().map(String::from).collect();
+    let authorization_words: Vec<String> = key.to_string()
+        .split_whitespace()
+        .map(String::from)
+        .collect();
 
     if authorization_words.len() != 2 {
         return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MalformedToken));

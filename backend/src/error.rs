@@ -131,9 +131,8 @@ impl<'r> Responder<'r> for WeekendAtJoesError {
             }
             MalformedToken => {
                 build
-                    .merge("Login token was not specified correctly.".respond_to(
-                        req,
-                    )?)
+                    .merge("Login token was not specified correctly."
+                        .respond_to(req)?)
                     .status(Status::Unauthorized)
                     .ok()
             }
