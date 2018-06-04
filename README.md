@@ -25,4 +25,4 @@ W@J intends to support the following features:
 
 # Build Instructions
 * Initial setup : https://github.com/hgzimmerman/WeekendAtJoes4/wiki/Initial-setup
-* Release instructions: 
+* Release instructions: https://github.com/hgzimmerman/WeekendAtJoes4/wiki/Release-Instructions
