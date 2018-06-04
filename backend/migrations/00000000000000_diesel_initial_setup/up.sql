@@ -34,3 +34,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Required for creation of UUIDs
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
