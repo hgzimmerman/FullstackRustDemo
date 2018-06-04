@@ -207,9 +207,13 @@ impl BucketModel {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    Msg::BucketReady(
-                        data.map(BucketData::from).unwrap()
-                    )
+//                    Msg::BucketCreationReady(
+//                        data.map(BucketData::from).unwrap()
+//                    )
+                    // TODO the full bucket response is not necessarily needed here.
+                    let bucket_uuid = data.map(|x: BucketResponse| x.uuid).unwrap();
+
+                    Msg::NavigateToBucket{bucket_uuid }
                 } else {
                     Msg::BucketFailed
                 }
