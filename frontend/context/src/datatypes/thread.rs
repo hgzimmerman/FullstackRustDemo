@@ -14,7 +14,7 @@ use identifiers::user::UserUuid;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct MinimalThreadData {
-    pub id: ThreadUuid,
+    pub uuid: ThreadUuid,
     pub title: String,
     pub author: UserData,
     pub created_date: NaiveDateTime,
@@ -25,7 +25,7 @@ pub struct MinimalThreadData {
 impl Default for MinimalThreadData {
     fn default() -> MinimalThreadData {
         MinimalThreadData {
-            id: ThreadUuid::default(),
+            uuid: ThreadUuid::default(),
             title: String::default(),
             author: UserData::default(),
             created_date: NaiveDateTime::from_timestamp(0,0),
@@ -37,7 +37,7 @@ impl Default for MinimalThreadData {
 impl From<MinimalThreadResponse> for MinimalThreadData {
     fn from(response: MinimalThreadResponse) -> Self {
         MinimalThreadData {
-            id: response.uuid,
+            uuid: response.uuid,
             title: response.title,
             author: response.author.into(),
             created_date: response.created_date,
@@ -65,8 +65,8 @@ impl NewThreadData {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ThreadData {
-    pub id: ThreadUuid,
-    pub forum_id: ForumUuid,
+    pub uuid: ThreadUuid,
+    pub forum_uuid: ForumUuid,
     pub title: String,
     pub author: UserData,
     pub posts: PostData,
@@ -77,8 +77,8 @@ pub struct ThreadData {
 impl Default for ThreadData {
     fn default() -> Self {
         ThreadData {
-            id: ThreadUuid::default(),
-            forum_id: ForumUuid::default(),
+            uuid: ThreadUuid::default(),
+            forum_uuid: ForumUuid::default(),
             title: String::default(),
             author: UserData::default(),
             posts: PostData::default(),
@@ -91,8 +91,8 @@ impl Default for ThreadData {
 impl From<ThreadResponse> for ThreadData {
     fn from(response: ThreadResponse) -> Self {
         ThreadData {
-            id: response.uuid,
-            forum_id: response.forum_uuid,
+            uuid: response.uuid,
+            forum_uuid: response.forum_uuid,
             title: response.title,
             author: UserData::from(response.author),
             posts: PostData::from(response.posts),

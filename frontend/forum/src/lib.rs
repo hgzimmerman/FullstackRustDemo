@@ -63,7 +63,7 @@ pub enum Msg {
     NewThreadReady(ThreadData),
     ThreadFailed,
     SetCreateThread,
-    SetThread{thread_id: ThreadUuid},
+    SetThread{thread_uuid: ThreadUuid},
     SetForum{forum_data: ForumData},
     PostNewThread{new_thread: NewThreadData}
 }
@@ -157,7 +157,7 @@ impl ForumModel {
 
     }
 
-    fn get_threads(forum_id: ForumUuid, context: &mut Env<Context, Self>) -> Loadable<Vec<SelectableMinimalThreadData>> {
+    fn get_threads(forum_uuid: ForumUuid, context: &mut Env<Context, Self>) -> Loadable<Vec<SelectableMinimalThreadData>> {
         let threads_callback = context.send_back(
             |response: Response<Json<Result<Vec<MinimalThreadResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -178,7 +178,7 @@ impl ForumModel {
 
         let threads_task = context.make_request(
             RequestWrapper::GetThreads {
-                forum_id,
+                forum_uuid,
                 page_index: 1,
             },
             threads_callback,
@@ -191,7 +191,7 @@ impl ForumModel {
         }
     }
 
-    fn get_thread(thread_id: ThreadUuid, context: &mut Env<Context, Self>) -> Loadable<ThreadData> {
+    fn get_thread(thread_uuid: ThreadUuid, context: &mut Env<Context, Self>) -> Loadable<ThreadData> {
         let callback = context.send_back(
             |response: Response<Json<Result<ThreadResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -206,7 +206,7 @@ impl ForumModel {
 
         let thread_task = context.make_request(
             RequestWrapper::GetThread {
-                thread_id,
+                thread_uuid,
             },
             callback,
         );
@@ -217,9 +217,9 @@ impl ForumModel {
         }
     }
 
-    fn upload_new_thread(new_thread: NewThreadData, forum_id: ForumUuid, context: &mut Env<Context, Self>) -> Uploadable<NewThreadData>
+    fn upload_new_thread(new_thread: NewThreadData, forum_uuid: ForumUuid, context: &mut Env<Context, Self>) -> Uploadable<NewThreadData>
     {
-        if let Ok(user_id) = context.user_id() {
+        if let Ok(user_uuid) = context.user_id() {
 
             let callback = context.send_back(
                 |response: Response<Json<Result<ThreadResponse, Error>>>| {
@@ -234,7 +234,7 @@ impl ForumModel {
                 },
             );
 
-            let new_thread_request: NewThreadRequest = new_thread.attach_info(forum_id, user_id);
+            let new_thread_request: NewThreadRequest = new_thread.attach_info(forum_uuid, user_uuid);
 
             let task = context.make_request(
                 RequestWrapper::CreateThread(
@@ -261,7 +261,7 @@ impl ForumModel {
                      .cloned()
                      .map(|x: SelectableMinimalThreadData| {
                          let mut replacement = x.clone();
-                         if x.minimal_thread_data.id == selected_thread.id {
+                         if x.minimal_thread_data.uuid == selected_thread.uuid {
                              replacement.is_selected = true;
                          } else {
                              replacement.is_selected = false;
@@ -299,31 +299,31 @@ impl Component<Context> for ForumModel {
                     ..Default::default()
                 }
             }
-            ForumRoute::Forum { forum_id } => {
+            ForumRoute::Forum { forum_uuid } => {
                 let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
-                    forum: Self::get_forum(forum_id, context),
-                    threads: Self::get_threads(forum_id, context)
+                    forum: Self::get_forum(forum_uuid, context),
+                    threads: Self::get_threads(forum_uuid, context)
                 };
                 ForumModel {
                     forums_or_selected_forum,
                     ..Default::default()
                 }
             }
-            ForumRoute::Thread { forum_id, thread_id } => {
+            ForumRoute::Thread { forum_uuid, thread_uuid } => {
                 let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
-                    forum: Self::get_forum(forum_id, context),
-                    threads: Self::get_threads(forum_id, context)
+                    forum: Self::get_forum(forum_uuid, context),
+                    threads: Self::get_threads(forum_uuid, context)
                 };
-                let thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context));
+                let thread = ThreadOrNewThread::Thread(Self::get_thread(thread_uuid, context));
                 ForumModel {
                     forums_or_selected_forum,
                     thread
                 }
             }
-            ForumRoute::CreateThread { forum_id } => {
+            ForumRoute::CreateThread { forum_uuid } => {
                 let forums_or_selected_forum: ForumsOrForum = ForumsOrForum::Forum {
-                    forum: Self::get_forum(forum_id, context),
-                    threads: Self::get_threads(forum_id, context)
+                    forum: Self::get_forum(forum_uuid, context),
+                    threads: Self::get_threads(forum_uuid, context)
                 };
                 ForumModel {
                     forums_or_selected_forum,
@@ -378,20 +378,20 @@ impl Component<Context> for ForumModel {
                 }
             },
             Msg::ThreadReady(thread) => {
-                let route = ForumRoute::Thread { forum_id: thread.forum_id, thread_id: thread.id};
+                let route = ForumRoute::Thread { forum_uuid: thread.forum_uuid, thread_uuid: thread.uuid};
                 context.routing.set_route(Route::Forums(route.clone()));
                 self.thread = ThreadOrNewThread::Thread(Loadable::Loaded(thread));
                 self.select_thread_in_list();
             },
             Msg::NewThreadReady(thread) => {
-                let route = ForumRoute::Thread { forum_id: thread.forum_id.clone(), thread_id: thread.id};
+                let route = ForumRoute::Thread { forum_uuid: thread.forum_uuid.clone(), thread_uuid: thread.uuid};
                 context.routing.set_route(Route::Forums(route.clone()));
 
                 if let ForumsOrForum::Forum {threads: ref mut existing_thread, ..} = self.forums_or_selected_forum {
-                    *existing_thread = Self::get_threads(thread.forum_id, context);
+                    *existing_thread = Self::get_threads(thread.forum_uuid, context);
                 } else {
-                    let f = Self::get_forum(thread.forum_id, context);
-                    let t = Self::get_threads(thread.forum_id, context);
+                    let f = Self::get_forum(thread.forum_uuid, context);
+                    let t = Self::get_threads(thread.forum_uuid, context);
                     self.forums_or_selected_forum = ForumsOrForum::Forum {forum: f, threads: t}
                 }
 
@@ -404,27 +404,27 @@ impl Component<Context> for ForumModel {
             },
             Msg::SetCreateThread => {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    let forum_id = forum_data.id;
-                    let route = ForumRoute::CreateThread {forum_id};
+                    let forum_uuid = forum_data.uuid;
+                    let route = ForumRoute::CreateThread {forum_uuid};
                     context.routing.set_route(Route::Forums(route));
                 }
             },
-            Msg::SetThread {thread_id} => {
+            Msg::SetThread {thread_uuid} => {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    let forum_id = forum_data.id;
-                    let route = ForumRoute::Thread { forum_id, thread_id };
+                    let forum_uuid = forum_data.uuid;
+                    let route = ForumRoute::Thread { forum_uuid, thread_uuid };
                     context.routing.set_route(Route::Forums(route.clone()));
                 }
             },
             Msg::SetForum {forum_data} => {
                 // TODO, this can be optomized to avoid needing to re-get the forum-data, but isn't particularly important.
-                let route = ForumRoute::Forum { forum_id: forum_data.id.clone() };
+                let route = ForumRoute::Forum { forum_uuid: forum_data.uuid.clone() };
                 context.routing.set_route(Route::Forums(route));
             }
             Msg::PostNewThread{new_thread} => {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    let forum_id = forum_data.id;
-                    self.thread = ThreadOrNewThread::NewThread(Self::upload_new_thread(new_thread, forum_id, context))
+                    let forum_uuid = forum_data.uuid;
+                    self.thread = ThreadOrNewThread::NewThread(Self::upload_new_thread(new_thread, forum_uuid, context))
                 }
             }
         };
@@ -441,9 +441,9 @@ impl Component<Context> for ForumModel {
                 self.forums_or_selected_forum = ForumsOrForum::Forums(Self::get_forum_list(context));
                 self.thread = ThreadOrNewThread::Thread(Loadable::Unloaded);
             },
-            Forum {forum_id} => {
+            Forum {forum_uuid} => {
                 let refresh: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    if forum_id != forum_data.id {
+                    if forum_uuid != forum_data.uuid {
                         true
                     } else {
                         false
@@ -453,14 +453,14 @@ impl Component<Context> for ForumModel {
                 };
 
                 if refresh {
-                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) }
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_uuid, context), threads: Self::get_threads(forum_uuid, context) }
                 }
                 self.thread = ThreadOrNewThread::Thread(Loadable::Unloaded);
 
             },
-            Thread {thread_id, forum_id} => {
+            Thread {thread_uuid, forum_uuid} => {
                 let refresh_forum: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    if forum_id != forum_data.id {
+                    if forum_uuid != forum_data.uuid {
                         true
                     } else {
                         false
@@ -469,7 +469,7 @@ impl Component<Context> for ForumModel {
                     true
                 };
                 let refresh_thread: bool = if let ThreadOrNewThread::Thread(Loadable::Loaded(ref thread_data)) = self.thread {
-                    if thread_id != thread_data.id {
+                    if thread_uuid != thread_data.uuid {
                         true
                     } else {
                         false
@@ -479,15 +479,15 @@ impl Component<Context> for ForumModel {
                 };
 
                 if refresh_forum {
-                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) };
-                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context))
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_uuid, context), threads: Self::get_threads(forum_uuid, context) };
+                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_uuid, context))
                 } else if refresh_thread {
-                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_id, context))
+                    self.thread = ThreadOrNewThread::Thread(Self::get_thread(thread_uuid, context))
                 }
             },
-            CreateThread {forum_id} => {
+            CreateThread {forum_uuid} => {
                 let refresh: bool = if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
-                    if forum_id != forum_data.id {
+                    if forum_uuid != forum_data.uuid {
                         true
                     } else {
                         false
@@ -497,7 +497,7 @@ impl Component<Context> for ForumModel {
                 };
 
                 if refresh {
-                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_id, context), threads: Self::get_threads(forum_id, context) }
+                    self.forums_or_selected_forum = ForumsOrForum::Forum{forum: Self::get_forum(forum_uuid, context), threads: Self::get_threads(forum_uuid, context) }
                 }
                 self.thread = ThreadOrNewThread::NewThread(Default::default());
             }
@@ -530,7 +530,7 @@ impl Renderable<Context, ForumModel> for ForumModel {
         fn thread_fn(thread: &ThreadData) -> Html<Context, ForumModel> {
             html! {
                 <div>
-                    <PostTree: post=&thread.posts, thread_id=thread.id, />
+                    <PostTree: post=&thread.posts, thread_id=thread.uuid, />
                 </div>
             }
         }

@@ -3,7 +3,7 @@ use identifiers::forum::ForumUuid;
 
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct ForumData {
-    pub id: ForumUuid,
+    pub uuid: ForumUuid,
     pub title: String,
     pub description: String,
 }
@@ -11,7 +11,7 @@ pub struct ForumData {
 impl From<ForumResponse> for ForumData {
     fn from(response: ForumResponse) -> Self {
         ForumData {
-            id: response.uuid,
+            uuid: response.uuid,
             title: response.title,
             description: response.description,
         }

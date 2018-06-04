@@ -44,9 +44,9 @@ pub enum Msg {
     GetBucketUsersData,
     BucketUsersDataLoaded(Vec<BucketUsersData>),
     BucketUsersDataFailed,
-    GrantUserAccessToBucket{user_id: UserUuid, bucket_id: BucketUuid},
-    DenyUserAccessToBucket{user_id: UserUuid, bucket_id: BucketUuid},
-    SetPublicOrPrivate{bucket_id: BucketUuid, pub_or_priv: PublicOrPrivate}
+    GrantUserAccessToBucket{user_uuid: UserUuid, bucket_uuid: BucketUuid},
+    DenyUserAccessToBucket{user_uuid: UserUuid, bucket_uuid: BucketUuid},
+    SetPublicOrPrivate{bucket_uuid: BucketUuid, pub_or_priv: PublicOrPrivate}
 }
 
 impl BucketManagement {
@@ -71,7 +71,7 @@ impl BucketManagement {
         );
     }
 
-    fn grant_access_to_user_for_bucket(bucket_id: BucketUuid, user_id: UserUuid, approve_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+    fn grant_access_to_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, approve_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -82,13 +82,13 @@ impl BucketManagement {
 
         context.make_request_and_set_ft(
             approve_user_action,
-            RequestWrapper::ApproveUserForBucket{bucket_id, user_id},
+            RequestWrapper::ApproveUserForBucket{bucket_uuid, user_uuid},
             callback,
         );
     }
 
-    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: BucketUuid = bucket_id;
+    fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_uuid: BucketUuid = bucket_uuid;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -99,13 +99,13 @@ impl BucketManagement {
 
         context.make_request_and_set_ft(
             remove_user_action,
-            RequestWrapper::RemoveUserFromBucket{bucket_id, user_id},
+            RequestWrapper::RemoveUserFromBucket{bucket_uuid, user_uuid},
             callback,
         );
     }
 
-    fn set_public_or_private(bucket_id: BucketUuid, pub_or_priv: PublicOrPrivate, set_public_or_private_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: BucketUuid = bucket_id;
+    fn set_public_or_private(bucket_uuid: BucketUuid, pub_or_priv: PublicOrPrivate, set_public_or_private_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_uuid: BucketUuid = bucket_uuid;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -121,7 +121,7 @@ impl BucketManagement {
 
         context.make_request_and_set_ft(
             set_public_or_private_action,
-            RequestWrapper::SetBucketPublicStatus{bucket_id, is_public},
+            RequestWrapper::SetBucketPublicStatus{bucket_uuid, is_public},
             callback,
         );
     }
@@ -150,14 +150,14 @@ impl Component<Context> for BucketManagement {
                 self.bucket_users = Loadable::Loaded(bucket_user_data)
             },
             BucketUsersDataFailed => context.log("Failed to get bucket user data"),
-            GrantUserAccessToBucket{bucket_id, user_id} => {
-                Self::grant_access_to_user_for_bucket(bucket_id, user_id, &mut self.approve_user_action, context)
+            GrantUserAccessToBucket{bucket_uuid, user_uuid} => {
+                Self::grant_access_to_user_for_bucket(bucket_uuid, user_uuid, &mut self.approve_user_action, context)
             }
-            DenyUserAccessToBucket{bucket_id, user_id} => {
-                Self::remove_user_from_bucket(bucket_id, user_id, &mut self.remove_user_action, context)
+            DenyUserAccessToBucket{bucket_uuid, user_uuid} => {
+                Self::remove_user_from_bucket(bucket_uuid, user_uuid, &mut self.remove_user_action, context)
             },
-            SetPublicOrPrivate {bucket_id, pub_or_priv} => {
-                Self::set_public_or_private(bucket_id, pub_or_priv, &mut self.set_public_or_private_action, context)
+            SetPublicOrPrivate {bucket_uuid, pub_or_priv} => {
+                Self::set_public_or_private(bucket_uuid, pub_or_priv, &mut self.set_public_or_private_action, context)
             }
         }
         true
@@ -187,14 +187,14 @@ impl BucketManagement {
     fn buckets_view(buckets: &Vec<BucketUsersData>) -> Html<Context, BucketManagement> {
 
         fn bucket_view(bucket_user_data: &BucketUsersData) -> Html<Context, BucketManagement> {
-            let bucket_id = bucket_user_data.bucket.id;
+            let bucket_uuid = bucket_user_data.bucket.uuid;
             let button = if bucket_user_data.bucket.is_public {
                 html! {
-                    <Button: title="Lock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_id, pub_or_priv: PublicOrPrivate::Private}, />
+                    <Button: title="Lock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, pub_or_priv: PublicOrPrivate::Private}, />
                 }
             } else {
                 html! {
-                    <Button: title="Unlock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_id, pub_or_priv: PublicOrPrivate::Public}, />
+                    <Button: title="Unlock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, pub_or_priv: PublicOrPrivate::Public}, />
                 }
             };
 
@@ -206,7 +206,7 @@ impl BucketManagement {
                         </div>
                         {button}
                     </div>
-                    {BucketManagement::users_view(&bucket_user_data.users, bucket_user_data.bucket.id)}
+                    {BucketManagement::users_view(&bucket_user_data.users, bucket_user_data.bucket.uuid)}
                 </div>
             }
         }
@@ -217,10 +217,10 @@ impl BucketManagement {
         }
     }
 
-    fn users_view(users: &Vec<UserData>, bucket_id: BucketUuid) -> Html<Context, BucketManagement> {
+    fn users_view(users: &Vec<UserData>, bucket_uuid: BucketUuid) -> Html<Context, BucketManagement> {
 
-        fn user_view(user: &UserData, bucket_id: BucketUuid) -> Html<Context, BucketManagement> {
-            let user_id = user.id;
+        fn user_view(user: &UserData, bucket_uuid: BucketUuid) -> Html<Context, BucketManagement> {
+            let user_uuid = user.uuid;
 
             html!{
                 <div class=("flexbox-horiz","full-width"),>
@@ -228,8 +228,8 @@ impl BucketManagement {
                         {&user.user_name}
                     </div>
                     <div>
-                        <Button: title="Approve", onclick=move |_| Msg::GrantUserAccessToBucket{bucket_id, user_id} ,/>
-                        <Button: title="Deny", onclick=move |_| Msg::DenyUserAccessToBucket{bucket_id, user_id} ,/>
+                        <Button: title="Approve", onclick=move |_| Msg::GrantUserAccessToBucket{bucket_uuid, user_uuid} ,/>
+                        <Button: title="Deny", onclick=move |_| Msg::DenyUserAccessToBucket{bucket_uuid, user_uuid} ,/>
                     </div>
                 </div>
             }
@@ -237,7 +237,7 @@ impl BucketManagement {
 
         html!{
             <>
-                {for users.iter().map(|u| user_view(u, bucket_id))}
+                {for users.iter().map(|u| user_view(u, bucket_uuid))}
             </>
         }
     }

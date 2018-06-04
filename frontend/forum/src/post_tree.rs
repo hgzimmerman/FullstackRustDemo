@@ -118,7 +118,7 @@ impl Component<Context> for PostTree {
                      let post_reply =  NewPostRequest {
                         author_uuid: user_id,
                         thread_uuid: self.thread_id,
-                        parent_uuid: Some(self.post.id),
+                        parent_uuid: Some(self.post.uuid),
                         content: self.reply_content.clone(),
                     };
 
@@ -168,7 +168,7 @@ impl Component<Context> for PostTree {
                         },
                     );
                     let post_edit = EditPostRequest {
-                        uuid: self.post.id,
+                        uuid: self.post.uuid,
                         thread_uuid: self.thread_id,
                         content: edit_text.clone(),
                     };
@@ -241,7 +241,7 @@ impl Renderable<Context, PostTree> for PostTree {
 
         fn edit_button_fn(post_tree: &PostTree) -> Html<Context, PostTree> {
             if let Some(user_id) = post_tree.user_id {
-                if user_id == post_tree.post.author.id {
+                if user_id == post_tree.post.author.uuid {
                     return html! {
                         <>
                             <Link<()>: name="edit", callback=|_| Msg::ToggleEditArea, />

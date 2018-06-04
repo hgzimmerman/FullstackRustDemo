@@ -19,8 +19,8 @@ impl Default for QuestionLocation {
 
 #[derive(Clone, Debug, Default)]
 pub struct QuestionData {
-    pub id: QuestionUuid,
-    pub bucket_id: BucketUuid,
+    pub uuid: QuestionUuid,
+    pub bucket_uuid: BucketUuid,
     pub question_text: String,
     pub author: UserData,
     pub answers: Vec<AnswerData>,
@@ -30,8 +30,8 @@ pub struct QuestionData {
 impl From<QuestionResponse> for QuestionData {
     fn from(response: QuestionResponse) -> QuestionData {
         QuestionData {
-            id: response.uuid,
-            bucket_id: response.bucket_uuid,
+            uuid: response.uuid,
+            bucket_uuid: response.bucket_uuid,
             question_text: response.question_text,
             author: UserData::from(response.author),
             answers: response.answers.into_iter().map(AnswerData::from).collect(),

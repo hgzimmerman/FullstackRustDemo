@@ -6,7 +6,7 @@ use identifiers::user::UserUuid;
 pub struct UserData {
     pub user_name: String,
     pub display_name: String,
-    pub id: UserUuid,
+    pub uuid: UserUuid,
 }
 
 impl From<UserResponse> for UserData {
@@ -14,7 +14,7 @@ impl From<UserResponse> for UserData {
         UserData {
             user_name: response.user_name,
             display_name: response.display_name,
-            id: response.uuid,
+            uuid: response.uuid,
         }
     }
 }

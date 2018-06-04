@@ -24,7 +24,7 @@ use identifiers::user::UserUuid;
 pub struct BucketParticipants {
     users:  Loadable<Vec<UserData>>,
     is_user_bucket_owner: Loadable<bool>,
-    bucket_id: Option<BucketUuid>,
+    bucket_uuid: Option<BucketUuid>,
     remove_user_action: Uploadable<()>
 }
 
@@ -39,22 +39,22 @@ impl Default for BucketParticipants {
         BucketParticipants {
             users: Loadable::default(),
             is_user_bucket_owner: Loadable::default(),
-            bucket_id: None,
+            bucket_uuid: None,
             remove_user_action: Uploadable::default()
         }
     }
 }
 
 pub enum Msg {
-    GetBucketUserData{bucket_id: BucketUuid},
+    GetBucketUserData{bucket_uuid: BucketUuid},
     BucketUserDataLoaded(Vec<UserData>),
     BucketUserDataFailed,
     SetIsUserOwner(bool),
-    RemoveUserFromBucket{user_id: UserUuid}
+    RemoveUserFromBucket{user_uuid: UserUuid}
 }
 
 impl BucketParticipants {
-    fn get_participants_in_bucket(bucket_id: BucketUuid, participants: &mut Loadable<Vec<UserData>>, context: &mut Env<Context, Self>) {
+    fn get_participants_in_bucket(bucket_uuid: BucketUuid, participants: &mut Loadable<Vec<UserData>>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<UserResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -70,12 +70,12 @@ impl BucketParticipants {
 
         context.make_request_and_set_ft(
             participants,
-            RequestWrapper::GetUsersInBucket{bucket_id},
+            RequestWrapper::GetUsersInBucket{bucket_uuid},
             callback,
         );
     }
 
-    fn determine_if_user_is_owner(bucket_id: BucketUuid, is_owner: &mut Loadable<bool>, context: &mut Env<Context, Self>) {
+    fn determine_if_user_is_owner(bucket_uuid: BucketUuid, is_owner: &mut Loadable<bool>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<bool, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -91,26 +91,26 @@ impl BucketParticipants {
 
         context.make_request_and_set_ft(
             is_owner,
-            RequestWrapper::GetIsUserOwnerOfBucket{bucket_id},
+            RequestWrapper::GetIsUserOwnerOfBucket{bucket_uuid},
             callback,
         );
     }
 
-    fn remove_user_from_bucket(bucket_id: BucketUuid, user_id: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-        let bucket_id: BucketUuid = bucket_id;
+    fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+        let bucket_uuid: BucketUuid = bucket_uuid;
         let callback = context.send_back(
             move |response: Response<Json<Result<(), Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
-                Msg::GetBucketUserData {bucket_id} // This is lazy, but just get the whole list again.
+                Msg::GetBucketUserData {bucket_uuid} // This is lazy, but just get the whole list again.
             },
         );
 
-        context.log(&format!("Removing user from bucket:{}-{}",user_id,bucket_id));
+        context.log(&format!("Removing user from bucket:{}-{}",user_uuid,bucket_uuid));
 
         context.make_request_and_set_ft(
             remove_user_action,
-            RequestWrapper::RemoveUserFromBucket{bucket_id, user_id},
+            RequestWrapper::RemoveUserFromBucket{bucket_uuid, user_uuid},
             callback,
         );
     }
@@ -125,9 +125,9 @@ impl Component<Context> for BucketParticipants {
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
         let mut participants: BucketParticipants = BucketParticipants::default();
         if let Loadable::Loaded(bucket_data) = props.bucket_data {
-            Self::get_participants_in_bucket(bucket_data.id, &mut participants.users, context); // TODO Possibly don't load this on startup, only do this when opening the pane
-            Self::determine_if_user_is_owner(bucket_data.id, &mut participants.is_user_bucket_owner, context);
-            participants.bucket_id = Some(bucket_data.id);
+            Self::get_participants_in_bucket(bucket_data.uuid, &mut participants.users, context); // TODO Possibly don't load this on startup, only do this when opening the pane
+            Self::determine_if_user_is_owner(bucket_data.uuid, &mut participants.is_user_bucket_owner, context);
+            participants.bucket_uuid = Some(bucket_data.uuid);
         }
         participants
     }
@@ -135,17 +135,17 @@ impl Component<Context> for BucketParticipants {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            GetBucketUserData {bucket_id} => {
-                Self::get_participants_in_bucket(bucket_id, &mut self.users, context);
+            GetBucketUserData {bucket_uuid} => {
+                Self::get_participants_in_bucket(bucket_uuid, &mut self.users, context);
             }
             BucketUserDataLoaded(bucket_user_data) => {
                 self.users = Loadable::Loaded(bucket_user_data);
             },
             BucketUserDataFailed => context.log("Failed to get bucket user data"),
             SetIsUserOwner(is_owner) => self.is_user_bucket_owner = Loadable::Loaded(is_owner),
-            RemoveUserFromBucket{user_id} => {
-                if let Some(bucket_id) = self.bucket_id {
-                    Self::remove_user_from_bucket(bucket_id, user_id, &mut self.remove_user_action, context)
+            RemoveUserFromBucket{user_uuid} => {
+                if let Some(bucket_uuid) = self.bucket_uuid {
+                    Self::remove_user_from_bucket(bucket_uuid, user_uuid, &mut self.remove_user_action, context)
                 } else {
                     context.log("Couldn't remove user because bucket id is unknown.")
                 }
@@ -157,9 +157,9 @@ impl Component<Context> for BucketParticipants {
 
     fn change(&mut self, props: Self::Properties, context: &mut Env<Context, Self>) -> ShouldRender {
         if let Loadable::Loaded(bucket_data) = props.bucket_data {
-            Self::get_participants_in_bucket(bucket_data.id, &mut self.users, context);
-            Self::determine_if_user_is_owner(bucket_data.id, &mut self.is_user_bucket_owner, context);
-            self.bucket_id = Some(bucket_data.id);
+            Self::get_participants_in_bucket(bucket_data.uuid, &mut self.users, context);
+            Self::determine_if_user_is_owner(bucket_data.uuid, &mut self.is_user_bucket_owner, context);
+            self.bucket_uuid = Some(bucket_data.uuid);
             true
         } else {
             false
@@ -201,10 +201,10 @@ impl BucketParticipants {
     fn users_view(users: &Vec<UserData>, is_user_owner: bool) -> Html<Context, BucketParticipants> {
 
         fn user_view(user: &UserData, is_user_owner: bool) -> Html<Context, BucketParticipants> {
-            let user_id = user.id;
+            let user_uuid = user.uuid;
             let delete_button = if is_user_owner {
                 html! {
-                    <Button: title="Remove", onclick=move |_| Msg::RemoveUserFromBucket{user_id} ,/>
+                    <Button: title="Remove", onclick=move |_| Msg::RemoveUserFromBucket{user_uuid} ,/>
                 }
             } else {
                 ::util::wrappers::empty_vdom_node()

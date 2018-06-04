@@ -39,7 +39,7 @@ impl Renderable<Context, BucketModel> for Vec<PublicBucket>
 
 impl Renderable<Context, BucketModel> for PublicBucket {
     fn view(&self) -> Html<Context, BucketModel> {
-        let bucket_id = self.as_ref().id.clone();
+        let bucket_uuid = self.as_ref().uuid.clone();
         html! {
             <div class="public-bucket-card",>
                 <div class=("flexbox-vert", "full-height"),>
@@ -47,7 +47,7 @@ impl Renderable<Context, BucketModel> for PublicBucket {
                         {&self.as_ref().bucket_name}
                     </div>
                     <div class="flexbox-horiz",>
-                        <Button: title="Request Access", onclick=move |_| Msg::RequestToJoinBucket{bucket_id} ,/>
+                        <Button: title="Request Access", onclick=move |_| Msg::RequestToJoinBucket{bucket_uuid} ,/>
                     </div>
                 </div>
             </div>
@@ -57,9 +57,9 @@ impl Renderable<Context, BucketModel> for PublicBucket {
 
 impl Renderable<Context, BucketModel> for ApprovedBucket {
     fn view(&self) -> Html<Context, BucketModel> {
-        let bucket_id = self.as_ref().id.clone();
+        let bucket_uuid = self.as_ref().uuid.clone();
         html! {
-            <div class="approved-bucket-card", onclick=move |_| Msg::NavigateToBucket{bucket_id}, >
+            <div class="approved-bucket-card", onclick=move |_| Msg::NavigateToBucket{bucket_uuid}, >
                 {&self.as_ref().bucket_name}
             </div>
         }

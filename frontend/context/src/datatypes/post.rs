@@ -12,7 +12,7 @@ pub struct MinimalNewPostData {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct PostData {
-    pub id: PostUuid,
+    pub uuid: PostUuid,
     pub author: UserData,
     pub created_date: NaiveDateTime,
     pub modified_date: Option<NaiveDateTime>,
@@ -24,7 +24,7 @@ pub struct PostData {
 impl Default for PostData {
     fn default() -> Self {
         PostData {
-            id: PostUuid::default(),
+            uuid: PostUuid::default(),
             author: UserData::default(),
             created_date: NaiveDateTime::from_timestamp(0,0),
             modified_date: Option::default(),
@@ -38,7 +38,7 @@ impl Default for PostData {
 impl From<PostResponse> for PostData {
     fn from(response: PostResponse) -> Self{
         PostData {
-            id: response.uuid,
+            uuid: response.uuid,
             author: UserData::from(response.author),
             created_date: response.created_date,
             modified_date: response.modified_date,

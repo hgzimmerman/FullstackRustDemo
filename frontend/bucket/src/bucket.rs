@@ -68,7 +68,7 @@ pub struct BucketLobby {
 
 
 impl BucketLobby {
-    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<QuestionList>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
+    fn get_prior_questions_and_answers(prior_questions: &mut Loadable<QuestionList>, bucket_uuid: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<Vec<QuestionResponse>, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -88,11 +88,11 @@ impl BucketLobby {
 
         context.make_request_and_set_ft(
             prior_questions,
-            RequestWrapper::GetQuestions{bucket_id},
+            RequestWrapper::GetQuestions{bucket_uuid},
             callback,
         );
     }
-    fn get_random_question(question_package: &mut Loadable<Uploadable<QuestionPackage>>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
+    fn get_random_question(question_package: &mut Loadable<Uploadable<QuestionPackage>>, bucket_uuid: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -114,7 +114,7 @@ impl BucketLobby {
 
         context.make_request_and_set_ft(
             question_package,
-            RequestWrapper::GetRandomQuestion{bucket_id},
+            RequestWrapper::GetRandomQuestion{bucket_uuid},
             callback,
         );
     }
@@ -167,7 +167,7 @@ impl BucketLobby {
         };
 
         let request = NewAnswerRequest {
-            question_uuid: question_package.as_ref().question_data.id,
+            question_uuid: question_package.as_ref().question_data.uuid,
             answer_text
         };
 
@@ -178,14 +178,14 @@ impl BucketLobby {
         );
     }
 
-    fn put_question_back_in_bucket(question_id: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+    fn put_question_back_in_bucket(question_uuid: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionUuid, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let question_id: QuestionUuid = data.unwrap();
-                    Msg::QuestionPutBackInBucketSuccess {question_id}
+                    let question_uuid: QuestionUuid = data.unwrap();
+                    Msg::QuestionPutBackInBucketSuccess {question_uuid}
                 } else {
                     Msg::QuestionPutBackInBucketFailed
                 }
@@ -193,20 +193,20 @@ impl BucketLobby {
         );
 
         let ft = context.make_request(
-            RequestWrapper::PutQuestionBackInBucket{question_id},
+            RequestWrapper::PutQuestionBackInBucket{question_uuid},
             callback,
         ).expect("user logged in"); // TODO refactor this.
         Some(ft)
     }
 
-    fn delete_question(question_id: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
+    fn delete_question(question_uuid: QuestionUuid, context: &mut Env<Context, Self>) -> Option<FetchTask> {
         let callback = context.send_back(
             |response: Response<Json<Result<QuestionUuid, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let question_id: QuestionUuid = data.unwrap();
-                    Msg::DiscardQuestionSucceeded {question_id}
+                    let question_uuid: QuestionUuid = data.unwrap();
+                    Msg::DiscardQuestionSucceeded {question_uuid}
                 } else {
                     Msg::DiscardQuestionFailed
                 }
@@ -214,7 +214,7 @@ impl BucketLobby {
         );
 
         let ft = context.make_request(
-            RequestWrapper::DeleteQuestion{question_id},
+            RequestWrapper::DeleteQuestion{question_uuid},
             callback,
         ).expect("user logged in"); // TODO refactor this.
         Some(ft)
@@ -240,11 +240,11 @@ pub enum Msg {
     CreateQuestionFailed,
     PriorQuestionsReady(Vec<QuestionData>),
     PriorQuestionsFailed,
-    PutOldQuestionBackInBucket{question_id: QuestionUuid},
-    QuestionPutBackInBucketSuccess{question_id: QuestionUuid},
+    PutOldQuestionBackInBucket{question_uuid: QuestionUuid},
+    QuestionPutBackInBucketSuccess{question_uuid: QuestionUuid},
     QuestionPutBackInBucketFailed,
     DiscardQuestion,
-    DiscardQuestionSucceeded {question_id: QuestionUuid},
+    DiscardQuestionSucceeded {question_uuid: QuestionUuid},
     DiscardQuestionFailed,
     SetListFilter(QuestionLocation)
 }
@@ -259,7 +259,7 @@ impl Component<Context> for BucketLobby {
             ..Default::default()
         };
 
-        Self::get_prior_questions_and_answers(&mut bucket.prior_questions_and_answers, bucket.bucket_data.id, context);
+        Self::get_prior_questions_and_answers(&mut bucket.prior_questions_and_answers, bucket.bucket_data.uuid, context);
 
         bucket
     }
@@ -267,7 +267,7 @@ impl Component<Context> for BucketLobby {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            DrawQuestion => Self::get_random_question(&mut self.active_question, self.bucket_data.id, context),
+            DrawQuestion => Self::get_random_question(&mut self.active_question, self.bucket_data.uuid, context),
             GetRandomQuestionReady(question_package) => self.active_question = Loadable::Loaded(Uploadable::NotUploaded(question_package)),
             GetRandomQuestionFailed => self.active_question = Loadable::Failed(Some(String::from("Could not load question."))),
             UpdateAnswer(input) => {
@@ -278,7 +278,7 @@ impl Component<Context> for BucketLobby {
                 }
             }
             SendAnswerSuccess => {
-                Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.id, context);
+                Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.uuid, context);
                 self.active_question = Loadable::Unloaded
             },
             SendAnswerFail => self.active_question = Loadable::Failed(Some(String::from("Failed to submit question"))),
@@ -291,7 +291,7 @@ impl Component<Context> for BucketLobby {
                 }
             },
             UpdateNewQuestion(input) => self.new_question.as_mut().question_text = input,
-            SubmitNewQuestion => Self::post_new_question(&mut self.new_question, self.bucket_data.id, context),
+            SubmitNewQuestion => Self::post_new_question(&mut self.new_question, self.bucket_data.uuid, context),
             ResetCreateQuestionText => self.new_question = Uploadable::default(),
             CreateQuestionFailed => self.new_question.set_failed("Could not create new question"),
             PriorQuestionsReady(questions) =>{
@@ -309,15 +309,15 @@ impl Component<Context> for BucketLobby {
                 context.log("Get prior questions failed");
                 self.prior_questions_and_answers = Loadable::Failed(Some(String::from("Could not load old questions")))
             }
-            PutOldQuestionBackInBucket{question_id} => self.misc_ft = Self::put_question_back_in_bucket(question_id, context),
-            QuestionPutBackInBucketSuccess {question_id} => {
+            PutOldQuestionBackInBucket{question_uuid} => self.misc_ft = Self::put_question_back_in_bucket(question_uuid, context),
+            QuestionPutBackInBucketSuccess {question_uuid} => {
                 if let Loadable::Loaded(ref mut q_list) = self.prior_questions_and_answers {
                     // Set the question to say it is in the bucket now locally,
                     // instead of fetching an up to date version of the list.
                     q_list.list
                         .iter_mut()
                         .for_each(|x| {
-                            if x.id == question_id {
+                            if x.uuid == question_uuid {
                                 x.location = QuestionLocation::Bucket
                             }
                         })
@@ -326,13 +326,13 @@ impl Component<Context> for BucketLobby {
             QuestionPutBackInBucketFailed => context.log("failed to put question back in bucket"),
             DiscardQuestion => {
                 if let Loadable::Loaded(ref active_question) = self.active_question {
-                    self.misc_ft = Self::delete_question(active_question.as_ref().question_data.id, context)
+                    self.misc_ft = Self::delete_question(active_question.as_ref().question_data.uuid, context)
                 }
             }
-            DiscardQuestionSucceeded { question_id} => {
+            DiscardQuestionSucceeded { question_uuid} => {
                 self.active_question = Loadable::Unloaded;
                 if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
-                    old_list.list.retain(|x| x.id != question_id) // Remove the question from the local list of questions.
+                    old_list.list.retain(|x| x.uuid != question_uuid) // Remove the question from the local list of questions.
                 }
             },
             DiscardQuestionFailed => context.log("Failed to discard question"),
@@ -352,7 +352,7 @@ impl Component<Context> for BucketLobby {
             ..Default::default()
         };
 
-        Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.id, context);
+        Self::get_prior_questions_and_answers(&mut self.prior_questions_and_answers, self.bucket_data.uuid, context);
         true
     }
 }
@@ -506,7 +506,7 @@ impl Renderable<Context, BucketLobby> for QuestionData {
              }
         }
 
-        let question_id: QuestionUuid = self.id;
+        let question_uuid: QuestionUuid = self.uuid;
         html! {
             <div class=("flexbox-vert", "bordered", "margin-default"),>
                 <div class=("flexbox-vert", "border-bottom", "padding-default"),>
@@ -517,7 +517,7 @@ impl Renderable<Context, BucketLobby> for QuestionData {
                         {
                             if self.location == QuestionLocation::Floor {
                                 html! {
-                                    <Link<()>: name="Return to bucket", callback=move |_| Msg::PutOldQuestionBackInBucket{question_id}, classes="small-link", />
+                                    <Link<()>: name="Return to bucket", callback=move |_| Msg::PutOldQuestionBackInBucket{question_uuid}, classes="small-link", />
                                 }
                             } else {
                                 ::util::wrappers::empty_vdom_node()

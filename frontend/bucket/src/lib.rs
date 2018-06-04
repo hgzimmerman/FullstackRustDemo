@@ -110,7 +110,7 @@ pub enum BucketPage {
 
 
 pub enum Msg {
-    NavigateToBucket{bucket_id: BucketUuid},
+    NavigateToBucket{bucket_uuid: BucketUuid},
     PublicBucketsReady(Vec<PublicBucket>),
     PublicBucketsFailed,
     ApprovedBucketsReady(Vec<ApprovedBucket>),
@@ -121,7 +121,7 @@ pub enum Msg {
     CreateBucket,
     UpdateBucketName(InputState),
     ChangeDropDownState(DropDownPaneVariant),
-    RequestToJoinBucket{bucket_id: BucketUuid},
+    RequestToJoinBucket{bucket_uuid: BucketUuid},
     NoOp // TODO remove me
 }
 
@@ -179,7 +179,7 @@ impl BucketModel {
         );
     }
 
-    fn get_bucket(bucket: &mut Loadable<BucketData>, bucket_id: BucketUuid, context: &mut Env<Context, Self>) {
+    fn get_bucket(bucket: &mut Loadable<BucketData>, bucket_uuid: BucketUuid, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<BucketResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -196,7 +196,7 @@ impl BucketModel {
 
         context.make_request_and_set_ft(
             bucket,
-            RequestWrapper::GetBucket{bucket_id},
+            RequestWrapper::GetBucket{bucket_uuid},
             callback,
         );
     }
@@ -234,7 +234,7 @@ impl BucketModel {
 
 
     }
-    fn request_to_join_bucket(bucket_id: BucketUuid, request_to_join_bucket_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
+    fn request_to_join_bucket(bucket_uuid: BucketUuid, request_to_join_bucket_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
         let callback = context.send_back(
             |response: Response<Json<Result<BucketResponse, Error>>>| {
                 let (meta, Json(data)) = response.into_parts();
@@ -249,7 +249,7 @@ impl BucketModel {
 
         context.make_request_and_set_ft(
             request_to_join_bucket_action,
-            RequestWrapper::CreateJoinBucketRequest{bucket_id},
+            RequestWrapper::CreateJoinBucketRequest{bucket_uuid},
             callback,
         );
     }
@@ -268,9 +268,9 @@ impl Component<Context> for BucketModel {
                 Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
                 BucketPage::BucketList(bucket_lists)
             }
-            BucketRoute::Bucket{bucket_id} => {
+            BucketRoute::Bucket{bucket_uuid} => {
                 let mut bucket = Loadable::default();
-                Self::get_bucket(&mut bucket, bucket_id, context);
+                Self::get_bucket(&mut bucket, bucket_uuid, context);
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {
@@ -288,7 +288,7 @@ impl Component<Context> for BucketModel {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            NavigateToBucket {bucket_id} => context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_id})),
+            NavigateToBucket {bucket_uuid} => context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid})),
             PublicBucketsReady(buckets) => {
                 if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
                     bucket_list.public_buckets = Loadable::Loaded(buckets)
@@ -348,9 +348,9 @@ impl Component<Context> for BucketModel {
                     self.drop_down_state = drop_down_state
                 }
             }
-            RequestToJoinBucket {bucket_id} => {
+            RequestToJoinBucket {bucket_uuid} => {
                 if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
-                    Self::request_to_join_bucket(bucket_id, &mut bucket_lists.request_to_join_bucket_action, context)
+                    Self::request_to_join_bucket(bucket_uuid, &mut bucket_lists.request_to_join_bucket_action, context)
                 }
             }
             NoOp => {}// TODO remove me.
@@ -365,9 +365,9 @@ impl Component<Context> for BucketModel {
                 Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
                 BucketPage::BucketList(bucket_lists)
             }
-            BucketRoute::Bucket{bucket_id} => {
+            BucketRoute::Bucket{bucket_uuid} => {
                 let mut bucket = Loadable::default();
-                Self::get_bucket(&mut bucket, bucket_id, context);
+                Self::get_bucket(&mut bucket, bucket_uuid, context);
                 BucketPage::Bucket(bucket)
             }
             BucketRoute::Create => {

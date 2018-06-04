@@ -31,7 +31,7 @@ impl Renderable<Context, ForumModel> for SelectableMinimalThreadData {
            html! {
                <>
                    <div>
-                        <Link<ThreadUuid>: name=&minimal_thread_data.title, cb_value=minimal_thread_data.id, callback=|id| super::Msg::SetThread {thread_id: id}, classes="forum-link", />
+                        <Link<ThreadUuid>: name=&minimal_thread_data.title, cb_value=minimal_thread_data.uuid, callback=|uuid| super::Msg::SetThread {thread_uuid: uuid}, classes="forum-link", />
                    </div>
                    <div>
                         {format!("By: {}", minimal_thread_data.author.display_name)}

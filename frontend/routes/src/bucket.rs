@@ -5,7 +5,7 @@ use identifiers::bucket::BucketUuid;
 #[derive(Debug, PartialEq, Clone)]
 pub enum BucketRoute {
     BucketList,
-    Bucket{bucket_id: BucketUuid},
+    Bucket{bucket_uuid: BucketUuid},
     Create
 }
 
@@ -20,15 +20,15 @@ impl Router for BucketRoute {
         use self::BucketRoute::*;
         match *self {
             BucketList => RouteInfo::parse("/").unwrap(),
-            Bucket{bucket_id} => RouteInfo::parse(&format!("/{}", bucket_id)).unwrap(),
+            Bucket{bucket_uuid} => RouteInfo::parse(&format!("/{}", bucket_uuid)).unwrap(),
             Create => RouteInfo::parse("/create").unwrap()
         }
     }
     fn from_route(route: &mut RouteInfo) -> Option<Self> {
         use self::BucketRoute::*;
         if let Some(RouteSection::Node { segment }) = route.next() {
-            if let Ok(bucket_id) = BucketUuid::parse_str(&segment) {
-                Some(Bucket{bucket_id})
+            if let Ok(bucket_uuid) = BucketUuid::parse_str(&segment) {
+                Some(Bucket{bucket_uuid})
             } else if segment == "create" {
                 Some(Create)
             } else {
