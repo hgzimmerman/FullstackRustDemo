@@ -10,8 +10,8 @@ use identifiers::user::UserUuid;
 impl From<Article> for MinimalArticleResponse {
     fn from(article: Article) -> MinimalArticleResponse {
         MinimalArticleResponse {
-            id: ArticleUuid(article.id),
-            author_id: UserUuid(article.author_id),
+            id: ArticleUuid(article.uuid),
+            author_id: UserUuid(article.author_uuid),
             title: article.title,
             body: article.body,
             publish_date: article.publish_date,
@@ -22,7 +22,7 @@ impl From<Article> for MinimalArticleResponse {
 impl From<ArticleData> for FullArticleResponse {
     fn from(data: ArticleData) -> FullArticleResponse {
         FullArticleResponse {
-            id: ArticleUuid(data.article.id),
+            id: ArticleUuid(data.article.uuid),
             author: data.user.into(),
             title: data.article.title,
             body: data.article.body,
@@ -34,7 +34,7 @@ impl From<ArticleData> for FullArticleResponse {
 impl From<ArticleData> for ArticlePreviewResponse {
     fn from(data: ArticleData) -> ArticlePreviewResponse {
         ArticlePreviewResponse {
-            id: ArticleUuid(data.article.id),
+            id: ArticleUuid(data.article.uuid),
             author: data.user.into(),
             title: data.article.title,
             publish_date: data.article.publish_date,
@@ -45,7 +45,7 @@ impl From<ArticleData> for ArticlePreviewResponse {
 impl From<UpdateArticleRequest> for ArticleChangeset {
     fn from(request: UpdateArticleRequest) -> ArticleChangeset {
         ArticleChangeset {
-            id: request.id.0,
+            uuid: request.id.0,
             title: request.title,
             body: request.body,
         }
@@ -58,7 +58,7 @@ impl From<NewArticleRequest> for NewArticle {
             title: new_article_request.title.clone(),
             slug: slugify(&new_article_request.title),
             body: new_article_request.body,
-            author_id: new_article_request.author_id.0,
+            author_uuid: new_article_request.author_id.0,
         }
     }
 }

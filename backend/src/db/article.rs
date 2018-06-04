@@ -15,30 +15,32 @@ use identifiers::user::UserUuid;
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq)]
+#[primary_key(uuid)]
 #[insertable = "NewArticle"]
-#[belongs_to(User, foreign_key = "author_id")]
+#[belongs_to(User, foreign_key = "author_uuid")]
 #[table_name = "articles"]
 pub struct Article {
     /// The public key for the article.
-    pub id: Uuid,
+    pub uuid: Uuid,
     /// The key of the user that authored the article.
-    pub author_id: Uuid,
+    pub author_uuid: Uuid,
     /// The title of the article. This will be used to when showing the article in "Suggested Articles" panes.
     pub title: String,
     /// Converted title + suffix for use in urls
     pub slug: String,
     /// The body will be rendered in markdown and will constitute the main content of the article.
     pub body: String,
-    /// The presense of a publish date will idicate the article's published status,
+    /// The presence of a publish date will idicate the article's published status,
     /// and will be used in ordering sets of the most recent articles.
     pub publish_date: Option<NaiveDateTime>,
 }
 
 /// Specifies the attributes that can be changed for an article.
 #[derive(AsChangeset, Clone, Debug, PartialEq)]
+#[primary_key(uuid)]
 #[table_name = "articles"]
 pub struct ArticleChangeset {
-    pub id: Uuid,
+    pub uuid: Uuid,
     pub title: Option<String>,
     pub body: Option<String>,
 }
@@ -52,7 +54,7 @@ pub struct NewArticle {
     pub title: String,
     pub slug: String,
     pub body: String,
-    pub author_id: Uuid,
+    pub author_uuid: Uuid,
 }
 
 pub struct ArticleData {
@@ -81,7 +83,7 @@ impl Article {
     pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<ArticleData> {
 
         let article = Article::get_by_uuid(article_uuid.0, conn)?;
-        let user = User::get_by_uuid(article.author_id, conn)?;
+        let user = User::get_by_uuid(article.author_uuid, conn)?;
         Ok(ArticleData { article, user })
     }
 
@@ -149,7 +151,7 @@ impl Article {
         };
 
         diesel::update(articles::table)
-            .filter(articles::id.eq(article_uuid.0))
+            .filter(articles::uuid.eq(article_uuid.0))
             .set(publish_date.eq(publish_value))
             .get_result(conn)
             .map_err(Article::handle_error)

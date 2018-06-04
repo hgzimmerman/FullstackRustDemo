@@ -17,15 +17,16 @@ use diesel::ExpressionMethods;
 use diesel::PgConnection;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
+#[primary_key(uuid)]
 #[insertable = "NewQuestion"]
 #[table_name = "questions"]
-#[belongs_to(Bucket, foreign_key = "bucket_id")]
-#[belongs_to(User, foreign_key = "author_id")]
+#[belongs_to(Bucket, foreign_key = "bucket_uuid")]
+#[belongs_to(User, foreign_key = "author_uuid")]
 pub struct Question {
     /// Primary Key.
-    pub id: Uuid,
-    pub bucket_id: Uuid,
-    pub author_id: Uuid,
+    pub uuid: Uuid,
+    pub bucket_uuid: Uuid,
+    pub author_uuid: Uuid,
     pub question_text: String,
     pub on_floor: bool,
 }
@@ -33,8 +34,8 @@ pub struct Question {
 #[derive(Insertable, Debug)]
 #[table_name = "questions"]
 pub struct NewQuestion {
-    pub bucket_id: Uuid,
-    pub author_id: Uuid,
+    pub bucket_uuid: Uuid,
+    pub author_uuid: Uuid,
     pub question_text: String,
     pub on_floor: bool, // Should be false by default
 }
@@ -49,7 +50,7 @@ impl Question {
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
         let question: Question = Question::create(new_question, conn)?;
-        let user = User::get_by_uuid(question.author_id, conn)?;
+        let user = User::get_by_uuid(question.author_uuid, conn)?;
 
         Ok(QuestionData {
             question,
@@ -106,7 +107,7 @@ impl Question {
             .map_err(Answer::handle_error)?;
         // Get the author of the question.
         let user: User = users
-            .find(question.author_id)
+            .find(question.author_uuid)
             .first::<User>(conn)
             .map_err(User::handle_error)?;
         // Get them all together.
@@ -266,7 +267,7 @@ impl Question {
 
         // Get the matching user
         let user: User = users
-            .find(question.author_id)
+            .find(question.author_uuid)
             .first::<User>(conn)
             .map_err(User::handle_error)?;
 
@@ -291,7 +292,7 @@ impl Question {
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(questions::id.eq(
+        let target = questions.filter(questions::uuid.eq(
             m_question_uuid,
         ));
         diesel::update(target)
@@ -307,7 +308,7 @@ impl Question {
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(questions::id.eq(
+        let target = questions.filter(questions::uuid.eq(
             m_question_uuid,
         ));
         diesel::update(target)

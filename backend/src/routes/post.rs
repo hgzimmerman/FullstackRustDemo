@@ -22,7 +22,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
     // check if token user id matches the request user id.
     // This prevents users from creating posts under other user's names.
     let new_post: NewPost = new_post.into_inner().into();
-    if new_post.author_id != login_user.user_id.0 {
+    if new_post.author_uuid != login_user.user_uuid.0 {
         return Err(WeekendAtJoesError::BadRequest);
     }
     Post::create_and_get_user(new_post, &conn)
@@ -38,7 +38,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
     let existing_post = Post::get_by_uuid(edit_post_request.0.id.0, &conn)?;
-    if login_user.user_id.0 != existing_post.author_id {
+    if login_user.user_uuid.0 != existing_post.author_uuid {
         return Err(WeekendAtJoesError::BadRequest);
     }
 

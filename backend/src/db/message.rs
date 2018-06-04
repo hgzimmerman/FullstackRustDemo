@@ -18,17 +18,18 @@ use identifiers::chat::ChatUuid;
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
-#[belongs_to(Message, foreign_key = "reply_id")]
-#[belongs_to(User, foreign_key = "author_id")]
-#[belongs_to(Chat, foreign_key = "chat_id")]
+#[primary_key(uuid)]
+#[belongs_to(Message, foreign_key = "reply_uuid")]
+#[belongs_to(User, foreign_key = "author_uuid")]
+#[belongs_to(Chat, foreign_key = "chat_uuid")]
 #[insertable = "NewMessage"]
 #[table_name = "messages"]
 pub struct Message {
     /// Primary Key.
-    pub id: Uuid,
-    pub author_id: Uuid,
-    pub chat_id: Uuid,
-    pub reply_id: Option<Uuid>,
+    pub uuid: Uuid,
+    pub author_uuid: Uuid,
+    pub chat_uuid: Uuid,
+    pub reply_uuid: Option<Uuid>,
     pub message_content: String,
     pub read_flag: bool,
     pub create_date: NaiveDateTime,
@@ -38,9 +39,9 @@ pub struct Message {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "messages"]
 pub struct NewMessage {
-    pub author_id: Uuid,
-    pub chat_id: Uuid,
-    pub reply_id: Option<Uuid>,
+    pub author_uuid: Uuid,
+    pub chat_uuid: Uuid,
+    pub reply_uuid: Option<Uuid>,
     pub message_content: String,
     pub read_flag: bool,
     pub create_date: NaiveDateTime,
@@ -88,11 +89,11 @@ impl Message {
 
     pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::create(new_message, conn)?;
-        let author = User::get_by_uuid(message.author_id, conn)?;
+        let author = User::get_by_uuid(message.author_uuid, conn)?;
         // Get only the first reply in the possible chain of replies.
-        if message.reply_id.is_some() {
+        if message.reply_uuid.is_some() {
             // The unwrap is safe because the if_some condition was checked above
-            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_id.unwrap());
+            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_uuid.unwrap());
             let reply = Message::get_message(reply_message_uuid, false, conn)?;
             Ok(MessageData {
                 message,
@@ -110,11 +111,11 @@ impl Message {
 
     fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
         let message = Message::get_by_uuid(uuid.0, conn)?;
-        let author = User::get_by_uuid(message.author_id, conn)?;
+        let author = User::get_by_uuid(message.author_uuid, conn)?;
         // If the parameter instructs to get the reply, and the reply id exists, get it.
-        if with_reply && message.reply_id.is_some() {
+        if with_reply && message.reply_uuid.is_some() {
             // The unwrap is safe because the if_some condition was checked above
-            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_id.unwrap());
+            let reply_message_uuid: MessageUuid = MessageUuid(message.reply_uuid.unwrap());
             let reply: MessageData = Message::get_message(reply_message_uuid, with_reply, conn)?;
             Ok(MessageData {
                 message,
@@ -131,7 +132,7 @@ impl Message {
     }
 
     pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
-        use schema::messages::dsl::*;
+//        use schema::messages::dsl::*;
         use schema::messages;
         use schema::users;
         use diesel::prelude::*;
@@ -141,7 +142,7 @@ impl Message {
         let (messages_and_users, _count): (Vec<(Message, User)>, i64) = messages::table
             .inner_join(users::table)
             .order(messages::create_date)
-            .filter(chat_id.eq(chat_uuid.0))
+            .filter(messages::chat_uuid.eq(chat_uuid.0))
             .select((messages::all_columns, users::all_columns))
             .paginate(page_index.into())
             .per_page(page_size.into())

@@ -18,7 +18,7 @@ use identifiers::forum::ForumUuid;
 #[post("/create", data = "<new_thread_request>")]
 fn create_thread(new_thread_request: Json<NewThreadRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
     let new_thread_request = new_thread_request.into_inner();
-    if new_thread_request.author_id != user.user_id {
+    if new_thread_request.author_id != user.user_uuid {
         return Err(WeekendAtJoesError::BadRequest);
     }
 

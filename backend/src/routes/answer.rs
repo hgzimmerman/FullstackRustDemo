@@ -23,8 +23,8 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: C
     let new_answer: NewAnswerRequest = new_answer.into_inner();
     let question_uuid: QuestionUuid = new_answer.question_id.clone(); // spurious clone
 
-    let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user.user_id);
-    let answer_user: User = User::get_by_uuid(new_answer.author_id, &conn)?;
+    let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user.user_uuid);
+    let answer_user: User = User::get_by_uuid(new_answer.author_uuid, &conn)?;
 
 
     Question::put_question_on_floor(question_uuid, &conn)?;

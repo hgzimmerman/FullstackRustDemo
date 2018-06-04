@@ -221,8 +221,8 @@ pub mod testing {
         // Create Threads
         let create_thread_fn = |forum: &Forum, user: &User, title: &str| {
             let thread1: NewThread = NewThread {
-                forum_id: forum.id,
-                author_id: user.id,
+                forum_uuid: forum.uuid,
+                author_uuid: user.uuid,
                 created_date: Utc::now().naive_utc(),
                 locked: false,
                 archived: false,

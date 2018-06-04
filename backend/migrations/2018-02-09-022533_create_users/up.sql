@@ -1,7 +1,7 @@
 --CREATE TYPE UserRole AS ENUM ('unprivileged', 'admin', 'moderator');
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY NOT NULL Default gen_random_uuid(),
+    uuid UUID PRIMARY KEY NOT NULL Default gen_random_uuid(),
     user_name VARCHAR UNIQUE NOT NULL,
     display_name VARCHAR NOT NULL,
     password_hash VARCHAR NOT NULL,

@@ -5,7 +5,7 @@ use serde_json;
 use rocket::Outcome;
 use rocket::request::{self, Request, FromRequest};
 use chrono::Utc;
-use log;
+use log::{warn, info};
 
 use auth::Secret;
 use auth::BannedSet;
@@ -83,7 +83,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     let secret: &Secret = match request.guard::<State<Secret>>() {
         Outcome::Success(s) => s.inner(),
         _ => {
-            log::warn!("Couldn't get secret from state.");
+            warn!("Couldn't get secret from state.");
             return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
         }
     };
@@ -91,7 +91,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
     match ServerJwt::decode_jwt_string(key.to_string(), secret) {
         Ok(jwt) => Outcome::Success(jwt),
         Err(_) => {
-            log::info!("Token couldn't be deserialized.");
+            info!("Token couldn't be deserialized.");
             Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken))
         }
     }
@@ -100,7 +100,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
 /// Make sure that the JWT hasn't expired yet.
 fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesError> {
     if jwt.exp < Utc::now().naive_utc() {
-        log::info!("Token expired.");
+        info!("Token expired.");
         return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
     }
     Outcome::Success(jwt)
@@ -122,13 +122,12 @@ pub enum JwtError {
 
 pub mod user_authorization {
     use super::*;
-    use log;
 
     trait FromJwt {
         fn from_jwt(jwt: &Jwt) -> Result<Self, RoleError>
         where
             Self: Sized;
-        fn get_id(&self) -> UserUuid;
+        fn get_uuid(&self) -> UserUuid;
     }
 
     pub enum RoleError {
@@ -136,7 +135,7 @@ pub mod user_authorization {
     }
 
     pub struct NormalUser {
-        pub user_id: UserUuid,
+        pub user_uuid: UserUuid,
     }
     impl FromJwt for NormalUser {
         fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
@@ -144,13 +143,13 @@ pub mod user_authorization {
                 &UserRole::Unprivileged,
             )
             {
-                Ok(NormalUser { user_id: jwt.sub })
+                Ok(NormalUser { user_uuid: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }
         }
-        fn get_id(&self) -> UserUuid {
-            self.user_id
+        fn get_uuid(&self) -> UserUuid {
+            self.user_uuid
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for NormalUser {
@@ -162,7 +161,7 @@ pub mod user_authorization {
     }
 
     pub struct AdminUser {
-        pub user_id: UserUuid,
+        pub user_uuid: UserUuid,
     }
     impl FromJwt for AdminUser {
         fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
@@ -170,13 +169,13 @@ pub mod user_authorization {
                 &UserRole::Admin,
             )
             {
-                Ok(AdminUser { user_id: jwt.sub })
+                Ok(AdminUser { user_uuid: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }
         }
-        fn get_id(&self) -> UserUuid {
-            self.user_id
+        fn get_uuid(&self) -> UserUuid {
+            self.user_uuid
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for AdminUser {
@@ -188,7 +187,7 @@ pub mod user_authorization {
     }
 
     pub struct ModeratorUser {
-        pub user_id: UserUuid,
+        pub user_uuid: UserUuid,
     }
     impl FromJwt for ModeratorUser {
         fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
@@ -196,14 +195,14 @@ pub mod user_authorization {
                 &UserRole::Moderator,
             )
             {
-                Ok(ModeratorUser { user_id: jwt.sub })
+                Ok(ModeratorUser { user_uuid: jwt.sub })
             } else {
                 Err(RoleError::InsufficientRights)
             }
         }
 
-        fn get_id(&self) -> UserUuid {
-            self.user_id
+        fn get_uuid(&self) -> UserUuid {
+            self.user_uuid
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for ModeratorUser {
@@ -232,12 +231,12 @@ pub mod user_authorization {
         // Check for stateful banned status
         match request.guard::<State<BannedSet>>() {
             Outcome::Success(set) => {
-                if set.is_user_banned(&user.get_id()) {
+                if set.is_user_banned(&user.get_uuid()) {
                     return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::BadRequest));
                 }
             }
             _ => {
-                log::warn!("Couldn't get banned set from state.");
+                warn!("Couldn't get banned set from state.");
                 return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
             }
         }

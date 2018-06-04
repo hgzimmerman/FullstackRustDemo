@@ -19,16 +19,16 @@ impl BannedSet {
         BannedSet(RwLock::new(HashSet::new()))
     }
 
-    pub fn ban_user(&self, user_id: UserUuid) {
-        self.0.write().unwrap().insert(user_id);
+    pub fn ban_user(&self, user_uuid: UserUuid) {
+        self.0.write().unwrap().insert(user_uuid);
     }
     /// True indicates that the user was unbanned.
     /// False indicates that the user was not in the banned set to begin with.
-    pub fn unban_user(&self, user_id: &UserUuid) -> bool {
-        self.0.write().unwrap().remove(user_id)
+    pub fn unban_user(&self, user_uuid: &UserUuid) -> bool {
+        self.0.write().unwrap().remove(user_uuid)
     }
 
-    pub fn is_user_banned(&self, user_id: &UserUuid) -> bool {
-        self.0.read().unwrap().contains(user_id)
+    pub fn is_user_banned(&self, user_uuid: &UserUuid) -> bool {
+        self.0.read().unwrap().contains(user_uuid)
     }
 }

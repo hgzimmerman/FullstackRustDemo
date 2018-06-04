@@ -19,7 +19,7 @@ use identifiers::chat::ChatUuid;
 /// This operation is available to users who are part of the chat.
 #[get("/<index>?<chat_uuid>")]
 fn get_messages_for_chat(chat_uuid: ChatUuid, index: i32, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MessageResponse>>> {
-    if !Chat::is_user_in_chat(&chat_uuid, user.user_id, &conn)? {
+    if !Chat::is_user_in_chat(&chat_uuid, user.user_uuid, &conn)? {
         return Err(WeekendAtJoesError::BadRequest);
     }
 
@@ -32,10 +32,10 @@ fn get_messages_for_chat(chat_uuid: ChatUuid, index: i32, user: NormalUser, conn
 #[post("/send", data = "<new_message>")]
 fn send_message(new_message: Json<NewMessageRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<MessageResponse>> {
 
-    if !Chat::is_user_in_chat(&new_message.chat_id, user.user_id, &conn)? {
+    if !Chat::is_user_in_chat(&new_message.chat_id, user.user_uuid, &conn)? {
         return Err(WeekendAtJoesError::BadRequest);
     }
-    if new_message.author_id != user.user_id {
+    if new_message.author_id != user.user_uuid {
         return Err(WeekendAtJoesError::BadRequest);
     }
 

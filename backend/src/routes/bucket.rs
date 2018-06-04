@@ -24,7 +24,7 @@ struct PublicParam {
 /// Get all of the available buckets.
 #[get("/public")]
 fn get_public_buckets(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
-    Bucket::get_public_buckets(user.user_id, &conn)
+    Bucket::get_public_buckets(user.user_uuid, &conn)
         .map(convert_vector)
         .map(Json)
 }
@@ -32,7 +32,7 @@ fn get_public_buckets(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<Bucket
 /// Gets the buckets the user is approved to join.
 #[get("/approved")]
 fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketResponse>>> {
-    Bucket::get_buckets_user_belongs_to(user.user_id, &conn)
+    Bucket::get_buckets_user_belongs_to(user.user_uuid, &conn)
         .map(convert_vector)
         .map(Json)
 }
@@ -43,7 +43,7 @@ fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json
 /// The user being approved already needs to have registered with the bucket in question.
 #[put("/<bucket_uuid>/approval?<user_uuid>")]
 fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -54,7 +54,7 @@ fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: N
 /// Entirely removes the user from the bucket.
 #[delete("/<bucket_uuid>?<user_uuid>")]
 fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -65,7 +65,7 @@ fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: N
 /// This will prevent other buckets from
 #[put("/<bucket_uuid>/publicity?<is_public_param>")]
 fn set_publicity(bucket_uuid: BucketUuid, is_public_param: PublicParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -77,7 +77,7 @@ fn set_publicity(bucket_uuid: BucketUuid, is_public_param: PublicParam, user: No
 #[get("/<bucket_uuid>")]
 fn get_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
     // If the user isn't approved then return a 403.
-    if !Bucket::is_user_approved(user.user_id, bucket_uuid, &conn) {
+    if !Bucket::is_user_approved(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
         return Err(e);
     }
@@ -92,7 +92,7 @@ fn get_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResul
 /// but require the active user to approve their request.
 #[get("/unapproved_users_for_owned_buckets")]
 fn get_unapproved_users_in_buckets_owned_by_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<BucketUsersResponse>>> {
-    Bucket::get_users_requiring_approval_for_owned_buckets(user.user_id, &conn)
+    Bucket::get_users_requiring_approval_for_owned_buckets(user.user_uuid, &conn)
         .map(convert_vector)
         .map(Json)
 }
@@ -100,14 +100,15 @@ fn get_unapproved_users_in_buckets_owned_by_user(user: NormalUser, conn: Conn) -
 /// Gets all of the users in the bucket, excluding the user that made the request
 #[get("/<bucket_uuid>/users")]
 fn get_users_in_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<UserResponse>>> {
-    if !Bucket::is_user_approved(user.user_id, bucket_uuid, &conn) {
+    if !Bucket::is_user_approved(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
         return Err(e);
     }
+    use db::user::User;
 
     let users = Bucket::get_users_with_approval(bucket_uuid, &conn)?
         .into_iter()
-        .filter( |m_user| m_user.id != user.user_id.0 ) // Filter out the user making the request.
+        .filter( |u: &User| u.uuid != user.user_uuid.0 ) // Filter out the user making the request.
         .map(UserResponse::from)
         .collect();
     Ok(Json(users))
@@ -116,12 +117,12 @@ fn get_users_in_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) ->
 /// Given a bucket id, determine if the current user owns the bucket.
 #[get("/<bucket_uuid>/user_owner_status")]
 fn get_is_current_user_owner(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResult<Json<bool>> {
-    if !Bucket::is_user_approved(user.user_id, bucket_uuid, &conn) {
+    if !Bucket::is_user_approved(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
         return Err(e);
     }
 
-    Bucket::is_user_owner(user.user_id, bucket_uuid, &conn)
+    Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)
         .map(Json)
 }
 
@@ -130,11 +131,11 @@ fn get_is_current_user_owner(bucket_uuid: BucketUuid, user: NormalUser, conn: Co
 /// they will gain access to internal bucket information.
 #[post("/<bucket_uuid>/user_join_request")]
 fn request_to_join_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    let bucket_id: Uuid = bucket_uuid.0;
-    let user_uuid: Uuid = user.user_id.0;
+    let bucket_uuid: Uuid = bucket_uuid.0;
+    let user_uuid: Uuid = user.user_uuid.0;
     let new_bucket_user = NewBucketUser {
-        bucket_id,
-        user_id: user_uuid,
+        bucket_uuid,
+        user_uuid,
         owner: false,
         approved: false,
     };
@@ -153,8 +154,8 @@ fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Con
 
     // Add the user who made the request to the bucket as the owner
     let new_bucket_user = NewBucketUser {
-        bucket_id: bucket_response.id.0,
-        user_id: user.user_id.0,
+        bucket_uuid: bucket_response.id.0,
+        user_uuid: user.user_uuid.0,
         owner: true,
         approved: true,
     };

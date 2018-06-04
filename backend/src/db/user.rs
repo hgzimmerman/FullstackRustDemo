@@ -17,11 +17,12 @@ use wire::user::*;
 
 /// The database's representation of a user.
 #[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
+#[primary_key(uuid)]
 #[insertable = "NewUser"]
 #[table_name = "users"]
 pub struct User {
     /// The primary key
-    pub id: Uuid,
+    pub uuid: Uuid,
     /// The user name of the user. This is used primarily for logging in, and is seldom displayed.
     pub user_name: String,
     /// This name will be displayed on data associated with the user, such as forum posts, or as the author of articles.
@@ -118,7 +119,7 @@ impl User {
                 Ok(true)
             } else {
                 // Remove the locked status
-                let target = users.filter(users::id.eq(self.id));
+                let target = users.filter(users::uuid.eq(self.uuid));
                 diesel::update(target)
                     .set(locked.eq(None::<NaiveDateTime>))
                     .execute(conn)
@@ -137,7 +138,7 @@ impl User {
         use schema::users::dsl::*;
         use schema::users;
 
-        let target = users.filter(users::id.eq(user_uuid.0));
+        let target = users.filter(users::uuid.eq(user_uuid.0));
         diesel::update(target)
             .set(failed_login_count.eq(0))
             .execute(conn)
@@ -157,7 +158,7 @@ impl User {
         let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
         let expire_datetime = current_date + Duration::seconds(delay_seconds);
 
-        let target = users.filter(users::id.eq(user_uuid.0));
+        let target = users.filter(users::uuid.eq(user_uuid.0));
         let _ = diesel::update(target)
             .set((
                 locked.eq(expire_datetime),
@@ -175,7 +176,7 @@ impl User {
     pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
         use schema::users;
-        let target = users.filter(users::id.eq(user_uuid.0));
+        let target = users.filter(users::uuid.eq(user_uuid.0));
         diesel::update(target)
             .set(banned.eq(is_banned))
             .get_result(conn)
@@ -201,7 +202,7 @@ impl User {
             let mut new_roles = user.roles.clone();
             new_roles.push(user_role_id);
 
-            let target = users.filter(users::id.eq(user_uuid.0));
+            let target = users.filter(users::uuid.eq(user_uuid.0));
             diesel::update(target)
                 .set(roles.eq(new_roles))
                 .get_result(conn)
@@ -216,7 +217,7 @@ impl User {
         use db::diesel_extensions::pagination::Paginate;
 
         users::table
-            .filter(users::id.eq(users::id)) // NoOp filter to get the paginate function to work.
+            .filter(users::uuid.eq(users::uuid)) // NoOp filter to get the paginate function to work.
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<User>(conn)

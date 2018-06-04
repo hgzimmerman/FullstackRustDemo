@@ -8,9 +8,9 @@ use identifiers::post::PostUuid;
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest) -> NewPost {
         NewPost {
-            thread_id: request.thread_id.0,
-            author_id: request.author_id.0,
-            parent_id: request.parent_id.map(|x| x.0),
+            thread_uuid: request.thread_id.0,
+            author_uuid: request.author_id.0,
+            parent_uuid: request.parent_id.map(|x| x.0),
             created_date: Utc::now().naive_utc(),
             content: request.content,
             censored: false,
@@ -21,9 +21,9 @@ impl From<NewPostRequest> for NewPost {
 impl From<(Thread, String)> for NewPost {
     fn from(content: (Thread, String)) -> NewPost {
         NewPost {
-            thread_id: content.0.id,
-            author_id: content.0.author_id,
-            parent_id: None,
+            thread_uuid: content.0.uuid,
+            author_uuid: content.0.author_uuid,
+            parent_uuid: None,
             created_date: Utc::now().naive_utc(),
             content: content.1,
             censored: false,
@@ -35,7 +35,7 @@ impl From<(Thread, String)> for NewPost {
 impl From<EditPostRequest> for EditPostChangeset {
     fn from(request: EditPostRequest) -> EditPostChangeset {
         EditPostChangeset {
-            id: request.id.0,
+            uuid: request.id.0,
             modified_date: Utc::now().naive_utc(),
             content: request.content,
         }
@@ -47,7 +47,7 @@ impl From<EditPostRequest> for EditPostChangeset {
 impl From<ChildlessPostData> for PostResponse {
     fn from(data: ChildlessPostData) -> PostResponse {
         PostResponse {
-            id: PostUuid(data.post.id),
+            id: PostUuid(data.post.uuid),
             author: data.user.into(),
             created_date: data.post.created_date,
             modified_date: data.post.modified_date,
@@ -63,7 +63,7 @@ impl From<ChildlessPostData> for PostResponse {
 impl From<PostData> for PostResponse {
     fn from(data: PostData) -> PostResponse {
         PostResponse {
-            id: PostUuid(data.post.id),
+            id: PostUuid(data.post.uuid),
             author: data.user.into(),
             created_date: data.post.created_date,
             modified_date: data.post.modified_date,

@@ -18,20 +18,21 @@ use uuid::Uuid;
 
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
+#[primary_key(uuid)]
 #[insertable = "NewPost"]
-#[belongs_to(User, foreign_key = "author_id")]
-#[belongs_to(Thread, foreign_key = "thread_id")]
-#[belongs_to(Post, foreign_key = "parent_id")]
+#[belongs_to(User, foreign_key = "author_uuid")]
+#[belongs_to(Thread, foreign_key = "thread_uuid")]
+#[belongs_to(Post, foreign_key = "parent_uuid")]
 #[table_name = "posts"]
 pub struct Post {
     /// Primary Key
-    pub id: Uuid,
+    pub uuid: Uuid,
     /// The Foreign Key of the thread the post belongs to.
-    pub thread_id: Uuid,
+    pub thread_uuid: Uuid,
     /// The Foreign Key of the user that created the post.
-    pub author_id: Uuid,
+    pub author_uuid: Uuid,
     /// The Foreign Key of the post to which this post is replying to.
-    pub parent_id: Option<Uuid>,
+    pub parent_uuid: Option<Uuid>,
     /// The timestamp of when the post was created.
     pub created_date: NaiveDateTime,
     /// If the post was edited, the most recent edit time will be attached to the post.
@@ -45,18 +46,19 @@ pub struct Post {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "posts"]
 pub struct NewPost {
-    pub thread_id: Uuid,
-    pub author_id: Uuid,
-    pub parent_id: Option<Uuid>, // this will always be None, try removing this.
+    pub thread_uuid: Uuid,
+    pub author_uuid: Uuid,
+    pub parent_uuid: Option<Uuid>, // this will always be None, try removing this.
     pub created_date: NaiveDateTime,
     pub content: String,
     pub censored: bool,
 }
 
 #[derive(Serialize, Deserialize, AsChangeset, Debug, Identifiable)]
+#[primary_key(uuid)]
 #[table_name = "posts"]
 pub struct EditPostChangeset {
-    pub id: Uuid,
+    pub uuid: Uuid,
     pub modified_date: NaiveDateTime,
     pub content: String,
 }
@@ -88,7 +90,7 @@ impl Post {
         let modified_post: Post = edit_post_changeset
             .save_changes(conn)
             .map_err(Post::handle_error)?;
-        let user = User::get_by_uuid(modified_post.author_id, conn)?;
+        let user = User::get_by_uuid(modified_post.author_uuid, conn)?;
         Ok(ChildlessPostData {
             post: modified_post,
             user,
@@ -99,7 +101,7 @@ impl Post {
     /// Creates a post, and also gets the associated author for the post.
     pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         let post: Post = Post::create(new_post, conn)?;
-        let user: User = User::get_by_uuid(post.author_id, conn)?;
+        let user: User = User::get_by_uuid(post.author_uuid, conn)?;
         Ok(ChildlessPostData { post, user })
     }
 
@@ -111,11 +113,11 @@ impl Post {
         let m_post_uuid: Uuid = post_uuid.0;
 
         let censored_post: Post = diesel::update(posts::table)
-            .filter(posts::id.eq(m_post_uuid))
+            .filter(posts::uuid.eq(m_post_uuid))
             .set(censored.eq(true))
             .get_result(conn)
             .map_err(Post::handle_error)?;
-        let user = User::get_by_uuid(censored_post.author_id, conn)?;
+        let user = User::get_by_uuid(censored_post.author_uuid, conn)?;
 
         Ok(ChildlessPostData {
             post: censored_post,
@@ -161,7 +163,7 @@ impl Post {
             .map_err(Post::handle_error)?;
 
         users
-            .find(post.author_id)
+            .find(post.author_uuid)
             .first(conn)
             .map_err(User::handle_error)
     }
@@ -177,7 +179,7 @@ impl Post {
 
         Post::belonging_to(&thread)
             .filter(
-                parent_id.is_null(), // There should only be one thread that has a null parent, and that is the OP/root post
+                parent_uuid.is_null(), // There should only be one thread that has a null parent, and that is the OP/root post
             )
             .first::<Post>(conn)
             .map_err(Post::handle_error)
@@ -185,7 +187,7 @@ impl Post {
 
     pub fn get_individual_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         let post = Post::get_by_uuid(post_uuid.0, conn)?;
-        let user = User::get_by_uuid(post.author_id, conn)?;
+        let user = User::get_by_uuid(post.author_uuid, conn)?;
         Ok(ChildlessPostData { post, user })
     }
 
@@ -193,7 +195,7 @@ impl Post {
     /// This will make recursive calls into the database.
     /// This method should be the target of significant scrutiny.
     pub fn get_post_data(self, conn: &PgConnection) -> JoeResult<PostData> {
-        let user: User = User::get_by_uuid(self.author_id, conn)?;
+        let user: User = User::get_by_uuid(self.author_uuid, conn)?;
         let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
         // turns the children into PostData
         let children: Vec<PostData> = children

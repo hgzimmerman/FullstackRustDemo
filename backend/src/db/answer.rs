@@ -7,23 +7,24 @@ use uuid::Uuid;
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
+#[primary_key(uuid)]
 #[table_name = "answers"]
 #[insertable = "NewAnswer"]
-#[belongs_to(User, foreign_key = "author_id")]
-#[belongs_to(Question, foreign_key = "question_id")]
+#[belongs_to(User, foreign_key = "author_uuid")]
+#[belongs_to(Question, foreign_key = "question_uuid")]
 pub struct Answer {
     /// Primary Key.
-    pub id: Uuid,
-    pub question_id: Uuid,
-    pub author_id: Uuid,
+    pub uuid: Uuid,
+    pub question_uuid: Uuid,
+    pub author_uuid: Uuid,
     pub answer_text: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
 #[table_name = "answers"]
 pub struct NewAnswer {
-    pub author_id: Uuid,
-    pub question_id: Uuid,
+    pub author_uuid: Uuid,
+    pub question_uuid: Uuid,
     pub answer_text: Option<String>,
 }
 

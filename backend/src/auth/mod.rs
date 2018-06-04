@@ -11,7 +11,6 @@ mod jwt;
 mod password;
 mod banned_set;
 
-use log;
 
 pub use self::jwt::user_authorization;
 pub use self::jwt::{ServerJwt, JwtError};
@@ -85,7 +84,7 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
         return Err(LoginError::AccountLocked);
     }
 
-    let user_uuid = UserUuid(user.id);
+    let user_uuid = UserUuid(user.uuid);
     info!("Verifying password against hash");
     match verify_hash(&login_request.password, &user.password_hash) {
         Ok(b) => {
@@ -116,10 +115,10 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> Login
     };
 
 
-    log::info!("Creating JWT");
+    info!("Creating JWT");
     let jwt = Jwt {
         //        user_name: user.user_name.clone(),
-        sub: UserUuid(user.id.clone()),
+        sub: UserUuid(user.uuid),
         user_roles: user.roles
             .iter()
             .map(|role_id| (*role_id).into())

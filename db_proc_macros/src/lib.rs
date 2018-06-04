@@ -53,13 +53,13 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
         }
 
         impl<'a> macro_RetrievableUuid<'a> for #name {
-            fn get_by_uuid(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
+            fn get_by_uuid(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
 
                 #table_name
-                    .find(item_id)
+                    .find(item_uuid)
                     .first::<#name>(conn)
                     .map_err(#name::handle_error)
             }
@@ -72,7 +72,7 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
                     .map_err(#name::handle_error)
             }
 
-            fn exists(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<bool> {
+            fn exists(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<bool> {
                 use schema::#table_name;
                 use schema::#table_name::dsl::*;
                 use diesel::select;
@@ -81,21 +81,21 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
                 use diesel::QueryDsl;
                 use diesel::ExpressionMethods;
 
-                select(exists(#table_name.filter(#table_name::id.eq(item_id))))
+                select(exists(#table_name.filter(#table_name::uuid.eq(item_uuid))))
                     .get_result::<bool>(conn)
                     .map_err(#name::handle_error)
             }
         }
 
         impl<'a> macro_DeletableUuid<'a> for #name {
-            fn delete_by_id(item_id: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
+            fn delete_by_id(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
                 use schema::#table_name::dsl::*;
                 use diesel::ExpressionMethods;
                 use diesel;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
 
-                let target = #table_name.filter(id.eq(item_id));
+                let target = #table_name.filter(uuid.eq(item_uuid));
 
                 diesel::delete(target)
                     .get_result(conn)

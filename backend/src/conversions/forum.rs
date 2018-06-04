@@ -5,7 +5,7 @@ use identifiers::forum::ForumUuid;
 impl From<Forum> for ForumResponse {
     fn from(forum: Forum) -> ForumResponse {
         ForumResponse {
-            id: ForumUuid(forum.id),
+            id: ForumUuid(forum.uuid),
             title: forum.title,
             description: forum.description,
         }

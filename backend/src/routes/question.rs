@@ -46,7 +46,7 @@ fn get_question(question_uuid: QuestionUuid, conn: Conn) -> Result<Json<Question
 fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, conn: Conn) -> Result<Json<QuestionResponse>, WeekendAtJoesError> {
     let request: NewQuestionRequest = new_question.into_inner();
 
-    let new_question: NewQuestion = NewQuestion::attach_user_id(request, user.user_id);
+    let new_question: NewQuestion = NewQuestion::attach_user_id(request, user.user_uuid);
 
     Question::create_data(new_question, &conn)
         .map(QuestionResponse::from)
@@ -56,7 +56,7 @@ fn create_question(new_question: Json<NewQuestionRequest>, user: NormalUser, con
 /// Permanently deletes the question from the database.
 #[delete("/<question_uuid>")]
 fn delete_question(question_uuid: QuestionUuid, user: NormalUser, conn: Conn) -> JoeResult<Json<QuestionUuid>> {
-    info!("user: {}, deleteting question with id: {:?}", user.user_id, question_uuid);
+    info!("user: {}, deleteting question with id: {:?}", user.user_uuid, question_uuid);
     Question::delete_question(question_uuid.clone(), &conn)?; // spurious clone
     Ok(Json(question_uuid))
 }

@@ -23,7 +23,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
 
     let new_chat: NewChat = new_chat.into_inner().into();
 
-    if new_chat.leader_id != user.user_id.0 {
+    if new_chat.leader_uuid != user.user_uuid.0 {
         info!("User tried to create a chat where they are not the leader");
         return Err(WeekendAtJoesError::BadRequest);
     }
@@ -37,7 +37,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
 /// This operation is available to any user.
 #[put("/add_user", data = "<association>")]
 fn add_user_to_chat(association: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
-    if !Chat::is_user_in_chat(&association.chat_id, user.user_id, &conn)? {
+    if !Chat::is_user_in_chat(&association.chat_id, user.user_uuid, &conn)? {
         info!("User not in a chat tried to add a user to that chat.");
         return Err(WeekendAtJoesError::BadRequest);
     }
@@ -54,9 +54,9 @@ fn add_user_to_chat(association: Json<ChatUserAssociationRequest>, user: NormalU
 fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
 
     let association: ChatUserAssociation = request.into_inner().into();
-    let chat: Chat = Chat::get_by_uuid(association.chat_id, &conn)?;
+    let chat: Chat = Chat::get_by_uuid(association.chat_uuid, &conn)?;
 
-    if chat.leader_id != user.user_id.0 {
+    if chat.leader_uuid != user.user_uuid.0 {
         info!("User without chat leader status tried to remove user");
         return Err(WeekendAtJoesError::BadRequest);
     }
@@ -68,7 +68,7 @@ fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: Normal
 /// Gets all of the chats (name and Id) that are associated with the user.
 #[get("/belonging_to_user")]
 fn get_chats_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json<Vec<MinimalChatResponse>>> {
-    Chat::get_chats_user_is_in(user.user_id, &conn)
+    Chat::get_chats_user_is_in(user.user_uuid, &conn)
         .map_vec::<MinimalChatResponse>()
         .map(Json)
 }

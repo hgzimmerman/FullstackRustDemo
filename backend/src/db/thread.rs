@@ -17,17 +17,18 @@ use db::post::{PostData, ChildlessPostData};
 use identifiers::forum::ForumUuid;
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
+#[primary_key(uuid)]
 #[insertable = "NewThread"]
-#[belongs_to(User, foreign_key = "author_id")]
-#[belongs_to(Forum, foreign_key = "forum_id")]
+#[belongs_to(User, foreign_key = "author_uuid")]
+#[belongs_to(Forum, foreign_key = "forum_uuid")]
 #[table_name = "threads"]
 pub struct Thread {
     /// Primary Key
-    pub id: Uuid,
+    pub uuid: Uuid,
     /// Foreign Key to which the thread belongs to.
-    pub forum_id: Uuid,
+    pub forum_uuid: Uuid,
     /// Foreign Kay of the user who created the thread.
-    pub author_id: Uuid,
+    pub author_uuid: Uuid,
     /// Timestamp of when the thread was created.
     pub created_date: NaiveDateTime,
     /// If the thread is locked, then it cannot be edited, nor can any of its posts.
@@ -42,8 +43,8 @@ pub struct Thread {
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "threads"]
 pub struct NewThread {
-    pub forum_id: Uuid,
-    pub author_id: Uuid,
+    pub forum_uuid: Uuid,
+    pub author_uuid: Uuid,
     pub created_date: NaiveDateTime,
     pub locked: bool,
     pub archived: bool,
@@ -70,11 +71,11 @@ impl Thread {
         let m_thread_uuid: Uuid = thread_uuid.0;
 
         let thread: Thread = diesel::update(threads::table)
-            .filter(threads::id.eq(m_thread_uuid))
+            .filter(threads::uuid.eq(m_thread_uuid))
             .set(locked.eq(is_locked))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_uuid(thread.author_id, conn)?;
+        let user: User = User::get_by_uuid(thread.author_uuid, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -87,11 +88,11 @@ impl Thread {
         let m_thread_uuid: Uuid = thread_uuid.0;
 
         let thread: Thread = diesel::update(threads::table)
-            .filter(threads::id.eq(m_thread_uuid))
+            .filter(threads::uuid.eq(m_thread_uuid))
             .set(archived.eq(true))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_uuid(thread.author_id, conn)?;
+        let user: User = User::get_by_uuid(thread.author_uuid, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -182,7 +183,7 @@ impl Thread {
         let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
         let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
         let post: PostData = root_post.get_post_data(conn)?;
-        let user = User::get_by_uuid(thread.author_id, conn)?;
+        let user = User::get_by_uuid(thread.author_uuid, conn)?;
         Ok(ThreadData { thread, post, user })
     }
 }
