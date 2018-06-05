@@ -16,7 +16,7 @@ yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbda
 
 #wire = {path = "../../wire"}
 context = {path = "../context"}
-util = {path = "../util"}
+#util = {path = "../util"}
 routes = {path = "../routes"}
 
 bucket = {path = "../bucket"}

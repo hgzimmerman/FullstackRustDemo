@@ -8,7 +8,6 @@ dependencies = [
  "forum 0.1.0",
  "header 0.1.0",
  "routes 0.1.0",
- "util 0.1.0",
  "yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=3685a0cd1c642b3f4dbdaa06832848a2ae641517)",
 ]
 

@@ -1,3 +1,7 @@
+//! This crate is for handling the `/auth/*` routes.
+//! This involves account creation and login, but would also encompass password reset.
+
+
 #[macro_use]
 extern crate yew;
 extern crate failure;
@@ -22,7 +26,6 @@ use self::create_account_component::CreateAccount;
 
 pub struct AuthModel {
     pub route: AuthRoute,
-//    pub on_login_cb: Option<Callback<()>>
 }
 
 pub enum Msg {
@@ -48,7 +51,6 @@ impl Component<Context> for AuthModel {
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
         AuthModel {
             route: props.route,
-//            on_login_cb: props.on_login_cb };
         }
 
     }
@@ -59,7 +61,6 @@ impl Component<Context> for AuthModel {
 
     fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
         self.route = props.route;
-//        self.on_login_cb = props.on_login_cb;
         true
     }
 }

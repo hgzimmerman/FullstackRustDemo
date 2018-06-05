@@ -1,31 +1,20 @@
-//#![feature(try_from)]
+//! This is the "binary" crate for the frontend;
+//! the crate that when built produces the WASM needed to run the app.
+//! The actual contents of this project should be kept to a minimum,
+//! as it must be rebuilt whenever _any_ other frontend crate is changed.
+
 #![recursion_limit="128"]
 
 #[macro_use]
 extern crate yew;
-//extern crate wire;
-//#[macro_use]
-//extern crate failure_derive;
-//extern crate failure;
-//extern crate serde;
-//#[macro_use]
-//extern crate serde_json;
-
-//extern crate chrono;
-
-//extern crate stdweb;
-
 use yew::prelude::*;
 
-
-//mod context;
 extern crate context;
 pub use context::Context;
 pub use context::datatypes;
 extern crate routes;
 
-//mod util;
-extern crate util;
+//extern crate util;
 
 extern crate bucket;
 extern crate forum;
@@ -134,7 +123,10 @@ impl Renderable<Context, Model> for Model {
             Bucket(ref bucket_route) => html! {
                 <BucketModel: route=bucket_route, />
             },
-            PageNotFound => util::wrappers::html_string("Page Not Found".into())
+            PageNotFound => html! {
+                {"Page Not Found"}
+            }
+//                util::wrappers::html_string("Page Not Found".into())
         };
 
         html! {

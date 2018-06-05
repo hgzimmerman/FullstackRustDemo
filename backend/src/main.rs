@@ -30,8 +30,8 @@ extern crate frank_jwt;
 #[macro_use]
 extern crate diesel;
 //#[macro_use] extern crate diesel_codegen;
-#[macro_use]
-extern crate diesel_infer_schema;
+//#[macro_use]
+//extern crate diesel_infer_schema;
 // #[macro_use] extern crate diesel_derive_enum;
 extern crate chrono;
 extern crate r2d2_diesel;
