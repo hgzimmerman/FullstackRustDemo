@@ -1,6 +1,6 @@
 #![feature(plugin, custom_derive)]
 #![plugin(rocket_codegen)]
-#![feature(rand)]
+//#![feature(rand)]
 #![feature(test)]
 #![recursion_limit="128"]
 // #![feature(proc_macro)]
@@ -13,12 +13,10 @@ extern crate error;
 extern crate auth as auth_lib;
 
 extern crate rocket;
-#[macro_use]
+//#[macro_use]
 extern crate rocket_contrib;
 extern crate uuid;
 extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 extern crate serde;
 #[macro_use(log)]
 extern crate log;
@@ -26,33 +24,15 @@ extern crate simplelog;
 
 extern crate test;
 
-
-//#[macro_use]
-//extern crate diesel;
-//#[macro_use] extern crate diesel_codegen;
-//#[macro_use]
-//extern crate diesel_infer_schema;
-// #[macro_use] extern crate diesel_derive_enum;
 extern crate chrono;
-//extern crate r2d2_diesel;
-//extern crate r2d2;
-
-// #[macro_use]
-// extern crate lazy_static;
-
-// extern crate bcrypt;
-//extern crate crypto;
-
 extern crate rocket_cors;
 
-extern crate rand;
 
 extern crate clap;
 use clap::{Arg, App};
 
 use rocket::Rocket;
 
-//mod conversions;
 mod routes;
 use routes::*;
 //mod db;
@@ -81,7 +61,7 @@ use auth_lib::BannedSet;
 use simplelog::*;
 use std::fs::File;
 
-pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
+//pub use db::schema; // schema internals can be accessed via db::schema::, or via schema::
 
 use rocket::http::Method;
 use rocket_cors::AllowedOrigins;
@@ -113,18 +93,21 @@ fn main() {
         ),
     ]).expect("Cant get logger.");
 
+    const CREATE_ADMIN: &'static str = "create_admin";
+    const SECRET_KEY: &'static str = "secret_key";
+
     let matches = App::new("Weekend At Joes Backend")
         .version("0.1.0")
         .author("Henry Zimmerman")
         .about("Monolithic server for the API and frontend of the Weekend at Joes website.")
         .arg(
-            Arg::with_name("create_admin")
+            Arg::with_name(CREATE_ADMIN)
                 .long("create_admin")
                 .help("Creates an administrator user if one doesn't already exist.")
                 .takes_value(false),
         )
         .arg(
-            Arg::with_name("secret_key")
+            Arg::with_name(SECRET_KEY)
                 .long("secret")
                 .short("s")
                 .value_name("KEY")
@@ -135,8 +118,8 @@ fn main() {
         )
         .get_matches();
 
-    let create_admin: bool = matches.is_present("create_admin");
-    let secret_key: Option<String> = matches.value_of("secret_key").map(
+    let create_admin: bool = matches.is_present(CREATE_ADMIN);
+    let secret_key: Option<String> = matches.value_of(SECRET_KEY).map(
         String::from,
     );
     let config = ConfigObject {
@@ -200,7 +183,7 @@ pub fn init_rocket(config: ConfigObject) -> Rocket {
     }
 
     // Initialize Rocket.
-    let rocket = rocket::ignite()
+    let rocket: Rocket = rocket::ignite()
         .manage(db_pool)
         .manage(secret)
         .manage(banned_set)

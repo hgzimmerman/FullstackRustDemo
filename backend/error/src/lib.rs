@@ -177,9 +177,7 @@ impl<'a> Responder<'a> for LoginError {
 
 
 
-
-
-/// An error that can ocurr in the course of handling JWTs.
+/// An error that can occur in the course of handling JWTs.
 #[derive(Debug, Clone)]
 pub enum JwtError {
     DecodeError,

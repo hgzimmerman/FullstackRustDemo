@@ -250,5 +250,4 @@ pub mod user_authorization {
         Outcome::Success(user)
 
     }
-
 }

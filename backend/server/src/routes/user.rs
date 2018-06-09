@@ -7,7 +7,7 @@ use db::user::User;
 use wire::user::*;
 use error::WeekendAtJoesError;
 use error::JoeResult;
-use auth_lib::user_authorization::*;
+//use auth_lib::user_authorization::*;
 use db::user::NewUser;
 use log::info;
 use auth_lib::BannedSet;

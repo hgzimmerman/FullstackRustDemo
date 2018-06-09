@@ -7,7 +7,6 @@ use error::WeekendAtJoesError;
 use error::VectorMappable;
 use db::Conn;
 use wire::question::*;
-use auth_lib::user_authorization::*;
 
 use error::*;
 use log::info;

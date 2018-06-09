@@ -6,7 +6,7 @@ use rocket_contrib::Json;
 use db::Conn;
 use rocket::State;
 
-use auth;
+//use auth;
 use wire::login::LoginRequest;
 use error::LoginResult;
 use auth_lib::Secret;

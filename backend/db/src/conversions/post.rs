@@ -1,7 +1,7 @@
 use post::*;
 use wire::post::*;
 use chrono::Utc;
-use thread::Thread;
+//use thread::Thread;
 use identifiers::post::PostUuid;
 
 
