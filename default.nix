@@ -23,6 +23,7 @@ stdenv.mkDerivation rec {
     export PGDATA='pgsql'
     # to set the password, run `psql` and enter `\password` and set it to the password below
     export DATABASE_URL='postgres://hzimmerman:password@localhost/weekend'
+    export DROP_DATABASE_URL='postgres://hzimmerman:password@localhost/postgres'
     pg_ctl init
     pg_ctl -l db.logfile start -o "-h localhost -i"
 

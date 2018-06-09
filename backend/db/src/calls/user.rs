@@ -234,17 +234,18 @@ impl User {
     }
 
     /// Updates the user's display name.
-    pub fn update_user_display_name(request: UpdateDisplayNameRequest, conn: &PgConnection) -> JoeResult<User> {
+    pub fn update_user_display_name(current_user_name: String, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
 
         use schema::users::dsl::*;
+
         let target = users.filter(
-            user_name.eq(request.user_name),
+            user_name.eq(current_user_name),
         );
 
         info!("Updating the user display name");
         diesel::update(target)
             .set(display_name.eq(
-                request.new_display_name,
+                new_display_name,
             ))
             .get_result(conn)
             .map_err(User::handle_error)
@@ -262,94 +263,3 @@ impl User {
     }
 }
 
-
-#[cfg(test)]
-mod test {
-    use db;
-    use db::Conn;
-    use super::*;
-    use test::Bencher;
-
-
-    #[bench]
-    fn crud_bench(b: &mut Bencher) {
-        let pool = db::init_pool();
-
-        let conn = Conn::new(pool.get().unwrap());
-
-        fn crud(conn: &Conn) {
-            let user_name: String = "CrudBenchTest-UserName".into();
-
-            // Delete the entry to avoid
-            let _ = User::delete_user_by_name(user_name.clone(), &conn);
-
-            // Create a user
-            let new_user = NewUserRequest {
-                user_name: user_name.clone(),
-                display_name: "DisplayName".into(),
-                plaintext_password: "TestPassword".into(),
-            };
-            let response: UserResponse = User::create(new_user.into(), &conn)
-                .unwrap()
-                .into();
-            assert_eq!(user_name.clone(), response.user_name);
-
-            // Get User
-            let response: UserResponse = User::get_by_id(response.id, &conn)
-                .unwrap()
-                .into();
-            assert_eq!(user_name.clone(), response.user_name);
-
-
-            // Modify user
-            let update_display_name_request: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
-                user_name: user_name.clone(),
-                new_display_name: "NewDisplayName".into(),
-            };
-            let response: UserResponse = User::update_user_display_name(update_display_name_request, &conn)
-                .unwrap()
-                .into();
-            assert_eq!("NewDisplayName".to_string(), response.display_name);
-
-
-            // Delete the entry
-            let _ = User::delete_user_by_name(user_name, &conn);
-        }
-
-
-        b.iter(|| crud(&conn))
-    }
-
-    #[bench]
-    fn get_user_bench(b: &mut Bencher) {
-        let pool = db::init_pool();
-
-        let conn = Conn::new(pool.get().unwrap());
-
-        let user_name: String = "GetBenchTest-UserName".into();
-
-        // Delete the entry to avoid
-        let _ = User::delete_user_by_name(user_name.clone(), &conn);
-
-        // Create a user
-        let new_user = NewUserRequest {
-            user_name: user_name.clone(),
-            display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into(),
-        };
-
-        let response: UserResponse = User::create(new_user.into(), &conn)
-            .unwrap()
-            .into();
-
-        // perform the bench
-        b.iter(
-            || User::get_by_id(response.id, &conn),
-        );
-
-        // Delete the user
-        let _ = User::delete_user_by_name(user_name, &conn);
-    }
-
-
-}

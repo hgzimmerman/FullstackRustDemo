@@ -5,6 +5,8 @@
 
 
 #![feature(use_extern_macros)]
+#![feature(test)]
+extern crate test;
 
 #[macro_use]
 extern crate db_proc_macros;
@@ -16,11 +18,6 @@ extern crate auth as auth_lib;
 extern crate diesel;
 extern crate uuid;
 
-
-
-
-//#[macro_use]
-//extern crate serde_json;
 
 extern crate slug;
 extern crate rand;
@@ -53,19 +50,6 @@ use diesel::Identifiable;
 // use diesel::Queryable;
 
 mod diesel_extensions;
-
-//pub mod auth;
-
-//pub mod user;
-//pub mod article;
-//pub mod forum;
-//pub mod thread;
-//pub mod post;
-//pub mod bucket;
-//pub mod question;
-//pub mod answer;
-//pub mod chat;
-//pub mod message;
 
 mod calls;
 pub use calls::*;
@@ -139,51 +123,51 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
     }
 }
 
+//
+//pub trait Creatable<T> {
+//    fn create(insert: T, conn: &PgConnection) -> JoeResult<Self>
+//    where
+//        Self: Sized;
+//}
+//
+//pub trait Retrievable<'a> {
+//    fn get_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
+//    where
+//        Self: 'a + Sized,
+//        &'a Self: Identifiable;
+//
+//    fn get_all(conn: &PgConnection) -> JoeResult<Vec<Self>>
+//    where
+//        Self: 'a + Sized,
+//        &'a Self: Identifiable;
+//
+//    fn exists(id: i32, conn: &PgConnection) -> JoeResult<bool>
+//    where
+//        Self: 'a + Sized,
+//        &'a Self: Identifiable;
+//
+//    // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
+//    //     where
+//    //         Self: Sized;
+//}
+//
+//trait Deletable<'a> {
+//    /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
+//    /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
+//    fn delete_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
+//    where
+//        Self: ErrorFormatter,
+//        Self: 'a + Sized,
+//        &'a Self: Identifiable;
+//}
 
-pub trait Creatable<T> {
-    fn create(insert: T, conn: &PgConnection) -> JoeResult<Self>
-    where
-        Self: Sized;
-}
-
-pub trait Retrievable<'a> {
-    fn get_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
-    where
-        Self: 'a + Sized,
-        &'a Self: Identifiable;
-
-    fn get_all(conn: &PgConnection) -> JoeResult<Vec<Self>>
-    where
-        Self: 'a + Sized,
-        &'a Self: Identifiable;
-
-    fn exists(id: i32, conn: &PgConnection) -> JoeResult<bool>
-    where
-        Self: 'a + Sized,
-        &'a Self: Identifiable;
-
-    // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
-    //     where
-    //         Self: Sized;
-}
-
-trait Deletable<'a> {
-    /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
-    /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
-    fn delete_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
-    where
-        Self: ErrorFormatter,
-        Self: 'a + Sized,
-        &'a Self: Identifiable;
-}
-
-/// Type tag that indicates that the tagged type can be created, retrieved, and deleted.
-/// This collection of abilities means that it is safe to use in integration tests.
-trait CRD<'a, T>
-where
-    Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
-{
-}
+///// Type tag that indicates that the tagged type can be created, retrieved, and deleted.
+///// This collection of abilities means that it is safe to use in integration tests.
+//trait CRD<'a, T>
+//where
+//    Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
+//{
+//}
 
 
 
