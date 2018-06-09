@@ -17,7 +17,7 @@ use wire::user::*;
 
 
 /// The database's representation of a user.
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, PartialEq)]
 #[primary_key(uuid)]
 #[insertable = "NewUser"]
 #[table_name = "users"]

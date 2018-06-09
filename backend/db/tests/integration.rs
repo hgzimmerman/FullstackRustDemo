@@ -1,6 +1,8 @@
 #![feature(test)]
 extern crate test;
 
+extern crate wire;
+extern crate identifiers;
 extern crate db;
 #[macro_use]
 extern crate lazy_static;

@@ -53,7 +53,7 @@ pub struct Jwt {
     pub iat: NaiveDateTime,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum UserRole {
     Unprivileged,
     Moderator,

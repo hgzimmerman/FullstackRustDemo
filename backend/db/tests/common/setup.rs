@@ -26,6 +26,8 @@ const DROP_DATABASE_URL: &'static str = env!("DROP_DATABASE_URL");
 ///
 /// Because it is wrapped in a mutex, only one test at a time can access it.
 /// The setup method will lock it and use it to reset the database.
+///
+/// It is ok if a test fails and poisons the mutex, as the one place where it is used disregards the poison.
 lazy_static! {
     static ref CONN: Mutex<PgConnection> =
         Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Database not available"));
@@ -50,7 +52,10 @@ pub fn setup<Fun, Fix >( mut test_function: Fun )
         Fun: FnMut (&Fix, &PgConnection), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
         Fix: Fixture
 {
-    let admin_conn: MutexGuard<PgConnection> = CONN.lock().unwrap();
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
     reset_database(&admin_conn);
 
     let actual_connection: PgConnection = PgConnection::establish(DATABASE_URL).expect("Database not available.");

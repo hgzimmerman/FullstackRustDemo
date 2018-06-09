@@ -1,19 +1,34 @@
 use common::setup::*;
 use diesel::PgConnection;
-use db::CreatableUuid;
 use db::user::{User, NewUser};
 use test::Bencher;
 
 
 
+use db::CreatableUuid;
+use db::RetrievableUuid;
+use identifiers::user::UserUuid;
+
+
 pub struct UserFixture {
     admin_user: User,
+    #[allow(dead_code)]
     normal_user: User
 }
 
 
-const ADMIN_USER_NAME: &'static str = "Admin";
-const ADMIN_DISPLAY_NAME: &'static str = "Admin";
+pub const ADMIN_USER_NAME: &'static str = "Admin";
+pub const ADMIN_DISPLAY_NAME: &'static str = "Admin";
+
+pub const NORMAL_USER_NAME: &'static str = "Normal User";
+pub const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
+
+const PASSWORD_HASH: &'static str = "INVALID PASSWORD HASH";
+#[allow(dead_code)]
+const PASSWORD: &'static str = "password";
+
+
+
 
 impl Fixture for UserFixture {
     fn generate(conn: &PgConnection) -> Self {
@@ -21,7 +36,7 @@ impl Fixture for UserFixture {
         let new_admin_user = NewUser {
             user_name: String::from(ADMIN_USER_NAME),
             display_name: String::from(ADMIN_DISPLAY_NAME),
-            password_hash: String::from("Invalid Password Hash"),
+            password_hash: String::from(PASSWORD_HASH),
             failed_login_count: 0,
             banned: false,
             roles: vec![1,2,3,4] // Has all privileges
@@ -29,9 +44,9 @@ impl Fixture for UserFixture {
         let admin_user: User = User::create(new_admin_user, conn).expect("Couldn't create new admin user");
 
         let new_normal_user = NewUser {
-            user_name: String::from("Normal"),
-            display_name: String::from("Normal"),
-            password_hash: String::from("Invalid Password Hash"),
+            user_name: String::from(NORMAL_USER_NAME),
+            display_name: String::from(NORMAL_DISPLAY_NAME),
+            password_hash: String::from(PASSWORD_HASH),
             failed_login_count: 0,
             banned: false,
             roles: vec![1] // Has only basic privileges
@@ -60,6 +75,111 @@ fn another_user_fixture_test() {
     })
 }
 
+#[test]
+fn delete_user() {
+    use db::RetrievableUuid;
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        User::delete_user_by_name(fixture.normal_user.user_name.clone(), conn)
+            .expect("Should have deleted user");
+        User::get_by_uuid(fixture.normal_user.uuid, conn)
+            .expect_err("User should have been deleted");
+    })
+}
+
+
+#[test]
+fn add_role() {
+    use wire::user::UserRole;
+
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        let user_uuid = UserUuid(fixture.normal_user.uuid);
+        let user_role = UserRole::Publisher;
+
+        assert!(!fixture.normal_user.roles.contains(&user_role.into()));
+        User::add_role_to_user(user_uuid, user_role, conn)
+            .expect("add role of publisher to user");
+        let changed_user: User = User::get_by_uuid(fixture.normal_user.uuid, conn)
+            .expect("User should be retrieved");
+
+        assert!(changed_user.roles.contains(&user_role.into()));
+
+    })
+}
+
+#[test]
+fn ban_status() {
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        let user_uuid = UserUuid(fixture.normal_user.uuid);
+
+        User::set_ban_status(user_uuid, true, conn)
+            .expect("user should be banned");
+        let changed_user: User = User::get_by_uuid(fixture.normal_user.uuid, conn)
+            .expect("User should be retrieved");
+
+        assert!(changed_user.banned);
+
+        let is_user_banned: bool = User::is_user_banned(user_uuid, conn).unwrap();
+        assert!(is_user_banned);
+
+        User::set_ban_status(user_uuid, false, conn)
+            .expect("user should be unbanned");
+        let changed_user: User = User::get_by_uuid(fixture.normal_user.uuid, conn)
+            .expect("User should be retrieved");
+
+        let is_user_banned: bool = User::is_user_banned(user_uuid, conn).unwrap();
+        assert!(!is_user_banned);
+        assert!(!changed_user.banned);
+    })
+}
+
+
+#[test]
+fn get_by_user_name() {
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        let user: User = User::get_user_by_user_name(&fixture.normal_user.user_name, conn)
+            .expect("get user by user name");
+        assert_eq!(user, fixture.normal_user);
+    })
+}
+
+
+#[test]
+fn get_by_user_role() {
+    use wire::user::UserRole;
+
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        let user_role = UserRole::Admin;
+
+        let users: Vec<User> = User::get_users_with_role(user_role, conn)
+            .expect("expected to get users with a given role");
+        assert!(users.contains(&fixture.admin_user));
+        assert!(!users.contains(&fixture.normal_user));
+
+        let user_role = UserRole::Unprivileged;
+        let users: Vec<User> = User::get_users_with_role(user_role, conn)
+            .expect("expected to get users with a given role");
+        assert!(users.contains(&fixture.admin_user));
+        assert!(users.contains(&fixture.normal_user));
+    })
+}
+
+#[test]
+fn get_users() {
+    setup(|fixture: &UserFixture, conn: &PgConnection| {
+        let users: Vec<User> = User::get_users(3, conn)
+            .expect("get users");
+        assert!(users.len() <= 3);
+        assert!(users.contains(&fixture.admin_user));
+        assert!(users.contains(&fixture.normal_user));
+
+        let users: Vec<User> = User::get_users(0, conn)
+            .expect("get users");
+        assert_eq!(users.len(), 0);
+    })
+}
+
+
+
 #[bench]
 fn get_user_bench(b: &mut Bencher) {
     use db::RetrievableUuid;
@@ -76,14 +196,15 @@ fn crd_user_bench(b: &mut Bencher) {
     setup(|_fixture: &EmptyFixture, conn: &PgConnection| {
 
         fn crud(conn: &PgConnection) {
-            let user_name: String = "CrudBenchTest-UserName".into();
+            const USER_NAME: &'static str = ADMIN_USER_NAME;
+            const NEW_DISPLAY_NAME: &'static str = "NewDisplayName";
 
             // Delete the entry to avoid
-            let _ = User::delete_user_by_name(user_name.clone(), &conn);
+            let _ = User::delete_user_by_name(USER_NAME.into(), &conn);
 
             // Create a user
             let new_admin_user = NewUser {
-                user_name: user_name.clone(),
+                user_name: USER_NAME.to_string(),
                 display_name: String::from("Admin"),
                 password_hash: String::from("Invalid Password Hash"),
                 failed_login_count: 0,
@@ -93,22 +214,21 @@ fn crd_user_bench(b: &mut Bencher) {
 
             let response: User = User::create(new_admin_user, &conn)
                 .unwrap();
-            assert_eq!(user_name.clone(), response.user_name);
+            assert_eq!(USER_NAME, response.user_name.as_str());
 
             // Get User
             let response: User = User::get_by_uuid(response.uuid, &conn)
                 .unwrap();
-            assert_eq!(user_name.clone(), response.user_name);
+            assert_eq!(USER_NAME, response.user_name.as_str());
 
-            let new_display_name = String::from("NewDisplayName");
 
-            let response: User = User::update_user_display_name(user_name.clone(), new_display_name, conn)
+            let response: User = User::update_user_display_name(USER_NAME.to_string(), NEW_DISPLAY_NAME.to_string(), conn)
                 .unwrap();
-            assert_eq!("NewDisplayName".to_string(), response.display_name);
+            assert_eq!(NEW_DISPLAY_NAME, response.display_name.as_str());
 
 
             // Delete the entry
-            let _ = User::delete_user_by_name(user_name, &conn);
+            let _ = User::delete_user_by_name(USER_NAME.to_string(), &conn);
         }
         b.iter(
             || crud(&conn),
