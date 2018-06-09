@@ -54,18 +54,21 @@ use diesel::Identifiable;
 
 mod diesel_extensions;
 
-pub mod auth;
+//pub mod auth;
 
-pub mod user;
-pub mod article;
-pub mod forum;
-pub mod thread;
-pub mod post;
-pub mod bucket;
-pub mod question;
-pub mod answer;
-pub mod chat;
-pub mod message;
+//pub mod user;
+//pub mod article;
+//pub mod forum;
+//pub mod thread;
+//pub mod post;
+//pub mod bucket;
+//pub mod question;
+//pub mod answer;
+//pub mod chat;
+//pub mod message;
+
+mod calls;
+pub use calls::*;
 
 pub mod schema;
 
