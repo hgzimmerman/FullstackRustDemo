@@ -1,0 +1,26 @@
+[package]
+name = "auth"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
+wire = { path = "../../wire"}
+error = {path = "../error"}
+#db = { path = "../db" }
+
+rust-crypto = "0.2.36"
+frank_jwt = "3.0.0"
+
+
+chrono = { version = "0.4", features = ["serde"] }
+
+rand = "0.4.1"
+log = "0.3.8"
+simplelog = "^0.5.0"
+
+rocket = "0.3.11"
+rocket_contrib = "0.3.11"
+
+
+serde_json = "1.0.3"

@@ -1,0 +1,51 @@
+[package]
+name = "server"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+
+wire = { path = "../../wire"}
+identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
+
+db = {path = "../db"}
+auth = {path = "../auth"}
+error = {path = "../error"}
+
+rocket = "0.3.11"
+rocket_codegen = "0.3.11"
+rocket_contrib = "0.3.11"
+
+#diesel = { version = "1.2", features = ["postgres", "uuid", "chrono", "serde_json"] }
+#diesel_codegen = { version = "1.0", features = ["postgresql"] }
+#diesel_infer_schema = {version = "1.1.0", features = ["postgres"] }
+#diesel-derive-enum = { version = "0.4", features = ["postgres"] }
+chrono = { version = "0.4", features = ["serde"] }
+#r2d2-diesel = "1.0.0"
+#r2d2 = "*"
+
+lazy_static = "1.0"
+
+serde = "1.0.14"
+serde_json = "1.0.3"
+serde_derive = "1.0.14"
+
+uuid = {version = "0.6", features = ["serde", "v4"] }
+
+log = "0.3.8"
+simplelog = "^0.5.0"
+
+rand = "0.4.1"
+
+
+
+rocket_cors = "0.2.3"
+
+clap = "~2.31"
+
+[features]
+default = ["development"]
+
+development = []
+staging = ["production"]
+production = ["rocket/tls"]
