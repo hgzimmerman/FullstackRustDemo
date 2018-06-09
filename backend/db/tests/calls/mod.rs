@@ -1,1 +1,2 @@
 mod user;
+mod auth;

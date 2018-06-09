@@ -2,30 +2,30 @@ use common::setup::*;
 use diesel::PgConnection;
 use db::user::{User, NewUser};
 use test::Bencher;
+use auth_lib::hash_password;
 
 
 
 use db::CreatableUuid;
 use db::RetrievableUuid;
 use identifiers::user::UserUuid;
+use auth_lib::Secret;
 
 
 pub struct UserFixture {
-    admin_user: User,
-    #[allow(dead_code)]
-    normal_user: User
+    pub admin_user: User,
+    pub normal_user: User,
+    pub secret: Secret
 }
 
 
-pub const ADMIN_USER_NAME: &'static str = "Admin";
-pub const ADMIN_DISPLAY_NAME: &'static str = "Admin";
+const ADMIN_USER_NAME: &'static str = "Admin";
+const ADMIN_DISPLAY_NAME: &'static str = "Admin";
 
-pub const NORMAL_USER_NAME: &'static str = "Normal User";
-pub const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
+const NORMAL_USER_NAME: &'static str = "Normal User";
+const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
 
-const PASSWORD_HASH: &'static str = "INVALID PASSWORD HASH";
-#[allow(dead_code)]
-const PASSWORD: &'static str = "password";
+pub const PASSWORD: &'static str = "password";
 
 
 
@@ -33,10 +33,13 @@ const PASSWORD: &'static str = "password";
 impl Fixture for UserFixture {
     fn generate(conn: &PgConnection) -> Self {
 
+        let secret: Secret = Secret::generate();
+        let password_hash: String = hash_password(PASSWORD).expect("Couldn't hash password.");
+
         let new_admin_user = NewUser {
             user_name: String::from(ADMIN_USER_NAME),
             display_name: String::from(ADMIN_DISPLAY_NAME),
-            password_hash: String::from(PASSWORD_HASH),
+            password_hash: password_hash.clone(),
             failed_login_count: 0,
             banned: false,
             roles: vec![1,2,3,4] // Has all privileges
@@ -46,21 +49,23 @@ impl Fixture for UserFixture {
         let new_normal_user = NewUser {
             user_name: String::from(NORMAL_USER_NAME),
             display_name: String::from(NORMAL_DISPLAY_NAME),
-            password_hash: String::from(PASSWORD_HASH),
+            password_hash,
             failed_login_count: 0,
             banned: false,
             roles: vec![1] // Has only basic privileges
         };
         let normal_user: User = User::create(new_normal_user, conn).expect("Couldn't create new normal user");
 
+
         UserFixture {
             admin_user,
-            normal_user
+            normal_user,
+            secret
         }
     }
 }
 
-
+/// Just tests the fixture
 #[test]
 fn user_fixture_test() {
     setup(|fixture: &UserFixture, _conn: &PgConnection| {
@@ -68,12 +73,6 @@ fn user_fixture_test() {
     })
 }
 
-#[test]
-fn another_user_fixture_test() {
-    setup(|fixture: &UserFixture, _conn: &PgConnection| {
-        assert_eq!(fixture.admin_user.user_name.as_str(), ADMIN_USER_NAME)
-    })
-}
 
 #[test]
 fn delete_user() {

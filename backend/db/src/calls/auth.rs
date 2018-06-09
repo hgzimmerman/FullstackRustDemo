@@ -8,6 +8,7 @@ use auth_lib::verify_hash;
 use user::User;
 use wire::login::LoginRequest;
 use error::LoginError;
+use diesel::PgConnection;
 
 use log::info;
 
@@ -17,7 +18,7 @@ use error::LoginResult;
 
 
 
-pub fn login(login_request: LoginRequest, secret: &Secret, conn: &Conn) -> LoginResult {
+pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) -> LoginResult {
     info!("Logging in for user: {}", &login_request.user_name);
 
     let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)

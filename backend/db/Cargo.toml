@@ -2,9 +2,14 @@
 name = "db"
 version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+autotests = false
 
 [[bench]]
 name = "bench"
+path = "tests/bench.rs"
+
+[[test]]
+name = "IntegrationTests"
 path = "tests/integration.rs"
 
 
