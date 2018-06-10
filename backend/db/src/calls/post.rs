@@ -18,8 +18,9 @@ use uuid::Uuid;
 use chrono::Utc;
 use log::info;
 
+use std::collections::HashMap;
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
 #[primary_key(uuid)]
 #[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_uuid")]
@@ -65,7 +66,7 @@ pub struct EditPostChangeset {
     pub content: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PostData {
     pub post: Post,
     pub user: User,
@@ -240,7 +241,9 @@ impl Post {
         Ok(ChildlessPostData { post, user })
     }
 
-    //TODO it might make sense to get all posts in a thread, and then sort them into a tree instead of making multiple recursive db calls.
+    // This may be useful in the future when you may want to get only a sub-tree of posts, eg. when displaying a user's posts.
+    #[deprecated]
+    #[allow(dead_code)]
     /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
     /// This will make recursive calls into the database.
     /// This method should be the target of significant scrutiny.
@@ -260,10 +263,83 @@ impl Post {
         })
     }
 
+    #[deprecated]
     /// Gets all of the posts that belong to the post.
     pub fn get_post_children(&self, conn: &PgConnection) -> Result<Vec<Post>, WeekendAtJoesError> {
         Post::belonging_to(self)
             .load::<Post>(conn)
             .map_err(Post::handle_error)
+    }
+
+
+    pub fn get_posts(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<PostData> {
+        use schema::posts;
+        use schema::posts::dsl::posts as posts_dsl;
+        use std::collections::HashSet;
+
+        let mut posts: Vec<Post> = posts_dsl
+            .filter(posts::thread_uuid.eq(thread_uuid.0))
+            .load::<Post>(conn)
+            .map_err(Post::handle_error)?;
+
+        if posts.len() == 0 {
+            return Err(WeekendAtJoesError::NotFound { type_name: "Post" })
+        }
+        // We now know that there is at least one post.
+
+        let mut user_uuids: Vec<Uuid> = posts.iter()
+            .map(|post| post.author_uuid)
+            .collect();
+        // It isn't ideal to sort these, so this approach works fine.
+        let set: HashSet<_> = user_uuids.drain(..).collect(); // dedup
+        user_uuids.extend(set.into_iter());
+
+        let mut users: Vec<User> = Vec::with_capacity(user_uuids.len());
+
+        for uuid in user_uuids {
+            users.push(User::get_by_uuid(uuid, conn)?);
+        }
+
+        let users: HashMap<Uuid, User> = users.into_iter().map(|u| (u.uuid, u)).collect();
+
+        // Remove the root from the list.
+        let root: Vec<Post> = posts
+            .drain_filter(|post| {
+                if let None = post.parent_uuid {
+                    true
+                } else {
+                    false
+                }
+            })
+            .collect();
+        let root: Post = root.into_iter().next().ok_or(WeekendAtJoesError::InternalServerError)?; // We are making the assumption that there is _exactly_ one post that meets the root criteria.
+        Ok(Post::assemble_posts(root, &mut posts, &users))
+    }
+
+    /// Recursive function to assemble posts out of the list of post data.
+    /// It has a time complexity of O: n * log_n, but that is still better than talking to the database,
+    /// as the constant time is too great there.
+    fn assemble_posts (post: Post, posts: &mut Vec<Post>, users: &HashMap<Uuid, User>) -> PostData {
+        let children: Vec<Post> = posts
+            .drain_filter(|child_post: &mut Post| {
+                if let Some(parent_uuid) = child_post.parent_uuid {
+                    parent_uuid == post.uuid
+                } else {
+                    false
+                }
+            })
+            .collect();
+
+        let children: Vec<PostData> = children.into_iter().map(|child_post| {
+            Post::assemble_posts(child_post, posts, users)
+        }).collect();
+
+        let user = users.get(&post.author_uuid).cloned().expect("The user at the uuid should exist");
+
+        PostData {
+            post,
+            user,
+            children
+        }
     }
 }

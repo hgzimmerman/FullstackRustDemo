@@ -193,6 +193,36 @@ fn lock() {
     })
 }
 
+#[test]
+fn post_getters_are_the_same() {
+    setup(|fixture: &ForumFixture, conn: &PgConnection| {
+        let mut new_post: NewPost = NewPost {
+            thread_uuid: fixture.thread_2.uuid, // should be empty thread
+            author_uuid: fixture.user_fixture.normal_user.uuid,
+            parent_uuid: None,
+            created_date: Utc::now().naive_utc(),
+            content: POST_1_CONTENT.to_string(),
+            censored: false,
+        };
+        // create 10 posts all in a row.
+        for _ in 0..10 {
+            let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
+                .map(|x| x.post.uuid)
+                .expect("Create post");
+            new_post.parent_uuid = Some(post_uuid);
+        }
+
+        let thread_2_uuid = ThreadUuid(fixture.thread_2.uuid);
+        let get_posts = Post::get_posts(thread_2_uuid, conn).expect("Should get post tree");
+        let root_post: Post = Post::get_root_post(thread_2_uuid, conn).expect("should get root post");
+        let get_post_data = root_post.get_post_data(conn).expect("Should get post tree");
+
+        assert_eq!(get_posts, get_post_data);
+
+    });
+}
+
+
 
 #[bench]
 fn get_post_tree(b: &mut Bencher) {
@@ -207,7 +237,7 @@ fn get_post_tree(b: &mut Bencher) {
         };
         // create 10 posts all in a row.
         for _ in 0..10 {
-             let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
+            let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
                 .map(|x| x.post.uuid)
                 .expect("Create post");
             new_post.parent_uuid = Some(post_uuid);
@@ -222,7 +252,34 @@ fn get_post_tree(b: &mut Bencher) {
             },
         );
 
+    });
+}
+#[bench]
+fn get_posts(b: &mut Bencher) {
+    setup(|fixture: &ForumFixture, conn: &PgConnection| {
+        let mut new_post: NewPost = NewPost {
+            thread_uuid: fixture.thread_2.uuid, // should be empty thread
+            author_uuid: fixture.user_fixture.normal_user.uuid,
+            parent_uuid: None,
+            created_date: Utc::now().naive_utc(),
+            content: POST_1_CONTENT.to_string(),
+            censored: false,
+        };
+        // create 10 posts all in a row.
+        for _ in 0..10 {
+            let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
+                .map(|x| x.post.uuid)
+                .expect("Create post");
+            new_post.parent_uuid = Some(post_uuid);
+        }
 
+        let thread_2_uuid = ThreadUuid(fixture.thread_2.uuid);
+
+        b.iter(
+            || {
+                Post::get_posts(thread_2_uuid, conn).expect("Should get post tree")
+            },
+        );
 
     });
 }

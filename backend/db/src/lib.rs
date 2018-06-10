@@ -6,6 +6,8 @@
 
 #![feature(use_extern_macros)]
 #![feature(test)]
+
+#![feature(drain_filter)]
 extern crate test;
 
 #[macro_use]
