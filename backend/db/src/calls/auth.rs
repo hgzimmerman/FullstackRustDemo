@@ -12,7 +12,6 @@ use diesel::PgConnection;
 
 use log::info;
 
-use Conn;
 use error::LoginResult;
 
 

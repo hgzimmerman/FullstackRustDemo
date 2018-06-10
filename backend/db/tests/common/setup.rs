@@ -13,9 +13,8 @@ use migrations_internals as migrations;
 use std::sync::{MutexGuard, Mutex};
 
 
-const DATABASE_NAME: &'static str = "weekend";
-// TODO, Create a testing db url so tests don't clobber the dev DB.
-pub const DATABASE_URL: &'static str = env!("DATABASE_URL");
+const DATABASE_NAME: &'static str = "weekend_test";
+pub const DATABASE_URL: &'static str = env!("TEST_DATABASE_URL");
 
 const DROP_DATABASE_URL: &'static str = env!("DROP_DATABASE_URL");
 
@@ -34,10 +33,16 @@ lazy_static! {
 }
 
 
+/// The Fixture trait should be implemented for collections of data used in testing.
+/// Because it can be instantiated using just a connection to the database,
+/// it allows the creation of the type in question and allows data generated at row insertion time
+/// (UUIDs) to be made available to the body of tests.
 pub trait Fixture {
     fn generate(conn: &PgConnection) -> Self;
 }
 
+/// Because some tests may not require any initial database state, but still utilize the connection,
+/// This Fixture is provided to meet that need.
 pub struct EmptyFixture;
 
 impl Fixture for EmptyFixture {
@@ -47,6 +52,10 @@ impl Fixture for EmptyFixture {
 }
 
 
+/// Sets up the database and runs the provided closure where the test code should be present.
+/// By running your tests using this method, you guarantee that the database only contains the rows
+/// created in the fixture's `generate()` function, and the thread will block if another test using
+/// this function is currently running, preventing side effects from breaking other tests.
 pub fn setup<Fun, Fix >( mut test_function: Fun )
     where
         Fun: FnMut (&Fix, &PgConnection), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
@@ -64,12 +73,16 @@ pub fn setup<Fun, Fix >( mut test_function: Fun )
     test_function (&fixture, &actual_connection);
 }
 
+/// Drops the database and then recreates it.
+/// The guarantee that this function provides is that the test database will be in a default
+/// state, without any run migrations after this ran.
 fn reset_database(conn: &PgConnection) {
     // TODO instead of dropping, I could instead just revert all migrations.
     drop_database(&conn).expect("Could not drop db");
-    let _ = create_database(&conn);
+    create_database(&conn).expect("Could not create Database");
 }
 
+/// Drops the database
 fn drop_database(conn: &PgConnection) ->  DatabaseResult<()> {
 
     if pg_database_exists(&conn, DATABASE_NAME)? {
@@ -85,7 +98,7 @@ fn drop_database(conn: &PgConnection) ->  DatabaseResult<()> {
     }
 }
 
-
+/// Recreates the database
 fn create_database(conn: &PgConnection) ->  DatabaseResult<()> {
     query_helper::create_database(DATABASE_NAME)
         .execute(conn)
@@ -93,7 +106,7 @@ fn create_database(conn: &PgConnection) ->  DatabaseResult<()> {
         .map(|_| ())
 }
 
-
+/// Creates tables
 fn run_migrations(conn: &PgConnection) {
     use std::path::Path;
     let migrations_dir = Path::new("migrations");

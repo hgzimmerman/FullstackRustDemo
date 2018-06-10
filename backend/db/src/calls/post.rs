@@ -16,6 +16,7 @@ use identifiers::thread::ThreadUuid;
 use identifiers::user::UserUuid;
 use uuid::Uuid;
 use chrono::Utc;
+use log::info;
 
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
@@ -32,7 +33,7 @@ pub struct Post {
     pub thread_uuid: Uuid,
     /// The Foreign Key of the user that created the post.
     pub author_uuid: Uuid,
-    /// The Foreign Key of the post to which this post is replying to.
+    /// The Foreign Key of the post to which this post is replying to. None indicates that this is the OP for the thread.
     pub parent_uuid: Option<Uuid>,
     /// The timestamp of when the post was created.
     pub created_date: NaiveDateTime,
@@ -49,7 +50,7 @@ pub struct Post {
 pub struct NewPost {
     pub thread_uuid: Uuid,
     pub author_uuid: Uuid,
-    pub parent_uuid: Option<Uuid>, // this will always be None, try removing this.
+    pub parent_uuid: Option<Uuid>,
     pub created_date: NaiveDateTime,
     pub content: String,
     pub censored: bool,
@@ -64,13 +65,14 @@ pub struct EditPostChangeset {
     pub content: String,
 }
 
-
+#[derive(Debug, Clone)]
 pub struct PostData {
     pub post: Post,
     pub user: User,
     pub children: Vec<PostData>,
 }
 
+#[derive(Debug, Clone)]
 pub struct ChildlessPostData {
     pub post: Post,
     pub user: User,
@@ -106,9 +108,9 @@ impl Post {
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         //        use schema::posts;
 
-        let target_thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
-        if target_thread.locked {
-            return Err(WeekendAtJoesError::ThreadLocked);
+        let target_thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
+        if target_thread.locked || target_thread.archived {
+            return Err(WeekendAtJoesError::ThreadImmutable);
         }
 
 
@@ -125,6 +127,22 @@ impl Post {
 
     /// Creates a post, and also gets the associated author for the post.
     pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+        let thread: Thread = Thread::get_by_uuid(new_post.thread_uuid, conn)?;
+        if thread.locked || thread.archived {
+            return Err(WeekendAtJoesError::ThreadImmutable);
+        }
+
+        // Do not allow the post to be created if the thread already has an "original post"
+        if let None = new_post.parent_uuid {
+            let thread_uuid: ThreadUuid = ThreadUuid(thread.uuid);
+            // Expect this to return
+            if let Err(_) = Post::get_root_post(thread_uuid, conn) {
+                info!("New post created for new thread.");
+            } else {
+                return Err(WeekendAtJoesError::BadRequest) // TODO need better error
+            }
+        };
+
         let post: Post = Post::create(new_post, conn)?;
         let user: User = User::get_by_uuid(post.author_uuid, conn)?;
         Ok(ChildlessPostData { post, user })
@@ -179,16 +197,16 @@ impl Post {
     pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<User> {
         use schema::posts::dsl::*;
         use schema::users::dsl::*;
+        use schema::posts;
 
-
-        // TODO consider using a select to just pull out the author id
-        let post: Post = posts
+        let authors_uuid: Uuid = posts
             .find(post_uuid.0)
-            .first::<Post>(conn)
+            .select(posts::author_uuid)
+            .first::<Uuid>(conn)
             .map_err(Post::handle_error)?;
 
         users
-            .find(post.author_uuid)
+            .find(authors_uuid)
             .first(conn)
             .map_err(User::handle_error)
     }
@@ -201,6 +219,12 @@ impl Post {
         use thread::Thread;
 
         let thread: Thread = Thread::get_by_uuid(requested_thread_id.0, conn)?;
+
+        // Because this method is used in the context of a thread that could be immutable,
+        // it should be subject to the locking mechanism.
+        if thread.locked || thread.archived {
+            return Err(WeekendAtJoesError::ThreadImmutable);
+        }
 
         Post::belonging_to(&thread)
             .filter(
@@ -216,6 +240,7 @@ impl Post {
         Ok(ChildlessPostData { post, user })
     }
 
+    //TODO it might make sense to get all posts in a thread, and then sort them into a tree instead of making multiple recursive db calls.
     /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
     /// This will make recursive calls into the database.
     /// This method should be the target of significant scrutiny.

@@ -9,7 +9,7 @@ name = "bench"
 path = "tests/bench.rs"
 
 [[test]]
-name = "IntegrationTests"
+name = "integration_tests"
 path = "tests/integration.rs"
 
 

@@ -68,10 +68,8 @@ impl Thread {
         use schema::threads;
         use schema::threads::dsl::*;
 
-        let m_thread_uuid: Uuid = thread_uuid.0;
-
         let thread: Thread = diesel::update(threads::table)
-            .filter(threads::uuid.eq(m_thread_uuid))
+            .filter(threads::uuid.eq(thread_uuid.0))
             .set(locked.eq(is_locked))
             .get_result(conn)
             .map_err(Thread::handle_error)?;
@@ -81,6 +79,8 @@ impl Thread {
     }
 
     /// Archives the thread, preventing it from being seen in typical requests.
+    ///
+    /// The thread _must_ also be locked in order to not be modifiable.
     pub fn archive_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use schema::threads;
         use schema::threads::dsl::*;
@@ -99,7 +99,7 @@ impl Thread {
 
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
-    // TODO add a step to enable pagination
+    #[deprecated]
     pub fn get_threads_in_forum(requested_forum_uuid: ForumUuid, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
         use schema::threads::dsl::*;
         use forum::Forum;
