@@ -181,8 +181,9 @@ impl Thread {
     /// Gets every bit of data related to a thread.
     pub fn get_full_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
-        let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
-        let post: PostData = root_post.get_post_data(conn)?;
+//        let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
+//        let post: PostData = root_post.get_post_data(conn)?;
+        let post: PostData = Post::get_posts_in_thread(thread_uuid, conn)?;
         let user = User::get_by_uuid(thread.author_uuid, conn)?;
         Ok(ThreadData { thread, post, user })
     }

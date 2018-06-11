@@ -27,6 +27,8 @@ const DROP_DATABASE_URL: &'static str = env!("DROP_DATABASE_URL");
 /// The setup method will lock it and use it to reset the database.
 ///
 /// It is ok if a test fails and poisons the mutex, as the one place where it is used disregards the poison.
+/// Disregarding the poison is fine because code using the mutexed value never modifies the value,
+/// so there is no indeterminate state to contend with.
 lazy_static! {
     static ref CONN: Mutex<PgConnection> =
         Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Database not available"));

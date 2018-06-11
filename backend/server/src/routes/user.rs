@@ -65,8 +65,11 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> JoeResult<Json
 fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
     info!("updating user display name");
     let request: UpdateDisplayNameRequest = data.into_inner();
-    // TODO, check if this is valid.
-    User::update_user_display_name(request, &conn)
+
+    let current_user_name = request.user_name;
+    let new_display_name = request.new_display_name;
+
+    User::update_user_display_name(current_user_name, new_display_name, &conn)
         .map(UserResponse::from)
         .map(Json)
 }

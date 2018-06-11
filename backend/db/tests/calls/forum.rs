@@ -1,13 +1,14 @@
 use calls::user::UserFixture;
 use db::forum::{Forum, NewForum};
 use db::thread::{Thread, NewThread, MinimalThreadData};
-use db::post::{Post, NewPost, EditPostChangeset};
+use db::post::{Post, NewPost, EditPostChangeset, PostData};
 use common::setup::*;
 use diesel::PgConnection;
 use chrono::Utc;
 use db::CreatableUuid;
 use identifiers::forum::ForumUuid;
 use identifiers::thread::ThreadUuid;
+use identifiers::post::PostUuid;
 use uuid::Uuid;
 use test::Bencher;
 
@@ -194,66 +195,22 @@ fn lock() {
 }
 
 #[test]
-fn post_getters_are_the_same() {
+fn get_post_and_children() {
     setup(|fixture: &ForumFixture, conn: &PgConnection| {
-        let mut new_post: NewPost = NewPost {
-            thread_uuid: fixture.thread_2.uuid, // should be empty thread
-            author_uuid: fixture.user_fixture.normal_user.uuid,
-            parent_uuid: None,
-            created_date: Utc::now().naive_utc(),
-            content: POST_1_CONTENT.to_string(),
-            censored: false,
-        };
-        // create 10 posts all in a row.
-        for _ in 0..10 {
-            let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
-                .map(|x| x.post.uuid)
-                .expect("Create post");
-            new_post.parent_uuid = Some(post_uuid);
-        }
+        // post one has two children
+        let post_uuid = PostUuid(fixture.post_1.uuid);
+        let post_data: PostData = Post::get_post_and_children(post_uuid, conn).expect("should get post and its children");
+        assert_eq!(post_data.children.len(), 2);
 
-        let thread_2_uuid = ThreadUuid(fixture.thread_2.uuid);
-        let get_posts = Post::get_posts(thread_2_uuid, conn).expect("Should get post tree");
-        let root_post: Post = Post::get_root_post(thread_2_uuid, conn).expect("should get root post");
-        let get_post_data = root_post.get_post_data(conn).expect("Should get post tree");
+        // Post two has no children
+        let post_uuid = PostUuid(fixture.post_2.uuid);
+        let post_data: PostData = Post::get_post_and_children(post_uuid, conn).expect("should get post and its children");
+        assert_eq!(post_data.children.len(), 0);
 
-        assert_eq!(get_posts, get_post_data);
 
     });
 }
 
-
-
-#[bench]
-fn get_post_tree(b: &mut Bencher) {
-    setup(|fixture: &ForumFixture, conn: &PgConnection| {
-        let mut new_post: NewPost = NewPost {
-            thread_uuid: fixture.thread_2.uuid, // should be empty thread
-            author_uuid: fixture.user_fixture.normal_user.uuid,
-            parent_uuid: None,
-            created_date: Utc::now().naive_utc(),
-            content: POST_1_CONTENT.to_string(),
-            censored: false,
-        };
-        // create 10 posts all in a row.
-        for _ in 0..10 {
-            let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
-                .map(|x| x.post.uuid)
-                .expect("Create post");
-            new_post.parent_uuid = Some(post_uuid);
-        }
-
-        let thread_2_uuid = ThreadUuid(fixture.thread_2.uuid);
-
-        b.iter(
-            || {
-                let root_post: Post = Post::get_root_post(thread_2_uuid, conn).expect("should get root post");
-                root_post.get_post_data(conn).expect("Should get post tree")
-            },
-        );
-
-    });
-}
 #[bench]
 fn get_posts(b: &mut Bencher) {
     setup(|fixture: &ForumFixture, conn: &PgConnection| {
@@ -265,8 +222,8 @@ fn get_posts(b: &mut Bencher) {
             content: POST_1_CONTENT.to_string(),
             censored: false,
         };
-        // create 10 posts all in a row.
-        for _ in 0..10 {
+        // create 100 posts all in a row.
+        for _ in 0..100 {
             let post_uuid: Uuid = Post::create_and_get_user(new_post.clone(), conn)
                 .map(|x| x.post.uuid)
                 .expect("Create post");
@@ -277,7 +234,7 @@ fn get_posts(b: &mut Bencher) {
 
         b.iter(
             || {
-                Post::get_posts(thread_2_uuid, conn).expect("Should get post tree")
+                Post::get_posts_in_thread(thread_2_uuid, conn).expect("Should get post tree")
             },
         );
 

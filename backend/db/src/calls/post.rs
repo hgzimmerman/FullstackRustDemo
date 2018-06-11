@@ -42,7 +42,7 @@ pub struct Post {
     pub modified_date: Option<NaiveDateTime>,
     /// The content of the post. This may be rendered with markdown or a subset thereof.
     pub content: String,
-    /// If the post has been censored, it will not be immediately viewabe by people viewing the thread.
+    /// If the post has been censored, it will not be immediately viewable by people viewing the thread.
     pub censored: bool,
 }
 
@@ -242,37 +242,38 @@ impl Post {
     }
 
     // This may be useful in the future when you may want to get only a sub-tree of posts, eg. when displaying a user's posts.
-    #[deprecated]
-    #[allow(dead_code)]
-    /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
-    /// This will make recursive calls into the database.
-    /// This method should be the target of significant scrutiny.
-    pub fn get_post_data(self, conn: &PgConnection) -> JoeResult<PostData> {
-        let user: User = User::get_by_uuid(self.author_uuid, conn)?;
-        let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
-        // turns the children into PostData
-        let children: Vec<PostData> = children
-            .into_iter()
-            .map(|child| child.get_post_data(conn))
-            .collect::<Result<Vec<PostData>, WeekendAtJoesError>>()?;
+    // It still may be better to take an approach using the more efficient function, and just prune the tree to what is desired.
+//    #[allow(dead_code)]
+//    /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
+//    /// This will make recursive calls into the database.
+//    /// This method should be the target of significant scrutiny.
+//    pub fn get_post_data(self, conn: &PgConnection) -> JoeResult<PostData> {
+//        let user: User = User::get_by_uuid(self.author_uuid, conn)?;
+//        let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
+//        // turns the children into PostData
+//        let children: Vec<PostData> = children
+//            .into_iter()
+//            .map(|child| child.get_post_data(conn))
+//            .collect::<Result<Vec<PostData>, WeekendAtJoesError>>()?;
+//
+//        Ok(PostData {
+//            post: self,
+//            user,
+//            children,
+//        })
+//    }
+//
+//    #[allow(dead_code)]
+//    /// Gets all of the posts that belong to the post.
+//    pub fn get_post_children(&self, conn: &PgConnection) -> Result<Vec<Post>, WeekendAtJoesError> {
+//        Post::belonging_to(self)
+//            .load::<Post>(conn)
+//            .map_err(Post::handle_error)
+//    }
 
-        Ok(PostData {
-            post: self,
-            user,
-            children,
-        })
-    }
 
-    #[deprecated]
-    /// Gets all of the posts that belong to the post.
-    pub fn get_post_children(&self, conn: &PgConnection) -> Result<Vec<Post>, WeekendAtJoesError> {
-        Post::belonging_to(self)
-            .load::<Post>(conn)
-            .map_err(Post::handle_error)
-    }
-
-
-    pub fn get_posts(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<PostData> {
+    /// Given the thread uuid, return a tree of posts.
+    pub fn get_posts_in_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<PostData> {
         use schema::posts;
         use schema::posts::dsl::posts as posts_dsl;
         use std::collections::HashSet;
@@ -312,8 +313,41 @@ impl Post {
                 }
             })
             .collect();
-        let root: Post = root.into_iter().next().ok_or(WeekendAtJoesError::InternalServerError)?; // We are making the assumption that there is _exactly_ one post that meets the root criteria.
+        // We are making the assumption that there is at least one post that meets the root criteria.
+        // Practically speaking, there should be exactly one, but we rely on reasonable insertions
+        // and modifications to enforce that.
+        let root: Post = root.into_iter().next().ok_or(WeekendAtJoesError::InternalServerError)?;
         Ok(Post::assemble_posts(root, &mut posts, &users))
+    }
+
+    /// Gets the post at the given UUID and all of its children.
+    ///
+    /// The current implementation has overhead as it requires getting all the posts in a thread
+    /// and then pruning it down to the desired subsection of the tree.
+    pub fn get_post_and_children(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<PostData> {
+        // Get the post so we can get the thread
+        let post = Post::get_by_uuid(post_uuid.0, conn)?;
+        let thread_uuid: ThreadUuid = ThreadUuid(post.thread_uuid);
+        let post_tree: PostData = Post::get_posts_in_thread(thread_uuid, conn)?;
+
+        /// Recursive inner function to prune the tree to find the desired node among the larger post_tree.
+        fn find_post_node(post_uuid: Uuid, post_tree: PostData) -> Option<PostData> {
+            if post_tree.post.uuid == post_uuid {
+                return Some(post_tree);
+            } else {
+                for child in post_tree.children {
+                    if let Some(found_root) = find_post_node(post_uuid, child) {
+                        return Some(found_root);
+                    }
+                }
+                return None;
+            }
+        }
+
+        let desired_post_node = find_post_node(post_uuid.0, post_tree)
+            .expect("The post should be inside the tree, because it is known to exist at the start of this function.");
+        Ok(desired_post_node)
+
     }
 
     /// Recursive function to assemble posts out of the list of post data.
@@ -330,11 +364,12 @@ impl Post {
             })
             .collect();
 
+        // Recurse
         let children: Vec<PostData> = children.into_iter().map(|child_post| {
             Post::assemble_posts(child_post, posts, users)
         }).collect();
 
-        let user = users.get(&post.author_uuid).cloned().expect("The user at the uuid should exist");
+        let user: User = users.get(&post.author_uuid).cloned().expect("The user at the uuid should exist");
 
         PostData {
             post,
