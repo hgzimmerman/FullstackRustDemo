@@ -14,6 +14,9 @@ extern crate chrono;
 extern crate serde_json;
 extern crate serde;
 
+extern crate url;
+
+pub mod route;
 pub mod networking;
 pub mod storage;
 pub mod user;
@@ -23,7 +26,7 @@ pub mod datatypes; // TODO, maybe move this elsewhere.
 
 use yew::services::fetch::FetchService;
 use yew::services::storage::{StorageService, Area};
-use yew::services::route::RouteService;
+use route::RouteService;
 use yew::services::console::ConsoleService;
 use jwt_service::JwtService;
 

@@ -1,13 +1,16 @@
 
 extern crate yew;
+extern crate url;
+extern crate context;
 
-use yew::services::route::*;
 extern crate identifiers;
+
+pub mod routing;
 
 pub mod auth;
 pub mod bucket;
 pub mod forum;
-pub mod routing;
+//pub mod routing;
 
 //pub use auth;
 //pub use bucket;
@@ -16,6 +19,12 @@ pub mod routing;
 use auth::AuthRoute;
 use bucket::BucketRoute;
 use forum::ForumRoute;
+
+use routing::RouteInfo;
+use routing::Router;
+use routing::MainRouter;
+
+use routing::*;
 
 
 #[derive(Clone, PartialEq, Debug)]

@@ -18,6 +18,8 @@ use util::input::InputState;
 use util::input::Input;
 use util::input::InputValidator;
 
+use routes::routing::Router;
+
 pub enum Msg {
     UpdatePassword(InputState),
     UpdateConfirmPassword(InputState),
@@ -119,7 +121,7 @@ impl Component<Context> for CreateAccount {
                 true
             }
             Msg::NavigateToLogin => {
-                context.routing.set_route(Route::Auth(AuthRoute::Login)); // navigate back to login page
+                context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()); // navigate back to login page
                 false
             }
             Msg::AccountCreationFailed => {

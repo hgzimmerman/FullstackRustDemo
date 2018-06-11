@@ -54,6 +54,8 @@ use buckets::ApprovedBucket;
 use buckets::PublicBucket;
 use identifiers::bucket::BucketUuid;
 
+use routes::routing::Router;
+
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
     pub name: InputState
@@ -292,7 +294,7 @@ impl Component<Context> for BucketModel {
     fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            NavigateToBucket {bucket_uuid} => context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid})),
+            NavigateToBucket {bucket_uuid} => context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid}).to_route().to_string()),
             PublicBucketsReady(buckets) => {
                 if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
                     bucket_list.public_buckets = Loadable::Loaded(buckets)
@@ -331,7 +333,7 @@ impl Component<Context> for BucketModel {
             },
             BucketReady(bucket) => self.bucket_page = BucketPage::Bucket(Loadable::Loaded(bucket)),
             BucketFailed => self.bucket_page = BucketPage::Bucket(Loadable::Failed(Some("Failed to load bucket.".to_string()))),
-            NavigateToCreateBucket => context.routing.set_route(Route::Bucket(BucketRoute::Create)),
+            NavigateToCreateBucket => context.routing.set_route(Route::Bucket(BucketRoute::Create).to_route().to_string()),
             CreateBucket => {
                 if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
                     Self::create_bucket(new_bucket, context)

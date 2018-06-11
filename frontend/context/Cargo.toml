@@ -18,6 +18,8 @@ serde_json = "*"
 serde = "1"
 
 stdweb = "0.4.2"
+url = "1.7.0"
+
 
 [dependencies.chrono]
 version = "0.4"

@@ -226,7 +226,7 @@ impl Context {
                 // This error indicates that the JWT just isn't present, so there isn't a need
                 // to remove it, as it is already gone.
                 // All this needs to do is redirect the user to the login page.
-                self.routing.set_route_from_string("/auth/login".into());
+                self.routing.set_route("/auth/login".into());
             }
         }
     }
@@ -253,7 +253,7 @@ impl Context {
                 if meta.status == 401 {
                     // Redirect to login
                     let mut rs = rs.clone_without_listener(); // TODO this is a pretty bad pattern of having to clone this twice...
-                    rs.set_route_from_string("/auth/login".into())
+                    rs.set_route("/auth/login".into())
                 }
                 let data = data.into();
                 callback.emit(Response::from_parts(meta, data))

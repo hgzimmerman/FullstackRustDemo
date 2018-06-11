@@ -1,5 +1,5 @@
 
-use yew::services::route::*;
+use routing::*;
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum AuthRoute {

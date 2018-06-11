@@ -1,5 +1,5 @@
 
-use yew::services::route::*;
+use routing::*;
 use identifiers::bucket::BucketUuid;
 
 #[derive(Debug, PartialEq, Clone)]

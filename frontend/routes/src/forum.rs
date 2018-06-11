@@ -2,7 +2,9 @@
 use identifiers::forum::ForumUuid;
 use identifiers::thread::ThreadUuid;
 
-use yew::services::route::*;
+use routing::*;
+
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum ForumRoute {
     ForumList,

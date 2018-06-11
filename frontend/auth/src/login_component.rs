@@ -12,6 +12,8 @@ use util::uploadable::Uploadable;
 use routes::Route;
 use routes::forum::ForumRoute;
 
+use routes::routing::Router;
+
 pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
@@ -103,7 +105,7 @@ impl Component<Context> for Login {
             Msg::NavToCreateAccount => {
                 context.routing.set_route(Route::Auth(
                     AuthRoute::Create,
-                ));
+                ).to_route().to_string());
                 true
             }
             Msg::UpdatePassword(p) => {
@@ -120,7 +122,7 @@ impl Component<Context> for Login {
                 context.log(&format!("Logged in. JWT received with payload: {:?}", ::context::user::extract_payload_from_jwt(jwt)));
 
 
-                context.routing.set_route(Route::Forums(ForumRoute::ForumList));
+                context.routing.set_route(Route::Forums(ForumRoute::ForumList).to_route().to_string());
                 if let Some(ref cb) = self.on_login_cb {
                     cb.emit(())
                 }

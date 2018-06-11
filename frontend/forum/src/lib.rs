@@ -51,6 +51,7 @@ use datatypes::thread::SelectableMinimalThreadData;
 use identifiers::forum::ForumUuid;
 use identifiers::thread::ThreadUuid;
 
+use routes::routing::Router;
 
 pub enum Msg {
     ForumsReady(Vec<ForumData>),
@@ -379,13 +380,13 @@ impl Component<Context> for ForumModel {
             },
             Msg::ThreadReady(thread) => {
                 let route = ForumRoute::Thread { forum_uuid: thread.forum_uuid, thread_uuid: thread.uuid};
-                context.routing.set_route(Route::Forums(route.clone()));
+                context.routing.set_route(Route::Forums(route.clone()).to_route().to_string());
                 self.thread = ThreadOrNewThread::Thread(Loadable::Loaded(thread));
                 self.select_thread_in_list();
             },
             Msg::NewThreadReady(thread) => {
                 let route = ForumRoute::Thread { forum_uuid: thread.forum_uuid.clone(), thread_uuid: thread.uuid};
-                context.routing.set_route(Route::Forums(route.clone()));
+                context.routing.set_route(Route::Forums(route.clone()).to_route().to_string());
 
                 if let ForumsOrForum::Forum {threads: ref mut existing_thread, ..} = self.forums_or_selected_forum {
                     *existing_thread = Self::get_threads(thread.forum_uuid, context);
@@ -406,20 +407,24 @@ impl Component<Context> for ForumModel {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
                     let forum_uuid = forum_data.uuid;
                     let route = ForumRoute::CreateThread {forum_uuid};
-                    context.routing.set_route(Route::Forums(route));
+                    context.routing.set_route(Route::Forums(route).to_route().to_string());
                 }
             },
             Msg::SetThread {thread_uuid} => {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {
                     let forum_uuid = forum_data.uuid;
                     let route = ForumRoute::Thread { forum_uuid, thread_uuid };
-                    context.routing.set_route(Route::Forums(route.clone()));
+                    let route = Route::Forums(route.clone());
+                    let route_string = route.to_route().to_string();
+                    context.routing.set_route(route_string);
                 }
             },
             Msg::SetForum {forum_data} => {
                 // TODO, this can be optomized to avoid needing to re-get the forum-data, but isn't particularly important.
-                let route = ForumRoute::Forum { forum_uuid: forum_data.uuid.clone() };
-                context.routing.set_route(Route::Forums(route));
+                let forum_route = ForumRoute::Forum { forum_uuid: forum_data.uuid.clone() };
+                let route = Route::Forums(forum_route);
+                let route_string = route.to_route().to_string();
+                context.routing.set_route(route_string);
             }
             Msg::PostNewThread{new_thread} => {
                 if let ForumsOrForum::Forum{forum: Loadable::Loaded(ref forum_data), ..} = self.forums_or_selected_forum {

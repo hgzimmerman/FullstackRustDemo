@@ -15,6 +15,9 @@ use routes::auth::AuthRoute;
 use routes::forum::ForumRoute;
 use routes::bucket::BucketRoute;
 
+use routes::routing::Router;
+
+
 #[derive(Clone, PartialEq)]
 pub struct HeaderLink {
     pub link: Route,
@@ -63,14 +66,14 @@ impl Component<Context> for Header {
     fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            Login => context.routing.set_route(Route::Auth(AuthRoute::Login)),
+            Login => context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()),
             Logout => {
                 context.remove_jwt();
                 self.is_logged_in = false;
-                context.routing.set_route(Route::Auth(AuthRoute::Login));
+                context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string());
             }
-            Forums => context.routing.set_route(Route::Forums(ForumRoute::ForumList)),
-            BucketQuestions => context.routing.set_route(Route::Bucket(BucketRoute::BucketList))
+            Forums => context.routing.set_route(Route::Forums(ForumRoute::ForumList).to_route().to_string()),
+            BucketQuestions => context.routing.set_route(Route::Bucket(BucketRoute::BucketList).to_route().to_string())
         }
         true
     }

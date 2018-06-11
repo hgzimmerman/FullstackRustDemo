@@ -97,6 +97,7 @@ mod test {
 //    use uuid::Uuid;
 
 
+    // TODO move this test to a server integration test directory
 
 //    #[test]
 //    fn jwt_integration_test() {

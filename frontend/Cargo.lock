@@ -123,6 +123,7 @@ dependencies = [
  "serde 1.0.59 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
  "stdweb 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "wire 0.1.0",
  "yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=3685a0cd1c642b3f4dbdaa06832848a2ae641517)",
 ]
@@ -311,7 +312,9 @@ dependencies = [
 name = "routes"
 version = "0.1.0"
 dependencies = [
+ "context 0.1.0",
  "identifiers 0.1.0",
+ "url 1.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "yew 0.3.0 (git+https://github.com/hgzimmerman/yew?rev=3685a0cd1c642b3f4dbdaa06832848a2ae641517)",
 ]
 

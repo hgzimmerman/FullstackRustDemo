@@ -6,7 +6,7 @@ use stdweb::Value;
 use stdweb::unstable::TryInto;
 use failure::Error;
 use yew::services::fetch::FetchService;
-use yew::services::route::RouteService;
+use route::RouteService;
 use yew::services::storage::{StorageService, Area};
 use wire::user::Jwt;
 use user;
@@ -53,7 +53,7 @@ impl JwtService {
                     let mut storage_service = StorageService::new(Area::Local);
                     storage_service.remove("JWT");
                     let mut rs = rs.clone_without_listener();
-                    rs.set_route_from_string("/auth/login".into())
+                    rs.set_route("/auth/login".into())
                 }
             };
         let callback = Callback::from(closure);

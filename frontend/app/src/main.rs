@@ -21,9 +21,11 @@ extern crate forum;
 extern crate auth;
 extern crate header;
 
-use yew::services::route::MainRouter;
-use yew::services::route::RouteResult;
+use routes::routing::MainRouter;
+use context::route::RouteResult;
 use routes::Route;
+use routes::routing::RouteInfo;
+use routes::routing::Router;
 
 use header::Header;
 use forum::ForumModel;
@@ -35,7 +37,13 @@ use auth::AuthModel;
 impl From<RouteResult> for Msg {
     fn from(result: RouteResult) -> Self {
         match result {
-            Ok(mut route_info) => Msg::Navigate(Route::from_route_main(&mut route_info)),
+            Ok(route_string) => {
+                if let Ok(mut route_info) = RouteInfo::parse(&route_string) {
+                    Msg::Navigate(Route::from_route_main(&mut route_info))
+                } else {
+                    Msg::Navigate(Route::PageNotFound)
+                }
+            },
             Err(_e) => {
 //                eprintln!("Couldn't route: {:?}", e);
                 Msg::Navigate(Route::PageNotFound)
@@ -67,9 +75,13 @@ impl Component<Context> for Model {
     type Properties = ();
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
-
+        use yew::services::console::ConsoleService;
         let callback = context.send_back(
             |route_result: RouteResult| {
+                let mut cs = ConsoleService::new();
+                if let Ok(route) = route_result.clone() {
+                    cs.log(&route)
+                }
                 Msg::from(route_result)
             },
         );
@@ -77,10 +89,15 @@ impl Component<Context> for Model {
             callback,
         );
 
+        let current_location = context.routing.get_location().expect("Couldn't get location");
+        let route: Route = if let Ok(mut current_route_info) = RouteInfo::parse(&current_location) {
+            Route::from_route_main(&mut current_route_info)
+        } else {
+            Route::PageNotFound
+        };
 
-        let route: Route = Route::from_route_main(&mut context.routing.get_current_route_info());
         context.routing.replace_url(
-            route.clone(),
+            route.clone().to_route().to_string(),
         ); // sets the url to be dependent on what the route_info was resolved to
 
         Model { route, is_logged_in: context.is_logged_in() }
@@ -101,7 +118,7 @@ impl Component<Context> for Model {
                 true
             }
             Msg::SetRoute(route) => {
-                context.routing.set_route(route);
+                context.routing.set_route(route.to_route().to_string());
                 false // let the call back to ::Navigate do the updating
             }
         }
@@ -124,7 +141,9 @@ impl Renderable<Context, Model> for Model {
                 <BucketModel: route=bucket_route, />
             },
             PageNotFound => html! {
-                {"Page Not Found"}
+                <div>
+                    {"Page Not Found"}
+                </div>
             }
 //                util::wrappers::html_string("Page Not Found".into())
         };
