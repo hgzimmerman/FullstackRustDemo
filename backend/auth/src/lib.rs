@@ -42,17 +42,8 @@ pub use password::{hash_password, verify_hash};
 pub use banned_set::BannedSet;
 
 use rand::{Rng};
-//use rand;
-use chrono::{NaiveDateTime, Utc};
-use chrono::Duration;
-use rocket::http::Status;
-use rocket::Response;
-use rocket::request::Request;
-use rocket::response::Responder;
-//use user::User;
-//use Conn;
+use chrono::Utc;
 
-use wire::login::*;
 use wire::user::Jwt;
 
 use log::{info, warn};
@@ -92,177 +83,141 @@ impl Secret {
 #[cfg(test)]
 mod test {
     use super::*;
-    use db::user::{User, UserRole};
-    use wire::user::UserResponse;
-    use wire::user::NewUserRequest;
-    use db;
+    use wire::user::UserRole;
+//    use wire::user::UserResponse;
+//    use wire::user::NewUserRequest;
 
-    use rocket::local::Client;
-    use wire::user::UpdateDisplayNameRequest;
-    use serde_json;
-    use rocket::http::Header;
-    use rocket::http::ContentType;
-    use init_rocket;
-    use db::Creatable;
-
-    #[test]
-    fn login_test() {
-
-        let pool = db::init_pool();
-
-        // Delete the entry to avoid
-        let conn = Conn::new(pool.get().unwrap());
-        let _ = User::delete_user_by_name("UserName".into(), &conn);
-
-        // Create a user
-        let new_user = NewUserRequest {
-            user_name: "UserName".into(),
-            display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into(),
-        };
-        let _: UserResponse = User::create(new_user.into(), &conn)
-            .unwrap()
-            .into();
-
-        // Log in as user
-        let login_request: LoginRequest = LoginRequest {
-            user_name: "UserName".into(),
-            password: "TestPassword".into(),
-        };
-
-        let secret: Secret = Secret::generate();
-
-        let response = login(login_request, secret.0, &conn);
-        assert!(response.is_ok());
-
-        let _ = User::delete_user_by_name("UserName".into(), &conn);
-    }
-
-    #[test]
-    fn jwt_integration_test() {
-
-        let pool = db::init_pool();
-
-        let user_name: String = "UserName-JwtIntegrationTest".into();
-
-        // Delete the entry to avoid
-        let conn = Conn::new(pool.get().unwrap());
-        let _ = User::delete_user_by_name(user_name.clone(), &conn);
-
-        // Create a user
-        let new_user = NewUserResponse {
-            user_name: user_name.clone(),
-            display_name: "DisplayName".into(),
-            plaintext_password: "TestPassword".into(),
-        };
-        let _: UserResponse = User::create(new_user.into(), &conn)
-            .unwrap()
-            .into();
-
-        // Log in as user
-        let login_request: LoginRequest = LoginRequest {
-            user_name: user_name.clone(),
-            password: "TestPassword".into(),
-        };
-        let rocket = init_rocket();
-        let client = Client::new(rocket).expect(
-            "valid rocket instance",
-        );
-
-        let mut response = client
-            .post("/api/auth/login/")
-            .header(ContentType::JSON)
-            .body(&serde_json::to_string(&login_request)
-                .unwrap())
-            .dispatch();
-
-        //login(login_request, secret.0, &conn);
-        assert_eq!(response.status(), Status::Ok);
-        let jwt_string: String = response
-            .body()
-            .unwrap()
-            .into_string()
-            .unwrap();
+//    use rocket::local::Client;
+//    use wire::user::UpdateDisplayNameRequest;
+//    use serde_json;
+//    use rocket::http::Header;
+//    use rocket::http::ContentType;
+//    use init_rocket;
+//    use db::Creatable;
+//    use uuid::Uuid;
 
 
 
-        let request_body: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
-            user_name: user_name.clone(),
-            new_display_name: "new name".into(),
-        };
-
-        let response = client
-            .put("/api/user/")
-            .header(ContentType::JSON)
-            .header(Header::new("Authorization", jwt_string.clone()))
-            .body(
-                serde_json::to_string(&request_body)
-                    .unwrap(),
-            )
-            .dispatch();
-        assert_eq!(response.status(), Status::Ok);
-
-
-
-        let _ = User::delete_user_by_name(user_name, &conn);
-    }
+//    #[test]
+//    fn jwt_integration_test() {
+//        let pool = db::init_pool();
+//
+//        let user_name: String = "UserName-JwtIntegrationTest".into();
+//
+//        // Delete the entry to avoid
+//        let conn = Conn::new(pool.get().unwrap());
+//        let _ = User::delete_user_by_name(user_name.clone(), &conn);
+//
+//        // Create a user
+//        let new_user = NewUserResponse {
+//            user_name: user_name.clone(),
+//            display_name: "DisplayName".into(),
+//            plaintext_password: "TestPassword".into(),
+//        };
+//        let _: UserResponse = User::create(new_user.into(), &conn)
+//            .unwrap()
+//            .into();
+//
+//        // Log in as user
+//        let login_request: LoginRequest = LoginRequest {
+//            user_name: user_name.clone(),
+//            password: "TestPassword".into(),
+//        };
+//        let rocket = init_rocket();
+//        let client = Client::new(rocket).expect(
+//            "valid rocket instance",
+//        );
+//
+//        let mut response = client
+//            .post("/api/auth/login/")
+//            .header(ContentType::JSON)
+//            .body(&serde_json::to_string(&login_request)
+//                .unwrap())
+//            .dispatch();
+//
+//        //login(login_request, secret.0, &conn);
+//        assert_eq!(response.status(), Status::Ok);
+//        let jwt_string: String = response
+//            .body()
+//            .unwrap()
+//            .into_string()
+//            .unwrap();
+//
+//
+//
+//        let request_body: UpdateDisplayNameRequest = UpdateDisplayNameRequest {
+//            user_name: user_name.clone(),
+//            new_display_name: "new name".into(),
+//        };
+//
+//        let response = client
+//            .put("/api/user/")
+//            .header(ContentType::JSON)
+//            .header(Header::new("Authorization", jwt_string.clone()))
+//            .body(
+//                serde_json::to_string(&request_body)
+//                    .unwrap(),
+//            )
+//            .dispatch();
+//        assert_eq!(response.status(), Status::Ok);
+//
+//
+//
+//        let _ = User::delete_user_by_name(user_name, &conn);
+//    }
 
 
     #[test]
     fn password_hash_and_verify() {
-        use test_setup;
-        test_setup();
-        let plaintext = "12345";
-        let hash_1 = hash_password(plaintext).unwrap();
+        let plaintext: &str = "12345";
+        let hash_1: String = hash_password(plaintext).unwrap();
         info!("hashed_password: {}", hash_1);
         match verify_hash(&plaintext, &hash_1) {
             Ok(_) => {}
             Err(e) => {
-                info!("error: {}", e);
-                assert!(false);
+                panic!("error: {}", e);
             }
         }
     }
 
     #[test]
     fn jwt() {
-        use test_setup;
-        test_setup();
-        let secret = "secret".to_string();
+        let secret = Secret("secret".to_string());
 
+        let sub = UserUuid::default();
         let jwt = Jwt {
-            user_name: "name".to_string(),
-            user_id: 1,
+            sub,
             user_roles: vec![UserRole::Unprivileged],
-            token_expire_date: Utc::now().naive_utc(),
+            exp: Utc::now().naive_utc(),
+            iat: Utc::now().naive_utc(),
         };
+        let jwt = ServerJwt(jwt);
 
         let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
-        let jwt: Jwt = match Jwt::decode_jwt_string(jwt_string, &secret) {
+        let _jwt: ServerJwt = match ServerJwt::decode_jwt_string(&jwt_string, &secret) {
             Ok(j) => j,
             Err(e) => {
-                info!("{:?}", e);
-                panic!();
+                panic!("{:?}",e);
             }
         };
-        info!("{:?}", jwt);
     }
     #[test]
     fn jwt_tampering_detected() {
-        use test_setup;
-        test_setup();
-        let secret = "secret".to_string();
+        let secret = Secret("secret".to_string());
         // create a normal jwt
+        let sub = UserUuid::default();
         let jwt = Jwt {
-            user_name: "name".to_string(),
-            user_id: 1,
+            sub,
             user_roles: vec![UserRole::Unprivileged],
-            token_expire_date: Utc::now().naive_utc(),
+            exp: Utc::now().naive_utc(),
+            iat: Utc::now().naive_utc(),
         };
+        let jwt = ServerJwt(jwt);
+
         let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
         // alter the username of a copy of the accepted jwt
-        let mut altered_jwt = jwt.clone();
-        altered_jwt.user_name = "other_name".to_string();
+        let mut altered_jwt: ServerJwt = jwt.clone();
+        altered_jwt.0.user_roles = vec![UserRole::Admin];
         let altered_jwt_string = altered_jwt
             .encode_jwt_string(&secret)
             .unwrap();
@@ -275,8 +230,9 @@ mod test {
         let normal_sig: &str = split_jwt.get(2).unwrap();
         let synthesized_jwt_string: String = format!("{}.{}.{}", normal_header, modified_payload, normal_sig);
         // The decode should fail because the signature does not correspond to the payload
-        Jwt::decode_jwt_string(synthesized_jwt_string, &secret)
-            .expect_err("Should not be able to decode this modified jwt.");
+        if let Ok(_) = ServerJwt::decode_jwt_string(&synthesized_jwt_string, &secret) {
+            panic!("Should not be able to decode this modified jwt.");
+        }
     }
 
 }

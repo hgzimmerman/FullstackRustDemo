@@ -120,6 +120,8 @@ fn get_paginated() {
 
 /// After archiving a thread, it should not be possible to get it with the get_threads_in_forum method,
 /// and it should not be possible to modify its child posts.
+///
+/// Under typical circumstances, the thread should not be accessable.
 #[test]
 fn archive() {
     setup(|fixture: &ForumFixture, conn: &PgConnection| {
@@ -206,7 +208,6 @@ fn get_post_and_children() {
         let post_uuid = PostUuid(fixture.post_2.uuid);
         let post_data: PostData = Post::get_post_and_children(post_uuid, conn).expect("should get post and its children");
         assert_eq!(post_data.children.len(), 0);
-
 
     });
 }

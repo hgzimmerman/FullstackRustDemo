@@ -241,36 +241,6 @@ impl Post {
         Ok(ChildlessPostData { post, user })
     }
 
-    // This may be useful in the future when you may want to get only a sub-tree of posts, eg. when displaying a user's posts.
-    // It still may be better to take an approach using the more efficient function, and just prune the tree to what is desired.
-//    #[allow(dead_code)]
-//    /// Gets all of the children for a post and assembles the tree with the `self` post as the root node.
-//    /// This will make recursive calls into the database.
-//    /// This method should be the target of significant scrutiny.
-//    pub fn get_post_data(self, conn: &PgConnection) -> JoeResult<PostData> {
-//        let user: User = User::get_by_uuid(self.author_uuid, conn)?;
-//        let children: Vec<Post> = self.get_post_children(conn)?; // gets the children
-//        // turns the children into PostData
-//        let children: Vec<PostData> = children
-//            .into_iter()
-//            .map(|child| child.get_post_data(conn))
-//            .collect::<Result<Vec<PostData>, WeekendAtJoesError>>()?;
-//
-//        Ok(PostData {
-//            post: self,
-//            user,
-//            children,
-//        })
-//    }
-//
-//    #[allow(dead_code)]
-//    /// Gets all of the posts that belong to the post.
-//    pub fn get_post_children(&self, conn: &PgConnection) -> Result<Vec<Post>, WeekendAtJoesError> {
-//        Post::belonging_to(self)
-//            .load::<Post>(conn)
-//            .map_err(Post::handle_error)
-//    }
-
 
     /// Given the thread uuid, return a tree of posts.
     pub fn get_posts_in_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<PostData> {
@@ -291,7 +261,7 @@ impl Post {
         let mut user_uuids: Vec<Uuid> = posts.iter()
             .map(|post| post.author_uuid)
             .collect();
-        // It isn't ideal to sort these, so this approach works fine.
+        // It isn't ideal to sort these, so this approach to deduplication works fine.
         let set: HashSet<_> = user_uuids.drain(..).collect(); // dedup
         user_uuids.extend(set.into_iter());
 
@@ -317,7 +287,36 @@ impl Post {
         // Practically speaking, there should be exactly one, but we rely on reasonable insertions
         // and modifications to enforce that.
         let root: Post = root.into_iter().next().ok_or(WeekendAtJoesError::InternalServerError)?;
-        Ok(Post::assemble_posts(root, &mut posts, &users))
+
+
+        /// Recursive function to assemble posts out of the list of post data.
+        /// It has a time complexity of O: n * log_n, but that is still better than talking to the database,
+        /// as the constant time is too great there.
+        fn assemble_posts (post: Post, posts: &mut Vec<Post>, users: &HashMap<Uuid, User>) -> PostData {
+            let children: Vec<Post> = posts
+                .drain_filter(|child_post: &mut Post| {
+                    if let Some(parent_uuid) = child_post.parent_uuid {
+                        parent_uuid == post.uuid
+                    } else {
+                        false
+                    }
+                })
+                .collect();
+
+            // Recurse
+            let children: Vec<PostData> = children.into_iter().map(|child_post| {
+                assemble_posts(child_post, posts, users)
+            }).collect();
+
+            let user: User = users.get(&post.author_uuid).cloned().expect("The user at the uuid should exist");
+
+            PostData {
+                post,
+                user,
+                children
+            }
+        }
+        Ok(assemble_posts(root, &mut posts, &users))
     }
 
     /// Gets the post at the given UUID and all of its children.
@@ -350,31 +349,5 @@ impl Post {
 
     }
 
-    /// Recursive function to assemble posts out of the list of post data.
-    /// It has a time complexity of O: n * log_n, but that is still better than talking to the database,
-    /// as the constant time is too great there.
-    fn assemble_posts (post: Post, posts: &mut Vec<Post>, users: &HashMap<Uuid, User>) -> PostData {
-        let children: Vec<Post> = posts
-            .drain_filter(|child_post: &mut Post| {
-                if let Some(parent_uuid) = child_post.parent_uuid {
-                    parent_uuid == post.uuid
-                } else {
-                    false
-                }
-            })
-            .collect();
 
-        // Recurse
-        let children: Vec<PostData> = children.into_iter().map(|child_post| {
-            Post::assemble_posts(child_post, posts, users)
-        }).collect();
-
-        let user: User = users.get(&post.author_uuid).cloned().expect("The user at the uuid should exist");
-
-        PostData {
-            post,
-            user,
-            children
-        }
-    }
 }

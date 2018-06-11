@@ -20,6 +20,7 @@ use identifiers::user::UserUuid;
 
 /// Because the JWT struct lives in the wire crate,
 /// this NewType is used to define other functions on it.
+#[derive(Clone)]
 pub struct ServerJwt(pub Jwt);
 
 impl ServerJwt {
@@ -40,7 +41,7 @@ impl ServerJwt {
         }
     }
 
-    pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<Jwt, JwtError> {
+    pub fn decode_jwt_string(jwt_str: &str, secret: &Secret) -> Result<ServerJwt, JwtError> {
         let secret: &String = &secret.0;
         let (_header, payload) = match decode(&jwt_str.to_string(), secret, Algorithm::HS256) {
             Ok(x) => x,
@@ -50,6 +51,7 @@ impl ServerJwt {
             Ok(x) => x,
             Err(_) => return Err(JwtError::DeserializeError),
         };
+        let jwt = ServerJwt(jwt);
         Ok(jwt)
     }
 }
@@ -61,16 +63,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for ServerJwt {
     type Error = WeekendAtJoesError;
 
     fn from_request(request: &'a Request<'r>) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
-        let jwt = extract_jwt_from_request(request)?;
-        let jwt = validate_jwt_expiry_time(jwt)?;
+        let jwt: ServerJwt = extract_jwt_from_request(request)?;
+        let jwt: ServerJwt = validate_jwt_expiry_time(jwt)?;
 
-        Outcome::Success(ServerJwt(jwt))
+        Outcome::Success(jwt)
     }
 }
 
 
 /// Given a request, extract the JWT struct from the headers in the request.
-fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<Jwt, WeekendAtJoesError> {
+fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
     let keys: Vec<_> = request
         .headers()
         .get("Authorization")
@@ -113,8 +115,8 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
 }
 
 /// Make sure that the JWT hasn't expired yet.
-fn validate_jwt_expiry_time(jwt: Jwt) -> request::Outcome<Jwt, WeekendAtJoesError> {
-    if jwt.exp < Utc::now().naive_utc() {
+fn validate_jwt_expiry_time(jwt: ServerJwt) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
+    if jwt.0.exp < Utc::now().naive_utc() {
         info!("Token expired.");
         return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
     }
@@ -225,11 +227,11 @@ pub mod user_authorization {
         T: FromJwt,
     {
         // Get the jwt from the request's header
-        let jwt: Jwt = extract_jwt_from_request(request)?;
+        let jwt: ServerJwt = extract_jwt_from_request(request)?;
         // Make sure that the JWT falls within the time bounds.
-        let jwt: Jwt = validate_jwt_expiry_time(jwt)?;
+        let jwt: ServerJwt = validate_jwt_expiry_time(jwt)?;
 
-        let user = match T::from_jwt(&jwt) {
+        let user = match T::from_jwt(&jwt.0) {
             Ok(user) => user,
             Err(_) => return Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role." })),
         };
