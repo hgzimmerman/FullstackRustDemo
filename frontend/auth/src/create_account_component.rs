@@ -59,7 +59,7 @@ pub struct CreateAccount {
 
 
 impl Component<Context> for CreateAccount {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -69,7 +69,7 @@ impl Component<Context> for CreateAccount {
     }
 
 
-    fn update(&mut self, msg: Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::Submit => {
 //                println!("Logging in with user name: {}", self.user_name);

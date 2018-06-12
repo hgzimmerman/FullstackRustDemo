@@ -288,7 +288,7 @@ impl ForumModel {
 
 
 impl Component<Context> for ForumModel {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
@@ -334,7 +334,7 @@ impl Component<Context> for ForumModel {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::ForumsReady(forums) => self.forums_or_selected_forum = ForumsOrForum::Forums(Loadable::Loaded(forums)),
             Msg::ForumsFailed => self.forums_or_selected_forum = ForumsOrForum::Forums(Loadable::Failed(None)),

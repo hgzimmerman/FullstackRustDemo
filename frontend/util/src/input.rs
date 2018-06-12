@@ -118,7 +118,7 @@ pub enum Msg {
 }
 
 impl Component<Context> for Input {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -236,9 +236,9 @@ impl Renderable<Context, Input> for Input
                         placeholder=&self.placeholder,
                         value=self.input_state.inner_text(),
                         onblur=|_| Msg::Validate,
-                        oninput=|e: InputData| Msg::UpdateText(e.value),
-                        onkeypress=|e: KeyData| {
-                            if e.key == "Enter" { Msg::EnterPressed } else {Msg::NoOp}
+                        oninput=|e| Msg::UpdateText(e.value),
+                        onkeypress=|e| {
+                            if e.key() == "Enter" { Msg::EnterPressed } else {Msg::NoOp}
                         },
                         type=input_type,
                     />

@@ -52,7 +52,7 @@ impl Default for Props {
 
 
 impl Component<Context> for Login {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -156,9 +156,9 @@ impl Renderable<Context, Login> for Login {
                         //    disabled=self.disabled,
                             placeholder="User Name",
                             value=&login_data.user_name,
-                            oninput=|e: InputData| Msg::UpdateUserName(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                            oninput=|e| Msg::UpdateUserName(e.value),
+                            onkeypress=|e| {
+                                if e.key() == "Enter" { Msg::Submit } else {Msg::NoOp}
                             },
                         />
                         <input
@@ -166,9 +166,9 @@ impl Renderable<Context, Login> for Login {
                         //    disabled=self.disabled,
                             placeholder="Password",
                             value=&login_data.password,
-                            oninput=|e: InputData| Msg::UpdatePassword(e.value),
-                            onkeypress=|e: KeyData| {
-                                if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
+                            oninput=|e| Msg::UpdatePassword(e.value),
+                            onkeypress=|e| {
+                                if e.key() == "Enter" { Msg::Submit } else {Msg::NoOp}
                             },
                             type="password",
                         />

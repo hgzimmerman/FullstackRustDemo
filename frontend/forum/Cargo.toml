@@ -12,7 +12,8 @@ util = {path = "../util"}
 routes = {path = "../routes"}
 
 #yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
-yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
+#yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "7f72c716042d2b85922f75e7ede54f4b4d49970d"}
 failure = "0.1"
 
 [features]

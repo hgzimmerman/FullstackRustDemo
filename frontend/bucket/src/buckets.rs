@@ -59,7 +59,10 @@ impl Renderable<Context, BucketModel> for ApprovedBucket {
     fn view(&self) -> Html<Context, BucketModel> {
         let bucket_uuid = self.as_ref().uuid.clone();
         html! {
-            <div class="approved-bucket-card", onclick=move |_| Msg::NavigateToBucket{bucket_uuid}, >
+            <div
+                class="approved-bucket-card",
+                onclick = |_| Msg::NavigateToBucket{bucket_uuid}, >
+
                 {&self.as_ref().bucket_name}
             </div>
         }

@@ -250,7 +250,7 @@ pub enum Msg {
 }
 
 impl Component<Context> for BucketLobby {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {

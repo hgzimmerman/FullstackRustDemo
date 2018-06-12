@@ -54,7 +54,7 @@ impl Default for Props {
 
 
 impl Component<Context> for Header {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -63,7 +63,7 @@ impl Component<Context> for Header {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
         use self::Msg::*;
         match msg {
             Login => context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()),

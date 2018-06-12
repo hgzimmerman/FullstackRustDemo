@@ -71,7 +71,7 @@ enum Msg {
 
 
 impl Component<Context> for Model {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = ();
 
     fn create(_: Self::Properties, context: &mut Env<Context, Self>) -> Self {
@@ -150,7 +150,10 @@ impl Renderable<Context, Model> for Model {
 
         html! {
             <div class="main-container", >
-                <Header: is_logged_in=self.is_logged_in,  />
+                // Apparently, the header needs to be wrapped in a div to preserve ordering.
+                <div>
+                    <Header: is_logged_in=self.is_logged_in, />
+                </div>
                 <div class="main-content", >
                     {page(&self.route)}
                 </div>

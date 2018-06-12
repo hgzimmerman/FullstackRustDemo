@@ -7,6 +7,7 @@ use failure::Error;
 
 impl Context {
     pub fn store_jwt(&mut self, jwt: String) {
+        let jwt: Result<String, Error> = Ok(jwt);
         self.local_storage.store("JWT", jwt)
     }
 

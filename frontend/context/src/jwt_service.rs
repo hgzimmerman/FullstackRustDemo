@@ -46,8 +46,9 @@ impl JwtService {
                 let (meta, data) = response.into_parts();
                 println!("META: {:?}, {:?}", meta, data);
                 if meta.status.is_success() {
-                    let jwt = data.expect("Expected JWT response to be a string");
+                    let jwt: String = data.expect("Expected JWT response to be a string");
                     let mut storage_service = StorageService::new(Area::Local);
+                    let jwt: Result<String, Error> = Ok(jwt);
                     storage_service.store("JWT", jwt);
                 } else {
                     let mut storage_service = StorageService::new(Area::Local);

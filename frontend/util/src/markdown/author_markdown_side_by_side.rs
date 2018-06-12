@@ -27,7 +27,7 @@ impl Default for Props {
 }
 
 impl Component<Context> for AuthorMarkdownSideBySide {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -38,7 +38,7 @@ impl Component<Context> for AuthorMarkdownSideBySide {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::UpdateText(t) => {
                 self.text = t.clone();
@@ -64,7 +64,7 @@ impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide 
                     <textarea
                         class=("markdown-textarea","form-control"),
                         value=&self.text,
-                        oninput=|e: InputData| Msg::UpdateText(e.value),
+                        oninput=|e| Msg::UpdateText(e.value),
                     />
                 </div>
                 <div class="edit-markdown-half",>

@@ -37,7 +37,7 @@ impl<CTX: 'static, T> Component<CTX> for Link<T>
 where
     T: 'static + Clone + PartialEq + Default,
 {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props<T>;
 
     fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
@@ -49,7 +49,7 @@ where
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &mut Env<CTX, Self>) -> ShouldRender {
         match msg {
             Msg::Clicked => {
                 if let Some(ref mut cb) = self.callback {

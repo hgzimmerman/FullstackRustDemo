@@ -262,7 +262,7 @@ impl BucketModel {
 }
 
 impl Component<Context> for BucketModel {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {

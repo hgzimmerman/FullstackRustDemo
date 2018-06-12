@@ -65,7 +65,7 @@ impl Default for Props {
 }
 
 impl Component<Context> for PostTree {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
@@ -88,7 +88,7 @@ impl Component<Context> for PostTree {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
         match  msg {
             Msg::ToggleReplyArea => {
                 self.is_reply_active = !self.is_reply_active;

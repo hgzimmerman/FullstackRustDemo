@@ -129,7 +129,7 @@ impl BucketManagement {
 
 
 impl Component<Context> for BucketManagement {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = ();
 
 

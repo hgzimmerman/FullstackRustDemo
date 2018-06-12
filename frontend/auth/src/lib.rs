@@ -45,7 +45,7 @@ impl Default for Props {
 
 
 impl Component<Context> for AuthModel {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -55,7 +55,7 @@ impl Component<Context> for AuthModel {
 
     }
 
-    fn update(&mut self, _msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, _msg: Self::Message, _context: &mut Env<Context, Self>) -> ShouldRender {
         true
     }
 

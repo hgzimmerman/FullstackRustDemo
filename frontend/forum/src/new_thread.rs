@@ -37,7 +37,7 @@ pub struct Props {
 
 
 impl Component<Context> for NewThread {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -48,7 +48,7 @@ impl Component<Context> for NewThread {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _context: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::CreateNewThread => {
                 self.callback.emit(self.new_thread.clone());
@@ -80,7 +80,7 @@ impl Renderable<Context, NewThread> for NewThread {
                 //    disabled=self.disabled,
                     placeholder="Thread Title",
                     value=&self.new_thread.title,
-                    oninput=|e: InputData| Msg::UpdateThreadTitle(e.value),
+                    oninput=|e| Msg::UpdateThreadTitle(e.value),
 //                    onkeypress=|e: KeyData| {
 //                        if e.key == "Enter" { Msg::Submit } else {Msg::NoOp}
 //                    },

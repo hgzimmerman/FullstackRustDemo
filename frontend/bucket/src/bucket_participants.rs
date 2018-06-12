@@ -118,7 +118,7 @@ impl BucketParticipants {
 
 
 impl Component<Context> for BucketParticipants {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
 

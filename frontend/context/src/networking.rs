@@ -1,6 +1,7 @@
 use super::Context;
 
 use yew::format::Nothing;
+use yew::format::Text;
 use yew::services::fetch::{FetchTask, Request, Response};
 use yew::callback::Callback;
 
@@ -248,7 +249,7 @@ impl Context {
         let rs = self.routing.clone_without_listener();
 
         // Take a look inside the response and check if it is a 401 response, indicating that the login has expired.
-        let interceptor_closure = move |response: Response<Result<String, Error>>| {
+        let interceptor_closure = move |response: Response<Text>| {
                 let (meta, data) = response.into_parts();
                 if meta.status == 401 {
                     // Redirect to login
@@ -312,12 +313,17 @@ impl Context {
             }
         };
 
+        use yew::format::Json;
         if let Some(body) = body {
-            let request = request_builder.body(body).unwrap();
+//            let moc_body: Result<String, Error> = Ok(body);
+//            let body = Json(body);
+            let body = Ok(body);
+            let request: Request<Result<String, Error>> = request_builder.body(body).unwrap();
+//                        let request = request_builder.body(Nothing).unwrap();
             Ok(self.networking.fetch(request, interceptor_callback))
         } else {
-            let request = request_builder.body(Nothing).unwrap();
-            Ok(self.networking.fetch(request, interceptor_callback))
+            let request: Request<Nothing> = request_builder.body(Nothing).unwrap();
+            Ok(self.networking.fetch(request.into(), interceptor_callback))
         }
     }
 }

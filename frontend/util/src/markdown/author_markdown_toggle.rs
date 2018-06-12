@@ -36,7 +36,7 @@ impl Default for Props {
 }
 
 impl Component<Context> for AuthorMarkdownToggle {
-    type Msg = Msg;
+    type Message = Msg;
     type Properties = Props;
 
     fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
@@ -48,7 +48,7 @@ impl Component<Context> for AuthorMarkdownToggle {
         }
     }
 
-    fn update(&mut self, msg: Self::Msg, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message, _: &mut Env<Context, Self>) -> ShouldRender {
         match msg {
             Msg::UpdateText(t) => {
                 self.text = t.clone();
@@ -80,7 +80,7 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
                     <textarea
                         class=("markdown-textarea","form-control"),
                         value=&self.text,
-                        oninput=|e: InputData| Msg::UpdateText(e.value),
+                        oninput=|e| {Msg::UpdateText(e.value)},
                     />
                 </>
             }
