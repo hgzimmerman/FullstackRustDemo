@@ -43,9 +43,9 @@ fn successful_login() {
 
         let jwt =  ServerJwt::decode_jwt_string(jwt_string.as_str(), &fixture.secret )
             .expect("Decoded jwt token");
-        assert_eq!(jwt.sub.0, fixture.admin_user.uuid);
+        assert_eq!(jwt.0.sub.0, fixture.admin_user.uuid);
         let expected_roles: Vec<UserRole> = fixture.admin_user.roles.clone().into_iter().map(UserRole::from).collect();
-        assert_eq!(jwt.user_roles, expected_roles);
+        assert_eq!(jwt.0.user_roles, expected_roles);
     })
 }
 
@@ -61,7 +61,6 @@ fn successful_reauth() {
 
         let jwt =  ServerJwt::decode_jwt_string(jwt_string.as_str(), &fixture.secret )
             .expect("Decoded jwt token");
-        let jwt: ServerJwt = ServerJwt(jwt);
 
         auth::reauth(jwt, &fixture.secret).expect("New JWT should be provided");
     })

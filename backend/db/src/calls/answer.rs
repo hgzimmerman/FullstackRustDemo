@@ -28,6 +28,7 @@ pub struct NewAnswer {
     pub answer_text: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct AnswerData {
     pub answer: Answer,
     pub user: User,

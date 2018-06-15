@@ -118,7 +118,8 @@ impl Bucket {
 
     /// Helper function.
     /// Gets users depending on the approval column.
-    fn get_users_approval(bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    /// It will exclude the user making the request.
+    fn get_users_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, approval: bool, conn: &PgConnection) -> JoeResult<Vec<User>> {
         use schema::junction_bucket_users::dsl::junction_bucket_users;
         use schema::junction_bucket_users as junctions;
         use schema::users;
@@ -127,6 +128,7 @@ impl Bucket {
         junction_bucket_users
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))
             .filter(junctions::approved.eq(approval))
+            .filter(junctions::user_uuid.ne(user_uuid.0))
             .inner_join(users::table)
             .select(users::all_columns)
             .load::<User>(conn)
@@ -135,11 +137,11 @@ impl Bucket {
 
 
     /// This function gets all players that are part of the bucket, excluding the active user
-    pub fn get_users_with_approval(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
-        Self::get_users_approval(bucket_uuid, true, conn)
+    pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
+        Self::get_users_approval(bucket_uuid, user_uuid, true, conn)
     }
-    pub fn get_users_requiring_approval(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
-        Self::get_users_approval(bucket_uuid, false, conn)
+    fn get_users_requiring_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
+        Self::get_users_approval(bucket_uuid, user_uuid,false, conn)
     }
 
     pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<UsersInBucketData>> {
@@ -160,7 +162,7 @@ impl Bucket {
         // This is an ineffecient query. Its time will scale linearly (with a high constant) with the number of buckets the user owns.
         let bucket_users = buckets
             .into_iter()
-            .filter_map(|bucket| if let Ok(users) = Self::get_users_requiring_approval(BucketUuid(bucket.uuid), conn) {
+            .filter_map(|bucket| if let Ok(users) = Self::get_users_requiring_approval(BucketUuid(bucket.uuid), bucket_owner_uuid, conn) {
                 Some(UsersInBucketData { bucket, users })
             } else {
                 None
@@ -171,7 +173,7 @@ impl Bucket {
     }
 
     /// Is the user the owner of the bucket
-    pub fn is_user_owner(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn is_user_owner(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
         use schema::junction_bucket_users::dsl::junction_bucket_users;
         use schema::junction_bucket_users as junctions;
 
@@ -181,7 +183,8 @@ impl Bucket {
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))
             .select(junctions::owner)
             .first::<bool>(conn)
-            .map_err(Bucket::handle_error)
+            .unwrap_or(false)
+//            .map_err(Bucket::handle_error)
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?

@@ -26,8 +26,8 @@ uuid = {version = "0.6", features = ["serde", "v4"] }
 r2d2-diesel = "1.0.0"
 r2d2 = "*"
 
-rust-crypto = "0.2.36"
-frank_jwt = "3.0.0"
+#rust-crypto = "0.2.36"
+#frank_jwt = "3.0.0"
 
 serde = "1.0.14"
 #serde_json = "1.0.3"

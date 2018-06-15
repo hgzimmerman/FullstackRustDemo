@@ -106,9 +106,11 @@ fn get_users_in_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) ->
     }
     use db::user::User;
 
-    let users = Bucket::get_users_with_approval(bucket_uuid, &conn)?
+    let user_uuid: UserUuid = user.user_uuid;
+
+    let users = Bucket::get_users_with_approval(bucket_uuid, user_uuid, &conn)?
         .into_iter()
-        .filter( |u: &User| u.uuid != user.user_uuid.0 ) // Filter out the user making the request.
+//        .filter( |u: &User| u.uuid != user.user_uuid.0 ) // Filter out the user making the request.
         .map(UserResponse::from)
         .collect();
     Ok(Json(users))
