@@ -43,7 +43,7 @@ fn get_approved_buckets_for_user(user: NormalUser, conn: Conn) -> JoeResult<Json
 /// The user being approved already needs to have registered with the bucket in question.
 #[put("/<bucket_uuid>/approval?<user_uuid>")]
 fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -54,7 +54,7 @@ fn approve_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: N
 /// Entirely removes the user from the bucket.
 #[delete("/<bucket_uuid>?<user_uuid>")]
 fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -65,7 +65,7 @@ fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, user: N
 /// This will prevent other buckets from
 #[put("/<bucket_uuid>/publicity?<is_public_param>")]
 fn set_publicity(bucket_uuid: BucketUuid, is_public_param: PublicParam, user: NormalUser, conn: Conn) -> JoeResult<()> {
-    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)? {
+    if !Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn) {
         let e = WeekendAtJoesError::NotAuthorized { reason: "User must be an owner of the bucket in order to approve users." };
         return Err(e);
     }
@@ -124,8 +124,9 @@ fn get_is_current_user_owner(bucket_uuid: BucketUuid, user: NormalUser, conn: Co
         return Err(e);
     }
 
-    Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn)
-        .map(Json)
+    let is_owner: bool = Bucket::is_user_owner(user.user_uuid, bucket_uuid, &conn);
+    Ok(Json(is_owner))
+
 }
 
 /// Make a request to join the bucket.

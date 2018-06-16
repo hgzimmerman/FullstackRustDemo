@@ -27,19 +27,22 @@ const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
 
 pub const PASSWORD: &'static str = "password";
 
-
+/// This adds a couple of seconds to the compile time,
+/// but it saves a bunch of time for every request.
+lazy_static! {
+    static ref PASSWORD_HASH: String = hash_password(PASSWORD).expect("Couldn't hash password.");
+}
 
 
 impl Fixture for UserFixture {
     fn generate(conn: &PgConnection) -> Self {
 
         let secret: Secret = Secret::generate();
-        let password_hash: String = hash_password(PASSWORD).expect("Couldn't hash password.");
 
         let new_admin_user = NewUser {
             user_name: String::from(ADMIN_USER_NAME),
             display_name: String::from(ADMIN_DISPLAY_NAME),
-            password_hash: password_hash.clone(),
+            password_hash: PASSWORD_HASH.to_string(),
             failed_login_count: 0,
             banned: false,
             roles: vec![1,2,3,4] // Has all privileges
@@ -49,7 +52,7 @@ impl Fixture for UserFixture {
         let new_normal_user = NewUser {
             user_name: String::from(NORMAL_USER_NAME),
             display_name: String::from(NORMAL_DISPLAY_NAME),
-            password_hash,
+            password_hash: PASSWORD_HASH.to_string(),
             failed_login_count: 0,
             banned: false,
             roles: vec![1] // Has only basic privileges

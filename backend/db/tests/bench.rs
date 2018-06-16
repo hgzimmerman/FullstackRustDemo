@@ -16,4 +16,5 @@ extern crate uuid;
 
 
 mod calls;
-pub mod common;
+
+extern crate testing_common as common;

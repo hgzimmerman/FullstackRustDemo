@@ -6,8 +6,8 @@ use diesel::RunQueryDsl;
 use diesel::OptionalExtension;
 use diesel::QueryResult;
 use diesel::Connection;
-use common::query_helper;
-use common::database_error::{ DatabaseResult, DatabaseError};
+use query_helper;
+use database_error::{ DatabaseResult, DatabaseError};
 use migrations_internals as migrations;
 
 use std::sync::{MutexGuard, Mutex};
@@ -102,10 +102,12 @@ fn drop_database(conn: &PgConnection) ->  DatabaseResult<()> {
 
 /// Recreates the database
 fn create_database(conn: &PgConnection) ->  DatabaseResult<()> {
-    query_helper::create_database(DATABASE_NAME)
+    let db_result = query_helper::create_database(DATABASE_NAME)
         .execute(conn)
         .map_err(DatabaseError::from)
-        .map(|_| ())
+        .map(|_| ());
+    println!("Created database");
+    db_result
 }
 
 /// Creates tables

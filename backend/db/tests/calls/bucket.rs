@@ -88,7 +88,6 @@ impl Fixture for BucketFixture {
             question_1,
             question_2,
         }
-
     }
 }
 

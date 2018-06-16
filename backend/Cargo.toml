@@ -4,5 +4,6 @@ members = [
     "server",
     "db",
     "db_proc_macros",
-    "auth"
+    "auth",
+    "testing_common"
 ]

@@ -1,6 +1,3 @@
-#![feature(test)]
-extern crate test;
-
 extern crate wire;
 extern crate identifiers;
 extern crate db;
@@ -13,9 +10,6 @@ extern crate migrations_internals;
 extern crate chrono;
 extern crate uuid;
 
-
-
-mod calls;
-//pub mod common;
-
-extern crate testing_common as common;
+mod query_helper;
+mod database_error;
+pub mod setup;
