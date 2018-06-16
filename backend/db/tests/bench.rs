@@ -9,7 +9,7 @@ extern crate auth as auth_lib;
 extern crate lazy_static;
 #[macro_use]
 extern crate diesel;
-extern crate migrations_internals;
+//extern crate migrations_internals;
 extern crate chrono;
 extern crate uuid;
 

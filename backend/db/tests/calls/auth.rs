@@ -1,10 +1,12 @@
-use calls::user::{UserFixture, self};
+use calls::user::{UserFixture};
 use common::setup::*;
+use common::constants::user::{PASSWORD};
 use diesel::PgConnection;
 //use db::user::{User, NewUser};
 use db::auth;
 use wire::login::LoginRequest;
 use auth_lib::ServerJwt;
+
 
 #[test]
 fn fail_login_invalid_password() {
@@ -36,7 +38,7 @@ fn successful_login() {
     setup(|fixture: &UserFixture, conn: &PgConnection| {
         let login_request = LoginRequest {
             user_name: fixture.admin_user.user_name.clone(),
-            password: user::PASSWORD.to_string()
+            password: PASSWORD.to_string()
         };
         let jwt_string: String = auth::login(login_request, &fixture.secret, conn)
             .expect("Should have logged the user in");
@@ -54,7 +56,7 @@ fn successful_reauth() {
     setup(|fixture: &UserFixture, conn: &PgConnection| {
         let login_request = LoginRequest {
             user_name: fixture.admin_user.user_name.clone(),
-            password: user::PASSWORD.to_string()
+            password: PASSWORD.to_string()
         };
         let jwt_string: String = auth::login(login_request, &fixture.secret, conn)
             .expect("Should have logged the user in");

@@ -5,10 +5,6 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
 
-wire = { path = "../../wire"}  # TODO Remove this ???
-identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
-db = {path = "../db"}
-error = { path = "../error" }
 auth = { path = "../auth"}
 
 

@@ -2,7 +2,8 @@ use common::setup::*;
 use diesel::PgConnection;
 use db::user::{User, NewUser};
 use test::Bencher;
-use auth_lib::hash_password;
+
+use common::constants::user::{PASSWORD_HASH};
 
 
 
@@ -25,13 +26,7 @@ const ADMIN_DISPLAY_NAME: &'static str = "Admin";
 const NORMAL_USER_NAME: &'static str = "Normal User";
 const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
 
-pub const PASSWORD: &'static str = "password";
 
-/// This adds a couple of seconds to the compile time,
-/// but it saves a bunch of time for every request.
-lazy_static! {
-    static ref PASSWORD_HASH: String = hash_password(PASSWORD).expect("Couldn't hash password.");
-}
 
 
 impl Fixture for UserFixture {

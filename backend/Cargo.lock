@@ -167,9 +167,7 @@ dependencies = [
  "diesel 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "error 0.1.0",
  "identifiers 0.1.0",
- "lazy_static 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "migrations_internals 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "r2d2-diesel 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -849,14 +847,10 @@ version = "0.1.0"
 dependencies = [
  "auth 0.1.0",
  "chrono 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "db 0.1.0",
  "diesel 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "error 0.1.0",
- "identifiers 0.1.0",
  "lazy_static 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "migrations_internals 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "wire 0.1.0",
 ]
 
 [[package]]
