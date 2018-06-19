@@ -1,6 +1,7 @@
-use calls::user::{UserFixture};
+//use calls::user::{UserFixture};
+use testing_fixtures::fixtures::user::UserFixture;
+use testing_fixtures::fixtures::user::PASSWORD;
 use common::setup::*;
-use common::constants::user::{PASSWORD};
 use diesel::PgConnection;
 //use db::user::{User, NewUser};
 use db::auth;

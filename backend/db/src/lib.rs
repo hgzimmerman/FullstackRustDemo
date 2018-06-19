@@ -77,12 +77,12 @@ pub use message::Message;
 /// Holds a bunch of connections to the database and hands them out to routes as needed.
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
-pub const DATABASE_FILE: &'static str = env!("DATABASE_URL");
+pub const DATABASE_URL: &'static str = env!("DATABASE_URL");
 
 /// Initializes the pool.
-pub fn init_pool() -> Pool {
+pub fn init_pool(db_url: &str) -> Pool {
     //    let config = r2d2::Config::default();
-    let manager = ConnectionManager::<PgConnection>::new(DATABASE_FILE);
+    let manager = ConnectionManager::<PgConnection>::new(db_url);
     r2d2::Pool::new(manager).expect(
         "db pool",
     )

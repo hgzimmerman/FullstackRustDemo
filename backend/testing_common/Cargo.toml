@@ -7,6 +7,9 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 auth = { path = "../auth"}
 
+server = { path = "../server"}
+rocket = "0.3.11"
+
 
 chrono = { version = "0.4", features = ["serde"] }
 uuid = {version = "0.6", features = ["serde", "v4"] }

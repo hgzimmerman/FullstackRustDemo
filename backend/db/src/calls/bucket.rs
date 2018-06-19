@@ -124,7 +124,6 @@ impl Bucket {
         use schema::junction_bucket_users as junctions;
         use schema::users;
 
-
         junction_bucket_users
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))
             .filter(junctions::approved.eq(approval))
@@ -136,7 +135,8 @@ impl Bucket {
     }
 
 
-    /// This function gets all players that are part of the bucket, excluding the active user
+    /// This function gets all players that are part of the bucket,
+    /// excluding the active user
     pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid, true, conn)
     }

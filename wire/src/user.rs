@@ -42,7 +42,7 @@ pub struct UserRoleRequest {
 /// This is the word that should proceeded the JWT when attaching it to the Authorization header.
 pub const BEARER: &'static str = "Bearer";
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Jwt {
     /// sub is the user id
     pub sub: UserUuid,

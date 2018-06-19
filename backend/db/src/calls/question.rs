@@ -199,18 +199,20 @@ impl Question {
         // Get the question
         let question: Question = Question::get_by_uuid(question_uuid.0, conn)?;
 
+        let to_answer_data = |x: (Answer, User)| {
+            AnswerData {
+                answer: x.0,
+                user: x.1,
+            }
+        };
+
         // Get the answers and their associated users and format them into answer data.
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
             .inner_join(users)
             .load::<(Answer, User)>(conn)
             .map_err(Answer::handle_error)?
             .into_iter()
-            .map(|x| {
-                AnswerData {
-                    answer: x.0,
-                    user: x.1,
-                }
-            })
+            .map(to_answer_data)
             .collect();
 
         // Get the matching user

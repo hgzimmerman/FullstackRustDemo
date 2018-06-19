@@ -39,3 +39,9 @@ default = ["development"]
 development = []
 staging = ["production"]
 production = ["rocket/tls"]
+
+
+
+[dev-dependencies]
+testing_common = {path = "../testing_common"}
+testing_fixtures = {path = "../testing_fixtures"}

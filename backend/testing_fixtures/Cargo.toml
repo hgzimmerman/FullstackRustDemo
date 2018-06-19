@@ -1,0 +1,15 @@
+[package]
+name = "testing_fixtures"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+testing_common = {path = "../testing_common"}
+db = {path = "../db"}
+auth = { path = "../auth"}
+
+lazy_static = "1.0"
+
+[dependencies.diesel]
+version = ">=1.2.2, <1.3.0"
+features = ["postgres", "uuid", "chrono", "serde_json"]

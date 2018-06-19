@@ -172,13 +172,7 @@ mod test {
     fn password_hash_and_verify() {
         let plaintext: &str = "12345";
         let hash_1: String = hash_password(plaintext).unwrap();
-        info!("hashed_password: {}", hash_1);
-        match verify_hash(&plaintext, &hash_1) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("error: {}", e);
-            }
-        }
+        verify_hash(&plaintext, &hash_1).expect("The hash should be verified");
     }
 
     #[test]
@@ -195,12 +189,8 @@ mod test {
         let jwt = ServerJwt(jwt);
 
         let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
-        let _jwt: ServerJwt = match ServerJwt::decode_jwt_string(&jwt_string, &secret) {
-            Ok(j) => j,
-            Err(e) => {
-                panic!("{:?}",e);
-            }
-        };
+        let decoded_jwt: ServerJwt = ServerJwt::decode_jwt_string(&jwt_string, &secret).expect("JWT should be decoded from the provided string");
+        assert_eq!(jwt, decoded_jwt);
     }
     #[test]
     fn jwt_tampering_detected() {

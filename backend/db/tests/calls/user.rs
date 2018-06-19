@@ -3,7 +3,6 @@ use diesel::PgConnection;
 use db::user::{User, NewUser};
 use test::Bencher;
 
-use common::constants::user::{PASSWORD_HASH};
 
 
 
@@ -12,56 +11,8 @@ use db::RetrievableUuid;
 use identifiers::user::UserUuid;
 use auth_lib::Secret;
 
-
-pub struct UserFixture {
-    pub admin_user: User,
-    pub normal_user: User,
-    pub secret: Secret
-}
-
-
-const ADMIN_USER_NAME: &'static str = "Admin";
-const ADMIN_DISPLAY_NAME: &'static str = "Admin";
-
-const NORMAL_USER_NAME: &'static str = "Normal User";
-const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
-
-
-
-
-impl Fixture for UserFixture {
-    fn generate(conn: &PgConnection) -> Self {
-
-        let secret: Secret = Secret::generate();
-
-        let new_admin_user = NewUser {
-            user_name: String::from(ADMIN_USER_NAME),
-            display_name: String::from(ADMIN_DISPLAY_NAME),
-            password_hash: PASSWORD_HASH.to_string(),
-            failed_login_count: 0,
-            banned: false,
-            roles: vec![1,2,3,4] // Has all privileges
-        };
-        let admin_user: User = User::create(new_admin_user, conn).expect("Couldn't create new admin user");
-
-        let new_normal_user = NewUser {
-            user_name: String::from(NORMAL_USER_NAME),
-            display_name: String::from(NORMAL_DISPLAY_NAME),
-            password_hash: PASSWORD_HASH.to_string(),
-            failed_login_count: 0,
-            banned: false,
-            roles: vec![1] // Has only basic privileges
-        };
-        let normal_user: User = User::create(new_normal_user, conn).expect("Couldn't create new normal user");
-
-
-        UserFixture {
-            admin_user,
-            normal_user,
-            secret
-        }
-    }
-}
+use testing_fixtures::fixtures::user::UserFixture;
+use testing_fixtures::fixtures::user::{PASSWORD_HASH, ADMIN_USER_NAME};
 
 /// Just tests the fixture
 #[test]
@@ -193,7 +144,7 @@ fn crd_user_bench(b: &mut Bencher) {
     setup(|_fixture: &EmptyFixture, conn: &PgConnection| {
 
         fn crud(conn: &PgConnection) {
-            const USER_NAME: &'static str = ADMIN_USER_NAME;
+            const USER_NAME: &'static str = "OldDisplayName";
             const NEW_DISPLAY_NAME: &'static str = "NewDisplayName";
 
             // Delete the entry to avoid

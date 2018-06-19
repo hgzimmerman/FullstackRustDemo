@@ -15,3 +15,4 @@ extern crate uuid;
 mod calls;
 
 extern crate testing_common as common;
+extern crate testing_fixtures;

@@ -1,4 +1,5 @@
-use calls::user::UserFixture;
+//use calls::user::UserFixture;
+use testing_fixtures::fixtures::user::UserFixture;
 use db::bucket::{Bucket, NewBucket, NewBucketUser};
 use db::question::{Question, NewQuestion};
 use db::answer::{Answer, NewAnswer, AnswerData};

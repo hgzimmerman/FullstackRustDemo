@@ -104,13 +104,11 @@ fn get_users_in_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) ->
         let e = WeekendAtJoesError::NotAuthorized { reason: "User has not been approved to participate in the bucket questions session." };
         return Err(e);
     }
-    use db::user::User;
 
     let user_uuid: UserUuid = user.user_uuid;
 
     let users = Bucket::get_users_with_approval(bucket_uuid, user_uuid, &conn)?
         .into_iter()
-//        .filter( |u: &User| u.uuid != user.user_uuid.0 ) // Filter out the user making the request.
         .map(UserResponse::from)
         .collect();
     Ok(Json(users))

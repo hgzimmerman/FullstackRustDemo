@@ -20,7 +20,7 @@ use identifiers::user::UserUuid;
 
 /// Because the JWT struct lives in the wire crate,
 /// this NewType is used to define other functions on it.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct ServerJwt(pub Jwt);
 
 impl ServerJwt {

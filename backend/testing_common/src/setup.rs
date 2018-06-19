@@ -9,6 +9,8 @@ use diesel::Connection;
 use query_helper;
 use database_error::{ DatabaseResult, DatabaseError};
 use migrations_internals as migrations;
+use rocket::local::Client;
+use server::{Config, init_rocket};
 
 use std::sync::{MutexGuard, Mutex};
 
@@ -75,6 +77,32 @@ pub fn setup<Fun, Fix >( mut test_function: Fun )
     test_function (&fixture, &actual_connection);
 }
 
+
+pub fn setup_client<Fun, Fix >( mut test_function: Fun )
+    where
+        Fun: FnMut (&Fix, Client), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
+        Fix: Fixture
+{
+    let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
+
+    let actual_connection: PgConnection = PgConnection::establish(DATABASE_URL).expect("Database not available.");
+    run_migrations(&actual_connection);
+    let fixture: Fix = Fix::generate(&actual_connection);
+
+    let mut config = Config::default();
+    config.db_url = DATABASE_URL.to_string(); // set the testing db url
+    let rocket = init_rocket(config);
+    let client = Client::new(rocket).expect(
+        "Valid rocket instance",
+    );
+
+    test_function (&fixture, client);
+}
+
 /// Drops the database and then recreates it.
 /// The guarantee that this function provides is that the test database will be in a default
 /// state, without any run migrations after this ran.
@@ -113,7 +141,8 @@ fn create_database(conn: &PgConnection) ->  DatabaseResult<()> {
 /// Creates tables
 fn run_migrations(conn: &PgConnection) {
     use std::path::Path;
-    let migrations_dir = Path::new("migrations");
+    // TODO this is a hack to make running the tests possible in both the db directory and the server directory
+    let migrations_dir = Path::new("../db/migrations");
     migrations::run_pending_migrations_in_directory(conn, migrations_dir, &mut ::std::io::sink())
         .expect("Couldn't run migrations.");
 }

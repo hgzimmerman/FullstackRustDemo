@@ -16,9 +16,16 @@ impl UserUuid {
     }
 }
 
+impl AsRef<Uuid> for UserUuid {
+    fn as_ref(&self) -> &Uuid {
+        &self.0
+    }
+}
+
 const PARAM_NAME: &'static str = "user_uuid";
 
 impl Display for UserUuid {
+    //noinspection ALL
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(f, "{}", self.0)
     }

@@ -49,3 +49,4 @@ features = ["postgres", "uuid", "chrono", "serde_json"]
 #migrations_internals = "~1.2.0"
 #lazy_static = "1.0"
 testing_common = {path = "../testing_common"}
+testing_fixtures = {path = "../testing_fixtures"}

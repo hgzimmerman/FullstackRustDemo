@@ -1,4 +1,5 @@
-use calls::user::UserFixture;
+//use calls::user::UserFixture;
+use testing_fixtures::fixtures::user::UserFixture;
 use db::forum::{Forum, NewForum};
 use db::thread::{Thread, NewThread, MinimalThreadData};
 use db::post::{Post, NewPost, EditPostChangeset, PostData};
@@ -11,6 +12,7 @@ use identifiers::thread::ThreadUuid;
 use identifiers::post::PostUuid;
 use uuid::Uuid;
 use test::Bencher;
+
 
 
 const FORUM_TITLE: &'static str = "Forum Title";

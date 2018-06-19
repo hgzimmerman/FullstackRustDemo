@@ -27,10 +27,12 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) 
     // This will clean up any locked status if the lock has already expired.
     if user.check_if_locked(conn).map_err(
         |_| {
+            info!("Db error while checking for locks.");
             LoginError::OtherError("DB error")
         },
     )?
     {
+        info!("Account locked.");
         return Err(LoginError::AccountLocked);
     }
 
