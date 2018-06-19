@@ -1,5 +1,4 @@
 use diesel::PgConnection;
-//use diesel::database_error::DatabaseResult;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;
@@ -11,14 +10,22 @@ use database_error::{ DatabaseResult, DatabaseError};
 use migrations_internals as migrations;
 use rocket::local::Client;
 use server::{Config, init_rocket};
+use testing_fixtures::Fixture;
 
 use std::sync::{MutexGuard, Mutex};
 
 
 const DATABASE_NAME: &'static str = "weekend_test";
+
+/// Points to the database that tests will be performed on.
+/// The database schema will be destroyed and recreated before every test.
+/// It absolutely should _never_ point to a production database,
+/// as tests ran using it will likely create an admin account that has known login credentials.
 pub const DATABASE_URL: &'static str = env!("TEST_DATABASE_URL");
 
+/// Should point to the base postgres account.
 const DROP_DATABASE_URL: &'static str = env!("DROP_DATABASE_URL");
+
 
 
 /// This creates a singleton of the base database connection.
@@ -29,31 +36,13 @@ const DROP_DATABASE_URL: &'static str = env!("DROP_DATABASE_URL");
 /// The setup method will lock it and use it to reset the database.
 ///
 /// It is ok if a test fails and poisons the mutex, as the one place where it is used disregards the poison.
-/// Disregarding the poison is fine because code using the mutexed value never modifies the value,
-/// so there is no indeterminate state to contend with.
+/// Disregarding the poison is fine because code using the mutex-ed value never modifies the value,
+/// so there is no indeterminate state to contend with if a prior test has panicked.
 lazy_static! {
     static ref CONN: Mutex<PgConnection> =
         Mutex::new(PgConnection::establish(DROP_DATABASE_URL).expect("Database not available"));
 }
 
-
-/// The Fixture trait should be implemented for collections of data used in testing.
-/// Because it can be instantiated using just a connection to the database,
-/// it allows the creation of the type in question and allows data generated at row insertion time
-/// (UUIDs) to be made available to the body of tests.
-pub trait Fixture {
-    fn generate(conn: &PgConnection) -> Self;
-}
-
-/// Because some tests may not require any initial database state, but still utilize the connection,
-/// This Fixture is provided to meet that need.
-pub struct EmptyFixture;
-
-impl Fixture for EmptyFixture {
-    fn generate(_conn: &PgConnection) -> Self {
-        EmptyFixture
-    }
-}
 
 
 /// Sets up the database and runs the provided closure where the test code should be present.
@@ -65,22 +54,25 @@ pub fn setup<Fun, Fix >( mut test_function: Fun )
         Fun: FnMut (&Fix, &PgConnection), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
         Fix: Fixture
 {
+    // Sleep-wait for the one connection to the administration account database connection to become available.
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
     };
     reset_database(&admin_conn);
 
-    let actual_connection: PgConnection = PgConnection::establish(DATABASE_URL).expect("Database not available.");
-    run_migrations(&actual_connection);
-    let fixture: Fix = Fix::generate(&actual_connection);
-    test_function (&fixture, &actual_connection);
+    // Create a connection to the test database.
+    let conn: PgConnection = PgConnection::establish(DATABASE_URL).expect("Database not available.");
+    run_migrations(&conn);
+    let fixture: Fix = Fix::generate(&conn);
+    test_function (&fixture, &conn);
 }
 
-
+/// Sets up the provided test fixture much like the `setup()` funciton,
+/// except that it provides a Rocket client instead of the raw database connection.
 pub fn setup_client<Fun, Fix >( mut test_function: Fun )
     where
-        Fun: FnMut (&Fix, Client), // The FnMut adds support for benchers, as they are required to mutate on each iteration.
+        Fun: FnMut (&Fix, Client), // The FnMut adds support for `benchers`, as they are required to mutate on each iteration.
         Fix: Fixture
 {
     let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
@@ -112,7 +104,7 @@ fn reset_database(conn: &PgConnection) {
     create_database(&conn).expect("Could not create Database");
 }
 
-/// Drops the database
+/// Drops the database, completely removing every table (and therefore every row) in the database.
 fn drop_database(conn: &PgConnection) ->  DatabaseResult<()> {
 
     if pg_database_exists(&conn, DATABASE_NAME)? {
@@ -134,17 +126,19 @@ fn create_database(conn: &PgConnection) ->  DatabaseResult<()> {
         .execute(conn)
         .map_err(DatabaseError::from)
         .map(|_| ());
-    println!("Created database");
+    println!("Created database:  {}", DATABASE_NAME);
     db_result
 }
 
-/// Creates tables
+/// Creates tables in the database.
 fn run_migrations(conn: &PgConnection) {
     use std::path::Path;
-    // TODO this is a hack to make running the tests possible in both the db directory and the server directory
-    let migrations_dir = Path::new("../db/migrations");
+    // This directory traversal allows this library to be used by any crate in the `backend` crate.
+    const MIGRATIONS_DIRECTORY: &'static str = "../db/migrations";
+
+    let migrations_dir: &Path = Path::new(MIGRATIONS_DIRECTORY);
     migrations::run_pending_migrations_in_directory(conn, migrations_dir, &mut ::std::io::sink())
-        .expect("Couldn't run migrations.");
+        .expect("Could not run migrations.");
 }
 
 table! {
@@ -154,6 +148,7 @@ table! {
     }
 }
 
+/// Convenience function used when dropping the database
 fn pg_database_exists(conn: &PgConnection, database_name: &str) -> QueryResult<bool> {
     use self::pg_database::dsl::*;
 

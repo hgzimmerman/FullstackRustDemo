@@ -1,8 +1,8 @@
 //! This module contains code that converts data between the request/response
-//! types and the database/data types.
+//! types and the database row data types.
 //!
 //! This mostly consists of the impls for From, but also contains accessory code
-//! for acomplishing that.
+//! for accomplishing that.
 
 pub mod user;
 pub mod article;

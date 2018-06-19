@@ -77,7 +77,10 @@ pub struct Config {
     /// The server should fail to start if the secret key is less than 128 characters long.
     secret_key: Option<String>,
     /// The url of the database to which the server will connect
-    pub db_url: String
+    pub db_url: String,
+    /// Determines if CORS support is enabled.
+    /// CORS is enabled by default in development mode.
+    enable_cors: bool
 }
 
 impl Default for Config {
@@ -85,7 +88,8 @@ impl Default for Config {
         Config {
             create_admin: false,
             secret_key: None,
-            db_url: db::DATABASE_URL.to_string()
+            db_url: db::DATABASE_URL.to_string(),
+            enable_cors: false
         }
     }
 }
@@ -95,8 +99,8 @@ impl Default for Config {
 pub fn init_rocket(config: Config) -> Rocket {
 
     let optionally_attach_cors = |rocket: Rocket| {
-        if cfg!(feature = "development") {
-            warn!("Development mode enabled. Enabling CORS.");
+        if cfg!(feature = "development") || config.enable_cors {
+            warn!("Enabling CORS.");
             let (allowed_origins, failed_origins) = AllowedOrigins::some(&["http://[::1]:8000", "http://localhost:8000", "http://localhost:8001"]);
             assert!(failed_origins.is_empty());
             let options = rocket_cors::Cors {
@@ -118,9 +122,9 @@ pub fn init_rocket(config: Config) -> Rocket {
 
 
     // The secret is used to generate and verify JWTs.
-    let secret: Secret = if let Some(key) = config.secret_key {
+    let secret: Secret = if let Some(ref key) = config.secret_key {
         info!("Using a user-supplied secret key.");
-        Secret::from_user_supplied_string(key)
+        Secret::from_user_supplied_string(&key)
     } else {
         info!("Generating a random 256 character secret key.");
         Secret::generate()
@@ -129,10 +133,10 @@ pub fn init_rocket(config: Config) -> Rocket {
     // The banned set is a set of user ids that are kept in memory.
     // This is done to prevent banned users with active JWTs from being authenticated, all without every
     // authentication attempt having to check the database.
-    let banned_set = BannedSet::new();
+    let banned_set: BannedSet = BannedSet::new();
 
     // A pool of database connections. These will be distributed to threads as they service requests.
-    let db_pool = db::init_pool(&config.db_url);
+    let db_pool: db::Pool = db::init_pool(&config.db_url);
 
     // Create a default Admin user if configured to do so.
     if config.create_admin {
@@ -227,11 +231,13 @@ pub fn parse_arguments() -> Config {
     let secret_key: Option<String> = matches.value_of(SECRET_KEY).map(
         String::from,
     );
-    let db_url = db::DATABASE_URL.to_string();
+    let db_url: String = db::DATABASE_URL.to_string();
+
     Config {
         create_admin,
         secret_key,
-        db_url
+        db_url,
+        enable_cors: false
     }
 }
 

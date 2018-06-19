@@ -9,10 +9,10 @@ use test::Bencher;
 use db::CreatableUuid;
 use db::RetrievableUuid;
 use identifiers::user::UserUuid;
-use auth_lib::Secret;
 
 use testing_fixtures::fixtures::user::UserFixture;
-use testing_fixtures::fixtures::user::{PASSWORD_HASH, ADMIN_USER_NAME};
+use testing_fixtures::fixtures::user::ADMIN_USER_NAME;
+use testing_fixtures::EmptyFixture;
 
 /// Just tests the fixture
 #[test]

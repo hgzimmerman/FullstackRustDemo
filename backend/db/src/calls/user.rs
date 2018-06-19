@@ -34,7 +34,7 @@ pub struct User {
     /// If the user fails a password attempt, lock them out for n seconds.
     pub locked: Option<NaiveDateTime>,
     pub failed_login_count: i32,
-    /// If the user is banned, they cannot log in without being unbanned.
+    /// If the user is banned, they cannot log in or access routes that require JWT tokens.
     pub banned: bool,
     /// The roles of the user.
     pub roles: Vec<i32>, // currently this is stored as an int. It would be better to store it as an enum, if diesel-enum serialization can be made to work.
@@ -101,9 +101,8 @@ impl User {
     pub fn is_user_banned(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
         use schema::users::dsl::*;
 
-        let m_user_uuid = user_uuid.0;
         users
-            .find(m_user_uuid)
+            .find(user_uuid.0)
             .select(banned)
             .first::<bool>(conn)
             .map_err(User::handle_error)
@@ -160,6 +159,7 @@ impl User {
         let current_date = Utc::now().naive_utc();
         let delay_seconds: i64 = (current_failed_attempts * 2).into(); // Todo: come up with a better function than this
         let expire_datetime = current_date + Duration::seconds(delay_seconds);
+        let new_failed_attempts = current_failed_attempts + 1; // Increment the failed count
 
         let target = users.filter(
             users::uuid.eq(user_uuid.0),
@@ -168,9 +168,8 @@ impl User {
             .set((
                 locked.eq(expire_datetime),
                 failed_login_count.eq(
-                    current_failed_attempts +
-                        1,
-                ), // Increment the failed count
+                    new_failed_attempts
+                ),
             ))
             .execute(conn)
             .map_err(User::handle_error)?;
@@ -178,6 +177,7 @@ impl User {
         return Ok(expire_datetime);
     }
 
+    /// Banns or unbans the user.
     pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;
         use schema::users;
@@ -197,7 +197,6 @@ impl User {
         use schema::users::dsl::*;
         use schema::users;
 
-        //        let m_user_uuid: Uuid = user_id.0;
         let user = User::get_by_uuid(user_uuid.0, conn)?;
 
         let user_role_id: i32 = i32::from(user_role);
@@ -221,12 +220,11 @@ impl User {
 
     /// Gets a number of users at specified offsets.
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
-        //        use schema::users::dsl::*;
         use schema::users;
         use diesel_extensions::pagination::Paginate;
 
         users::table
-            .filter(users::uuid.eq(users::uuid)) // NoOp filter to get the paginate function to work.
+            .order(users::user_name)
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<User>(conn)
@@ -235,14 +233,13 @@ impl User {
 
     /// Updates the user's display name.
     pub fn update_user_display_name(current_user_name: String, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
-
         use schema::users::dsl::*;
 
         let target = users.filter(
             user_name.eq(current_user_name),
         );
 
-        info!("Updating the user display name");
+        info!("Updating user display name");
         diesel::update(target)
             .set(display_name.eq(
                 new_display_name,

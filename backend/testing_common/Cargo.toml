@@ -6,6 +6,7 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 [dependencies]
 
 auth = { path = "../auth"}
+testing_fixtures = {path = "../testing_fixtures"}
 
 server = { path = "../server"}
 rocket = "0.3.11"

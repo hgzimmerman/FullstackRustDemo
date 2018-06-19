@@ -2,7 +2,7 @@ use auth::Secret;
 use diesel::PgConnection;
 use db::CreatableUuid;
 use db::user::{NewUser, User};
-use testing_common::setup::Fixture;
+use Fixture;
 
 use auth::hash_password;
 

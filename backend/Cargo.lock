@@ -855,6 +855,7 @@ dependencies = [
  "migrations_internals 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rocket 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "server 0.1.0",
+ "testing_fixtures 0.1.0",
  "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -863,10 +864,10 @@ name = "testing_fixtures"
 version = "0.1.0"
 dependencies = [
  "auth 0.1.0",
+ "chrono 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "db 0.1.0",
  "diesel 1.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "testing_common 0.1.0",
 ]
 
 [[package]]

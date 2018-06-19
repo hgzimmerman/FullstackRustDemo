@@ -4,9 +4,11 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-testing_common = {path = "../testing_common"}
+#testing_common = {path = "../testing_common"}
 db = {path = "../db"}
 auth = { path = "../auth"}
+
+chrono = { version = "0.4", features = ["serde"] }
 
 lazy_static = "1.0"
 

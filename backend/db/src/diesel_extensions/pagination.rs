@@ -48,6 +48,16 @@ impl<T> Paginated<T> {
         let total_pages = (total as f64 / per_page as f64).ceil() as i64;
         Ok((records, total_pages))
     }
+
+    // TODO test if this actually works. It may be better to structure it like the above query and just not return the total pages value.
+    #[allow(dead_code)]
+    pub fn load_values<U>(self, conn: &PgConnection) -> QueryResult<Vec<U>>
+    where
+        Self: LoadQuery<PgConnection, U>
+    {
+        let results = self.load::<U>(conn)?;
+        Ok(results)
+    }
 }
 
 impl<T: Query> Query for Paginated<T> {

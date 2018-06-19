@@ -1,7 +1,10 @@
 //! This module is responsible for facilitating interaction with the database.
 //! Pools and Connections are defined which allow a pool to be specified at startup, and for routes to request a connection from the pool.
 //! The files in this module contain functions that interact with the type specified by the filename.
-//! These functions are analagous to stored procedures.
+//!
+//! These functions are analogous to stored procedures with the caveat that performance may be lower
+//! due to aggregation and organization of types belonging to different tables occurs server-side
+//! instead of on the database.
 
 
 #![feature(use_extern_macros)]
@@ -124,53 +127,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
         }
     }
 }
-
-//
-//pub trait Creatable<T> {
-//    fn create(insert: T, conn: &PgConnection) -> JoeResult<Self>
-//    where
-//        Self: Sized;
-//}
-//
-//pub trait Retrievable<'a> {
-//    fn get_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
-//    where
-//        Self: 'a + Sized,
-//        &'a Self: Identifiable;
-//
-//    fn get_all(conn: &PgConnection) -> JoeResult<Vec<Self>>
-//    where
-//        Self: 'a + Sized,
-//        &'a Self: Identifiable;
-//
-//    fn exists(id: i32, conn: &PgConnection) -> JoeResult<bool>
-//    where
-//        Self: 'a + Sized,
-//        &'a Self: Identifiable;
-//
-//    // fn get_paginated(page_index: i64, page_size: i64, conn: &Conn) -> Result<Vec<Self>, WeekendAtJoesError>
-//    //     where
-//    //         Self: Sized;
-//}
-//
-//trait Deletable<'a> {
-//    /// The delete operation will fail if any children exist: `ForeignKeyViolation`.
-//    /// A separate, safe-delete operation should be implemented that cleans up all children before this runs.
-//    fn delete_by_id(id: i32, conn: &PgConnection) -> JoeResult<Self>
-//    where
-//        Self: ErrorFormatter,
-//        Self: 'a + Sized,
-//        &'a Self: Identifiable;
-//}
-
-///// Type tag that indicates that the tagged type can be created, retrieved, and deleted.
-///// This collection of abilities means that it is safe to use in integration tests.
-//trait CRD<'a, T>
-//where
-//    Self: Creatable<T> + Retrievable<'a> + Deletable<'a>
-//{
-//}
-
 
 
 use uuid::Uuid;
