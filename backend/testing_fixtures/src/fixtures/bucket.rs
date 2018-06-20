@@ -1,7 +1,6 @@
 use fixtures::user::UserFixture;
 use db::bucket::{Bucket, NewBucket, NewBucketUser};
 use db::question::{Question, NewQuestion};
-use db::answer::{Answer, NewAnswer, AnswerData};
 
 use db::CreatableUuid;
 

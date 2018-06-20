@@ -73,6 +73,14 @@ table! {
 }
 
 table! {
+    post_downvotes (uuid) {
+        uuid -> Uuid,
+        post_uuid -> Uuid,
+        user_uuid -> Uuid,
+    }
+}
+
+table! {
     posts (uuid) {
         uuid -> Uuid,
         thread_uuid -> Uuid,
@@ -82,6 +90,14 @@ table! {
         modified_date -> Nullable<Timestamp>,
         content -> Varchar,
         censored -> Bool,
+    }
+}
+
+table! {
+    post_upvotes (uuid) {
+        uuid -> Uuid,
+        post_uuid -> Uuid,
+        user_uuid -> Uuid,
     }
 }
 
@@ -130,6 +146,10 @@ joinable!(junction_chat_users -> chats (chat_uuid));
 joinable!(junction_chat_users -> users (user_uuid));
 joinable!(messages -> chats (chat_uuid));
 joinable!(messages -> users (author_uuid));
+joinable!(post_downvotes -> posts (post_uuid));
+joinable!(post_downvotes -> users (user_uuid));
+joinable!(post_upvotes -> posts (post_uuid));
+joinable!(post_upvotes -> users (user_uuid));
 joinable!(posts -> threads (thread_uuid));
 joinable!(posts -> users (author_uuid));
 joinable!(questions -> buckets (bucket_uuid));
@@ -146,7 +166,9 @@ allow_tables_to_appear_in_same_query!(
     junction_bucket_users,
     junction_chat_users,
     messages,
+    post_downvotes,
     posts,
+    post_upvotes,
     questions,
     threads,
     users,

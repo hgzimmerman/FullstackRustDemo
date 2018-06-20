@@ -25,4 +25,16 @@ CREATE TABLE posts (
     modified_date TIMESTAMP,
     content VARCHAR NOT NULL,
     censored BOOLEAN NOT NULL
-)
+);
+
+CREATE TABLE post_upvotes (
+    uuid Uuid PRIMARY KEY NOT NULL Default gen_random_uuid(),
+    post_uuid UUID NOT NULL REFERENCES posts(uuid) ON DELETE CASCADE,
+    user_uuid UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE
+);
+
+CREATE TABLE post_downvotes (
+    uuid Uuid PRIMARY KEY NOT NULL Default gen_random_uuid(),
+    post_uuid UUID NOT NULL REFERENCES posts(uuid) ON DELETE CASCADE,
+    user_uuid UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE
+);

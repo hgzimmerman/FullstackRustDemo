@@ -6,11 +6,10 @@ use db::thread::{Thread, NewThread};
 use db::Conn;
 use wire::thread::{NewThreadRequest, ThreadResponse};
 use wire::thread::MinimalThreadResponse;
-//use auth::user_authorization::NormalUser;
-//use auth::user_authorization::ModeratorUser;
 use error::*;
 use identifiers::thread::ThreadUuid;
 use identifiers::forum::ForumUuid;
+use identifiers::user::UserUuid;
 
 use auth_lib::user_authorization::NormalUser;
 use auth_lib::user_authorization::ModeratorUser;
@@ -73,12 +72,17 @@ fn get_threads_by_forum_id(forum_uuid: ForumUuid, index: i32, conn: Conn) -> Joe
 
 /// Gets the entire contents of a thread.
 /// The thread info, the posts, and the author of the thread.
+///
+/// If a JWT is attached, then the posts in the returned thread will have
+/// info about that user's votes for each post returned.
 #[get("/<thread_uuid>")]
-fn get_thread_contents(thread_uuid: ThreadUuid, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
-    Thread::get_full_thread(thread_uuid, &conn)
+fn get_thread_contents(thread_uuid: ThreadUuid, user: Option<NormalUser>, conn: Conn) -> JoeResult<Json<ThreadResponse>> {
+    let user_uuid: Option<UserUuid> = user.map(|x| x.user_uuid);
+    Thread::get_full_thread(thread_uuid, user_uuid, &conn)
         .map(ThreadResponse::from)
         .map(Json)
 }
+
 
 
 impl Routable for Thread {

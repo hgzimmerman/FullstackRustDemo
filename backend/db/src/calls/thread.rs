@@ -11,6 +11,7 @@ use error::JoeResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::thread::ThreadUuid;
+use identifiers::user::UserUuid;
 
 use post::{Post, NewPost};
 use post::{PostData, ChildlessPostData};
@@ -179,11 +180,9 @@ impl Thread {
     }
 
     /// Gets every bit of data related to a thread.
-    pub fn get_full_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<ThreadData> {
+    pub fn get_full_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<ThreadData> {
         let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
-//        let root_post: Post = Post::get_root_post(thread_uuid, conn)?;
-//        let post: PostData = root_post.get_post_data(conn)?;
-        let post: PostData = Post::get_posts_in_thread(thread_uuid, conn)?;
+        let post: PostData = Post::get_posts_in_thread(thread_uuid, user_uuid, conn)?;
         let user = User::get_by_uuid(thread.author_uuid, conn)?;
         Ok(ThreadData { thread, post, user })
     }

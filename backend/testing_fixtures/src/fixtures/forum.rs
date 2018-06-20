@@ -1,11 +1,10 @@
 use diesel::PgConnection;
 use chrono::Utc;
-use chrono::Duration;
 use Fixture;
 
 use db::forum::{Forum, NewForum};
-use db::thread::{Thread, NewThread, MinimalThreadData};
-use db::post::{Post, NewPost, EditPostChangeset, PostData};
+use db::thread::{Thread, NewThread};
+use db::post::{Post, NewPost};
 
 use fixtures::user::UserFixture;
 
@@ -28,8 +27,8 @@ const POST_3_CONTENT: &'static str = "Post 3 content";
 pub struct ForumFixture {
     pub user_fixture: UserFixture,
     pub forum: Forum,
-    pub thread_1: Thread,
-    pub thread_2: Thread,
+    pub populated_thread: Thread,
+    pub empty_thread: Thread,
     pub post_1: Post,
     pub post_2: Post,
     pub post_3: Post,
@@ -87,8 +86,8 @@ impl Fixture for ForumFixture {
         ForumFixture {
             user_fixture,
             forum,
-            thread_1,
-            thread_2,
+            populated_thread: thread_1,
+            empty_thread: thread_2,
             post_1,
             post_2,
             post_3,

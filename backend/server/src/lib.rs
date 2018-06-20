@@ -68,7 +68,8 @@ use rocket_cors::AllowedOrigins;
 
 use log::{info, error, warn};
 
-#[derive(Clone)]
+/// Configuration object for rocket initialization.
+#[derive(Clone, Debug)]
 pub struct Config {
     /// If this is true, an Admin account will be created at app startup if it has not been done so already.
     create_admin: bool,
@@ -98,6 +99,8 @@ impl Default for Config {
 ///Initialize the webserver
 pub fn init_rocket(config: Config) -> Rocket {
 
+    info!("Initializing rocket with config: {:#?}", config);
+
     let optionally_attach_cors = |rocket: Rocket| {
         if cfg!(feature = "development") || config.enable_cors {
             warn!("Enabling CORS.");
@@ -109,13 +112,12 @@ pub fn init_rocket(config: Config) -> Rocket {
                     .into_iter()
                     .map(From::from)
                     .collect(),
-                //        allowed_headers: AllowedHeaders::some(&["Authorization", "Accept",]),
                 allow_credentials: true,
                 ..Default::default()
             };
             rocket.attach(options)
         } else {
-            info!("Development not enabled. Using default CORS.");
+            info!("Using default CORS.");
             rocket
         }
     };
@@ -147,7 +149,7 @@ pub fn init_rocket(config: Config) -> Rocket {
         }
     }
 
-    ///Path should be an &str that starts with a /
+    /// Path should be an &str that starts with a /
     fn format_api(path: &str) -> String {
         String::from("/api") + path
     }
