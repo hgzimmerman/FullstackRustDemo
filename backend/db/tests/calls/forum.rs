@@ -259,14 +259,13 @@ fn voting_many() {
         Post::vote(upvote, conn).expect("Vote should be cast");
 
         let posts: Vec<Post> = vec![fixture.post_1.clone(), fixture.post_2.clone(), fixture.post_3.clone()];
-        let posts_and_votes = Post::get_votes_for_posts(posts, Some(admin_user_uuid), conn).expect("should get vote counts");
+        let posts_and_votes = Post::get_votes_for_posts(&posts, Some(admin_user_uuid), conn).expect("should get vote counts");
 
         assert_eq!(posts_and_votes.len(), 3);
-        assert_eq!(posts_and_votes[0].0, fixture.post_1);
-        assert_eq!(posts_and_votes[0].1.up, 2);
-        assert!(posts_and_votes[0].1.user_voted_up);
-        assert_eq!(posts_and_votes[1].1.up, 1);
-        assert!(!posts_and_votes[1].1.user_voted_up);
+        assert_eq!(posts_and_votes[0].up, 2);
+        assert!(posts_and_votes[0].user_voted_up);
+        assert_eq!(posts_and_votes[1].up, 1);
+        assert!(!posts_and_votes[1].user_voted_up);
 
     });
 }

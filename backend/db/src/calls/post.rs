@@ -287,10 +287,11 @@ impl Post {
             .load::<Post>(conn)
             .map_err(Post::handle_error)?;
 
-        let posts_and_counts: Vec<(Post, VoteCounts)> = Post::get_votes_for_posts(user_posts, Some(user_uuid), conn)?;
+        let votes = Post::get_votes_for_posts(&user_posts, Some(user_uuid), conn)?;
+        let posts_and_votes: Vec<(Post, VoteCounts)> = user_posts.into_iter().zip(votes.into_iter()).collect();
 
         return Ok(
-            posts_and_counts
+            posts_and_votes
                 .into_iter()
                 .map(|p_and_c: (Post, VoteCounts)| {
                     let (post, votes) = p_and_c;
@@ -371,11 +372,13 @@ impl Post {
         }
         // We now know that there is at least one post.
 
-        let mut posts_and_votes: Vec<(Post, VoteCounts)> = Post::get_votes_for_posts(posts, user_uuid, conn)?;
+        let votes = Post::get_votes_for_posts(&posts, user_uuid, conn)?;
+        let mut posts_and_votes: Vec<(Post, VoteCounts)> = posts.into_iter().zip(votes.into_iter()).collect();
 
         let mut user_uuids: Vec<Uuid> = posts_and_votes.iter()
             .map(|post| post.0.author_uuid)
             .collect();
+
         // It isn't ideal to sort these, so this approach to deduplication works fine.
         let set: HashSet<_> = user_uuids.drain(..).collect(); // dedup
         user_uuids.extend(set.into_iter());
@@ -626,13 +629,14 @@ impl Post {
         Ok(counts)
     }
 
+    // TODO make this take a reference to a vector of posts, then only return the votes, not a tuple.
     /// Given a vector of posts, make a request to get the vote counts for each and associate the counts with the posts.
-    pub fn get_votes_for_posts(posts: Vec<Post>, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<Vec<(Post, VoteCounts)>> {
+    pub fn get_votes_for_posts(posts: &Vec<Post>, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<Vec<VoteCounts>> {
         use diesel::GroupedBy;
 
-        let counts = match user_uuid {
+        match user_uuid {
             Some(user_uuid) => {
-                let up_counts: Vec<(i64, bool)> = PostUpvote::belonging_to(&posts)
+                let up_counts: Vec<(i64, bool)> = PostUpvote::belonging_to(posts)
                     .load(conn)
                     .map_err(Post::handle_error)?
                     .grouped_by(&posts)
@@ -643,7 +647,7 @@ impl Post {
                         (count, user_voted_up)
                     })
                     .collect();
-                let down_counts: Vec<(i64, bool)> = PostDownvote::belonging_to(&posts)
+                let down_counts: Vec<(i64, bool)> = PostDownvote::belonging_to(posts)
                     .load(conn)
                     .map_err(Post::handle_error)?
                     .grouped_by(&posts)
@@ -665,17 +669,17 @@ impl Post {
                         user_voted_down: (x.1).1
                     })
                     .collect();
-                counts
+                Ok(counts)
             }
             None => {
-                let up_counts: Vec<i64> = PostUpvote::belonging_to(&posts)
+                let up_counts: Vec<i64> = PostUpvote::belonging_to(posts)
                     .load(conn)
                     .map_err(Post::handle_error)?
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostUpvote>| l.len() as i64)
                     .collect();
-                let down_counts: Vec<i64> = PostDownvote::belonging_to(&posts)
+                let down_counts: Vec<i64> = PostDownvote::belonging_to(posts)
                     .load(conn)
                     .map_err(Post::handle_error)?
                     .grouped_by(&posts)
@@ -692,13 +696,12 @@ impl Post {
                         user_voted_down: false
                     })
                     .collect();
-                counts
+                Ok(counts)
             }
-        };
+        }
 
 
-        let posts_and_vote_counts: Vec<(Post, VoteCounts)> = posts.into_iter().zip(counts.into_iter()).collect();
-        Ok(posts_and_vote_counts)
+//        let posts_and_vote_counts: Vec<(Post, VoteCounts)> = posts.into_iter().zip(counts.into_iter()).collect();
     }
 
 
