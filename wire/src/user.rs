@@ -53,6 +53,17 @@ pub struct Jwt {
     pub iat: NaiveDateTime,
 }
 
+impl Default for Jwt {
+    fn default() -> Self {
+        Jwt {
+            sub: UserUuid::default(),
+            user_roles: Vec::default(),
+            exp: NaiveDateTime::from_timestamp(0,0),
+            iat: NaiveDateTime::from_timestamp(0,0),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum UserRole {
     Unprivileged,
