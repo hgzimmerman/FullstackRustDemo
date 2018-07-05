@@ -32,11 +32,11 @@ impl Default for Props {
     }
 }
 
-impl<CTX: 'static> Component<CTX> for Button {
+impl Component for Button {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Button {
             title: props.title,
             //            color: Color::Primary,
@@ -45,7 +45,7 @@ impl<CTX: 'static> Component<CTX> for Button {
         }
     }
 
-    fn update(&mut self, msg: Self::Message, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Clicked => {
                 if let Some(ref mut callback) = self.onclick {
@@ -56,7 +56,7 @@ impl<CTX: 'static> Component<CTX> for Button {
         false
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
         self.title = props.title;
         //self.color = props.color;
         self.disabled = props.disabled;
@@ -65,8 +65,8 @@ impl<CTX: 'static> Component<CTX> for Button {
     }
 }
 
-impl<CTX: 'static> Renderable<CTX, Button> for Button {
-    fn view(&self) -> Html<CTX, Self> {
+impl Renderable<Button> for Button {
+    fn view(&self) -> Html<Self> {
 
         //<button class=("btn", &self.color.to_button_class()), disabled=self.disabled, onclick=|_| Msg::Clicked,>{ &self.title }</button>
         html! {

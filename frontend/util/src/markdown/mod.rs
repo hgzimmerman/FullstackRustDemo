@@ -1,7 +1,5 @@
 pub mod author_markdown_toggle;
 pub mod author_markdown_side_by_side;
-
-
 /// Original author of this code is [Nathan Ringo](https://github.com/remexre)
 /// Source: https://github.com/acmumn/mentoring/blob/master/web-client/src/view/markdown.rs
 
@@ -12,10 +10,9 @@ use yew::virtual_dom::{VNode, VTag, VText};
 
 /// Renders a string of Markdown to HTML with the default options (footnotes
 /// disabled, tables enabled).
-pub fn render_markdown<CTX, M>(src: &str) -> Html<CTX, M>
-where
-    M: Component<CTX>,
-    CTX: 'static,
+pub fn render_markdown<COMP>(src: &str) -> Html<COMP>
+    where
+        COMP: Component,
 {
     let mut elems = vec![];
     let mut spine = vec![];
@@ -49,9 +46,9 @@ where
                                 if let &mut VNode::VTag(ref mut vtag) = c {
                                     match aligns[i] {
                                         Alignment::None => {}
-                                        Alignment::Left => vtag.add_classes("text-left"),
-                                        Alignment::Center => vtag.add_classes("text-center"),
-                                        Alignment::Right => vtag.add_classes("text-right"),
+                                        Alignment::Left => vtag.add_class("text-left"),
+                                        Alignment::Center => vtag.add_class("text-center"),
+                                        Alignment::Right => vtag.add_class("text-right"),
                                     }
                                 }
                             }
@@ -79,18 +76,18 @@ where
         }
     }
 
-    //    if elems.len() == 1 {
-    //        elems.pop().unwrap()
-    //    } else {
-    html! {
+    if elems.len() == 1 {
+        VNode::VTag(elems.pop().unwrap())
+    } else {
+        html! {
             <div>{ for elems.into_iter() }</div>
         }
-    //    }
+    }
 }
 
-fn make_tag<CTX, M>(t: Tag) -> VTag<CTX, M>
-where
-    M: Component<CTX>,
+fn make_tag<COMP>(t: Tag) -> VTag<COMP>
+    where
+        COMP: Component,
 {
     match t {
         Tag::Paragraph => VTag::new("p"),
@@ -102,14 +99,22 @@ where
         }
         Tag::BlockQuote => {
             let mut el = VTag::new("blockquote");
-            el.add_classes("blockquote");
+            el.add_class("blockquote");
             el
         }
         Tag::CodeBlock(lang) => {
             let mut el = VTag::new("code");
-            if lang != "" {
-                unimplemented!()
-            }
+            // Different color schemes may be used for different code blocks,
+            // but a different library (likely js based at the moment) would be necessary to actually provide the
+            // highlighting support by locating the language classes and applying dom transforms
+            // on their contents.
+            match lang.as_ref() {
+                "html" => el.add_class("html-language"),
+                "rust" => el.add_class("rust-language"),
+                "java" => el.add_class("java-language"),
+                "c" => el.add_class("c-language"),
+                _ => {} // Add your own language highlighting support
+            };
             el
         }
         Tag::List(None) => VTag::new("ul"),
@@ -122,7 +127,7 @@ where
         Tag::Item => VTag::new("li"),
         Tag::Table(_) => {
             let mut el = VTag::new("table");
-            el.add_classes("table");
+            el.add_class("table");
             el
         }
         Tag::TableHead => VTag::new("tr"),
@@ -130,12 +135,12 @@ where
         Tag::TableCell => VTag::new("td"),
         Tag::Emphasis => {
             let mut el = VTag::new("span");
-            el.add_classes("font-italic");
+            el.add_class("font-italic");
             el
         }
         Tag::Strong => {
             let mut el = VTag::new("span");
-            el.add_classes("font-weight-bold");
+            el.add_class("font-weight-bold");
             el
         }
         Tag::Code => VTag::new("code"),
@@ -155,6 +160,6 @@ where
             }
             el
         }
-        _ => unimplemented!("tag {:?}", t),
+        Tag::FootnoteDefinition(ref _footnote_id) => VTag::new("span") // Footnotes are not rendered as anything special
     }
 }

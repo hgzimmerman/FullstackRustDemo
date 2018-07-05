@@ -1,6 +1,5 @@
 
 use yew::prelude::*;
-use context::Context; // TODO: I don't think that this is necessary
 
 use wrappers;
 
@@ -117,11 +116,11 @@ pub enum Msg {
     NoOp
 }
 
-impl Component<Context> for Input {
+impl Component for Input {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Input {
             input_state: props.input_state,
             placeholder: props.placeholder,
@@ -135,7 +134,7 @@ impl Component<Context> for Input {
         }
     }
 
-    fn update(&mut self, msg: Msg, _context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Msg) -> ShouldRender {
         use self::Msg::*;
 
         match msg {
@@ -166,7 +165,7 @@ impl Component<Context> for Input {
         }
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
 
         self.input_state = props.input_state;
         self.required = props.required;
@@ -181,9 +180,9 @@ impl Component<Context> for Input {
 }
 
 
-impl Renderable<Context, Input> for Input
+impl Renderable<Input> for Input
 {
-    fn view(&self) -> Html<Context, Input> {
+    fn view(&self) -> Html<Input> {
 
 //        fn required_star(is_required: bool) -> Html<Context, Input> {
 //            if is_required {
@@ -198,7 +197,7 @@ impl Renderable<Context, Input> for Input
 //            }
 //        }
 
-        fn error_view(error: Option<&String>) ->  Html<Context, Input> {
+        fn error_view(error: Option<&String>) ->  Html<Input> {
             match error {
                 Some(e) => html!{
                     <div>

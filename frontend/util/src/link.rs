@@ -33,14 +33,14 @@ impl<T: Default> Default for Props<T> {
     }
 }
 
-impl<CTX: 'static, T> Component<CTX> for Link<T>
+impl<T> Component for Link<T>
 where
     T: 'static + Clone + PartialEq + Default,
 {
     type Message = Msg;
     type Properties = Props<T>;
 
-    fn create(props: Self::Properties, _: &mut Env<CTX, Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
         Link {
             callback: props.callback,
             cb_value: props.cb_value,
@@ -49,7 +49,7 @@ where
         }
     }
 
-    fn update(&mut self, msg: Self::Message, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Clicked => {
                 if let Some(ref mut cb) = self.callback {
@@ -60,7 +60,7 @@ where
         false
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<CTX, Self>) -> ShouldRender {
+    fn change(&mut self, props: Self::Properties) -> ShouldRender {
         self.callback = props.callback;
         self.name = props.name;
         self.classes = props.classes;
@@ -69,11 +69,11 @@ where
     }
 }
 
-impl<CTX: 'static, T> Renderable<CTX, Link<T>> for Link<T>
+impl<T> Renderable<Link<T>> for Link<T>
 where
     T: 'static + Clone + PartialEq + Default,
 {
-    fn view(&self) -> Html<CTX, Self> {
+    fn view(&self) -> Html<Self> {
         html!{
             <a onclick= |_| Msg::Clicked, class={self.classes}, >
                 {&self.name}

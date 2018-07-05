@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use context::Context;
 
 pub struct AuthorMarkdownSideBySide {
     text: String,
@@ -26,11 +25,11 @@ impl Default for Props {
     }
 }
 
-impl Component<Context> for AuthorMarkdownSideBySide {
+impl Component for AuthorMarkdownSideBySide {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
 
         AuthorMarkdownSideBySide {
             text: props.text,
@@ -38,7 +37,7 @@ impl Component<Context> for AuthorMarkdownSideBySide {
         }
     }
 
-    fn update(&mut self, msg: Self::Message, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::UpdateText(t) => {
                 self.text = t.clone();
@@ -50,13 +49,13 @@ impl Component<Context> for AuthorMarkdownSideBySide {
         }
     }
 
-    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
     }
 }
 
-impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide {
-    fn view(&self) -> Html<Context, Self> {
+impl Renderable<AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide {
+    fn view(&self) -> Html<Self> {
 
         return html! {
             <div class="edit-markdown-side-by-side-wrapper", >
@@ -68,7 +67,7 @@ impl Renderable<Context, AuthorMarkdownSideBySide> for AuthorMarkdownSideBySide 
                     />
                 </div>
                 <div class="edit-markdown-half",>
-                    {super::render_markdown::<Context, Self>(&self.text)}
+                    {super::render_markdown::<Self>(&self.text)}
                 </div>
             </div>
         };

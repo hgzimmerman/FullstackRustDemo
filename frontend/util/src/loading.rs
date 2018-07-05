@@ -5,10 +5,9 @@ use stdweb::web::Node;
 use stdweb::unstable::TryFrom;
 
 
-pub enum LoadingType<CTX, U>
+pub enum LoadingType<U>
     where
-        CTX: 'static,
-        U: Component<CTX>
+        U: Component
 {
     #[allow(dead_code)]
     Empty,
@@ -16,16 +15,15 @@ pub enum LoadingType<CTX, U>
     Rolling{diameter: usize},
     Fidget{diameter: usize},
     #[allow(dead_code)]
-    Custom(fn() -> Html<CTX, U>)
+    Custom(fn() -> Html<U>)
 }
 
 
-impl<CTX, U> Renderable<CTX, U> for LoadingType<CTX, U>
+impl<U> Renderable<U> for LoadingType< U>
 where
-    CTX: 'static,
-    U: Component<CTX>
+    U: Component
 {
-    fn view(&self) -> Html<CTX, U> {
+    fn view(&self) -> Html<U> {
         match self {
             LoadingType::Rolling {diameter} => {
                 let style = format!("width: {}px; height: {}px;", diameter, diameter);
@@ -64,14 +62,13 @@ const FIDGET_SVG: &'static str = include_str!("../inlined_assets/Fidget.svg");
 
 struct LoadingIcon (&'static str);
 
-impl<U, CTX> Renderable<CTX, U> for LoadingIcon
+impl<U> Renderable<U> for LoadingIcon
     where
 //        CTX: AsMut<ConsoleService> + 'static,
-        CTX: 'static,
-        U: Component<CTX>
+        U: Component
 
 {
-    fn view(&self) -> Html<CTX, U> {
+    fn view(&self) -> Html<U> {
         let js_svg = js! {
             var div = document.createElement("div");
             div.innerHTML = @{self.0.to_string()};

@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate yew;
-extern crate context;
+//extern crate context;
+extern crate common;
 #[macro_use]
 extern crate stdweb;
 

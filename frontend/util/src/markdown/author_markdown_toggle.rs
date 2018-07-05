@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use context::Context;
 
 use button::Button;
 
@@ -35,11 +34,11 @@ impl Default for Props {
     }
 }
 
-impl Component<Context> for AuthorMarkdownToggle {
+impl Component for AuthorMarkdownToggle {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, _link: ComponentLink<Self>) -> Self {
 
         AuthorMarkdownToggle {
             text: props.text,
@@ -48,7 +47,7 @@ impl Component<Context> for AuthorMarkdownToggle {
         }
     }
 
-    fn update(&mut self, msg: Self::Message, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::UpdateText(t) => {
                 self.text = t.clone();
@@ -64,13 +63,13 @@ impl Component<Context> for AuthorMarkdownToggle {
         }
     }
 
-    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
     }
 }
 
-impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
-    fn view(&self) -> Html<Context, Self> {
+impl Renderable<AuthorMarkdownToggle> for AuthorMarkdownToggle {
+    fn view(&self) -> Html<Self> {
 
 
         let view = || match self.editor_state {
@@ -88,7 +87,7 @@ impl Renderable<Context, AuthorMarkdownToggle> for AuthorMarkdownToggle {
             State::RenderingMarkdown => {
                 html! {
                <div class="view-markdown-content",>
-                    {super::render_markdown::<Context, Self>(&self.text)}
+                    {super::render_markdown::<Self>(&self.text)}
                </div>
             }
             }

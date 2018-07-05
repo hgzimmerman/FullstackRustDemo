@@ -1,9 +1,9 @@
-use yew::services::fetch::FetchTask;
 use yew::prelude::*;
 use std::fmt::Formatter;
 use std::fmt::Debug;
+use common::fetch::FetchResponse;
 
-use context::networking::FtWrapper;
+//use context::networking::FtWrapper;
 
 use loading::LoadingType;
 
@@ -11,9 +11,10 @@ use wrappers::empty_vdom_node;
 
 
 
+
 pub enum Loadable<T> {
     Unloaded,
-    Loading(FetchTask),
+    Loading,
     Loaded(T),
     Failed(Option<String>)
 }
@@ -28,7 +29,7 @@ impl<T> PartialEq for Loadable<T> where T: PartialEq {
                     false
                 }
             }
-            Loadable::Loading(_) => true, // Just make the assumption that if something is loading its representation does not need to change
+            Loadable::Loading => true, // Just make the assumption that if something is loading its representation does not need to change
             Loadable::Loaded(ref t) => {
                 if let Loadable::Loaded(ref t_other) = other {
                     return t == t_other
@@ -49,17 +50,17 @@ impl<T> PartialEq for Loadable<T> where T: PartialEq {
 
 }
 
-impl <T> FtWrapper for Loadable<T> where T: Default {
-    fn set_ft(&mut self, ft: FetchTask) {
-        *self = Loadable::Loading(ft)
-    }
-}
+//impl <T> FtWrapper for Loadable<T> where T: Default {
+//    fn set_ft(&mut self, ft: FetchTask) {
+//        *self = Loadable::Loading(ft)
+//    }
+//}
 
 impl <T> Debug for Loadable<T> where T: Debug {
     fn fmt(&self, f: &mut Formatter) -> Result<(), ::std::fmt::Error> {
         match self {
             Loadable::Unloaded => write!(f, "Unloaded"),
-            Loadable::Loading(_) => write!(f, "Loading"),
+            Loadable::Loading => write!(f, "Loading"),
             Loadable::Loaded(t) => write!(f, "Loaded: {:?}", t),
             Loadable::Failed(_) => write!(f, "Failed"),
         }
@@ -78,7 +79,7 @@ impl <T> Clone for Loadable<T>
     fn clone(&self) -> Self {
         match self {
             Loadable::Unloaded => Loadable::Unloaded,
-            Loadable::Loading(_) => Loadable::Unloaded, // Any loading loadable throws away the FT because it can't be cloned
+            Loadable::Loading => Loadable::Loading, // Any loading loadable throws away the FT because it can't be cloned
             Loadable::Loaded(t) => Loadable::Loaded(t.clone()),
             Loadable::Failed(o) => Loadable::Failed(o.clone())
         }
@@ -90,31 +91,39 @@ impl <T> Clone for Loadable<T>
 impl <T> Loadable<T> {
 
 
-    fn custom_view<U, CTX, LoadedFn, FailedFn>(&self,
-                                               unloaded: Html<CTX,U>,
-                                               loading: Html<CTX,U>,
+    /// Creates a loadable from a fetch response
+    pub fn from_fetch_response(fetch_response: FetchResponse<T>) -> Loadable<T> {
+        use self::FetchResponse::*;
+        match fetch_response {
+            Success(t) => Loadable::Loaded(t),
+            Error(_) => Loadable::Failed(None),
+            Started => Loadable::Loading
+        }
+    }
+
+    fn custom_view<U, LoadedFn, FailedFn>(&self,
+                                               unloaded: Html<U>,
+                                               loading: Html<U>,
                                                loaded_fn: LoadedFn,
                                                failed_fn: FailedFn
-    ) -> Html<CTX, U>
+    ) -> Html<U>
         where
-        CTX: 'static,
-        U: Component<CTX>,
-        LoadedFn: Fn(&T) -> Html<CTX, U>,
-        FailedFn: Fn(&Option<String>) -> Html<CTX, U>
+        U: Component,
+        LoadedFn: Fn(&T) -> Html<U>,
+        FailedFn: Fn(&Option<String>) -> Html<U>
     {
         match self {
             Loadable::Unloaded => unloaded,
-            Loadable::Loading(_) => loading,
+            Loadable::Loading => loading,
             Loadable::Loaded(ref t) => loaded_fn(t),
             Loadable::Failed(ref error) => failed_fn(error)
         }
     }
 
 
-    fn failed<U, CTX> (error: &Option<String>) -> Html<CTX, U>
+    fn failed<U> (error: &Option<String>) -> Html<U>
     where
-        CTX: 'static,
-        U: Component<CTX>,
+        U: Component
     {
         if let Some(message) = error {
             html! {
@@ -134,10 +143,9 @@ impl <T> Loadable<T> {
 
     /// Uses a 100x100 icons for loading and error.
     /// This should work for medium to large sized views, but if a view dimension can be less than that, visual bugs will result.
-    pub fn default_view<U, CTX>(&self, render_fn: fn(&T) -> Html<CTX, U> ) -> Html<CTX, U>
+    pub fn default_view<U>(&self, render_fn: fn(&T) -> Html<U> ) -> Html<U>
         where
-            CTX: 'static,
-            U: Component<CTX>
+            U: Component
     {
         self.custom_view(
             empty_vdom_node(),
@@ -149,10 +157,9 @@ impl <T> Loadable<T> {
 
     /// Uses text for all error and loading fillers.
     /// This should allow it to be used most flexibly.
-    pub fn small_view<U, CTX>(&self, render_fn: fn(&T) -> Html<CTX, U> ) -> Html<CTX, U>
+    pub fn small_view<U>(&self, render_fn: fn(&T) -> Html<U> ) -> Html<U>
         where
-            CTX: 'static,
-            U: Component<CTX>
+            U: Component
     {
         self.custom_view(
             empty_vdom_node(),
@@ -162,17 +169,16 @@ impl <T> Loadable<T> {
         )
     }
 
-    pub fn restricted_custom_view<CTX, U, LoadedFn, FailedFn>(&self,
-                                     unloaded: Html<CTX, U>,
-                                     loading_type: LoadingType<CTX, U>,
+    pub fn restricted_custom_view<U, LoadedFn, FailedFn>(&self,
+                                     unloaded: Html<U>,
+                                     loading_type: LoadingType<U>,
                                      render_fn: LoadedFn,
                                      failed_fn: FailedFn
-    ) -> Html<CTX,U>
+    ) -> Html<U>
             where
-            CTX: 'static,
-            U: Component<CTX>,
-            LoadedFn: Fn(&T) -> Html<CTX, U>,
-            FailedFn: Fn(&Option<String>) -> Html<CTX, U>
+            U: Component,
+            LoadedFn: Fn(&T) -> Html<U>,
+            FailedFn: Fn(&Option<String>) -> Html<U>
     {
         self.custom_view(
             unloaded,

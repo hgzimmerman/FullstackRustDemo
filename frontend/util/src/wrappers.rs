@@ -3,17 +3,15 @@ use yew::virtual_dom::VNode;
 use yew::virtual_dom::VText;
 use yew::virtual_dom::VList;
 
-pub fn empty_vdom_node<CTX, CMP>() -> Html<CTX, CMP>
+pub fn empty_vdom_node<CMP>() -> Html<CMP>
     where
-        CTX: 'static,
-        CMP: Component<CTX>
+        CMP: Component
 {
     VNode::from(VList::new())
 }
-pub fn html_string<CTX, CMP>(text: String) -> Html<CTX, CMP>
+pub fn html_string<CMP>(text: String) -> Html<CMP>
     where
-        CTX: 'static,
-        CMP: Component<CTX>,
+        CMP: Component
 {
     VNode::from(VText::new(text))
 }
