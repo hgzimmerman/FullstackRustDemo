@@ -101,6 +101,14 @@ impl <T> Loadable<T> {
         }
     }
 
+    pub fn as_option<'a>(&'a self) -> Option<&'a T> {
+        if let Loadable::Loaded(value) = self {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
     fn custom_view<U, LoadedFn, FailedFn>(&self,
                                                unloaded: Html<U>,
                                                loading: Html<U>,

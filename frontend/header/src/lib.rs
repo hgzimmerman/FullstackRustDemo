@@ -71,7 +71,7 @@ impl Component for Header {
             }
             HandleLoginResponse(response) => {
                 match response {
-                    LoginResponse::LoggedIn => {
+                    LoginResponse::LoggedIn(_) => {
                         self.is_logged_in = true
                     }
                     LoginResponse::LoggedOut => {

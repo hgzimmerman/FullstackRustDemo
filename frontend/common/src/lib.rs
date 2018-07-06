@@ -10,6 +10,8 @@ extern crate serde_derive;
 extern crate stdweb;
 extern crate chrono;
 extern crate base64;
+#[macro_use]
+extern crate log;
 
 extern crate wire;
 extern crate identifiers;
@@ -18,5 +20,7 @@ pub mod fetch;
 extern crate yew_router;
 
 pub mod user;
+
+pub mod datatypes;
 
 //pub mod notification;

@@ -4,8 +4,9 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-context = {path = "../context"}
+#context = {path = "../context"}
 
+common = {path = "../common"}
 wire = {path = "../../wire"}
 identifiers = {path = "../../identifiers"}
 util = {path = "../util"}
@@ -13,13 +14,21 @@ routes = {path = "../routes"}
 
 #yew = { git = "https://github.com/hgzimmerman/yew", rev = "ad750e481746b1eaa8853b1575580a856c277bf2" }
 #yew = { git = "https://github.com/hgzimmerman/yew", rev = "3685a0cd1c642b3f4dbdaa06832848a2ae641517" }
-yew = { git = "https://github.com/DenisKolodin/yew", rev = "7f72c716042d2b85922f75e7ede54f4b4d49970d"}
+#yew = { git = "https://github.com/DenisKolodin/yew", rev = "7f72c716042d2b85922f75e7ede54f4b4d49970d"}
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "a5213c57430b2f18539aeb25939bdc8c5c348157" }
+yew_router = { git = "https://github.com/hgzimmerman/YewRouter", rev = "6f34e84ae4f91044cb44752bce7d0085b2bbe64a" }
 
 stdweb = "0.4.2"
 
 failure = "0.1"
 
+log = "0.4"
+
+serde = "1"
+serde_derive = "1"
+
+
 [features]
 default = []
 
-development = ["context/development"]
+development = ["common/development"]

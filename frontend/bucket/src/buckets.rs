@@ -1,7 +1,6 @@
 use yew::prelude::*;
 use datatypes::bucket::BucketData;
 //use util::loadable::Loadable;
-use Context;
 //use Route;
 use util::loadable::Loadable;
 use util::uploadable::Uploadable;
@@ -15,9 +14,9 @@ use util::button::Button;
 pub struct ApprovedBucket(pub BucketData);
 pub struct PublicBucket(pub BucketData);
 
-impl Renderable<Context, BucketModel> for Vec<ApprovedBucket>
+impl Renderable<BucketModel> for Vec<ApprovedBucket>
 {
-    fn view(&self) -> Html<Context, BucketModel> {
+    fn view(&self) -> Html<BucketModel> {
         html! {
             <div class=("flexbox-horiz-wrap"),>
                 {for self.iter().map(ApprovedBucket::view)}
@@ -25,9 +24,9 @@ impl Renderable<Context, BucketModel> for Vec<ApprovedBucket>
         }
     }
 }
-impl Renderable<Context, BucketModel> for Vec<PublicBucket>
+impl Renderable<BucketModel> for Vec<PublicBucket>
 {
-    fn view(&self) -> Html<Context, BucketModel> {
+    fn view(&self) -> Html<BucketModel> {
         html! {
             <div class=("flexbox-horiz-wrap"),>
                 {for self.iter().map(PublicBucket::view)}
@@ -37,8 +36,8 @@ impl Renderable<Context, BucketModel> for Vec<PublicBucket>
 }
 
 
-impl Renderable<Context, BucketModel> for PublicBucket {
-    fn view(&self) -> Html<Context, BucketModel> {
+impl Renderable<BucketModel> for PublicBucket {
+    fn view(&self) -> Html<BucketModel> {
         let bucket_uuid = self.as_ref().uuid.clone();
         html! {
             <div class="public-bucket-card",>
@@ -55,8 +54,8 @@ impl Renderable<Context, BucketModel> for PublicBucket {
     }
 }
 
-impl Renderable<Context, BucketModel> for ApprovedBucket {
-    fn view(&self) -> Html<Context, BucketModel> {
+impl Renderable<BucketModel> for ApprovedBucket {
+    fn view(&self) -> Html<BucketModel> {
         let bucket_uuid = self.as_ref().uuid.clone();
         html! {
             <div
@@ -94,8 +93,8 @@ pub struct BucketLists {
     pub request_to_join_bucket_action: Uploadable<()>,
 }
 
-impl Renderable<Context, BucketModel> for BucketLists {
-    fn view(&self) -> Html<Context, BucketModel> {
+impl Renderable<BucketModel> for BucketLists {
+    fn view(&self) -> Html<BucketModel> {
         html! {
             <div class=("full-height", "full-width", "flexbox-vert", "scrollable"),>
                 <div class="flexbox-expand",>

@@ -23,7 +23,7 @@ yew_router = { git = "https://github.com/hgzimmerman/YewRouter", rev = "6f34e84a
 common = {path = "../common"}
 #routes = {path = "../routes"}
 
-#bucket = {path = "../bucket"}
+bucket = {path = "../bucket"}
 #forum = {path = "../forum"}
 auth = {path = "../auth"}
 header = {path = "../header"}
@@ -42,4 +42,4 @@ web_logger = "0.1"
 [features]
 default = ["development"]
 #development = ["bucket/development", "forum/development", "auth/development"]
-development = ["auth/development"]
+development = ["auth/development", "bucket/development"]

@@ -20,6 +20,9 @@ serde_json = "*"
 serde = "1"
 serde_derive = "1"
 
+
+log = "0.4"
+
 [dependencies.chrono]
 version = "0.4"
 default-features = false

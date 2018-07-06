@@ -1,6 +1,5 @@
 use super::NewBucket;
 use util::button::Button;
-use Context;
 use yew::prelude::*;
 use util::input::Input;
 use BucketModel;
@@ -8,8 +7,8 @@ use super::Msg;
 
 use util::input::InputValidator;
 
-impl Renderable<Context, BucketModel> for NewBucket {
-    fn view(&self) -> Html<Context, BucketModel> {
+impl Renderable<BucketModel> for NewBucket {
+    fn view(&self) -> Html<BucketModel> {
         html! {
             <div class=("login-card", "flexbox-vert"),>
                 <div class="flexbox-child-grow",>

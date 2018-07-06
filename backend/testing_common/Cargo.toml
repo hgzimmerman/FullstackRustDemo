@@ -9,7 +9,7 @@ auth = { path = "../auth"}
 testing_fixtures = {path = "../testing_fixtures"}
 
 server = { path = "../server"}
-rocket = "0.3.11"
+rocket = "0.3.13"
 
 
 chrono = { version = "0.4", features = ["serde"] }

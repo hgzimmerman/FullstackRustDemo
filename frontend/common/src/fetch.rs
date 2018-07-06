@@ -22,6 +22,7 @@ use yew::services::storage::{StorageService, Area};
 use yew::callback::Callback;
 
 use wire::user::BEARER;
+#[derive(Debug)]
 pub enum Auth {
     Required,
     NotRequired,
@@ -55,10 +56,10 @@ pub trait FetchRequest: Serialize + DeserializeOwned {
 }
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum FetchError {
     /// Could not deserialize the response into the type defined as W.
-    DecodeError,
+    DecodeError(String),
     /// If the response came back as a 401.
     Unauthorized,
     /// Authentication wasn't present when the request was made.
@@ -75,6 +76,26 @@ pub enum FetchResponse<T> {
     Error(FetchError),
     /// Fetch Connection has started
     Started
+}
+
+impl <T> Clone for FetchResponse<T> where T: Clone {
+    fn clone(&self) -> Self {
+        use self::FetchResponse::*;
+        match self {
+            Success(t) => Success(t.clone()),
+            a => a.clone()
+        }
+    }
+}
+
+impl<T> FetchResponse<T> {
+    pub fn map<U, F: Fn(T) -> U>(self, f: F) -> FetchResponse<U> {
+        match self {
+            FetchResponse::Success(t) => FetchResponse::Success(f(t)),
+            FetchResponse::Error(e) => FetchResponse::Error(e),
+            FetchResponse::Started => FetchResponse::Started
+        }
+    }
 }
 
 impl <W> Transferable for FetchResponse<W> where W: Serialize + for <'de> Deserialize<'de> {}
@@ -157,7 +178,7 @@ impl <T, W> Agent for FetchAgent<T, W>
                     let data: String = data.unwrap();
                     let data: FetchResponse<W> = serde_json::from_str(&data)
                         .map(FetchResponse::Success)
-                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError));
+                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError(data)));
                     data
                 }
                 _ => {
@@ -194,6 +215,7 @@ impl <T, W> Agent for FetchAgent<T, W>
         request_builder.uri(url.as_str());
         request_builder.header("Content-Type", "application/json");
 
+        info!("Sending request to: '{}', with auth: {:?}", url, auth_requirement);
 
         // If the auth is required _and_ the user isn't logged in or their session is expired,
         // redirect the user to the login screen.
@@ -322,6 +344,12 @@ pub struct Networking {
     fetch_task_collection: Vec<FetchTask>,
     router: RouterSenderBase<()>,
 }
+use std::fmt::Debug;
+impl Debug for Networking {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "Networking {{ num_held_tasks: {} }}", self.fetch_task_collection.len())
+    }
+}
 
 use yew::html::ComponentLink;
 use yew::html::Renderable;
@@ -357,19 +385,22 @@ impl Networking {
     {
         let router_cb = link.send_back(|_| V::Message::default());
         let handle_response_closure = move |response: Response<Text>| {
+            debug!("Response received");
             let (meta, data) = response.into_parts();
             let message: FetchResponse<U> = match meta.status.into() {
                 401 => {
                     // This will_not send messages back to the component to to which this fetch struct was created from.
                     let mut router = RouterSenderBase::<()>::new(router_cb.clone());
                     router.send(RouterRequest::ChangeRoute(Route::parse("/auth/login")));
+                    warn!("Response: Not Authorized. Authentication not present or has expired");
                     FetchResponse::Error(FetchError::Unauthorized)
                 }
                 200...299 => {
+                    info!("Response: 2xx response");
                     let data: String = data.unwrap();
                     let data: FetchResponse<U> = serde_json::from_str(&data)
                         .map(FetchResponse::Success)
-                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError));
+                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError(data)));
                     data
                 }
                 _ => {
@@ -377,17 +408,22 @@ impl Networking {
                     FetchResponse::Error(FetchError::Misc)
                 }
             };
+
+            if cfg!(feature = "development") {
+                match &message {
+                    FetchResponse::Success(_) => info!("Response: Successful"),
+                    FetchResponse::Error(error) => warn!("Response: Error: {:?}", error),
+                    _ => {}
+                };
+            }
             message
         };
-//        let callback = callback.reform(handle_response_closure);
 
-        let callback = move |response: Response<Text>| {
+        let closure = move |response: Response<Text>| {
             let fetch_response = handle_response_closure(response);
             response_mapper(fetch_response)
         };
-        let callback = link.send_back(callback);
-
-
+        let callback = link.send_back(closure);
 
 
         if let Some(task) = make_request(self, request, callback ) {
@@ -397,6 +433,70 @@ impl Networking {
             use yew::services::Task;
             self.fetch_task_collection.retain(|ref x| x.is_active());
         }
+
+        // Pass the "Request Started" message back to the calling component.
+        let started_callback = link.send_back(response_mapper);
+        started_callback.emit(FetchResponse::Started)
+    }
+
+
+    pub fn fetch_string<T, V>(&mut self, request: T, response_mapper: fn(FetchResponse<String>) -> V::Message, link: &ComponentLink<V>)
+        where
+            T: FetchRequest,
+            V: Component + Renderable<V>,
+            V::Message: Default
+    {
+        let router_cb = link.send_back(|_| V::Message::default());
+        let handle_response_closure = move |response: Response<Text>| {
+            debug!("Response received");
+            let (meta, data) = response.into_parts();
+            let message: FetchResponse<String> = match meta.status.into() {
+                401 => {
+                    // This will_not send messages back to the component to to which this fetch struct was created from.
+                    let mut router = RouterSenderBase::<()>::new(router_cb.clone());
+                    router.send(RouterRequest::ChangeRoute(Route::parse("/auth/login")));
+                    warn!("Response: Not Authorized. Authentication not present or has expired");
+                    FetchResponse::Error(FetchError::Unauthorized)
+                }
+                200...299 => {
+                    info!("Response: 2xx response");
+                    let data: String = data.unwrap();
+                    FetchResponse::Success(data)
+                }
+                _ => {
+                    // not handled
+                    FetchResponse::Error(FetchError::Misc)
+                }
+            };
+
+            if cfg!(feature = "development") {
+                match &message {
+                    FetchResponse::Success(_) => info!("Response: Successful"),
+                    FetchResponse::Error(error) => warn!("Response: Error: {:?}", error),
+                    _ => {}
+                };
+            }
+            message
+        };
+
+        let closure = move |response: Response<Text>| {
+            let fetch_response = handle_response_closure(response);
+            response_mapper(fetch_response)
+        };
+        let callback = link.send_back(closure);
+
+
+        if let Some(task) = make_request(self, request, callback ) {
+            // Hold on to the task so it isn't dropped and canceled.
+            self.fetch_task_collection.push(task);
+            // Remove tasks that aren't holding anything.
+            use yew::services::Task;
+            self.fetch_task_collection.retain(|ref x| x.is_active());
+        }
+
+        // Pass the "Request Started" message back to the calling component.
+        let started_callback = link.send_back(response_mapper);
+        started_callback.emit(FetchResponse::Started)
     }
 }
 
@@ -452,6 +552,8 @@ fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: T, call
             None
         }
     };
+
+    info!("Sending request to: '{}', with auth: {:?}", url, auth_requirement);
 
     // Make the request
     let task = if let Some(body) = body {

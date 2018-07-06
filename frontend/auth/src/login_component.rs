@@ -11,12 +11,11 @@ use wire::login::*;
 use util::uploadable::Uploadable;
 use yew_router::components::RouterButton;
 use yew_router::router_agent::RouterSenderBase;
-use yew::services::StorageService;
-use yew::services::storage::Area;
 use requests::AuthRequest;
 use common::fetch::FetchResponse;
 use common::fetch::Networking;
 
+use common::user::{LoginAgent, LoginRequest as LoginStoreRequest, LoginResponse};
 //use routes::Route;
 //use routes::forum::ForumRoute;
 //
@@ -26,10 +25,11 @@ pub enum Msg {
     UpdatePassword(String),
     UpdateUserName(String),
     Submit,
-    LoginSuccess(String),
+    LoginRequestSuccess(String),
     LoginRequestStarted,
     NoOp,
-    LoginError,
+    LoginRequestError,
+    HandleLoginStoreResponse(LoginResponse)
 }
 
 impl Default for Msg {
@@ -50,7 +50,8 @@ pub struct Login {
     networking: Networking,
     link: ComponentLink<Login>,
     router: RouterSenderBase<()>,
-    storage_service: StorageService
+//    storage_service: StorageService
+    login_agent: Box<Bridge<LoginAgent>>,
 }
 
 impl Routable for Login {
@@ -78,13 +79,16 @@ impl Component for Login {
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let cb = link.send_back(|_| Msg::default());
+
+        let login_agent = LoginAgent::bridge(link.send_back(|response| Msg::HandleLoginStoreResponse(response)));
         Login {
             login_data: Uploadable::default(),
 //            on_login_cb: props.on_login_cb,
             networking: Networking::new(&link),
             router: RouterSenderBase::<()>::new(cb),
             link,
-            storage_service: StorageService::new(Area::Local)
+            login_agent
+//            storage_service: StorageService::new(Area::Local)
         }
     }
 
@@ -95,8 +99,8 @@ impl Component for Login {
                 fn response_mapper(fetch_response: FetchResponse<String>) -> Msg { // TODO figure out what response type.
                     match fetch_response {
                         FetchResponse::Started => Msg::LoginRequestStarted,
-                        FetchResponse::Success(jwt_string) => Msg::LoginSuccess(jwt_string),
-                        FetchResponse::Error(_) => Msg::LoginError
+                        FetchResponse::Success(jwt_string) => Msg::LoginRequestSuccess(jwt_string),
+                        FetchResponse::Error(_) => Msg::LoginRequestError
                     }
                 };
 
@@ -109,7 +113,7 @@ impl Component for Login {
                 };
                 let request = AuthRequest::Login(login_request);
 
-                self.networking.fetch(request, response_mapper, &self.link);
+                self.networking.fetch_string(request, response_mapper, &self.link);
                 true
             }
 
@@ -121,25 +125,36 @@ impl Component for Login {
                 self.login_data.as_mut().user_name = u;
                 true
             }
-            Msg::LoginSuccess(jwt) => {
+            Msg::LoginRequestSuccess(jwt_string) => {
 //                context.store_jwt(jwt.clone()); // store/upsert the local JWT.
-                use common;
-                common::user::store_jwt(&mut self.storage_service, jwt);
+//                use common;
+//                common::user::store_jwt(&mut self.storage_service, jwt);
 
 //                context.log(&format!("Logged in. JWT received with payload: {:?}", ::context::user::extract_payload_from_jwt(jwt)));
-
-                self.router.send(RouterRequest::ChangeRoute(Route::parse("forums/")));
+                self.login_agent.send(LoginStoreRequest::Login{jwt_string});
+//                self.router.send(RouterRequest::ChangeRoute(Route::parse("forums/")));
+                self.router.send(RouterRequest::ChangeRoute(Route::parse("forums")));
 
 //                context.routing.set_route(Route::Forums(ForumRoute::ForumList).to_route().to_string());
 
                 true
             }
-            Msg::LoginError => {
+            Msg::LoginRequestError => {
                 self.login_data.set_failed("Login Failed, try another user name combo");
                 true
             }
             Msg::LoginRequestStarted => {
                 self.login_data.set_uploading();
+                true
+            }
+            Msg::HandleLoginStoreResponse(response) => {
+                match response {
+                    LoginResponse::LoggedIn(_) => {
+                        self.router.send(RouterRequest::ChangeRoute(Route::parse("forums/")));
+                    }
+                    LoginResponse::LoggedOut => {
+                    }
+                }
                 true
             }
             Msg::NoOp => false,

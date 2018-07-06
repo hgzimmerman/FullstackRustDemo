@@ -160,7 +160,7 @@ pub enum LoginRequest {
 #[derive(Serialize, Deserialize)]
 pub enum LoginResponse {
     LoggedOut,
-    LoggedIn
+    LoggedIn(Jwt)
 }
 
 pub struct LoginAgent {
@@ -188,7 +188,7 @@ impl Agent for LoginAgent
         }
     }
 
-    fn update(&mut self, msg: Self::Message) {
+    fn update(&mut self, _msg: Self::Message) {
 
     }
 
@@ -199,9 +199,15 @@ impl Agent for LoginAgent
     fn handle(&mut self, request: Self::Input, who: HandlerId) {
         match request {
             LoginRequest::Login{jwt_string} => {
-                store_jwt(&mut self.storage_service, jwt_string);
-                for sub in self.subscribers.iter().filter(|s| *s != &who) {
-                    self.link.response(*sub, LoginResponse::LoggedIn);
+                if let Ok(jwt) = extract_payload_from_jwt(jwt_string.clone()) {
+                    // Only store the jwt if it is valid
+                    store_jwt(&mut self.storage_service, jwt_string);
+                    for sub in self.subscribers.iter().filter(|s| *s != &who) {
+                        self.link.response(*sub, LoginResponse::LoggedIn(jwt.clone()));
+                    }
+                }
+                else {
+                    error!("Could not convert jwt string to usable JWT type: {}", jwt_string)
                 }
             }
             LoginRequest::Logout => {
@@ -212,8 +218,13 @@ impl Agent for LoginAgent
             }
             LoginRequest::Query => {
 
-                let response = if is_logged_in(&mut self.storage_service){
-                    LoginResponse::LoggedIn
+                let response = if let Ok(jwt_string) = restore_jwt(&mut self.storage_service) {
+                    if let Ok(jwt) = extract_payload_from_jwt(jwt_string.clone()) {
+                        LoginResponse::LoggedIn(jwt)
+                    } else {
+                        error!("Could not convert jwt string to usable JWT type: {}", jwt_string);
+                        LoginResponse::LoggedIn(Jwt::default())
+                    }
                 } else {
                     LoginResponse::LoggedOut
                 };

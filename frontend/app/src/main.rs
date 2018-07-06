@@ -15,7 +15,7 @@ use yew_router::prelude::*;
 //pub use context::datatypes;
 
 
-//extern crate bucket;
+extern crate bucket;
 //extern crate forum;
 extern crate auth;
 extern crate header;
@@ -31,7 +31,7 @@ extern crate web_logger;
 
 use header::Header;
 //use forum::ForumModel;
-//use bucket::BucketModel;
+use bucket::BucketModel;
 //use auth::AuthModel;
 
 use auth::{Login, CreateAccount};
@@ -80,7 +80,7 @@ impl Renderable<Model> for Model {
                     <Header: />
                 </div>
                 <div class="main-content", >
-                    <YewRouter: routes=routes![Login, CreateAccount], />
+                    <YewRouter: routes=routes![Login, CreateAccount, BucketModel], />
 //                    {page(&self.route)}
                 </div>
             <div/>
