@@ -1,105 +1,110 @@
 #[macro_use]
 extern crate yew;
 extern crate failure;
-extern crate context;
+
+extern crate yew_router;
+use yew_router::prelude::*;
+//extern crate context;
+extern crate common;
 //extern crate wire;
 extern crate util;
-extern crate routes;
+//extern crate routes;
 
 use yew::prelude::*;
+use yew_router::components::RouterLink;
+
 use util::link::Link;
-use context::Context;
+use yew_router::router_agent::RouterSenderBase;
+use common::user::{LoginAgent, LoginRequest, LoginResponse};
 
-use routes::Route;
-use routes::auth::AuthRoute;
-use routes::forum::ForumRoute;
-use routes::bucket::BucketRoute;
+//use util::link::Link;
+//use context::Context;
 
-use routes::routing::Router;
+//use routes::Route;
+//use routes::auth::AuthRoute;
+//use routes::forum::ForumRoute;
+//use routes::bucket::BucketRoute;
+//
+//use routes::routing::Router;
 
 
-#[derive(Clone, PartialEq)]
-pub struct HeaderLink {
-    pub link: Route,
-    pub name: String,
-}
-
-#[derive(Clone, PartialEq)]
 pub struct Header {
-//    pub links: Vec<HeaderLink>,
-//    pub callback: Option<Callback<Route>>
-    is_logged_in: bool
+    is_logged_in: bool,
+//    storage_service: StorageService,
+    login_agent: Box<Bridge<LoginAgent>>,
+    router: RouterSenderBase<()>
 }
 
 pub enum Msg {
-//    CallLink(Route),
-    Login,
-    Logout,
-    Forums,
-    BucketQuestions
-}
-
-#[derive(PartialEq, Clone)]
-pub struct Props {
-    pub is_logged_in: bool
-}
-
-impl Default for Props {
-    fn default() -> Self {
-        Props {
-            is_logged_in: false
-        }
-    }
+    InitiateLogout,
+    HandleLoginResponse(LoginResponse),
+    NoOp
 }
 
 
-impl Component<Context> for Header {
+
+impl Component for Header {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let cb = link.send_back(|_| Msg::NoOp);
+
+
+        let login_agent = LoginAgent::bridge(link.send_back(|response| Msg::HandleLoginResponse(response)));
+        login_agent.send(LoginRequest::Query);
         Header {
-            is_logged_in: props.is_logged_in
+            is_logged_in: false,
+            login_agent,
+            router: RouterSenderBase::<()>::new(cb)
         }
     }
 
-    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            Login => context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()),
-            Logout => {
-                context.remove_jwt();
+            InitiateLogout => {
+                self.login_agent.send(LoginRequest::Logout);
                 self.is_logged_in = false;
-                context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string());
+                self.router.send(RouterRequest::ChangeRoute(Route::parse("auth/login")));
+                true
             }
-            Forums => context.routing.set_route(Route::Forums(ForumRoute::ForumList).to_route().to_string()),
-            BucketQuestions => context.routing.set_route(Route::Bucket(BucketRoute::BucketList).to_route().to_string())
+            HandleLoginResponse(response) => {
+                match response {
+                    LoginResponse::LoggedIn => {
+                        self.is_logged_in = true
+                    }
+                    LoginResponse::LoggedOut => {
+                        self.is_logged_in = false
+                    }
+                }
+                true
+            }
+            NoOp => false
         }
-        true
     }
 
-    fn change(&mut self, props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
-        self.is_logged_in = props.is_logged_in;
+    fn change(&mut self, _props: Self::Properties ) -> ShouldRender {
         true
     }
 }
 
-impl Renderable<Context, Header> for Header {
-    fn view(&self) -> Html<Context, Self> {
+impl Renderable<Header> for Header {
+    fn view(&self) -> Html<Self> {
 
         let log_in_out = if self.is_logged_in {
             html! {
-                <Link<()>: name="Logout", callback=|_| Msg::Logout, classes="nav-link", />
+                <Link<()>: name="Logout", callback=|_| Msg::InitiateLogout, classes="nav-link", />
             }
         } else {
             html! {
-                <Link<()>: name="Login", callback=|_| Msg::Login, classes="nav-link", />
+                <RouterLink: text="Login", route=Route::parse("auth/login"), />
             }
         };
 
         let bucket_questions = if self.is_logged_in {
             html! {
-                <Link<()>: name="Bucket Questions", callback=|_| Msg::BucketQuestions, classes="nav-link", />
+                <RouterLink: text="Bucket Questions", route=Route::parse("bucket"), />
             }
         } else {
             util::wrappers::empty_vdom_node()
@@ -113,7 +118,7 @@ impl Renderable<Context, Header> for Header {
                 <div class="nav-links",>
                     // Spans are necessary to keep the ordering preserved under different states.
                     <span>
-                        <Link<()>: name="Forums", callback=|_| Msg::Forums, classes="nav-link", />
+                        <RouterLink: text="Forums", route=Route::parse("forums"), />
                     </span>
                     <span>
                         {bucket_questions}

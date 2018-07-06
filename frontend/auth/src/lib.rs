@@ -4,108 +4,27 @@
 
 #[macro_use]
 extern crate yew;
+//#[macro_use]
+extern crate yew_router;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 extern crate failure;
-extern crate context;
+//extern crate context;
+extern crate common;
 extern crate wire;
 extern crate util;
-extern crate routes;
+//extern crate routes;
 
-pub use context::datatypes;
-pub use context::Context;
-pub use routes::auth::AuthRoute;
-pub use routes::Route;
+//pub use context::datatypes;
+//pub use context::Context;
+//pub use routes::auth::AuthRoute;
+//pub use routes::Route;
 
 pub mod login_component;
 pub mod create_account_component;
+mod requests;
 
-use yew::prelude::*;
-use self::login_component::Login;
-use self::create_account_component::CreateAccount;
-//use Context;
+pub use self::login_component::Login;
+pub use self::create_account_component::CreateAccount;
 
-
-pub struct AuthModel {
-    pub route: AuthRoute,
-}
-
-pub enum Msg {
-}
-
-#[derive(Clone, PartialEq)]
-pub struct Props {
-    pub route: AuthRoute,
-    pub on_login_cb: Option<Callback<()>>
-}
-
-impl Default for Props {
-    fn default() -> Self {
-        Props { route: AuthRoute::Login, on_login_cb: None }
-    }
-}
-
-
-impl Component<Context> for AuthModel {
-    type Message = Msg;
-    type Properties = Props;
-
-    fn create(props: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
-        AuthModel {
-            route: props.route,
-        }
-
-    }
-
-    fn update(&mut self, _msg: Self::Message, _context: &mut Env<Context, Self>) -> ShouldRender {
-        true
-    }
-
-    fn change(&mut self, props: Self::Properties, _context: &mut Env<Context, Self>) -> ShouldRender {
-        self.route = props.route;
-        true
-    }
-}
-
-impl Renderable<Context, AuthModel> for AuthModel {
-    fn view(&self) -> Html<Context, Self> {
-
-        match &self.route {
-            &AuthRoute::Login => html! {
-                <>
-                    <Login: />
-                </>
-            },
-            &AuthRoute::Create => html! {
-                <>
-                    <CreateAccount:  />
-                </>
-            }
-        }
-    }
-}
-
-//
-//impl  Renderable<Context, Component<Context>> for AuthRoute
-////    where
-////        CMP: Component<Context>
-//{
-//    fn view(&self) -> Html<Context, Component<Context>> {
-//
-//        match self.route {
-//            AuthRoute::Login => {
-//                html! {
-//                    <>
-//                        <Login:  />
-//                    </>
-//                }
-//            }
-//            AuthRoute::Create => {
-//                html! {
-//                    <>
-//                        <CreateAccount:  />
-//                    </>
-//                }
-//            }
-//        }
-//
-//    }
-//}

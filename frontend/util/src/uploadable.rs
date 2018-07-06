@@ -87,6 +87,13 @@ impl <T> Uploadable<T> where T: Default {
             Uploadable::Failed(ref mut t, _) => Uploadable::Failed(mem::replace(t, T::default()), msg)
         }
     }
+    pub fn set_uploading(&mut self) {
+        *self = match *self {
+            Uploadable::NotUploaded(ref mut t) => Uploadable::Uploading(mem::replace(t, T::default())),
+            Uploadable::Uploading(ref mut t) => Uploadable::Uploading(mem::replace(t, T::default())),
+            Uploadable::Failed(ref mut t, _) => Uploadable::Uploading(mem::replace(t, T::default()))
+        }
+    }
 
     pub fn cloned_inner(&self) -> T where T: Clone {
         self.as_ref().clone()

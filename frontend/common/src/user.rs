@@ -1,6 +1,6 @@
 
-use yew::services::storage::{StorageService};
-
+use yew::services::storage::{StorageService, Area};
+use yew::prelude::worker::*;
 
 use base64::decode_config as b64_dec;
 use serde_json::Value as JsonValue;
@@ -12,6 +12,7 @@ use wire::user::{UserRole, Jwt};
 
 use chrono::NaiveDateTime;
 use identifiers::user::UserUuid;
+use std::collections::HashSet;
 
 
 #[derive(Fail, Debug)]
@@ -146,3 +147,82 @@ pub fn remove_jwt(storage_service: &mut StorageService) {
 }
 
 
+
+#[derive(Serialize, Deserialize)]
+pub enum LoginRequest {
+    Logout,
+    Login {
+        jwt_string: String
+    },
+    Query
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum LoginResponse {
+    LoggedOut,
+    LoggedIn
+}
+
+pub struct LoginAgent {
+    storage_service: StorageService,
+    subscribers: HashSet<HandlerId>,
+    link: AgentLink<LoginAgent>
+}
+
+impl Transferable for LoginResponse {}
+impl Transferable for LoginRequest {}
+
+
+impl Agent for LoginAgent
+{
+    type Reach = Context;
+    type Message = ();
+    type Input = LoginRequest ;
+    type Output = LoginResponse;
+
+    fn create(link: AgentLink<Self>) -> Self {
+        LoginAgent {
+            storage_service: StorageService::new(Area::Local),
+            subscribers: HashSet::new(),
+            link
+        }
+    }
+
+    fn update(&mut self, msg: Self::Message) {
+
+    }
+
+    fn connected(&mut self, who: HandlerId) {
+        self.subscribers.insert(who);
+    }
+
+    fn handle(&mut self, request: Self::Input, who: HandlerId) {
+        match request {
+            LoginRequest::Login{jwt_string} => {
+                store_jwt(&mut self.storage_service, jwt_string);
+                for sub in self.subscribers.iter().filter(|s| *s != &who) {
+                    self.link.response(*sub, LoginResponse::LoggedIn);
+                }
+            }
+            LoginRequest::Logout => {
+                remove_jwt(&mut self.storage_service);
+                for sub in self.subscribers.iter().filter(|s| *s != &who) {
+                    self.link.response(*sub, LoginResponse::LoggedOut);
+                }
+            }
+            LoginRequest::Query => {
+
+                let response = if is_logged_in(&mut self.storage_service){
+                    LoginResponse::LoggedIn
+                } else {
+                    LoginResponse::LoggedOut
+                };
+                self.link.response(who, response);
+            }
+        }
+    }
+
+    fn disconnected(&mut self, who: HandlerId) {
+        self.subscribers.remove(&who);
+    }
+}

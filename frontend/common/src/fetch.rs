@@ -313,7 +313,7 @@ fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: String, f
 
 
 
-pub struct FetchStruct {
+pub struct Networking {
     /// Used for fetching
     fetch_service: FetchService,
     /// Gets the JWT
@@ -328,7 +328,11 @@ use yew::html::Renderable;
 use yew::html::Component;
 use yew_router::router_agent::RouterSenderBase;
 
-impl FetchStruct {
+
+pub fn to_body(r: &impl Serialize) -> String {
+    serde_json::to_string(r).unwrap()
+}
+impl Networking {
     pub fn new<T>(link: &ComponentLink<T>) -> Self
         where
         T: Component + Renderable<T>,
@@ -336,7 +340,7 @@ impl FetchStruct {
     {
         let callback = link.send_back(|_| T::Message::default());
         let router = RouterSenderBase::<()>::new(callback);
-        FetchStruct {
+        Networking {
             fetch_service: FetchService::new(),
             storage_service: StorageService::new(Area::Local),
             fetch_task_collection: Vec::new(),
@@ -344,7 +348,7 @@ impl FetchStruct {
         }
     }
 
-    pub fn fetch<T, U, V>(&mut self, request: T, closure: &'static Fn(FetchResponse<U>) -> V::Message, link: &ComponentLink<V>)
+    pub fn fetch<T, U, V>(&mut self, request: T, response_mapper: fn(FetchResponse<U>) -> V::Message, link: &ComponentLink<V>)
         where
             T: FetchRequest,
             U: for <'de> Deserialize<'de> + 'static,
@@ -379,7 +383,7 @@ impl FetchStruct {
 
         let callback = move |response: Response<Text>| {
             let fetch_response = handle_response_closure(response);
-            closure(fetch_response)
+            response_mapper(fetch_response)
         };
         let callback = link.send_back(callback);
 
@@ -396,7 +400,7 @@ impl FetchStruct {
     }
 }
 
-fn make_request<T: FetchRequest>(fetch_struct: &mut FetchStruct, request: T, callback: Callback<Response<Text>>) -> Option<FetchTask> {
+fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: T, callback: Callback<Response<Text>>) -> Option<FetchTask> {
         // Get the relevant information from the request.
     let url: String = request.resolve_url();
     let auth_requirement: Auth = request.resolve_auth();

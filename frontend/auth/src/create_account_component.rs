@@ -1,16 +1,19 @@
 use yew::prelude::*;
-use Context;
+use yew_router::prelude::*;
+use yew_router::components::RouterButton;
+//use Context;
+use common::fetch::Networking;
 use util::button::*;
 
-use yew::format::Json;
-use yew::services::fetch::{Response};
-use failure::Error;
+//use yew::format::Json;
+//use yew::services::fetch::{Response};
+//use failure::Error;
 use wire::user::*;
 
-use context::networking::*;
+//use context::networking::*;
 
-use Route;
-use super::AuthRoute;
+//use Route;
+//use super::AuthRoute;
 
 use util::uploadable::Uploadable;
 
@@ -18,7 +21,10 @@ use util::input::InputState;
 use util::input::Input;
 use util::input::InputValidator;
 
-use routes::routing::Router;
+use common::fetch::FetchResponse;
+use requests::AuthRequest;
+
+//use routes::routing::Router;
 
 pub enum Msg {
     UpdatePassword(InputState),
@@ -28,6 +34,14 @@ pub enum Msg {
     Submit,
     NavigateToLogin,
     AccountCreationFailed,
+    RequestStarted,
+    NoOp
+}
+
+impl Default for Msg {
+    fn default() -> Self {
+        Msg::NoOp
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -54,51 +68,63 @@ impl CreateAccountData {
 }
 
 pub struct CreateAccount {
-    data: Uploadable<CreateAccountData>
+    networking: Networking,
+    data: Uploadable<CreateAccountData>,
+    link: ComponentLink<CreateAccount>
+}
+
+impl Routable for CreateAccount {
+    fn resolve_props(route: &Route) -> Option<<Self as Component>::Properties> {
+        if let Some(seg_2) = route.path_segments.get(1) {
+            if seg_2 == "create" {
+                return Some(())
+            }
+        }
+        return None
+    }
+    fn will_try_to_route(route: &Route) -> bool {
+        if let Some(seg_1) = route.path_segments.get(0) {
+            seg_1.as_str() == "auth"
+        } else {
+            false
+        }
+    }
 }
 
 
-impl Component<Context> for CreateAccount {
+impl Component for CreateAccount {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _context: &mut Env<Context, Self>) -> Self {
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         CreateAccount {
-            data: Uploadable::default()
+            networking: Networking::new(&link),
+            data: Uploadable::default(),
+            link
         }
     }
 
 
-    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Submit => {
 //                println!("Logging in with user name: {}", self.user_name);
-                let callback = context.send_back(
-                    |response: Response<Json<Result<String, Error>>>| {
-                        let (meta, Json(_data)) = response.into_parts();
-//                        println!("META: {:?}, {:?}", meta, data);
-
-                        if meta.status.is_success() {
-                            Msg::NavigateToLogin
-                        } else {
-                            Msg::AccountCreationFailed
-                        }
-                    },
-                );
+                fn response_mapper(fetch_response: FetchResponse<()>) -> Msg { // TODO, I don't actually know this return type
+                    match fetch_response {
+                        FetchResponse::Started => Msg::RequestStarted,
+                        FetchResponse::Success(_) => Msg::NavigateToLogin,
+                        FetchResponse::Error(_) => Msg::AccountCreationFailed
+                    }
+                }
 
                 match self.data.cloned_inner().validate()  {
                     Ok(new_user_request) => {
-                        context.make_request_and_set_ft(
-                            &mut self.data,
-                            RequestWrapper::CreateUser(
-                                new_user_request,
-                            ),
-                            callback,
-                        );
+                        let request = AuthRequest::CreateUser(new_user_request);
+                        self.networking.fetch(request, response_mapper, &self.link );
                     }
                     Err(err_msg) => {
                         self.data.set_failed(err_msg);
-                        context.log("Couldn't validate create account data.")
+//                        context.log("Couldn't validate create account data.")
                     }
                 }
 
@@ -121,17 +147,22 @@ impl Component<Context> for CreateAccount {
                 true
             }
             Msg::NavigateToLogin => {
-                context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()); // navigate back to login page
+//                context.routing.set_route(Route::Auth(AuthRoute::Login).to_route().to_string()); // navigate back to login page
                 false
             }
             Msg::AccountCreationFailed => {
                 self.data.set_failed("Could not create account.");
                 true
             }
+            Msg::RequestStarted => {
+                self.data.set_uploading();
+                true
+            }
+            Msg::NoOp => false
         }
     }
 
-    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         true
     }
 }
@@ -161,9 +192,9 @@ fn validate_password(password: String) -> Result<String, String> {
 //    Ok(password)
 //}
 
-impl Renderable<Context, CreateAccount> for CreateAccount {
-    fn view(&self) -> Html<Context, Self> {
-        fn create_account_view(create_account: &CreateAccountData) -> Html<Context, CreateAccount> {
+impl Renderable<CreateAccount> for CreateAccount {
+    fn view(&self) -> Html<Self> {
+        fn create_account_view(create_account: &CreateAccountData) -> Html<CreateAccount> {
             html! {
                 <div class=("flexbox","full-height"),>
                     <div class=("login-card", "flexbox-vert", "flexbox-center-item"),>
@@ -212,7 +243,7 @@ impl Renderable<Context, CreateAccount> for CreateAccount {
                         </div>
                         <div>
                             <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                            <Button: title="Back To Login", disabled=false, onclick=|_| Msg::NavigateToLogin, />
+                            <RouterButton: text="Back To Login", route=Route::parse("/auth/login"), />
                         </div>
                     </div>
                 </div>

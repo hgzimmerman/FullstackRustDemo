@@ -58,8 +58,8 @@ impl Default for Jwt {
         Jwt {
             sub: UserUuid::default(),
             user_roles: Vec::default(),
-            exp: NaiveDateTime::from_timestamp(0,0),
-            iat: NaiveDateTime::from_timestamp(0,0),
+            exp: NaiveDateTime::from_timestamp(0, 0),
+            iat: NaiveDateTime::from_timestamp(0, 0),
         }
     }
 }

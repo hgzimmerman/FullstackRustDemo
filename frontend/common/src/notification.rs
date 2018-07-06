@@ -59,14 +59,13 @@ impl Agent for NotificationRepository {
             subscribers: HashSet::new(),
             history: VecDeque::new()
         }
-
     }
+
 
 
     fn update(&mut self, msg: Self::Message) {
 
     }
-
 
     fn handle(&mut self, notification: Self::Input, who: HandlerId) {
         self.history.push_back(notification);
