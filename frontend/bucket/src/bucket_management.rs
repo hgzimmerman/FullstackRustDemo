@@ -2,11 +2,8 @@ use common::datatypes::bucket::BucketUsersData;
 //use Context;
 use util::button::Button;
 use yew::prelude::*;
-use yew::format::Json;
 
-use failure::Error;
 use wire::bucket::BucketUsersResponse;
-use yew::services::fetch::Response;
 
 use util::loadable::Loadable;
 use util::uploadable::Uploadable;
@@ -31,34 +28,24 @@ pub struct BucketManagement {
     link: ComponentLink<BucketManagement>,
 }
 
-//impl Default for BucketManagement {
-//    fn default() -> Self {
-//        BucketManagement {
-//            bucket_users: Loadable::default(),
-//            remove_user_action: Uploadable::default(),
-//            approve_user_action: Uploadable::default(),
-//            set_public_or_private_action: Uploadable::default()
-//        }
-//    }
-//}
-pub enum PublicOrPrivate {
+
+pub enum Publicity {
     Public,
     Private
 }
 
 pub enum Msg {
     GetBucketUsersData,
-//    BucketUsersDataLoaded(Vec<BucketUsersData>),
-//    BucketUsersDataFailed,
-    HandleGetBucketUsersDataResponse(FetchResponse<Vec<BucketUsersResponse>>),
+    HandleGetBucketUsersDataResponse(FetchResponse<Vec<BucketUsersData>>),
     GrantUserAccessToBucket{user_uuid: UserUuid, bucket_uuid: BucketUuid},
     HandleGrantUserAccessResponse(FetchResponse<()>),
     DenyUserAccessToBucket{user_uuid: UserUuid, bucket_uuid: BucketUuid},
     HandleDenyUserAccessResponse(FetchResponse<()>),
-    SetPublicOrPrivate{bucket_uuid: BucketUuid, pub_or_priv: PublicOrPrivate},
+    SetPublicOrPrivate{bucket_uuid: BucketUuid, publicity: Publicity },
     HandleSetPublicityResponse(FetchResponse<()>),
     NoOp
 }
+
 impl Default for Msg {
     fn default() -> Self {
         Msg::NoOp
@@ -66,81 +53,43 @@ impl Default for Msg {
 }
 
 impl BucketManagement {
-//    fn get_managable_buckets(loadable_bucket_users: &mut Loadable<Vec<BucketUsersData>>, context: &mut Env<Context, Self>) {
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<Vec<BucketUsersResponse>, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    let new_bucket_users_data: Vec<BucketUsersData> = data.map(::wire::convert_vector).unwrap();
-//                    Msg::BucketUsersDataLoaded(new_bucket_users_data)
-//                } else {
-//                    Msg::BucketUsersDataFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            loadable_bucket_users,
-//            BucketRequest::GetUnapprovedUsersForOwnedBuckets,
-//            callback,
-//        );
-//    }
-//
-//    fn grant_access_to_user_for_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, approve_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-//        let callback = context.send_back(
-//            move |response: Response<Json<Result<(), Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                Msg::GetBucketUsersData // This is lazy, but just get the whole list again.
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            approve_user_action,
-//            BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
-//            callback,
-//        );
-//    }
-//
-//    fn remove_user_from_bucket(bucket_uuid: BucketUuid, user_uuid: UserUuid, remove_user_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-//        let bucket_uuid: BucketUuid = bucket_uuid;
-//        let callback = context.send_back(
-//            move |response: Response<Json<Result<(), Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                Msg::GetBucketUsersData // This is lazy, but just get the whole list again.
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            remove_user_action,
-//            BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
-//            callback,
-//        );
-//    }
-//
-//    fn set_public_or_private(bucket_uuid: BucketUuid, pub_or_priv: PublicOrPrivate, set_public_or_private_action: &mut Uploadable<()>, context: &mut Env<Context, Self>) {
-//        let bucket_uuid: BucketUuid = bucket_uuid;
-//        let callback = context.send_back(
-//            move |response: Response<Json<Result<(), Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                Msg::GetBucketUsersData // This is lazy, but just get the whole list again.
-//            },
-//        );
-//
-//        let is_public = match pub_or_priv {
-//            PublicOrPrivate::Public => true,
-//            PublicOrPrivate::Private => false
-//        };
-//
-//        context.make_request_and_set_ft(
-//            set_public_or_private_action,
-//            BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
-//            callback,
-//        );
-//    }
+    fn get_manageable_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
+        networking.fetch(
+            BucketRequest::GetUnapprovedUsersForOwnedBuckets,
+            |r: FetchResponse<Vec<BucketUsersResponse>>| {
+                let r: FetchResponse<Vec<BucketUsersData>> = r.map(::wire::convert_vector);
+                Msg::HandleGetBucketUsersDataResponse(r)
+            },
+            link
+        );
+    }
+
+    fn grant_access_to_user_for_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
+        self.networking.fetch(
+            BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
+            |r| Msg::HandleGrantUserAccessResponse(r),
+            &self.link
+        );
+    }
+    fn remove_user_from_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
+        self.networking.fetch(
+            BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
+            |r| Msg::HandleDenyUserAccessResponse(r),
+            &self.link
+        );
+    }
+
+    fn set_public_or_private(&mut self, bucket_uuid: BucketUuid, publicity: Publicity) {
+        let is_public: bool = match publicity {
+            Publicity::Public => true,
+            Publicity::Private => false
+        };
+        self.networking.fetch(
+            BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
+            |r| Msg::HandleSetPublicityResponse(r),
+            &self.link
+        );
+    }
 }
 
 
@@ -156,16 +105,11 @@ impl Component for BucketManagement {
             approve_user_action: Uploadable::default(),
             set_public_or_private_action: Uploadable::default(),
             networking: Networking::new(&link),
-            link: link,
+            link,
         };
 
-//        Self::get_managable_buckets(&mut management.bucket_users, context);
         // Get the buckets
-        management.networking.fetch(
-            BucketRequest::GetUnapprovedUsersForOwnedBuckets,
-            |r| Msg::HandleGetBucketUsersDataResponse(r),
-            &management.link
-        );
+        Self::get_manageable_buckets(&mut management.networking, &management.link);
         management
     }
 
@@ -173,28 +117,13 @@ impl Component for BucketManagement {
         use self::Msg::*;
         match msg {
             GetBucketUsersData => {
-//                Self::get_managable_buckets(&mut self.bucket_users, context);
-                self.networking.fetch(
-                    BucketRequest::GetUnapprovedUsersForOwnedBuckets,
-                    |r| Msg::HandleGetBucketUsersDataResponse(r),
-                    &self.link
-                );
+                Self::get_manageable_buckets(&mut self.networking, &self.link);
             }
-//            BucketUsersDataLoaded(bucket_user_data) => {
-//                self.bucket_users = Loadable::Loaded(bucket_user_data)
-//            },
-//            BucketUsersDataFailed => warn!("Failed to get bucket user data"),
             HandleGetBucketUsersDataResponse(response) => {
-                let response: FetchResponse<Vec<BucketUsersData>> = response.map(::wire::convert_vector);
                 self.bucket_users = Loadable::from_fetch_response(response)
             }
             GrantUserAccessToBucket{bucket_uuid, user_uuid} => {
-//                Self::grant_access_to_user_for_bucket(bucket_uuid, user_uuid, &mut self.approve_user_action, context)
-                self.networking.fetch(
-                    BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
-                    |r| Msg::HandleGrantUserAccessResponse(r),
-                    &self.link
-                );
+                self.grant_access_to_user_for_bucket(bucket_uuid, user_uuid);
             }
             HandleGrantUserAccessResponse(response) => {
                 self.approve_user_action.handle_fetch_response(response.clone());
@@ -203,12 +132,7 @@ impl Component for BucketManagement {
                 }
             }
             DenyUserAccessToBucket{bucket_uuid, user_uuid} => {
-//                Self::remove_user_from_bucket(bucket_uuid, user_uuid, &mut self.remove_user_action, context)
-                self.networking.fetch(
-                    BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
-                    |r| Msg::HandleSetPublicityResponse(r),
-                    &self.link
-                );
+                self.remove_user_from_bucket(bucket_uuid, user_uuid);
             },
             HandleDenyUserAccessResponse(response) => {
                 self.remove_user_action.handle_fetch_response(response.clone());
@@ -216,17 +140,8 @@ impl Component for BucketManagement {
                    self.update(GetBucketUsersData);
                 }
             }
-            SetPublicOrPrivate {bucket_uuid, pub_or_priv} => {
-                let is_public: bool = match pub_or_priv {
-                    PublicOrPrivate::Public => true,
-                    PublicOrPrivate::Private => false
-                };
-                self.networking.fetch(
-                    BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
-                    |r| Msg::HandleSetPublicityResponse(r),
-                    &self.link
-                );
-//                Self::set_public_or_private(bucket_uuid, pub_or_priv, &mut self.set_public_or_private_action, context)
+            SetPublicOrPrivate {bucket_uuid, publicity} => {
+                self.set_public_or_private(bucket_uuid, publicity)
             }
             HandleSetPublicityResponse(response) => {
                 self.set_public_or_private_action.handle_fetch_response(response.clone());
@@ -238,7 +153,6 @@ impl Component for BucketManagement {
         }
         true
     }
-
 
     fn change(&mut self, _props: Self::Properties, ) -> ShouldRender {
         false
@@ -266,11 +180,11 @@ impl BucketManagement {
             let bucket_uuid = bucket_user_data.bucket.uuid;
             let button = if bucket_user_data.bucket.is_public {
                 html! {
-                    <Button: title="Lock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, pub_or_priv: PublicOrPrivate::Private}, />
+                    <Button: title="Lock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, publicity: Publicity::Private}, />
                 }
             } else {
                 html! {
-                    <Button: title="Unlock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, pub_or_priv: PublicOrPrivate::Public}, />
+                    <Button: title="Unlock", onclick= move |_| Msg::SetPublicOrPrivate{bucket_uuid, publicity: Publicity::Public}, />
                 }
             };
 

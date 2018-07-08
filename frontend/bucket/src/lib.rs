@@ -31,39 +31,22 @@ mod requests;
 
 use util::button::Button;
 use bucket::BucketLobby;
-
-
-//use routes::Route;
-
-//use common::datatypes::bucket::BucketData;
 use util::loadable::Loadable;
-
-
-use yew::format::Json;
-use yew::services::fetch::Response;
-use failure::Error;
-//use context::networking::RequestWrapper;
 use wire::bucket::BucketResponse;
-
 //use util::input::InputValidator;
 //use util::input::Input;
 use util::input::InputState;
-
 use util::uploadable::Uploadable;
 use wire::bucket::NewBucketRequest;
-
 use bucket_participants::BucketParticipants;
 use bucket_management::BucketManagement;
-
 use buckets::BucketLists;
-
 use buckets::ApprovedBucket;
 use buckets::PublicBucket;
 use identifiers::bucket::BucketUuid;
 
 use common::fetch::Networking;
 use common::fetch::FetchResponse;
-use common::fetch::FetchError;
 use common::datatypes::bucket::BucketData;
 
 use requests::BucketRequest;
@@ -101,11 +84,6 @@ pub enum DropDownPaneVariant {
     ViewParticipants,
     Closed
 }
-
-//pub struct Buckets {
-//    joinable_buckets: Loadable<Vec<BucketData>>,
-//    public_buckets: Loadable<Vec<BucketData>>
-//}
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -181,140 +159,39 @@ impl Default for Msg {
 }
 
 impl BucketModel {
-//    fn get_public_buckets(networking: &mut Networking, buckets: &mut Loadable<Vec<PublicBucket>>, link: &ComponentLink<BucketModel>) {
-//        networking.fetch(BucketRequest::GetPublicBuckets, |r| Msg::HandleGetBucketsResponse(r) , &link);
-//        let threads_callback = context.send_back(
-//            |response: Response<Json<Result<Vec<BucketResponse>, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    Msg::PublicBucketsReady(
-//                        data.unwrap()
-//                            .into_iter()
-//                            .map(BucketData::from)
-//                            .map(PublicBucket)
-//                            .collect(),
-//                    )
-//                } else {
-//                    Msg::PublicBucketsFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            buckets,
-//            RequestWrapper::GetPublicBuckets,
-//            threads_callback,
-//        );
-//    }
+    /// Gets the list of buckets the user can request to join.
+    fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>)  {
+        networking.fetch(BucketRequest::GetPublicBuckets, |r| Msg::HandleGetPublicBucketsResponse(r) , link);
+    }
 
     /// Gets the list of buckets the user can join.
-//    fn get_approved_buckets(buckets: &mut Loadable<Vec<ApprovedBucket>>, context: &mut Env<Context, Self>) {
-//        let threads_callback = context.send_back(
-//            |response: Response<Json<Result<Vec<BucketResponse>, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    Msg::ApprovedBucketsReady(
-//                        data.unwrap()
-//                            .into_iter()
-//                            .map(BucketData::from)
-//                            .map(ApprovedBucket)
-//                            .collect(),
-//                    )
-//                } else {
-//                    Msg::ApprovedBucketsFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            buckets,
-//            RequestWrapper::GetBucketsForUser,
-//            threads_callback,
-//        );
-//    }
+    fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
+        networking.fetch(BucketRequest::GetBucketsForUser, |r| Msg::HandleGetApprovedBucketsResponse(r) , link);
+    }
 
-//    fn get_bucket(bucket: &mut Loadable<BucketData>, bucket_uuid: BucketUuid, context: &mut Env<Context, Self>) {
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<BucketResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    Msg::BucketReady(
-//                        data.map(BucketData::from).unwrap()
-//                    )
-//                } else {
-//                    Msg::BucketFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            bucket,
-//            RequestWrapper::GetBucket{bucket_uuid},
-//            callback,
-//        );
-//    }
+    fn get_bucket(bucket_uuid: BucketUuid, networking: &mut Networking, link: &ComponentLink<Self>) {
+        networking.fetch(
+            BucketRequest::GetBucket{bucket_uuid},
+            |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)),
+            link
+        );
+    }
 
     fn create_bucket(&mut self, bucket: NewBucket) {
-
-//        let bucket: NewBucket = new_bucket.cloned_inner();
-
         match bucket.validate() {
             Ok(new_bucket_request) => {
                 self.networking.fetch(BucketRequest::CreateBucket(new_bucket_request), |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)) , &self.link);
             }
             Err(error) => {
-                self.update(Msg::HandleGetBucketResponse(FetchResponse::Error(FetchError::Misc)));
-//                new_bucket.set_failed(&error)
+                if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
+                    new_bucket.set_failed(&error)
+                }
             }
         }
-
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<BucketResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-////                    Msg::BucketCreationReady(
-////                        data.map(BucketData::from).unwrap()
-////                    )
-//                    // TODO the full bucket response is not necessarily needed here.
-//                    let bucket_uuid = data.map(|x: BucketResponse| x.uuid).unwrap();
-//
-//                    Msg::NavigateToBucket{bucket_uuid }
-//                } else {
-////                    Msg::BucketFailed // TEMP
-//                    Msg::NoOp
-//                }
-//            },
-//        );
-
     }
-//    fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid, /*request_to_join_bucket_action: &mut Uploadable<()>*/) {
-//
-//
-//        self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
-//
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<BucketResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    Msg::NoOp
-//                } else {
-////                    Msg::BucketFailed
-//                    Msg::NoOp // TODO temp, not intended permanantly
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            request_to_join_bucket_action,
-//            RequestWrapper::CreateJoinBucketRequest{bucket_uuid},
-//            callback,
-//        );
-//    }
+    fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
+        self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
+    }
 }
 
 impl Component for BucketModel {
@@ -326,25 +203,18 @@ impl Component for BucketModel {
 
         let bucket_page: BucketPage = match props {
             BucketRoute::BucketList => {
-                let mut bucket_lists = BucketLists::default();
-
-                networking.fetch(BucketRequest::GetPublicBuckets, |r| Msg::HandleGetPublicBucketsResponse(r) , &link);
-                networking.fetch(BucketRequest::GetBucketsForUser, |r| Msg::HandleGetApprovedBucketsResponse(r) , &link);
-//                Self::get_public_buckets(networking, &mut bucket_lists.public_buckets, context);
-//                Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
-                BucketPage::BucketList(bucket_lists)
+                Self::get_public_buckets(&mut networking, &link);
+                Self::get_approved_buckets(&mut networking, &link);
+                BucketPage::BucketList(BucketLists::default())
             }
             BucketRoute::Bucket{bucket_uuid} => {
-                let mut bucket = Loadable::default();
-                networking.fetch(BucketRequest::GetBucket{bucket_uuid}, |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)), &link);
-//                Self::get_bucket(&mut bucket, bucket_uuid, context);
-                BucketPage::Bucket(bucket)
+                Self::get_bucket(bucket_uuid, &mut networking, &link);
+                BucketPage::Bucket(Loadable::default())
             }
             BucketRoute::Create => {
                 BucketPage::Create(Uploadable::default())
             }
         };
-
 
         let router_cb = link.send_back(|_| Msg::NoOp);
         BucketModel {
@@ -354,6 +224,8 @@ impl Component for BucketModel {
             router: RouterSenderBase::<()>::new(router_cb),
             link
         }
+
+
     }
 
     fn update(&mut self, msg: Msg ) -> ShouldRender {
@@ -396,8 +268,6 @@ impl Component for BucketModel {
             HandleGetBucketResponse(bucket_data_response) => {
                 self.bucket_page = BucketPage::Bucket(Loadable::from_fetch_response(bucket_data_response))
             }
-//            BucketReady(bucket) => self.bucket_page = BucketPage::Bucket(Loadable::Loaded(bucket)),
-//            BucketFailed => self.bucket_page = BucketPage::Bucket(Loadable::Failed(Some("Failed to load bucket.".to_string()))),
             CreateBucket => {
                 let new_bucket_option: Option<NewBucket> = if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
                     Some(new_bucket.cloned_inner())
@@ -428,13 +298,14 @@ impl Component for BucketModel {
                 }
             }
             RequestToJoinBucket {bucket_uuid} => {
-//                self.request_to_join_bucket(bucket_uuid)
-                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
+                self.request_to_join_bucket(bucket_uuid)
+//                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
             }
-            HandleJoinBucketResponse(response) => {
-                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
-                   // TODO do something
-                }
+            HandleJoinBucketResponse(_response) => {
+//                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
+//                    bucket_lists
+//                }
+                //TODO this used to be a "noop" but it should probably do something
             }
             NoOp => {}
         }
@@ -443,19 +314,13 @@ impl Component for BucketModel {
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         let bucket_page: BucketPage = match props {
             BucketRoute::BucketList => {
-                let mut bucket_lists = BucketLists::default();
-                self.networking.fetch(BucketRequest::GetPublicBuckets, |r| Msg::HandleGetPublicBucketsResponse(r) , &self.link);
-                self.networking.fetch(BucketRequest::GetBucketsForUser, |r| Msg::HandleGetApprovedBucketsResponse(r) , &self.link);
-//                Self::get_public_buckets(&mut bucket_lists.public_buckets, context);
-//                Self::get_approved_buckets(&mut bucket_lists.approved_buckets, context);
-                BucketPage::BucketList(bucket_lists)
+                Self::get_public_buckets(&mut self.networking, &self.link);
+                Self::get_approved_buckets(&mut self.networking, &self.link);
+                BucketPage::BucketList(BucketLists::default())
             }
             BucketRoute::Bucket{bucket_uuid} => {
-                let mut bucket = Loadable::default();
-
-                self.networking.fetch(BucketRequest::GetBucket{bucket_uuid}, |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)), &self.link);
-//                Self::get_bucket(&mut bucket, bucket_uuid, context);
-                BucketPage::Bucket(bucket)
+                Self::get_bucket(bucket_uuid, &mut self.networking, &self.link);
+                BucketPage::Bucket(Loadable::default())
             }
             BucketRoute::Create => {
                 BucketPage::Create(Uploadable::default())

@@ -64,6 +64,12 @@ pub enum FetchError {
     Unauthorized,
     /// Authentication wasn't present when the request was made.
     AuthAbsent,
+    /// Not found
+    ResourceNotFound,
+    /// Bad request
+    BadRequest,
+    /// Forbidden: 403 you are authenticated, but not authorized to access this resource.
+    Forbidden,
     /// Unhandled error.
     Misc
 }
@@ -283,13 +289,19 @@ impl FetchRequest for Reauth {
 }
 
 fn refresh_jwt(jwt_string: String, fetch_service: &mut FetchService, fetch_task_collection: &mut Vec<FetchTask>) {
+    info!("JWT is being refreshed, this will extend the length of login session's validity.");
+
     let closure = move |response: Response<Result<String, Error>>| {
         let (meta, data) = response.into_parts();
         println!("META: {:?}, {:?}", meta, data);
         if meta.status.is_success() {
-            let jwt: String = data.expect("Expected JWT response to be a string");
+            info!("New JWT retrieved.");
+            let jwt = data;
+            if jwt.is_err() {
+                error!("New JWT encountered an error")
+            }
             let mut storage_service = StorageService::new(Area::Local);
-            let jwt: Result<String, Error> = Ok(jwt);
+            info!("Storing JWT");
             storage_service.store("JWT", jwt);
         } else {
             let mut storage_service = StorageService::new(Area::Local);
@@ -323,7 +335,6 @@ fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: String, f
 
 
         let current_date = user::get_now();
-
 //        self.log(&format!("current: {:?}, iat: {:?}", current_date, jwt.iat) );
         // If current time > iat + 1 day, then refresh.
         if current_date > jwt.iat + Duration::days(1) {
@@ -395,6 +406,15 @@ impl Networking {
                     warn!("Response: Not Authorized. Authentication not present or has expired");
                     FetchResponse::Error(FetchError::Unauthorized)
                 }
+                404 => {
+                    FetchResponse::Error(FetchError::ResourceNotFound)
+                }
+                403 => {
+                    FetchResponse::Error(FetchError::Forbidden)
+                }
+                400 => {
+                    FetchResponse::Error(FetchError::BadRequest)
+                }
                 200...299 => {
                     info!("Response: 2xx response");
                     let data: String = data.unwrap();
@@ -446,7 +466,7 @@ impl Networking {
             V: Component + Renderable<V>,
             V::Message: Default
     {
-        let router_cb = link.send_back(|_| V::Message::default());
+        let router_cb = link.send_back(|_| V::Message::default()); // do nothing
         let handle_response_closure = move |response: Response<Text>| {
             debug!("Response received");
             let (meta, data) = response.into_parts();
@@ -455,8 +475,17 @@ impl Networking {
                     // This will_not send messages back to the component to to which this fetch struct was created from.
                     let mut router = RouterSenderBase::<()>::new(router_cb.clone());
                     router.send(RouterRequest::ChangeRoute(Route::parse("/auth/login")));
-                    warn!("Response: Not Authorized. Authentication not present or has expired");
+                    warn!("Response: Not Authorized. Authentication not present or has expired, redirecting to login");
                     FetchResponse::Error(FetchError::Unauthorized)
+                }
+                404 => {
+                    FetchResponse::Error(FetchError::ResourceNotFound)
+                }
+                403 => {
+                    FetchResponse::Error(FetchError::Forbidden)
+                }
+                400 => {
+                    FetchResponse::Error(FetchError::BadRequest)
                 }
                 200...299 => {
                     info!("Response: 2xx response");

@@ -1,10 +1,8 @@
 use yew::prelude::*;
 use datatypes::bucket::BucketData;
 use datatypes::question::QuestionData;
-//use datatypes::question::NewQuestionData;
 use datatypes::question::QuestionLocation;
 
-//use Context;
 use util::loadable::Loadable;
 use util::loading::LoadingType;
 use util::uploadable::Uploadable;
@@ -13,11 +11,6 @@ use util::input::Input;
 
 use util::button::Button;
 use datatypes::answer::AnswerData;
-
-use yew::format::Json;
-use yew::services::fetch::Response;
-use yew::services::fetch::FetchTask;
-use failure::Error;
 
 
 use wire::question::QuestionResponse;
@@ -66,7 +59,6 @@ pub struct BucketLobby {
     active_question: Loadable<Uploadable<QuestionPackage>>,
     new_question: Uploadable<NewQuestion>,
     prior_questions_and_answers: Loadable<QuestionList>,
-    misc_ft: Option<FetchTask>, // Fetch task for which no loading animation is assigned. only one is expected to run at a time, or invalidation of a prior ft is ok.
     networking: Networking,
     link: ComponentLink<BucketLobby>
 }
@@ -88,30 +80,8 @@ impl BucketLobby {
             },
             &self.link
         );
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<Vec<QuestionResponse>, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    Msg::PriorQuestionsReady(
-//                        data.unwrap()
-//                            .into_iter()
-//                            .map(QuestionData::from)
-//                            .collect()
-//                    )
-//                } else {
-//                    Msg::PriorQuestionsFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            prior_questions,
-//            BucketRequest::GetQuestions{bucket_uuid},
-//            callback,
-//        );
     }
-    fn get_random_question(&mut self, /*question_package: &mut Loadable<Uploadable<QuestionPackage>>*/ bucket_uuid: BucketUuid) {
+    fn get_random_question(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
             BucketRequest::GetRandomQuestion{bucket_uuid},
             |r: FetchResponse<QuestionResponse>| {
@@ -131,30 +101,7 @@ impl BucketLobby {
             },
             &self.link
         );
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<QuestionResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    let question_data = data.map(QuestionData::from).unwrap();
-//                    let question_package = QuestionPackage {
-//                        question_data,
-//                        answer: InputState::default(),
-//                    };
-//                    Msg::GetRandomQuestionReady(
-//                        question_package
-//                    )
-//                } else {
-//                    Msg::GetRandomQuestionFailed
-//                }
-//            },
-//        );
-//
-//        context.make_request_and_set_ft(
-//            question_package,
-//            BucketRequest::GetRandomQuestion{bucket_uuid},
-//            callback,
-//        );
+
     }
     fn post_new_question(&mut self, new_question_request: NewQuestionRequest, /* new_question: &mut Uploadable<NewQuestion>,*/) {
         self.networking.fetch(
@@ -162,30 +109,7 @@ impl BucketLobby {
             |r: FetchResponse<QuestionResponse>| Msg::HandleSubmitNewQuestionResponse(r.map(|_|())),
             &self.link
         );
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<QuestionResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    let _question_data = data.map(QuestionData::from).unwrap();
-//                    Msg::ResetCreateQuestionText
-//                } else {
-//                    Msg::CreateQuestionFailed
-//                }
-//            },
-//        );
-//
-//        let question_text = new_question.as_ref().question_text.inner_text();
-//        let new_question_request = NewQuestionRequest {
-//            bucket_uuid,
-//            question_text
-//        };
-//
-//        context.make_request_and_set_ft(
-//            new_question,
-//            BucketRequest::CreateQuestion( new_question_request),
-//            callback,
-//        );
+
     }
 
     fn post_answer_to_question(&mut self, new_answer_request: NewAnswerRequest /*question_package: &mut Uploadable<QuestionPackage>*/) {
@@ -195,36 +119,6 @@ impl BucketLobby {
             &self.link
         );
 
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<AnswerResponse, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-////                    let question_data = data.map(QuestionData::from).unwrap();
-//                    Msg::SendAnswerSuccess
-//                } else {
-//                    Msg::SendAnswerFail
-//                }
-//            },
-//        );
-
-//
-//        let answer_text = if question_package.as_ref().answer.inner_text().len() > 0 {
-//            Some(question_package.as_ref().answer.inner_text())
-//        } else {
-//            None
-//        };
-//
-//        let request = NewAnswerRequest {
-//            question_uuid: question_package.as_ref().question_data.uuid,
-//            answer_text
-//        };
-//
-//        context.make_request_and_set_ft(
-//            question_package,
-//            BucketRequest::AnswerQuestion(request),
-//            callback,
-//        );
     }
 
     fn put_question_back_in_bucket(&mut self, question_uuid: QuestionUuid) {
@@ -234,24 +128,7 @@ impl BucketLobby {
             &self.link
          );
 
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<QuestionUuid, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    let question_uuid: QuestionUuid = data.unwrap();
-//                    Msg::QuestionPutBackInBucketSuccess {question_uuid}
-//                } else {
-//                    Msg::QuestionPutBackInBucketFailed
-//                }
-//            },
-//        );
-//
-//        let ft = context.make_request(
-//            BucketRequest::PutQuestionBackInBucket{question_uuid},
-//            callback,
-//        ).expect("user logged in"); // TODO refactor this.
-//        Some(ft)
+
     }
 
     fn delete_question(&mut self, question_uuid: QuestionUuid, ) {
@@ -260,24 +137,6 @@ impl BucketLobby {
             |r| Msg::HandleDiscardQuestionResponse(r),
             &self.link
          );
-//        let callback = context.send_back(
-//            |response: Response<Json<Result<QuestionUuid, Error>>>| {
-//                let (meta, Json(data)) = response.into_parts();
-//                println!("META: {:?}, {:?}", meta, data);
-//                if meta.status.is_success() {
-//                    let question_uuid: QuestionUuid = data.unwrap();
-//                    Msg::DiscardQuestionSucceeded {question_uuid}
-//                } else {
-//                    Msg::DiscardQuestionFailed
-//                }
-//            },
-//        );
-//
-//        let ft = context.make_request(
-//            BucketRequest::DeleteQuestion{question_uuid},
-//            callback,
-//        ).expect("user logged in"); // TODO refactor this.
-//        Some(ft)
     }
 }
 
@@ -289,29 +148,18 @@ pub struct Props {
 pub enum Msg {
     DrawRandomQuestion,
     HandleDrawRandomQuestionResponse(FetchResponse<Uploadable<QuestionPackage>>),
-//    GetRandomQuestionReady(QuestionPackage),
-//    GetRandomQuestionFailed,
     UpdateAnswer(InputState),
     SubmitAnswer,
     HandleSubmitAnswerResponse(FetchResponse<()>),
-//    SendAnswerSuccess,
-//    SendAnswerFail,
     UpdateNewQuestion(InputState),
     SubmitNewQuestion,
     HandleSubmitNewQuestionResponse(FetchResponse<()>),
     ResetCreateQuestionText,
-//    CreateQuestionFailed,
     HandlePriorQuestionResponse(FetchResponse<Vec<QuestionData>>),
-//    PriorQuestionsReady(Vec<QuestionData>),
-//    PriorQuestionsFailed,
     PutOldQuestionBackInBucket{question_uuid: QuestionUuid},
     HandlePutOldQuestionBackInBucketResponse(FetchResponse<QuestionUuid>),
-//    QuestionPutBackInBucketSuccess{question_uuid: QuestionUuid},
-//    QuestionPutBackInBucketFailed,
     DiscardQuestion,
     HandleDiscardQuestionResponse(FetchResponse<QuestionUuid>),
-//    DiscardQuestionSucceeded {question_uuid: QuestionUuid},
-//    DiscardQuestionFailed,
     SetListFilter(QuestionLocation),
     NoOp
 }
@@ -327,16 +175,11 @@ impl Component for BucketLobby {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-//        let mut bucket = BucketLobby {
-//            bucket_data: props.bucket_data,
-//            ..Default::default()
-//        };
         let mut bucket = BucketLobby {
             bucket_data: props.bucket_data,
             active_question: Loadable::default(),
             new_question: Uploadable::default(),
             prior_questions_and_answers: Loadable::default(),
-            misc_ft: Option::default(), // Fetch task for which no loading animation is assigned. only one is expected to run at a time, or invalidation of a prior ft is ok.
             networking: Networking::new(&link),
             link
         };
@@ -357,8 +200,6 @@ impl Component for BucketLobby {
             HandleDrawRandomQuestionResponse(response) => {
                 self.active_question = Loadable::from_fetch_response(response);
             }
-//            GetRandomQuestionReady(question_package) => self.active_question = Loadable::Loaded(Uploadable::NotUploaded(question_package)),
-//            GetRandomQuestionFailed => self.active_question = Loadable::Failed(Some(String::from("Could not load question."))),
             UpdateAnswer(input) => {
                 if let Loadable::Loaded(ref mut question_package) = self.active_question {
                     question_package.as_mut().answer = input;
@@ -366,11 +207,6 @@ impl Component for BucketLobby {
                     error!("Error, should not be able to update answer if question not loaded.")
                 }
             }
-//            SendAnswerSuccess => {
-//                self.get_prior_questions_and_answers( self.bucket_data.uuid);
-//                self.active_question = Loadable::Unloaded
-//            },
-//            SendAnswerFail => self.active_question = Loadable::Failed(Some(String::from("Failed to submit question"))),
             SubmitAnswer => {
                 let request_option: Option<NewAnswerRequest> = self.active_question.as_option().map(|question_package| {
                      let answer_text = if question_package.as_ref().answer.inner_text().len() > 0 {
@@ -399,8 +235,16 @@ impl Component for BucketLobby {
                         self.get_prior_questions_and_answers( bucket_uuid);
                         self.active_question = Loadable::Unloaded
                     }
-                    Error(_) => self.new_question.set_failed("failed to submit Answer"),
-                    Started => self.new_question.set_uploading(),
+                    Error(_) => {
+                        if let Some(ref mut active_uploadable) = self.active_question.as_mut_option() {
+                            active_uploadable.set_failed("failed to submit Answer")
+                        }
+                    },
+                    Started => {
+                        if let Some(ref mut active_question_uploadable) = self.active_question.as_mut_option() {
+                            active_question_uploadable.set_uploading()
+                        }
+                    },
                 }
             }
             UpdateNewQuestion(input) => self.new_question.as_mut().question_text = input,
@@ -424,7 +268,6 @@ impl Component for BucketLobby {
                 };
             }
             ResetCreateQuestionText => self.new_question = Uploadable::default(),
-//            CreateQuestionFailed => self.new_question.set_failed("Could not create new question"),
             HandlePriorQuestionResponse(response) => {
                match response {
                     FetchResponse::Success(questions) => {
@@ -439,28 +282,12 @@ impl Component for BucketLobby {
                         }
                     }
                     FetchResponse::Error(_) => {
-//                        error!("failed to put question back in bucket")
                         warn!("Get prior questions failed");
                         self.prior_questions_and_answers = Loadable::Failed(Some(String::from("Could not load old questions")))
                     },
                     FetchResponse::Started => self.prior_questions_and_answers = Loadable::Loading,
                 }
             }
-//            PriorQuestionsReady(questions) =>{
-//                if let Loadable::Loaded(ref mut old_list) = self.prior_questions_and_answers {
-//                    old_list.list = questions;
-//                } else {
-//                    let new_list = QuestionList {
-//                        list: questions,
-//                        filter: QuestionLocation::Floor
-//                    };
-//                    self.prior_questions_and_answers = Loadable::Loaded(new_list)
-//                }
-//            }
-//            PriorQuestionsFailed => {
-//                warn!("Get prior questions failed");
-//                self.prior_questions_and_answers = Loadable::Failed(Some(String::from("Could not load old questions")))
-//            }
             PutOldQuestionBackInBucket{question_uuid} => self.put_question_back_in_bucket(question_uuid),
             HandlePutOldQuestionBackInBucketResponse(response) => {
                 match response {
@@ -494,10 +321,8 @@ impl Component for BucketLobby {
 //                        })
 //                }
 //            },
-//            QuestionPutBackInBucketFailed => error!("failed to put question back in bucket"),
             DiscardQuestion => {
                 if let Some(question_uuid) = self.active_question.as_option().map(|x|x.as_ref().question_data.uuid) {
-//                    let question_uuid = active_question.as_ref().question_data.uuid;
                     self.delete_question(question_uuid)
                 }
             }
