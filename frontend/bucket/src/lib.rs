@@ -57,13 +57,16 @@ use yew_router::components::RouterButton;
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct NewBucket {
-    pub name: InputState
+    pub name: InputState,
 }
 
 impl NewBucket {
     pub fn validate_name(name: String) -> Result<String, String> {
         if name.len() < 1 {
-            return Err("Bucket Name must have some text.".into())
+            return Err(
+                "Bucket Name must have some text."
+                    .into(),
+            );
         }
         Ok(name)
     }
@@ -72,7 +75,7 @@ impl NewBucket {
 
         let request = NewBucketRequest {
             bucket_name: self.name.inner_text().clone(),
-            is_public: true // By default, all buckets are public, but the option to parameterize it in the UI in the future is possible
+            is_public: true, // By default, all buckets are public, but the option to parameterize it in the UI in the future is possible
         };
         Ok(request)
     }
@@ -82,15 +85,15 @@ impl NewBucket {
 pub enum DropDownPaneVariant {
     ManageBuckets,
     ViewParticipants,
-    Closed
+    Closed,
 }
 
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum BucketRoute {
     BucketList,
-    Bucket{bucket_uuid: BucketUuid},
-    Create
+    Bucket { bucket_uuid: BucketUuid },
+    Create,
 }
 impl Default for BucketRoute {
     fn default() -> Self {
@@ -102,7 +105,7 @@ impl Routable for BucketModel {
     fn resolve_props(route: &Route) -> Option<<Self as Component>::Properties> {
         if let Some(seg_2) = route.path_segments.get(1) {
             if let Ok(bucket_uuid) = BucketUuid::parse_str(&seg_2) {
-                Some(BucketRoute::Bucket{bucket_uuid})
+                Some(BucketRoute::Bucket { bucket_uuid })
             } else if seg_2 == "create" {
                 Some(BucketRoute::Create)
             } else {
@@ -126,7 +129,7 @@ pub struct BucketModel {
     drop_down_state: DropDownPaneVariant,
     networking: Networking,
     link: ComponentLink<BucketModel>,
-    router: RouterSenderBase<()>
+    router: RouterSenderBase<()>,
 }
 
 
@@ -134,12 +137,12 @@ pub struct BucketModel {
 pub enum BucketPage {
     BucketList(BucketLists),
     Bucket(Loadable<BucketData>),
-    Create(Uploadable<NewBucket>)
+    Create(Uploadable<NewBucket>),
 }
 
 
 pub enum Msg {
-    NavigateToBucket{bucket_uuid: BucketUuid},
+    NavigateToBucket { bucket_uuid: BucketUuid },
     NavigateToCreateBucket,
     HandleGetPublicBucketsResponse(FetchResponse<Vec<BucketResponse>>),
     HandleGetApprovedBucketsResponse(FetchResponse<Vec<BucketResponse>>),
@@ -148,8 +151,8 @@ pub enum Msg {
     CreateBucket,
     UpdateBucketName(InputState),
     ChangeDropDownState(DropDownPaneVariant),
-    RequestToJoinBucket{bucket_uuid: BucketUuid},
-    NoOp // TODO remove me
+    RequestToJoinBucket { bucket_uuid: BucketUuid },
+    NoOp, // TODO remove me
 }
 
 impl Default for Msg {
@@ -160,27 +163,39 @@ impl Default for Msg {
 
 impl BucketModel {
     /// Gets the list of buckets the user can request to join.
-    fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>)  {
-        networking.fetch(BucketRequest::GetPublicBuckets, |r| Msg::HandleGetPublicBucketsResponse(r) , link);
+    fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
+        networking.fetch(
+            BucketRequest::GetPublicBuckets,
+            |r| Msg::HandleGetPublicBucketsResponse(r),
+            link,
+        );
     }
 
     /// Gets the list of buckets the user can join.
     fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
-        networking.fetch(BucketRequest::GetBucketsForUser, |r| Msg::HandleGetApprovedBucketsResponse(r) , link);
+        networking.fetch(
+            BucketRequest::GetBucketsForUser,
+            |r| Msg::HandleGetApprovedBucketsResponse(r),
+            link,
+        );
     }
 
     fn get_bucket(bucket_uuid: BucketUuid, networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
-            BucketRequest::GetBucket{bucket_uuid},
+            BucketRequest::GetBucket { bucket_uuid },
             |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)),
-            link
+            link,
         );
     }
 
     fn create_bucket(&mut self, bucket: NewBucket) {
         match bucket.validate() {
             Ok(new_bucket_request) => {
-                self.networking.fetch(BucketRequest::CreateBucket(new_bucket_request), |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)) , &self.link);
+                self.networking.fetch(
+                    BucketRequest::CreateBucket(new_bucket_request),
+                    |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)),
+                    &self.link,
+                );
             }
             Err(error) => {
                 if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
@@ -190,7 +205,11 @@ impl BucketModel {
         }
     }
     fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
-        self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
+        self.networking.fetch(
+            BucketRequest::CreateJoinBucketRequest { bucket_uuid },
+            |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r),
+            &self.link,
+        );
     }
 }
 
@@ -207,13 +226,11 @@ impl Component for BucketModel {
                 Self::get_approved_buckets(&mut networking, &link);
                 BucketPage::BucketList(BucketLists::default())
             }
-            BucketRoute::Bucket{bucket_uuid} => {
+            BucketRoute::Bucket { bucket_uuid } => {
                 Self::get_bucket(bucket_uuid, &mut networking, &link);
                 BucketPage::Bucket(Loadable::default())
             }
-            BucketRoute::Create => {
-                BucketPage::Create(Uploadable::default())
-            }
+            BucketRoute::Create => BucketPage::Create(Uploadable::default()),
         };
 
         let router_cb = link.send_back(|_| Msg::NoOp);
@@ -222,25 +239,42 @@ impl Component for BucketModel {
             drop_down_state: DropDownPaneVariant::Closed,
             networking,
             router: RouterSenderBase::<()>::new(router_cb),
-            link
+            link,
         }
 
 
     }
 
-    fn update(&mut self, msg: Msg ) -> ShouldRender {
+    fn update(&mut self, msg: Msg) -> ShouldRender {
         use self::Msg::*;
         match msg {
-            NavigateToBucket {bucket_uuid} => self.router.send(RouterRequest::ChangeRoute(Route::parse(&format!("bucket/{}", bucket_uuid)))),//context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid}).to_route().to_string()),
-            NavigateToCreateBucket => self.router.send(RouterRequest::ChangeRoute(Route::parse("bucket/create"))),
+            NavigateToBucket { bucket_uuid } => {
+                self.router.send(
+                    RouterRequest::ChangeRoute(
+                        Route::parse(&format!(
+                            "bucket/{}",
+                            bucket_uuid
+                        )),
+                    ),
+                )
+            }//context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid}).to_route().to_string()),
+            NavigateToCreateBucket => {
+                self.router.send(
+                    RouterRequest::ChangeRoute(
+                        Route::parse("bucket/create"),
+                    ),
+                )
+            }
             HandleGetPublicBucketsResponse(buckets_response) => {
 
-                let public_buckets_response: FetchResponse<Vec<PublicBucket>> = buckets_response
-                    .map(|x: Vec<BucketResponse>| x
-                        .into_iter()
-                        .map(BucketData::from)
-                        .map(PublicBucket).collect()
-                    );
+                let public_buckets_response: FetchResponse<Vec<PublicBucket>> = buckets_response.map(
+                    |x: Vec<BucketResponse>| {
+                        x.into_iter()
+                            .map(BucketData::from)
+                            .map(PublicBucket)
+                            .collect()
+                    },
+                );
                 if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
                     bucket_list.public_buckets = Loadable::from_fetch_response(public_buckets_response);
                 } else {
@@ -250,12 +284,14 @@ impl Component for BucketModel {
                 }
             }
             HandleGetApprovedBucketsResponse(buckets_response) => {
-                let approved_buckets_response: FetchResponse<Vec<ApprovedBucket>> = buckets_response
-                    .map(|x: Vec<BucketResponse>| x
-                        .into_iter()
-                        .map(BucketData::from)
-                        .map(ApprovedBucket).collect()
-                    );
+                let approved_buckets_response: FetchResponse<Vec<ApprovedBucket>> = buckets_response.map(
+                    |x: Vec<BucketResponse>| {
+                        x.into_iter()
+                            .map(BucketData::from)
+                            .map(ApprovedBucket)
+                            .collect()
+                    },
+                );
 
                 if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
                     bucket_list.approved_buckets = Loadable::from_fetch_response(approved_buckets_response);
@@ -265,9 +301,7 @@ impl Component for BucketModel {
                     self.bucket_page = BucketPage::BucketList(bucket_lists)
                 }
             }
-            HandleGetBucketResponse(bucket_data_response) => {
-                self.bucket_page = BucketPage::Bucket(Loadable::from_fetch_response(bucket_data_response))
-            }
+            HandleGetBucketResponse(bucket_data_response) => self.bucket_page = BucketPage::Bucket(Loadable::from_fetch_response(bucket_data_response)),
             CreateBucket => {
                 let new_bucket_option: Option<NewBucket> = if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
                     Some(new_bucket.cloned_inner())
@@ -281,13 +315,13 @@ impl Component for BucketModel {
                 } else {
                     warn!("app in indeterminate state");
                 }
-            },
+            }
             UpdateBucketName(bucket_name) => {
                 if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
                     new_bucket.as_mut().name = bucket_name;
                 } else {
                     warn!("Incoherent state. Expected page to be /create");
-                    return false
+                    return false;
                 }
             }
             ChangeDropDownState(drop_down_state) => {
@@ -297,14 +331,14 @@ impl Component for BucketModel {
                     self.drop_down_state = drop_down_state
                 }
             }
-            RequestToJoinBucket {bucket_uuid} => {
+            RequestToJoinBucket { bucket_uuid } => {
                 self.request_to_join_bucket(bucket_uuid)
-//                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
+                //                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
             }
             HandleJoinBucketResponse(_response) => {
-//                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
-//                    bucket_lists
-//                }
+                //                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
+                //                    bucket_lists
+                //                }
                 //TODO this used to be a "noop" but it should probably do something
             }
             NoOp => {}
@@ -318,13 +352,11 @@ impl Component for BucketModel {
                 Self::get_approved_buckets(&mut self.networking, &self.link);
                 BucketPage::BucketList(BucketLists::default())
             }
-            BucketRoute::Bucket{bucket_uuid} => {
+            BucketRoute::Bucket { bucket_uuid } => {
                 Self::get_bucket(bucket_uuid, &mut self.networking, &self.link);
                 BucketPage::Bucket(Loadable::default())
             }
-            BucketRoute::Create => {
-                BucketPage::Create(Uploadable::default())
-            }
+            BucketRoute::Create => BucketPage::Create(Uploadable::default()),
         };
         self.bucket_page = bucket_page;
         true
@@ -346,19 +378,23 @@ impl Renderable<BucketModel> for BucketModel {
         let page = match self.bucket_page {
             BucketList(ref buckets) => buckets.view(),
             Bucket(ref bucket) => bucket.default_view(bucket_lobby_fn),
-            Create(ref new_bucket) => html! {
+            Create(ref new_bucket) => {
+                html! {
                 <div class="flexbox-center-item",>
                     {new_bucket.default_view(NewBucket::view)}
                 </div>
+            }
             }
         };
 
 
         let pane = match self.drop_down_state {
             DropDownPaneVariant::Closed => ::util::wrappers::empty_vdom_node(),
-            DropDownPaneVariant::ManageBuckets => html! {
+            DropDownPaneVariant::ManageBuckets => {
+                html! {
                 <BucketManagement: />
-            },
+            }
+            }
             DropDownPaneVariant::ViewParticipants => {
                 if let Bucket(ref bucket) = self.bucket_page {
                     html! {
@@ -372,7 +408,8 @@ impl Renderable<BucketModel> for BucketModel {
 
 
         let title_content = match self.bucket_page {
-            BucketList(_) => html! {
+            BucketList(_) => {
+                html! {
                 <div class=("flexbox-horiz","full-width"),>
                     <div class="flexbox-expand", >
                         {"Buckets"}
@@ -385,8 +422,10 @@ impl Renderable<BucketModel> for BucketModel {
                         {pane}
                     </div>
                 </div>
-            },
-            Bucket(ref bucket) => html! {
+            }
+            }
+            Bucket(ref bucket) => {
+                html! {
                 <div class=("flexbox-horiz","full-width"),>
                     <div class="flexbox-expand",>
                     {
@@ -404,11 +443,14 @@ impl Renderable<BucketModel> for BucketModel {
                         {pane}
                     </div>
                 </div>
-            },
-            Create(_) => html! {
+            }
+            }
+            Create(_) => {
+                html! {
                 <div>
                     {"Create Bucket"}
                 </div>
+            }
             }
         };
 
@@ -428,4 +470,3 @@ impl Renderable<BucketModel> for BucketModel {
 
     }
 }
-

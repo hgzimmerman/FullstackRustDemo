@@ -16,7 +16,7 @@ use yew_router::prelude::*;
 
 
 extern crate bucket;
-//extern crate forum;
+extern crate forum;
 extern crate auth;
 extern crate header;
 
@@ -30,10 +30,8 @@ extern crate web_logger;
 //use routes::routing::Router;
 
 use header::Header;
-//use forum::ForumModel;
+use forum::ForumModel;
 use bucket::BucketModel;
-//use auth::AuthModel;
-
 use auth::{Login, CreateAccount};
 
 struct Model;
@@ -55,23 +53,23 @@ impl Component for Model {
 impl Renderable<Model> for Model {
     fn view(&self) -> Html<Self> {
 
-//        let page = |route: &Route| match route {
-//            Auth(ref auth_route) => html! {
-//                <AuthModel: route=auth_route, />
-//            },
-//            Forums(ref forum_list_route) => html! {
-//                <ForumModel: route=forum_list_route, />
-//            },
-//            Bucket(ref bucket_route) => html! {
-//                <BucketModel: route=bucket_route, />
-//            },
-//            PageNotFound => html! {
-//                <div>
-//                    {"Page Not Found"}
-//                </div>
-//            }
-////                util::wrappers::html_string("Page Not Found".into())
-//        };
+        //        let page = |route: &Route| match route {
+        //            Auth(ref auth_route) => html! {
+        //                <AuthModel: route=auth_route, />
+        //            },
+        //            Forums(ref forum_list_route) => html! {
+        //                <ForumModel: route=forum_list_route, />
+        //            },
+        //            Bucket(ref bucket_route) => html! {
+        //                <BucketModel: route=bucket_route, />
+        //            },
+        //            PageNotFound => html! {
+        //                <div>
+        //                    {"Page Not Found"}
+        //                </div>
+        //            }
+        ////                util::wrappers::html_string("Page Not Found".into())
+        //        };
 
         html! {
             <div class="main-container", >
@@ -80,7 +78,7 @@ impl Renderable<Model> for Model {
                     <Header: />
                 </div>
                 <div class="main-content", >
-                    <YewRouter: routes=routes![Login, CreateAccount, BucketModel], />
+                    <YewRouter: routes=routes![Login, CreateAccount, BucketModel, ForumModel], />
 //                    {page(&self.route)}
                 </div>
             <div/>
@@ -89,7 +87,7 @@ impl Renderable<Model> for Model {
 }
 
 
-fn main()  {
+fn main() {
     web_logger::init();
     info!("Starting Application");
     yew::initialize();

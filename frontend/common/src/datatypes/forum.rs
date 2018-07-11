@@ -17,3 +17,4 @@ impl From<ForumResponse> for ForumData {
         }
     }
 }
+

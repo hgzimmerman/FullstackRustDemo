@@ -1,24 +1,20 @@
-
-use yew::prelude::*;
+use common::fetch::FetchResponse;
+use common::fetch::Networking;
 use datatypes::post::*;
-
-use util::button::Button;
-use util::markdown::author_markdown_toggle::AuthorMarkdownToggle;
-use util::link::Link;
-
-use context::Context;
-use failure::Error;
-use yew::services::fetch::Response;
-use yew::services::fetch::FetchTask;
-use yew::format::Json;
-use wire::post::PostResponse;
-use wire::post::EditPostRequest;
-use context::networking::RequestWrapper;
-use wire::post::NewPostRequest;
-use util::markdown;
+//use context::Context;
 use identifiers::thread::ThreadUuid;
 use identifiers::user::UserUuid;
-
+use requests::ForumRequest;
+use util::button::Button;
+use util::link::Link;
+use util::markdown;
+use util::markdown::author_markdown_toggle::AuthorMarkdownToggle;
+use wire::post::EditPostRequest;
+//use context::networking::RequestWrapper;
+use wire::post::NewPostRequest;
+use wire::post::PostResponse;
+use yew::prelude::*;
+use yew::services::storage::{Area, StorageService};
 
 
 //use util::color::Color;
@@ -28,67 +24,115 @@ pub struct PostTree {
     is_reply_active: bool,
     reply_content: String,
     thread_id: ThreadUuid,
-    ft: Option<FetchTask>,
     edit_instance: Option<String>,
     /// Logged in user, unrelated to the post in question. This is a proxy for if a user is logged in.
     user_id: Option<UserUuid>,
+    networking: Networking,
+    link: ComponentLink<PostTree>
+}
+
+impl PostTree {
+    fn make_a_reply_post(&mut self) {
+        if let Some(user_id) = self.user_id {
+            self.is_reply_active = false; // TODO, not sure if this is ideal to have here?
+            let post_reply =  NewPostRequest {
+                author_uuid: user_id,
+                thread_uuid: self.thread_id,
+                parent_uuid: Some(self.post.uuid),
+                content: self.reply_content.clone(),
+            };
+            self.networking.fetch(
+                ForumRequest::CreatePostResponse(post_reply),
+                |r: FetchResponse<PostResponse>| Msg::HandleCreatePostReplyResponse(r.map(PostData::from)),
+                &self.link
+            );
+        } else {
+            error!("user id should always be accessible")
+        }
+
+    }
+    fn send_edit_request(&mut self) {
+        if let Some(ref edit_text) = self.edit_instance {
+            let post_edit = EditPostRequest {
+                uuid: self.post.uuid,
+                thread_uuid: self.thread_id,
+                content: edit_text.clone(),
+            };
+            self.networking.fetch(
+                ForumRequest::UpdatePost(post_edit),
+                |r: FetchResponse<PostResponse>| Msg::HandleEditPostResponse(r.map(PostData::from)),
+                &self.link
+            );
+        }
+    }
 }
 
 pub enum Msg {
     ToggleReplyArea,
     UpdateReplyContent(String),
     PostReply,
-    ChildPostReady(PostData),
-    ChildPostFailed,
+    HandleCreatePostReplyResponse(FetchResponse<PostData>),
+//    ChildPostReady(PostData),
+//    ChildPostFailed,
     ToggleEditArea,
     UpdateEditContent(String),
     PostPostEdit,
-    PostEditReady(PostData),
-    PostEditFailed
+    HandleEditPostResponse(FetchResponse<PostData>),
+//    PostEditReady(PostData),
+//    PostEditFailed
+    NoOp
+}
+
+impl Default for Msg {
+    fn default() -> Self {
+        Msg::NoOp
+    }
 }
 
 #[derive(PartialEq, Clone)]
 pub struct Props {
     pub post: PostData,
-    pub thread_id: ThreadUuid,
-    pub user_id: Option<UserUuid>
+    pub thread_uuid: ThreadUuid,
+    pub user_uuid: Option<UserUuid>,
 }
 
 impl Default for Props {
     fn default() -> Self {
         Props {
             post: PostData::default(),
-            thread_id: ThreadUuid::default(),
-            user_id: None
+            thread_uuid: ThreadUuid::default(),
+            user_uuid: None,
         }
     }
 }
 
-impl Component<Context> for PostTree {
+impl Component for PostTree {
     type Message = Msg;
     type Properties = Props;
 
-    fn create(props: Self::Properties, context: &mut Env<Context, Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 
         // If the user id isn't passed in, get it from localstorage.
-        let user_id = if let Some(id) = props.user_id {
-            Some(id)
+        let user_id = if let Some(uuid) = props.user_uuid {
+            Some(uuid)
         } else {
-            context.user_id().ok()
+            let mut storage_service = StorageService::new(Area::Local);
+            ::common::user::user_id(&mut storage_service).ok()
         };
 
         PostTree {
             post: props.post,
             is_reply_active: false,
             reply_content: String::new(),
-            thread_id: props.thread_id,
-            ft: None,
+            thread_id: props.thread_uuid,
             edit_instance: None,
-            user_id
+            user_id,
+            networking: Networking::new(&link),
+            link
         }
     }
 
-    fn update(&mut self, msg: Self::Message, context: &mut Env<Context, Self>) -> ShouldRender {
+    fn update(&mut self, msg: Self::Message ) -> ShouldRender {
         match  msg {
             Msg::ToggleReplyArea => {
                 self.is_reply_active = !self.is_reply_active;
@@ -99,44 +143,25 @@ impl Component<Context> for PostTree {
                 true
             }
             Msg::PostReply => {
-                self.is_reply_active = false;
-                let callback = context.send_back(
-                    |response: Response<Json<Result<PostResponse, Error>>>| {
-                        let (meta, Json(data)) = response.into_parts();
-                        println!("META: {:?}, {:?}", meta, data);
-
-                        if meta.status.is_success() {
-                            let post_data: PostData = data.unwrap().into();
-
-                            Msg::ChildPostReady(post_data)
-                        } else {
-                            Msg::ChildPostFailed
-                        }
-                    },
-                );
-                if let Ok(user_id) = context.user_id() {
-                     let post_reply =  NewPostRequest {
-                        author_uuid: user_id,
-                        thread_uuid: self.thread_id,
-                        parent_uuid: Some(self.post.uuid),
-                        content: self.reply_content.clone(),
-                    };
-
-                    let task = context.make_request(RequestWrapper::CreatePostResponse(post_reply), callback);
-                    self.ft = task.ok()
-                };
-
+                self.make_a_reply_post();
                 true
             }
-            Msg::ChildPostReady(post_data) => {
-                self.post.children.push(post_data);
-                self.reply_content = "".to_string();
+            Msg::HandleCreatePostReplyResponse(response) => {
+                match response {
+                    FetchResponse::Success(post_data) => {
+                        self.post.children.push(post_data);
+                        self.reply_content = "".to_string();
+                    }
+                    FetchResponse::Error(_) => {
+                        error!("Couldn't respond to post");
+                    }
+                    FetchResponse::Started => {
+                        info!("Started sending response post");
+                    }
+                }
                 true
             }
-            Msg::ChildPostFailed => {
-                context.log("Post reply failed");
-                true
-            },
+
             Msg::ToggleEditArea => {
                 if let Some(_) = self.edit_instance {
                     self.edit_instance = None
@@ -152,61 +177,50 @@ impl Component<Context> for PostTree {
                 true
             },
             Msg::PostPostEdit => {
-                if let Some(ref edit_text) = self.edit_instance {
-                    let callback = context.send_back(
-                        |response: Response<Json<Result<PostResponse, Error>>>| {
-                            let (meta, Json(data)) = response.into_parts();
-                            println!("META: {:?}, {:?}", meta, data);
-
-                            if meta.status.is_success() {
-                                let post_data: PostData = data.unwrap().into();
-
-                                Msg::PostEditReady(post_data)
-                            } else {
-                                Msg::PostEditFailed
-                            }
-                        },
-                    );
-                    let post_edit = EditPostRequest {
-                        uuid: self.post.uuid,
-                        thread_uuid: self.thread_id,
-                        content: edit_text.clone(),
-                    };
-
-                    let task = context.make_request(RequestWrapper::UpdatePost(post_edit), callback);
-                    self.ft = task.ok() // This will cancel a reply if a reply post is active.
+                self.send_edit_request();
+                true
+            }
+            Msg::HandleEditPostResponse(response) => {
+                match response {
+                    FetchResponse::Success(edited_post) => {
+                        self.post.merge_childless(edited_post);
+                        self.edit_instance = None;
+                    }
+                    FetchResponse::Error(e) => error!("Edit post failure: {:?}", e),
+                    FetchResponse::Started => { info!("Edit post started.")} // TODO, do something here
                 }
                 true
             }
-            Msg::PostEditReady(childless_edited_post) => {
-                context.log("Edit post succeeded.");
-                self.post.merge_childless(childless_edited_post);
-                self.edit_instance = None;
-                true
-            }
-            Msg::PostEditFailed => {
-                context.log("Edit post failed.");
-                true
-            }
+//            Msg::PostEditReady(childless_edited_post) => {
+//                context.log("Edit post succeeded.");
+//                self.post.merge_childless(childless_edited_post);
+//                self.edit_instance = None;
+//                true
+//            }
+//            Msg::PostEditFailed => {
+//                context.log("Edit post failed.");
+//                true
+//            }
+            Msg::NoOp => false
         }
 
     }
 
-    fn change(&mut self, _props: Self::Properties, _: &mut Env<Context, Self>) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         true
     }
 }
 
-impl Renderable<Context, PostTree> for PostTree {
-    fn view(&self) -> Html<Context, Self> {
+impl Renderable<PostTree> for PostTree {
+    fn view(&self) -> Html<Self> {
 
         let child = |x: &PostData| {
             html! {
-                <PostTree: post=x, thread_id=self.thread_id, user_id=self.user_id, />
+                <PostTree: post=x, thread_uuid=self.thread_id, user_uuid=self.user_id, />
             }
         };
 
-        fn reply_area_view(post_tree: &PostTree) -> Html<Context, PostTree> {
+        fn reply_area_view(post_tree: &PostTree) -> Html<PostTree> {
             if post_tree.is_reply_active {
                 html!{
                     <div>
@@ -222,7 +236,7 @@ impl Renderable<Context, PostTree> for PostTree {
             }
         }
 
-        fn edit_area_view(edit_instance: &Option<String>, normal_content: &String) -> Html<Context, PostTree> {
+        fn edit_area_view(edit_instance: &Option<String>, normal_content: &String) -> Html<PostTree> {
             if let Some(edit_content_string) = edit_instance {
                 html!{
                     <div>
@@ -239,7 +253,7 @@ impl Renderable<Context, PostTree> for PostTree {
             }
         }
 
-        fn edit_button_fn(post_tree: &PostTree) -> Html<Context, PostTree> {
+        fn edit_button_fn(post_tree: &PostTree) -> Html<PostTree> {
             if let Some(user_id) = post_tree.user_id {
                 if user_id == post_tree.post.author.uuid {
                     return html! {
@@ -254,7 +268,7 @@ impl Renderable<Context, PostTree> for PostTree {
             }
         }
 
-        fn reply_button_fn(post_tree: &PostTree) -> Html<Context,PostTree> {
+        fn reply_button_fn(post_tree: &PostTree) -> Html<PostTree> {
             // User is logged in
             if let Some(_) = post_tree.user_id {
                 html! {

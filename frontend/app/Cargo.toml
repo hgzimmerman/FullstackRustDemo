@@ -24,7 +24,7 @@ common = {path = "../common"}
 #routes = {path = "../routes"}
 
 bucket = {path = "../bucket"}
-#forum = {path = "../forum"}
+forum = {path = "../forum"}
 auth = {path = "../auth"}
 header = {path = "../header"}
 

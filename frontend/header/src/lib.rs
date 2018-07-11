@@ -30,15 +30,15 @@ use common::user::{LoginAgent, LoginRequest, LoginResponse};
 
 pub struct Header {
     is_logged_in: bool,
-//    storage_service: StorageService,
+    //    storage_service: StorageService,
     login_agent: Box<Bridge<LoginAgent>>,
-    router: RouterSenderBase<()>
+    router: RouterSenderBase<()>,
 }
 
 pub enum Msg {
     InitiateLogout,
     HandleLoginResponse(LoginResponse),
-    NoOp
+    NoOp,
 }
 
 
@@ -51,12 +51,14 @@ impl Component for Header {
         let cb = link.send_back(|_| Msg::NoOp);
 
 
-        let login_agent = LoginAgent::bridge(link.send_back(|response| Msg::HandleLoginResponse(response)));
+        let login_agent = LoginAgent::bridge(link.send_back(|response| {
+            Msg::HandleLoginResponse(response)
+        }));
         login_agent.send(LoginRequest::Query);
         Header {
             is_logged_in: false,
             login_agent,
-            router: RouterSenderBase::<()>::new(cb)
+            router: RouterSenderBase::<()>::new(cb),
         }
     }
 
@@ -64,27 +66,29 @@ impl Component for Header {
         use self::Msg::*;
         match msg {
             InitiateLogout => {
-                self.login_agent.send(LoginRequest::Logout);
+                self.login_agent.send(
+                    LoginRequest::Logout,
+                );
                 self.is_logged_in = false;
-                self.router.send(RouterRequest::ChangeRoute(Route::parse("auth/login")));
+                self.router.send(
+                    RouterRequest::ChangeRoute(
+                        Route::parse("auth/login"),
+                    ),
+                );
                 true
             }
             HandleLoginResponse(response) => {
                 match response {
-                    LoginResponse::LoggedIn(_) => {
-                        self.is_logged_in = true
-                    }
-                    LoginResponse::LoggedOut => {
-                        self.is_logged_in = false
-                    }
+                    LoginResponse::LoggedIn(_) => self.is_logged_in = true,
+                    LoginResponse::LoggedOut => self.is_logged_in = false,
                 }
                 true
             }
-            NoOp => false
+            NoOp => false,
         }
     }
 
-    fn change(&mut self, _props: Self::Properties ) -> ShouldRender {
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         true
     }
 }
@@ -118,7 +122,7 @@ impl Renderable<Header> for Header {
                 <div class="nav-links",>
                     // Spans are necessary to keep the ordering preserved under different states.
                     <span>
-                        <RouterLink: text="Forums", route=Route::parse("forums"), />
+                        <RouterLink: text="Forums", route=Route::parse("forum"), />
                     </span>
                     <span>
                         {bucket_questions}
@@ -131,4 +135,3 @@ impl Renderable<Header> for Header {
         }
     }
 }
-

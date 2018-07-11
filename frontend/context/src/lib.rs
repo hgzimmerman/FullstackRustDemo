@@ -37,7 +37,7 @@ pub struct Context {
     pub routing: RouteService,
     local_storage: StorageService,
     console: ConsoleService,
-    jwt_service: JwtService
+    jwt_service: JwtService,
 }
 
 impl Context {
@@ -47,7 +47,7 @@ impl Context {
             routing: RouteService::new(),
             local_storage: StorageService::new(Area::Local),
             console: ConsoleService::new(),
-            jwt_service: JwtService::default()
+            jwt_service: JwtService::default(),
         }
     }
     pub fn log(&mut self, msg: &str) {

@@ -10,6 +10,7 @@ dependencies = [
  "auth 0.1.0",
  "bucket 0.1.0",
  "common 0.1.0",
+ "forum 0.1.0",
  "header 0.1.0",
  "log 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "web_logger 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -206,13 +207,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "forum"
 version = "0.1.0"
 dependencies = [
- "context 0.1.0",
+ "common 0.1.0",
  "failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "identifiers 0.1.0",
+ "log 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "routes 0.1.0",
+ "serde 1.0.59 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.59 (registry+https://github.com/rust-lang/crates.io-index)",
  "util 0.1.0",
  "wire 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=7f72c716042d2b85922f75e7ede54f4b4d49970d)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=6f34e84ae4f91044cb44752bce7d0085b2bbe64a)",
 ]
 
 [[package]]

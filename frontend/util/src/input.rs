@@ -5,7 +5,7 @@ use wrappers;
 
 pub type InputValidator = fn(String) -> Result<String, String>;
 /// Parent components will own input states and pass them to the Input Components.
-#[derive(Debug, Clone, PartialEq, )]
+#[derive(Debug, Clone, PartialEq)]
 pub enum InputState{
     /// A string that has not yet been validated, but isn't necessarily incorrect.
     /// Selecting the input and then unselecting it should make this convert to a Validated variant.

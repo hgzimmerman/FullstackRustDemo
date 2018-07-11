@@ -105,13 +105,29 @@ impl From<ThreadResponse> for ThreadData {
 #[derive(Clone, Debug)]
 pub struct SelectableMinimalThreadData {
     pub minimal_thread_data: MinimalThreadData,
+    pub forum_uuid: ForumUuid,
     pub is_selected: bool
 }
-impl From<MinimalThreadData> for SelectableMinimalThreadData {
-    fn from(minimal_thread_data: MinimalThreadData) -> Self {
+//impl From<MinimalThreadData> for SelectableMinimalThreadData {
+//    fn from(minimal_thread_data: MinimalThreadData) -> Self {
+//        SelectableMinimalThreadData {
+//            minimal_thread_data,
+//            is_selected: false
+//        }
+//    }
+//}
+
+impl SelectableMinimalThreadData {
+    pub fn new(minimal_thread_data: MinimalThreadData, forum_uuid: ForumUuid, thread_uuid: Option<ThreadUuid>) -> Self {
+        let mut is_selected: bool = false;
+
+        if let Some(thread_uuid) = thread_uuid {
+            is_selected = minimal_thread_data.uuid == thread_uuid;
+        }
         SelectableMinimalThreadData {
             minimal_thread_data,
-            is_selected: false
+            forum_uuid,
+            is_selected
         }
     }
 }

@@ -10,7 +10,7 @@ use identifiers::user::UserUuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewThreadRequest {
     pub forum_uuid: ForumUuid,
-    pub author_uuid: UserUuid,
+    pub author_uuid: UserUuid, // TODO, this should be removed, JWT provides this anyway
     pub title: String,
     pub post_content: String,
 }
