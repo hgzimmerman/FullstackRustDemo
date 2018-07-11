@@ -1,10 +1,8 @@
 use common::fetch::FetchResponse;
 use common::fetch::Networking;
-use identifiers::forum::ForumUuid;
 use requests::ForumRequest;
 use util::button::Button;
 use util::uploadable::Uploadable;
-use wire::thread::NewThreadRequest;
 use yew::prelude::*;
 use yew_router::prelude::*;
 use yew::services::storage::{Area, StorageService};
@@ -12,6 +10,7 @@ use yew_router::router_agent::RouterSenderBase;
 use util::input::Input;
 use util::input::InputState;
 use wire::forum::NewForumRequest;
+use wire::forum::ForumResponse;
 //use Context;
 
 #[derive(Default, Clone)]
@@ -38,7 +37,7 @@ impl NewForum {
         };
         self.networking.fetch(
             ForumRequest::CreateForum(new_forum_request),
-            |r: FetchResponse<()>| Msg::HandleCreateNewForumResponse(r),
+            |r: FetchResponse<ForumResponse>| Msg::HandleCreateNewForumResponse(r),
             &self.link
         );
     }
@@ -47,7 +46,7 @@ impl NewForum {
 
 pub enum Msg {
     SendCreateNewForumRequest,
-    HandleCreateNewForumResponse(FetchResponse<()>), // TODO determine this type
+    HandleCreateNewForumResponse(FetchResponse<ForumResponse>), // TODO determine this type
     UpdateTitle(InputState),
     UpdateDescription(InputState),
     NoOp
@@ -91,8 +90,9 @@ impl Component for NewForum {
             }
             Msg::HandleCreateNewForumResponse(response) => {
                 match response {
-                    FetchResponse::Success(_) => {
-                        self.router_sender.send(RouterRequest::ChangeRoute(Route::parse("forum"))) // TODO, make this more specific
+                    FetchResponse::Success(forum_response) => {
+                        let forum_uuid = forum_response.uuid;
+                        self.router_sender.send(RouterRequest::ChangeRoute(Route::parse(format!("forum/{}", forum_uuid)))) // TODO, make this more specific
                     },
                     FetchResponse::Error(_) => {
                         self.new_forum.set_failed("Couldn't create new forum.")

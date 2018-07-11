@@ -191,19 +191,8 @@ impl Component for PostTree {
                 }
                 true
             }
-//            Msg::PostEditReady(childless_edited_post) => {
-//                context.log("Edit post succeeded.");
-//                self.post.merge_childless(childless_edited_post);
-//                self.edit_instance = None;
-//                true
-//            }
-//            Msg::PostEditFailed => {
-//                context.log("Edit post failed.");
-//                true
-//            }
             Msg::NoOp => false
         }
-
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {

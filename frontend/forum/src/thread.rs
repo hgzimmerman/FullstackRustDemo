@@ -37,6 +37,7 @@ impl Default for Msg {
 
 impl Thread {
     fn get_posts(&mut self) {
+        info!("Getting Posts: Thread Component");
         let thread_uuid: ThreadUuid = self.thread_uuid;
         self.networking.fetch(
             ForumRequest::GetThread{thread_uuid},
@@ -83,8 +84,10 @@ impl Component for Thread {
     }
 
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.thread_uuid = props.thread_uuid;
-        self.get_posts();
+        if self.thread_uuid != props.thread_uuid {
+            self.thread_uuid = props.thread_uuid;
+            self.get_posts();
+        }
         false
     }
 }

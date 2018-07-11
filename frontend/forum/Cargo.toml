@@ -10,7 +10,7 @@ common = {path = "../common" }
 wire = {path = "../../wire"}
 identifiers = {path = "../../identifiers"}
 util = {path = "../util"}
-routes = {path = "../routes"}
+#routes = {path = "../routes"}
 
 #yew = { git = "https://github.com/DenisKolodin/yew", rev = "7f72c716042d2b85922f75e7ede54f4b4d49970d"}
 yew = { git = "https://github.com/DenisKolodin/yew", rev = "a5213c57430b2f18539aeb25939bdc8c5c348157" }

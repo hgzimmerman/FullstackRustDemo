@@ -3,14 +3,13 @@
 
 members = [
     "app",
-    "context",
     "common",
     "util",
     "bucket",
     "forum",
     "auth",
     "header",
-    "routes"
+#    "routes"
 ]
 
 [profile.release]

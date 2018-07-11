@@ -41,6 +41,7 @@ impl Component for ForumsList {
             link
         };
 
+        info!("Creating forums list component");
         forums_list.networking.fetch(
             ForumRequest::GetForums,
             |r: FetchResponse<Vec<ForumResponse>>| Msg::HandleGetForumsListResponse(r.map(

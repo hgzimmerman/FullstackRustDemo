@@ -3,7 +3,7 @@ extern crate failure;
 extern crate identifiers;
 #[macro_use]
 extern crate log;
-extern crate routes;
+//extern crate routes;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -16,11 +16,9 @@ extern crate yew_router;
 
 pub use common::datatypes;
 use new_thread::NewThread;
-pub use routes::forum::ForumRoute;
 use yew::html::Renderable;
 use yew::prelude::*;
 use yew_router::prelude::*;
-
 
 
 
