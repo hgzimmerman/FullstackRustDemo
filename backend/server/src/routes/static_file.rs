@@ -74,23 +74,21 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
 #[get("/", rank = 10)]
 pub fn index() -> NamedFile {
     info!("Getting index.html");
-    const WEB_DIRECTORY: &'static str = "../frontend/app/static/index.html";
+    const WEB_DIRECTORY: &'static str = "../../frontend/app/static/index.html";
     NamedFile::open(Path::new(WEB_DIRECTORY))
         .unwrap()
 }
 
 #[get("/js/app.js", rank = 8)]
 pub fn js() -> Option<NamedFile> {
-    const WEB_DIRECTORY: &'static str = "../frontend/target/wasm32-unknown-unknown/release/app.js";
-    //    info!("Getting file: {}", file.to_str().unwrap());
+    const WEB_DIRECTORY: &'static str = "../../frontend/target/wasm32-unknown-unknown/release/app.js";
     NamedFile::open(Path::new(WEB_DIRECTORY))
         .ok()
 }
 
 #[get("/app.wasm", rank = 8)]
 pub fn wasm() -> Option<NamedFile> {
-    const WEB_DIRECTORY: &'static str = "../frontend/target/wasm32-unknown-unknown/release/app.wasm";
-    //    info!("Getting file: {}", file.to_str().unwrap());
+    const WEB_DIRECTORY: &'static str = "../../frontend/target/wasm32-unknown-unknown/release/app.wasm";
     NamedFile::open(Path::new(WEB_DIRECTORY))
         .ok()
 }

@@ -92,7 +92,7 @@ impl Component for NewForum {
                 match response {
                     FetchResponse::Success(forum_response) => {
                         let forum_uuid = forum_response.uuid;
-                        self.router_sender.send(RouterRequest::ChangeRoute(Route::parse(format!("forum/{}", forum_uuid)))) // TODO, make this more specific
+                        self.router_sender.send(RouterRequest::ChangeRoute(route!("forum/{}", forum_uuid))) // TODO, make this more specific
                     },
                     FetchResponse::Error(_) => {
                         self.new_forum.set_failed("Couldn't create new forum.")

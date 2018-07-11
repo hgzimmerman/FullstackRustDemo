@@ -41,7 +41,7 @@ impl Component for ForumsList {
             link
         };
 
-        info!("Creating forums list component");
+        warn!("Creating forums list component");
         forums_list.networking.fetch(
             ForumRequest::GetForums,
             |r: FetchResponse<Vec<ForumResponse>>| Msg::HandleGetForumsListResponse(r.map(
@@ -70,6 +70,10 @@ impl Component for ForumsList {
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
         false
     }
+
+    fn destroy(&mut self) {
+        warn!("Destroying forums list")
+    }
 }
 
 impl Renderable<ForumsList> for ForumsList {
@@ -81,7 +85,11 @@ impl Renderable<ForumsList> for ForumsList {
                 </ul>
             }
         };
-        self.forums.default_view(forum_list_fn)
+        html! {
+            <div>
+                {self.forums.default_view(forum_list_fn)}
+            </div>
+        }
     }
 }
 

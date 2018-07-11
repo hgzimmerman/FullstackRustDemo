@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate yew;
 extern crate failure;
-
+#[macro_use]
 extern crate yew_router;
 use yew_router::prelude::*;
 //extern crate context;
@@ -15,6 +15,7 @@ use yew_router::components::RouterLink;
 
 use util::link::Link;
 use yew_router::router_agent::RouterSenderBase;
+//use yew_router::route::RouteBase;
 use common::user::{LoginAgent, LoginRequest, LoginResponse};
 
 //use util::link::Link;
@@ -102,13 +103,13 @@ impl Renderable<Header> for Header {
             }
         } else {
             html! {
-                <RouterLink: text="Login", route=Route::parse("auth/login"), />
+                <RouterLink: text="Login", route=route!("auth/login"), />
             }
         };
 
         let bucket_questions = if self.is_logged_in {
             html! {
-                <RouterLink: text="Bucket Questions", route=Route::parse("bucket"), />
+                <RouterLink: text="Bucket Questions", route=route!("bucket"), />
             }
         } else {
             util::wrappers::empty_vdom_node()
@@ -122,7 +123,7 @@ impl Renderable<Header> for Header {
                 <div class="nav-links",>
                     // Spans are necessary to keep the ordering preserved under different states.
                     <span>
-                        <RouterLink: text="Forums", route=Route::parse("forum"), />
+                        <RouterLink: text="Forums", route=route!("forum"), />
                     </span>
                     <span>
                         {bucket_questions}

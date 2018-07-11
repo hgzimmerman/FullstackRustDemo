@@ -133,7 +133,7 @@ impl Component for Login {
 //                context.log(&format!("Logged in. JWT received with payload: {:?}", ::context::user::extract_payload_from_jwt(jwt)));
                 self.login_agent.send(LoginStoreRequest::Login{jwt_string});
 //                self.router.send(RouterRequest::ChangeRoute(Route::parse("forums/")));
-                self.router.send(RouterRequest::ChangeRoute(Route::parse("forums")));
+                self.router.send(RouterRequest::ChangeRoute(route!("forums")));
 
 //                context.routing.set_route(Route::Forums(ForumRoute::ForumList).to_route().to_string());
 
@@ -150,7 +150,7 @@ impl Component for Login {
             Msg::HandleLoginStoreResponse(response) => {
                 match response {
                     LoginResponse::LoggedIn(_) => {
-                        self.router.send(RouterRequest::ChangeRoute(Route::parse("forums/")));
+                        self.router.send(RouterRequest::ChangeRoute(route!("forums/")));
                     }
                     LoginResponse::LoggedOut => {
                     }
@@ -201,7 +201,7 @@ impl Renderable<Login> for Login {
 
                     <div class=("flexbox-horiz"),>
                         <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                        <RouterButton: text="Create Account", route=Route::parse("auth/create"), />
+                        <RouterButton: text="Create Account", route=route!("auth/create"), />
                     </div>
                 </div>
             }

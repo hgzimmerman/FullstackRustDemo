@@ -92,7 +92,7 @@ impl Renderable<ForumTitle> for ForumTitle {
             html! {
                 <div>
                     {&forum_data.title}
-                    <RouterButton: text="New Thread", route=Route::parse(format!("forum/{}/create", forum_data.uuid)), />
+                    <RouterButton: text="New Thread", route=route!("forum/{}/create", forum_data.uuid), />
                 </div>
             }
         }
@@ -152,7 +152,7 @@ impl Renderable<ForumsTitle> for ForumsTitle {
         html! {
             <div>
                 {"Forums"}
-                <RouterButton: text="New Forum", route=Route::parse("forum/create"), />
+                <RouterButton: text="New Forum", route=route!("forum/create"), />
             </div>
         }
     }

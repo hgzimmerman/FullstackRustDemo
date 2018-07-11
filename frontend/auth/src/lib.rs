@@ -4,7 +4,7 @@
 
 #[macro_use]
 extern crate yew;
-//#[macro_use]
+#[macro_use]
 extern crate yew_router;
 #[macro_use]
 extern crate serde_derive;

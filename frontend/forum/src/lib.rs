@@ -55,6 +55,7 @@ impl Component for ForumModel {
     type Properties = Props;
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        error!("Create Forum Model"); // TODO TEMP
         ForumModel
     }
 
@@ -82,7 +83,6 @@ impl Renderable<ForumModel> for ForumModel {
                     </div>
                     <div class=("vertical-expand", "full-width", "scrollable" ),> // Vertical - content container
                         <YewRouter: routes=routes![Thread, NewThread, NewForum], />
-
                     </div>
                 </div>
             </div>

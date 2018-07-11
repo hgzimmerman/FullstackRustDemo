@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate yew;
+#[macro_use]
 extern crate yew_router;
 extern crate failure;
 //extern crate context;
@@ -251,17 +252,14 @@ impl Component for BucketModel {
             NavigateToBucket { bucket_uuid } => {
                 self.router.send(
                     RouterRequest::ChangeRoute(
-                        Route::parse(&format!(
-                            "bucket/{}",
-                            bucket_uuid
-                        )),
+                        route!("bucket/{}", bucket_uuid),
                     ),
                 )
             }//context.routing.set_route(Route::Bucket(BucketRoute::Bucket{bucket_uuid}).to_route().to_string()),
             NavigateToCreateBucket => {
                 self.router.send(
                     RouterRequest::ChangeRoute(
-                        Route::parse("bucket/create"),
+                        route!("bucket/create"),
                     ),
                 )
             }
@@ -415,7 +413,7 @@ impl Renderable<BucketModel> for BucketModel {
                         {"Buckets"}
                     </div>
                     <div>
-                        <RouterButton: text="Create Bucket", route=Route::parse("bucket/create"), />
+                        <RouterButton: text="Create Bucket", route=route!("bucket/create"), />
                     </div>
                     <div style="position: relative",>
                         <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />

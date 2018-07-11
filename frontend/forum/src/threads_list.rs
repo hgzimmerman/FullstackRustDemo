@@ -128,7 +128,7 @@ impl Renderable<ThreadsList> for SelectableMinimalThreadData {
            html! {
                <>
                    <div>
-                        <RouterLink: text=&minimal_thread_data.title, route=Route::parse(&format!("forum/{}/{}", forum_uuid, minimal_thread_data.uuid)), />
+                        <RouterLink: text=&minimal_thread_data.title, route=route!("forum/{}/{}", forum_uuid, minimal_thread_data.uuid), />
                    </div>
                    <div>
                         {format!("By: {}", minimal_thread_data.author.display_name)}

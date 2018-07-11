@@ -243,7 +243,7 @@ impl Renderable<CreateAccount> for CreateAccount {
                         </div>
                         <div>
                             <Button: title="Submit", disabled=false, onclick=|_| Msg::Submit, />
-                            <RouterButton: text="Back To Login", route=Route::parse("/auth/login"), />
+                            <RouterButton: text="Back To Login", route=route!("/auth/login"), />
                         </div>
                     </div>
                 </div>

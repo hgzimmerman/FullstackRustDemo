@@ -91,7 +91,7 @@ impl Component for NewThread {
                     FetchResponse::Success(thread_response) => {
                         let thread_uuid = thread_response.uuid;
                         let forum_uuid = thread_response.forum_uuid;
-                        self.router_sender.send(RouterRequest::ChangeRoute(Route::parse(format!("forum/{}/{}", forum_uuid, thread_uuid))))
+                        self.router_sender.send(RouterRequest::ChangeRoute(route!("forum/{}/{}", forum_uuid, thread_uuid)))
                     },
                     FetchResponse::Error(_) => {
                         self.new_thread.set_failed("Couldn't create new thread.")
