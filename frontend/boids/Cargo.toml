@@ -1,0 +1,12 @@
+[package]
+name = "boids"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+stdweb = "0.4.2"
+log = "0.4"
+
+rand = "0.5.4"
+
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "a5213c57430b2f18539aeb25939bdc8c5c348157" }

@@ -64,7 +64,6 @@ struct LoadingIcon (&'static str);
 
 impl<U> Renderable<U> for LoadingIcon
     where
-//        CTX: AsMut<ConsoleService> + 'static,
         U: Component
 
 {

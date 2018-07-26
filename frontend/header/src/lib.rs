@@ -73,7 +73,7 @@ impl Component for Header {
                 self.is_logged_in = false;
                 self.router.send(
                     RouterRequest::ChangeRoute(
-                        Route::parse("auth/login"),
+                        route!("auth/login"),
                     ),
                 );
                 true

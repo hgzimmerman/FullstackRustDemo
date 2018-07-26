@@ -1,0 +1,10 @@
+[package]
+name = "boids_example"
+version = "0.1.0"
+authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+
+[dependencies]
+boids = {path = "../.."}
+web_logger = "0.1"
+log = "0.4"
+yew = { git = "https://github.com/DenisKolodin/yew", rev = "a5213c57430b2f18539aeb25939bdc8c5c348157" }

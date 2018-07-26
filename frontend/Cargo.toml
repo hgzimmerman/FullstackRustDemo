@@ -1,18 +1,22 @@
 [workspace]
 
-
 members = [
     "app",
+    "boids",
+    "boids/examples/boids_example",  # I dont want this here
     "common",
     "util",
     "bucket",
     "forum",
     "auth",
     "header",
-#    "routes"
+]
+exclude = [
 ]
 
 [profile.release]
 #lto = true
 #panic = 'abort'
 
+[profile]
+lto = true

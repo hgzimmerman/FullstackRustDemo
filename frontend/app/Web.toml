@@ -11,6 +11,8 @@ default-target = "wasm32-unknown-unknown"
 # order of appearance.
 #prepend-js = "app/.js"
 
+#404-path = "index.html"
+
 [cargo-web]
 # Asserts the minimum required version of `cargo-web` necessary
 # to compile this crate; supported since 0.6.0.
