@@ -120,7 +120,7 @@ impl Component for CreateAccount {
                 match self.data.cloned_inner().validate()  {
                     Ok(new_user_request) => {
                         let request = AuthRequest::CreateUser(new_user_request);
-                        self.networking.fetch(request, response_mapper, &self.link );
+                        self.networking.fetch(&request, response_mapper, &self.link );
                     }
                     Err(err_msg) => {
                         self.data.set_failed(err_msg);

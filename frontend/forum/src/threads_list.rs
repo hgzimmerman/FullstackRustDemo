@@ -58,7 +58,7 @@ impl Component for ThreadsList {
 
 
         threads_list.networking.fetch(
-            ForumRequest::GetThreads{forum_uuid, page_index},
+            &ForumRequest::GetThreads{forum_uuid, page_index},
             |r: FetchResponse<Vec<MinimalThreadResponse>>| Msg::HandleGetThreadsResponse(r.map(
                 |x: Vec<MinimalThreadResponse>| {
                     x.into_iter()

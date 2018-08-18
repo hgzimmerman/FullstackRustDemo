@@ -113,6 +113,8 @@ pub enum Msg<W> {
     NoOp
 }
 
+// ======== Use of the agent is discouraged. Just use the service instead. ==========
+//
 /// An agent that facilitates sending network requests as well as managing authentication and route redirection.
 struct FetchAgent<T, W>
     where T: FetchRequest + Transferable + 'static,
@@ -172,7 +174,7 @@ impl <T, W> Agent for FetchAgent<T, W>
 
     fn handle(&mut self, request: Self::Input, who: HandlerId) {
         // Define the callback that will fire when the request comes back.
-        let whom = who.clone();
+        let whom = who;
         let callback = self.link.send_back(move |response: Response<Text>| {
             let (meta, data) = response.into_parts();
             let message = match meta.status.into() {
@@ -184,7 +186,7 @@ impl <T, W> Agent for FetchAgent<T, W>
                     let data: String = data.unwrap();
                     let data: FetchResponse<W> = serde_json::from_str(&data)
                         .map(FetchResponse::Success)
-                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError(data)));
+                        .unwrap_or_else(|_| FetchResponse::Error(FetchError::DecodeError(data)));
                     data
                 }
                 _ => {
@@ -226,13 +228,11 @@ impl <T, W> Agent for FetchAgent<T, W>
         // If the auth is required _and_ the user isn't logged in or their session is expired,
         // redirect the user to the login screen.
         if let Some(token) = user::get_token_if_valid(&mut self.storage_service) {
-            refresh_jwt_if_needed(&mut self.fetch_service, token.clone(), &mut self.fetch_task_collection);
+            refresh_jwt_if_needed(&mut self.fetch_service, &token, &mut self.fetch_task_collection);
             request_builder.header("Authorization", format!("{} {}", BEARER, token).as_str());
-        } else {
-            if let Auth::Required = auth_requirement {
-                self.update(Msg::Data(who, FetchResponse::Error(FetchError::AuthAbsent)));
-                return; // don't continue
-            }
+        } else if let Auth::Required = auth_requirement {
+            self.update(Msg::Data(who, FetchResponse::Error(FetchError::AuthAbsent)));
+            return; // don't continue
         }
 
         let body: Option<String> = match body_and_method {
@@ -257,7 +257,7 @@ impl <T, W> Agent for FetchAgent<T, W>
             self.fetch_service.fetch(request, callback)
         } else {
             let request: Request<Nothing> = request_builder.body(Nothing).unwrap();
-            self.fetch_service.fetch(request.into(), callback)
+            self.fetch_service.fetch(request, callback)
         };
         // Hold on to the task so it isn't dropped and canceled.
         self.fetch_task_collection.push(task);
@@ -288,7 +288,7 @@ impl FetchRequest for Reauth {
     }
 }
 
-fn refresh_jwt(jwt_string: String, fetch_service: &mut FetchService, fetch_task_collection: &mut Vec<FetchTask>) {
+fn refresh_jwt(jwt_string: &str, fetch_service: &mut FetchService, fetch_task_collection: &mut Vec<FetchTask>) {
     info!("JWT is being refreshed, this will extend the length of login session's validity.");
 
     let closure = move |response: Response<Result<String, Error>>| {
@@ -328,10 +328,10 @@ fn refresh_jwt(jwt_string: String, fetch_service: &mut FetchService, fetch_task_
 }
 
 /// If a specific amount of time has elapsed since the jwt has been issued, then refresh the jwt.
-fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: String, fetch_task_collection: &mut Vec<FetchTask>)  {
-        // The stored jwt may be malformed
-        let jwt: Jwt = user::extract_payload_from_jwt(jwt_string.clone())
-            .unwrap_or(Jwt::default()); // By sending a default jwt, it will fail the reauth, logging the user out. This path should never be needed, but would fail in a safe manner.
+fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: &str, fetch_task_collection: &mut Vec<FetchTask>)  {
+        // The stored jwt may be malformed 
+        // By sending a default jwt, it will fail the reauth, logging the user out. This path should never be needed, but would fail in a safe manner.
+        let jwt: Jwt = user::extract_payload_from_jwt(jwt_string).unwrap_or_default();
 
 
         let current_date = user::get_now();
@@ -339,7 +339,7 @@ fn refresh_jwt_if_needed(fetch_service: &mut FetchService, jwt_string: String, f
         // If current time > iat + 1 day, then refresh.
         if current_date > jwt.iat + Duration::days(1) {
 //            self.log("Refreshing JWT");
-            refresh_jwt(jwt_string.clone(), fetch_service, fetch_task_collection);
+            refresh_jwt(jwt_string, fetch_service, fetch_task_collection);
         }
 }
 
@@ -387,7 +387,7 @@ impl Networking {
         }
     }
 
-    pub fn fetch<T, U, V>(&mut self, request: T, response_mapper: fn(FetchResponse<U>) -> V::Message, link: &ComponentLink<V>)
+    pub fn fetch<T, U, V>(&mut self, request: &T, response_mapper: fn(FetchResponse<U>) -> V::Message, link: &ComponentLink<V>)
         where
             T: FetchRequest,
             U: for <'de> Deserialize<'de> + 'static,
@@ -420,7 +420,7 @@ impl Networking {
                     let data: String = data.unwrap();
                     let data: FetchResponse<U> = serde_json::from_str(&data)
                         .map(FetchResponse::Success)
-                        .unwrap_or(FetchResponse::Error(FetchError::DecodeError(data)));
+                        .unwrap_or_else(|_| FetchResponse::Error(FetchError::DecodeError(data)));
                     data
                 }
                 _ => {
@@ -460,7 +460,7 @@ impl Networking {
     }
 
 
-    pub fn fetch_string<T, V>(&mut self, request: T, response_mapper: fn(FetchResponse<String>) -> V::Message, link: &ComponentLink<V>)
+    pub fn fetch_string<T, V>(&mut self, request: &T, response_mapper: fn(FetchResponse<String>) -> V::Message, link: &ComponentLink<V>)
         where
             T: FetchRequest,
             V: Component + Renderable<V>,
@@ -529,7 +529,7 @@ impl Networking {
     }
 }
 
-fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: T, callback: Callback<Response<Text>>) -> Option<FetchTask> {
+fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: &T, callback: Callback<Response<Text>>) -> Option<FetchTask> {
         // Get the relevant information from the request.
     let url: String = request.resolve_url();
     let auth_requirement: Auth = request.resolve_auth();
@@ -558,13 +558,11 @@ fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: T, call
     // If the auth is required _and_ the user isn't logged in or their session is expired,
     // redirect the user to the login screen.
     if let Some(token) = user::get_token_if_valid(&mut fetch_struct.storage_service) {
-        refresh_jwt_if_needed(&mut fetch_struct.fetch_service, token.clone(), &mut fetch_struct.fetch_task_collection);
+        refresh_jwt_if_needed(&mut fetch_struct.fetch_service, &token, &mut fetch_struct.fetch_task_collection);
         request_builder.header("Authorization", format!("{} {}", BEARER, token).as_str());
-    } else {
-        if let Auth::Required = auth_requirement {
-            fetch_struct.router.send(RouterRequest::ChangeRoute(Route::parse("/auth/login")));
-            return None; // don't continue
-        }
+    } else if let Auth::Required = auth_requirement {
+        fetch_struct.router.send(RouterRequest::ChangeRoute(Route::parse("/auth/login")));
+        return None; // don't continue
     }
 
     let body: Option<String> = match body_and_method {
@@ -591,7 +589,7 @@ fn make_request<T: FetchRequest>(fetch_struct: &mut Networking, request: T, call
         fetch_struct.fetch_service.fetch(request, callback)
     } else {
         let request: Request<Nothing> = request_builder.body(Nothing).unwrap();
-        fetch_struct.fetch_service.fetch(request.into(), callback)
+        fetch_struct.fetch_service.fetch(request, callback)
     };
     Some(task)
 }

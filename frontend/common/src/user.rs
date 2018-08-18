@@ -25,7 +25,7 @@ enum JwtError {
     JsonDecodeFailure,
 }
 
-pub fn extract_payload_from_jwt(jwt_string: String) -> Result<Jwt, Error> {
+pub fn extract_payload_from_jwt(jwt_string: &str) -> Result<Jwt, Error> {
     let payload_segment: &str = jwt_string
         .split('.')
         .collect::<Vec<&str>>()
@@ -50,10 +50,10 @@ fn decode_payload(payload_segment: &str) -> Result<JsonValue, Error> {
 
 
 
-fn user_has_role(storage: &mut StorageService, role: &UserRole) -> bool {
+fn user_has_role(storage: &mut StorageService, role: UserRole) -> bool {
     if let Ok(token) = restore_jwt(storage) {
-        match extract_payload_from_jwt(token) {
-            Ok(payload) => payload.user_roles.contains(role),
+        match extract_payload_from_jwt(&token) {
+            Ok(payload) => payload.user_roles.contains(&role),
             Err(e) => {
                 println!("{}", e);
                 false
@@ -67,24 +67,24 @@ fn user_has_role(storage: &mut StorageService, role: &UserRole) -> bool {
 pub fn user_is_unprivileged(storage: &mut StorageService) -> bool {
     user_has_role(
         storage,
-        &UserRole::Unprivileged,
+        UserRole::Unprivileged,
     )
 }
 pub fn user_is_moderator(storage: &mut StorageService) -> bool {
-    user_has_role(storage,&UserRole::Moderator)
+    user_has_role(storage, UserRole::Moderator)
 }
 pub fn user_is_publisher(storage: &mut StorageService) -> bool {
-    user_has_role(storage, &UserRole::Publisher)
+    user_has_role(storage, UserRole::Publisher)
 }
 pub fn user_is_admin(storage: &mut StorageService) -> bool {
-    user_has_role(storage, &UserRole::Admin)
+    user_has_role(storage, UserRole::Admin)
 }
 
 
 /// Gets the user uuid from the token.
 pub fn user_id(storage: &mut StorageService) -> Result<UserUuid, Error> {
     let token = restore_jwt(storage)?;
-    let payload = extract_payload_from_jwt(token)?;
+    let payload = extract_payload_from_jwt(&token)?;
     Ok(payload.sub)
 }
 
@@ -92,7 +92,7 @@ pub fn user_id(storage: &mut StorageService) -> Result<UserUuid, Error> {
 /// Gets the expiry date from the token.
 pub fn user_auth_expire_date(storage_service: &mut StorageService) -> Result<NaiveDateTime, Error> {
     let token = restore_jwt(storage_service)?;
-    let payload = extract_payload_from_jwt(token)?;
+    let payload = extract_payload_from_jwt(&token)?;
     Ok(payload.exp)
 }
 
@@ -107,15 +107,15 @@ pub fn get_now() -> NaiveDateTime {
     };
 
     let current_time_as_seconds: i64 = current_time_as_seconds.try_into().expect("Couldn't convert local timestamp int into Rust i64");
-    let current_date_time = NaiveDateTime::from_timestamp(current_time_as_seconds, 0);
-    current_date_time
+    const NANOS: u32 = 0;
+    NaiveDateTime::from_timestamp(current_time_as_seconds, NANOS)
 }
 
 
 /// The token is valid if it exists and if it's expiry date is before now
 pub fn get_token_if_valid(storage_service: &mut StorageService) -> Option<String> {
     if let Ok(token) = restore_jwt(storage_service) {
-        if let Ok(payload) = extract_payload_from_jwt(token.clone()){
+        if let Ok(payload) = extract_payload_from_jwt(&token){
             let expiry_date = payload.exp;
             let now = get_now();
             if now < expiry_date {
@@ -199,7 +199,7 @@ impl Agent for LoginAgent
     fn handle(&mut self, request: Self::Input, who: HandlerId) {
         match request {
             LoginRequest::Login{jwt_string} => {
-                if let Ok(jwt) = extract_payload_from_jwt(jwt_string.clone()) {
+                if let Ok(jwt) = extract_payload_from_jwt(&jwt_string) {
                     // Only store the jwt if it is valid
                     store_jwt(&mut self.storage_service, jwt_string);
                     for sub in self.subscribers.iter().filter(|s| *s != &who) {
@@ -219,7 +219,7 @@ impl Agent for LoginAgent
             LoginRequest::Query => {
 
                 let response = if let Ok(jwt_string) = restore_jwt(&mut self.storage_service) {
-                    if let Ok(jwt) = extract_payload_from_jwt(jwt_string.clone()) {
+                    if let Ok(jwt) = extract_payload_from_jwt(&jwt_string) {
                         LoginResponse::LoggedIn(jwt)
                     } else {
                         error!("Could not convert jwt string to usable JWT type: {}", jwt_string);

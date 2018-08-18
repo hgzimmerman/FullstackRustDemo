@@ -52,7 +52,7 @@ impl Default for Msg {
 impl BucketParticipants {
     fn get_participants_in_bucket(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
-            BucketRequest::GetUsersInBucket{bucket_uuid},
+            &BucketRequest::GetUsersInBucket{bucket_uuid},
             |r: FetchResponse<Vec<UserResponse>>| Msg::HandleGetBucketUserDataResponse(r.map(::wire::convert_vector)),
             &self.link
         );
@@ -60,7 +60,7 @@ impl BucketParticipants {
 
     fn determine_if_user_is_owner(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
-            BucketRequest::GetIsUserOwnerOfBucket{bucket_uuid},
+            &BucketRequest::GetIsUserOwnerOfBucket{bucket_uuid},
             Msg::HandleIsUserOwnerResponse,
             &self.link
         );
@@ -68,7 +68,7 @@ impl BucketParticipants {
 
     fn remove_user_from_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
-            BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
+            &BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
             Msg::HandleRemoveUserResponse,
             &self.link
         );

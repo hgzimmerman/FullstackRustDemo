@@ -40,7 +40,7 @@ impl Thread {
         info!("Getting Posts: Thread Component");
         let thread_uuid: ThreadUuid = self.thread_uuid;
         self.networking.fetch(
-            ForumRequest::GetThread{thread_uuid},
+            &ForumRequest::GetThread{thread_uuid},
             |r: FetchResponse<ThreadResponse>| Msg::HandleGetThreadResponse(r.map(|x| PostData::from(x.posts))), // TODO, I throw away a lot of info here
             &self.link
         );

@@ -67,7 +67,7 @@ pub struct BucketLobby {
 impl BucketLobby {
     fn get_prior_questions_and_answers(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
-            BucketRequest::GetQuestions{bucket_uuid},
+            &BucketRequest::GetQuestions{bucket_uuid},
             |r: FetchResponse<Vec<QuestionResponse>>| {
                 Msg::HandlePriorQuestionResponse(r
                     .map(|vec|
@@ -83,7 +83,7 @@ impl BucketLobby {
     }
     fn get_random_question(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
-            BucketRequest::GetRandomQuestion{bucket_uuid},
+            &BucketRequest::GetRandomQuestion{bucket_uuid},
             |r: FetchResponse<QuestionResponse>| {
                 // Convert the question response to question data,
                 // move it to a quesiton package,
@@ -105,7 +105,7 @@ impl BucketLobby {
     }
     fn post_new_question(&mut self, new_question_request: NewQuestionRequest, /* new_question: &mut Uploadable<NewQuestion>,*/) {
         self.networking.fetch(
-            BucketRequest::CreateQuestion(new_question_request),
+            &BucketRequest::CreateQuestion(new_question_request),
             |r: FetchResponse<QuestionResponse>| Msg::HandleSubmitNewQuestionResponse(r.map(|_|())),
             &self.link
         );
@@ -114,7 +114,7 @@ impl BucketLobby {
 
     fn post_answer_to_question(&mut self, new_answer_request: NewAnswerRequest /*question_package: &mut Uploadable<QuestionPackage>*/) {
        self.networking.fetch(
-            BucketRequest::AnswerQuestion(new_answer_request),
+            &BucketRequest::AnswerQuestion(new_answer_request),
             |r: FetchResponse<AnswerResponse>| Msg::HandleSubmitAnswerResponse(r.map(|_|())),
             &self.link
         );
@@ -123,7 +123,7 @@ impl BucketLobby {
 
     fn put_question_back_in_bucket(&mut self, question_uuid: QuestionUuid) {
         self.networking.fetch(
-            BucketRequest::PutQuestionBackInBucket{question_uuid},
+            &BucketRequest::PutQuestionBackInBucket{question_uuid},
             Msg::HandlePutOldQuestionBackInBucketResponse,
             &self.link
          );
@@ -133,7 +133,7 @@ impl BucketLobby {
 
     fn delete_question(&mut self, question_uuid: QuestionUuid, ) {
         self.networking.fetch(
-            BucketRequest::DeleteQuestion{question_uuid},
+            &BucketRequest::DeleteQuestion{question_uuid},
             Msg::HandleDiscardQuestionResponse,
             &self.link
          );
@@ -400,7 +400,7 @@ impl Renderable<BucketLobby> for BucketLobby {
                             <div class=("question-card", "active-question-card"),> // Answer question card
                                 {self.active_question.restricted_custom_view(
                                     empty_question,
-                                    LoadingType::Fidget{diameter: 100},
+                                    &LoadingType::Fidget{diameter: 100},
                                     uploadable_question_shim_fn,
                                     failed_question_view
                                 )}

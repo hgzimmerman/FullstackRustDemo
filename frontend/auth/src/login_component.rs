@@ -111,9 +111,12 @@ impl Component for Login {
                     user_name: login_data.user_name,
                     password: login_data.password,
                 };
-                let request = AuthRequest::Login(login_request);
 
-                self.networking.fetch_string(request, response_mapper, &self.link);
+                self.networking.fetch_string(
+                    &AuthRequest::Login(login_request),
+                    response_mapper,
+                    &self.link
+                );
                 true
             }
 

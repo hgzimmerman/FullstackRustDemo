@@ -42,7 +42,7 @@ impl PostTree {
                 content: self.reply_content.clone(),
             };
             self.networking.fetch(
-                ForumRequest::CreatePostResponse(post_reply),
+                &ForumRequest::CreatePostResponse(post_reply),
                 |r: FetchResponse<PostResponse>| Msg::HandleCreatePostReplyResponse(r.map(PostData::from)),
                 &self.link
             );
@@ -59,7 +59,7 @@ impl PostTree {
                 content: edit_text.clone(),
             };
             self.networking.fetch(
-                ForumRequest::UpdatePost(post_edit),
+                &ForumRequest::UpdatePost(post_edit),
                 |r: FetchResponse<PostResponse>| Msg::HandleEditPostResponse(r.map(PostData::from)),
                 &self.link
             );
@@ -163,7 +163,7 @@ impl Component for PostTree {
             }
 
             Msg::ToggleEditArea => {
-                if let Some(_) = self.edit_instance {
+                if self.edit_instance.is_some() {
                     self.edit_instance = None
                 } else {
                     self.edit_instance = Some(self.post.content.clone())
@@ -213,7 +213,7 @@ impl Renderable<PostTree> for PostTree {
             if post_tree.is_reply_active {
                 html!{
                     <div>
-                        <AuthorMarkdownToggle: text=&post_tree.reply_content, callback=|text| Msg::UpdateReplyContent(text), />
+                        <AuthorMarkdownToggle: text=&post_tree.reply_content, callback= Msg::UpdateReplyContent, />
                         <Button: title="Reply", onclick=|_| Msg::PostReply, />
                     </div>
                 }
@@ -225,11 +225,11 @@ impl Renderable<PostTree> for PostTree {
             }
         }
 
-        fn edit_area_view(edit_instance: &Option<String>, normal_content: &String) -> Html<PostTree> {
+        fn edit_area_view(edit_instance: &Option<String>, normal_content: &str) -> Html<PostTree> {
             if let Some(edit_content_string) = edit_instance {
                 html!{
                     <div>
-                        <AuthorMarkdownToggle: text=edit_content_string, callback=|text| Msg::UpdateEditContent(text), />
+                        <AuthorMarkdownToggle: text=edit_content_string, callback=Msg::UpdateEditContent, />
                         <Button: title="Edit", onclick=|_| Msg::PostPostEdit, />
                     </div>
                 }
@@ -259,7 +259,7 @@ impl Renderable<PostTree> for PostTree {
 
         fn reply_button_fn(post_tree: &PostTree) -> Html<PostTree> {
             // User is logged in
-            if let Some(_) = post_tree.user_id {
+            if post_tree.user_id.is_some() {
                 html! {
                     <>
                         <Link<()>: name="reply", callback=|_| Msg::ToggleReplyArea, />

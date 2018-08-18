@@ -43,7 +43,7 @@ impl Component for ForumsList {
 
         warn!("Creating forums list component");
         forums_list.networking.fetch(
-            ForumRequest::GetForums,
+            &ForumRequest::GetForums,
             |r: FetchResponse<Vec<ForumResponse>>| Msg::HandleGetForumsListResponse(r.map(
                 |x: Vec<ForumResponse>| {
                     x.into_iter()
@@ -110,7 +110,7 @@ impl Renderable<ForumsList> for ForumData {
 }
 impl Routable for ForumsList {
     fn resolve_props(route: &Route) -> Option<<Self as Component>::Properties> {
-        if let None = route.path_segments.get(1) {
+        if route.path_segments.get(1).is_none() {
             Some(ForumsListProps)
         } else {
             None

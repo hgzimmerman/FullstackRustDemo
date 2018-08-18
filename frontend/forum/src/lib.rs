@@ -103,10 +103,6 @@ impl Routable for ForumModel {
         }
     }
     fn will_try_to_route(route: &Route) -> bool {
-        if let Some(_) = route.path_segments.get(0) {
-            true
-        } else {
-            false
-        }
+       route.path_segments.get(0).is_some()
     }
 }

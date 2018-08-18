@@ -30,8 +30,8 @@ impl NewThread {
             .as_ref()
             .attach_info(self.forum_uuid, self.user_uuid);
         self.networking.fetch(
-            ForumRequest::CreateThread(new_thread_request),
-            |r: FetchResponse<ThreadResponse>| Msg::HandleCreateNewThreadResponse(r),
+            &ForumRequest::CreateThread(new_thread_request),
+            Msg::HandleCreateNewThreadResponse,
             &self.link
         );
     }

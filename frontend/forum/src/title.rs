@@ -38,7 +38,7 @@ impl Default for Msg {
 impl ForumTitle {
     fn get_forum(&mut self, forum_uuid: ForumUuid) {
         self.networking.fetch(
-            ForumRequest::GetForum{forum_uuid},
+            &ForumRequest::GetForum{forum_uuid},
             |r: FetchResponse<ForumResponse>| Msg::HandleGetForumRequest(r.map(ForumData::from)),
             &self.link
         );
@@ -67,7 +67,7 @@ impl Component for ForumTitle {
                 self.chosen_forum = Loadable::from_fetch_response(response);
                 true
             }
-            Msg::NoOp => return false
+            Msg::NoOp => false
         }
     }
 
@@ -159,7 +159,7 @@ impl Renderable<ForumsTitle> for ForumsTitle {
 }
 impl Routable for ForumsTitle {
     fn resolve_props(route: &Route) -> Option<<Self as Component>::Properties> {
-        if let None = route.path_segments.get(1) {
+        if route.path_segments.get(1).is_none() {
             info!("routing forums title");
             Some(ForumsTitleProps)
         } else {

@@ -36,8 +36,8 @@ impl NewForum {
             description: self.new_forum.as_ref().description.inner_text()
         };
         self.networking.fetch(
-            ForumRequest::CreateForum(new_forum_request),
-            |r: FetchResponse<ForumResponse>| Msg::HandleCreateNewForumResponse(r),
+            &ForumRequest::CreateForum(new_forum_request),
+            Msg::HandleCreateNewForumResponse,
             &self.link
         );
     }
@@ -134,13 +134,13 @@ impl Renderable<NewForum> for NewForumData {
                 <Input:
                     input_state=&self.title,
                     placeholder="Forum Title",
-                    on_change=|value| Msg::UpdateTitle(value),
+                    on_change= Msg::UpdateTitle,
                 />
 
                 <Input:
                     input_state=&self.description,
                     placeholder="Description",
-                    on_change=|value| Msg::UpdateDescription(value),
+                    on_change= Msg::UpdateDescription,
                 />
                 <Button: title="submit", onclick=|_| Msg::SendCreateNewForumRequest, />
 

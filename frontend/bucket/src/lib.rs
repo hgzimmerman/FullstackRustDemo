@@ -166,7 +166,7 @@ impl BucketModel {
     /// Gets the list of buckets the user can request to join.
     fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
-            BucketRequest::GetPublicBuckets,
+            &BucketRequest::GetPublicBuckets,
             Msg::HandleGetPublicBucketsResponse,
             link,
         );
@@ -175,7 +175,7 @@ impl BucketModel {
     /// Gets the list of buckets the user can join.
     fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
-            BucketRequest::GetBucketsForUser,
+            &BucketRequest::GetBucketsForUser,
             Msg::HandleGetApprovedBucketsResponse,
             link,
         );
@@ -183,7 +183,7 @@ impl BucketModel {
 
     fn get_bucket(bucket_uuid: BucketUuid, networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
-            BucketRequest::GetBucket { bucket_uuid },
+            &BucketRequest::GetBucket { bucket_uuid },
             |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)),
             link,
         );
@@ -193,7 +193,7 @@ impl BucketModel {
         match bucket.validate() {
             Ok(new_bucket_request) => {
                 self.networking.fetch(
-                    BucketRequest::CreateBucket(new_bucket_request),
+                    &BucketRequest::CreateBucket(new_bucket_request),
                     |r: FetchResponse<BucketResponse>| Msg::HandleGetBucketResponse(r.map(BucketData::from)),
                     &self.link,
                 );
@@ -207,7 +207,7 @@ impl BucketModel {
     }
     fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
-            BucketRequest::CreateJoinBucketRequest { bucket_uuid },
+            &BucketRequest::CreateJoinBucketRequest { bucket_uuid },
             Msg::HandleJoinBucketResponse,
             &self.link,
         );

@@ -55,7 +55,7 @@ impl Default for Msg {
 impl BucketManagement {
     fn get_manageable_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
-            BucketRequest::GetUnapprovedUsersForOwnedBuckets,
+            &BucketRequest::GetUnapprovedUsersForOwnedBuckets,
             |r: FetchResponse<Vec<BucketUsersResponse>>| {
                 let r: FetchResponse<Vec<BucketUsersData>> = r.map(::wire::convert_vector);
                 Msg::HandleGetBucketUsersDataResponse(r)
@@ -66,14 +66,14 @@ impl BucketManagement {
 
     fn grant_access_to_user_for_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
-            BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
+            &BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
             Msg::HandleGrantUserAccessResponse,
             &self.link
         );
     }
     fn remove_user_from_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
-            BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
+            &BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
             Msg::HandleDenyUserAccessResponse,
             &self.link
         );
@@ -85,7 +85,7 @@ impl BucketManagement {
             Publicity::Private => false
         };
         self.networking.fetch(
-            BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
+            &BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
             Msg::HandleSetPublicityResponse,
             &self.link
         );
