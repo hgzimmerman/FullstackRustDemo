@@ -15,7 +15,7 @@ impl Renderable<BucketModel> for NewBucket {
                     <Input:
                         placeholder="Bucket Name",
                         input_state=&self.name,
-                        on_change=|a| Msg::UpdateBucketName(a),
+                        on_change= Msg::UpdateBucketName,
                         on_enter=|_| Msg::CreateBucket,
                         validator=Box::new(NewBucket::validate_name as InputValidator),
                     />

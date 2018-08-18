@@ -15,7 +15,7 @@ impl ThreadUuid {
     }
 }
 
-const PARAM_NAME: &'static str = "thread_uuid";
+const PARAM_NAME: &str = "thread_uuid";
 
 impl Display for ThreadUuid {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {

@@ -28,7 +28,7 @@ pub struct BucketManagement {
     link: ComponentLink<BucketManagement>,
 }
 
-
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Publicity {
     Public,
     Private
@@ -67,14 +67,14 @@ impl BucketManagement {
     fn grant_access_to_user_for_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
             BucketRequest::ApproveUserForBucket{bucket_uuid, user_uuid},
-            |r| Msg::HandleGrantUserAccessResponse(r),
+            Msg::HandleGrantUserAccessResponse,
             &self.link
         );
     }
     fn remove_user_from_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
             BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
-            |r| Msg::HandleDenyUserAccessResponse(r),
+            Msg::HandleDenyUserAccessResponse,
             &self.link
         );
     }
@@ -86,7 +86,7 @@ impl BucketManagement {
         };
         self.networking.fetch(
             BucketRequest::SetBucketPublicStatus{bucket_uuid, is_public},
-            |r| Msg::HandleSetPublicityResponse(r),
+            Msg::HandleSetPublicityResponse,
             &self.link
         );
     }
@@ -207,7 +207,7 @@ impl BucketManagement {
         }
     }
 
-    fn users_view(users: &Vec<UserData>, bucket_uuid: BucketUuid) -> Html<BucketManagement> {
+    fn users_view(users: &[UserData], bucket_uuid: BucketUuid) -> Html<BucketManagement> {
 
         fn user_view(user: &UserData, bucket_uuid: BucketUuid) -> Html<BucketManagement> {
             let user_uuid = user.uuid;

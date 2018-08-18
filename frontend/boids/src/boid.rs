@@ -17,7 +17,6 @@ use stdweb::web::FillRule;
 #[derive(Clone, Copy, Debug, PartialOrd, Ord, Eq, Default)]
 pub struct BoidId(u16);
 
-
 impl PartialEq for BoidId {
     fn eq(&self, other: &Self) -> bool {
         self.0.eq(&other.0)

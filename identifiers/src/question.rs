@@ -6,7 +6,7 @@ use uuid::ParseError;
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct QuestionUuid(pub Uuid);
 
-const PARAM_NAME: &'static str = "question_uuid";
+const PARAM_NAME: &str = "question_uuid";
 impl QuestionUuid {
     pub fn to_query_parameter(self) -> String {
         format!("{}={}", PARAM_NAME, self.0)

@@ -22,7 +22,7 @@ impl AsRef<Uuid> for UserUuid {
     }
 }
 
-const PARAM_NAME: &'static str = "user_uuid";
+const PARAM_NAME: &str = "user_uuid";
 
 impl Display for UserUuid {
     //noinspection ALL

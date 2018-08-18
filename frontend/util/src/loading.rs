@@ -57,8 +57,8 @@ where
 
 
 /// This svg indicates loading
-const ROLLING_SVG: &'static str = include_str!("../inlined_assets/LoadingRoll.svg");
-const FIDGET_SVG: &'static str = include_str!("../inlined_assets/Fidget.svg");
+const ROLLING_SVG: &str = include_str!("../inlined_assets/LoadingRoll.svg");
+const FIDGET_SVG: &str = include_str!("../inlined_assets/Fidget.svg");
 
 struct LoadingIcon (&'static str);
 
@@ -74,7 +74,6 @@ impl<U> Renderable<U> for LoadingIcon
             return div;
         };
         let node = Node::try_from(js_svg).expect("convert js_svg");
-        let vnode = VNode::VRef(node);
-        vnode
+        VNode::VRef(node)
     }
 }

@@ -1,4 +1,3 @@
-use stdweb::web::event::ResizeEvent;
 use stdweb::Value;
 use yew::callback::Callback;
 
@@ -24,7 +23,7 @@ impl ResizeService {
             };
             return window.addEventListener("resize", action);
         };
-        return ResizeTask(Some(handle))
+        ResizeTask(Some(handle))
     }
 }
 

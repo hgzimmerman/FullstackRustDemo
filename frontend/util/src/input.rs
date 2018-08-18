@@ -102,7 +102,7 @@ impl Default for Props {
             is_password: false,
             on_enter: None,
             on_change: None,
-            validator: Box::new(|s: String| Ok(s)) // by default, the validator will approve any String
+            validator: Box::new(Ok) // by default, the validator will approve any String
         }
     }
 }
@@ -208,7 +208,7 @@ impl Renderable<Input> for Input
             }
         }
 
-        let error_visibility: &str = if let Some(_) = self.input_state.error_text() {
+        let error_visibility: &str = if self.input_state.error_text().is_some() {
            "visibility: visible"
         } else {
            "visibility: hidden"

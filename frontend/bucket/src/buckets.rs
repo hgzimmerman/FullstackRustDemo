@@ -38,7 +38,7 @@ impl Renderable<BucketModel> for Vec<PublicBucket>
 
 impl Renderable<BucketModel> for PublicBucket {
     fn view(&self) -> Html<BucketModel> {
-        let bucket_uuid = self.as_ref().uuid.clone();
+        let bucket_uuid = self.as_ref().uuid;
         html! {
             <div class="public-bucket-card",>
                 <div class=("flexbox-vert", "full-height"),>
@@ -56,7 +56,7 @@ impl Renderable<BucketModel> for PublicBucket {
 
 impl Renderable<BucketModel> for ApprovedBucket {
     fn view(&self) -> Html<BucketModel> {
-        let bucket_uuid = self.as_ref().uuid.clone();
+        let bucket_uuid = self.as_ref().uuid;
         html! {
             <div
                 class="approved-bucket-card",

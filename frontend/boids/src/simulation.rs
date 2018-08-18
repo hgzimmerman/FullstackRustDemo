@@ -1,4 +1,4 @@
-use boid::BoidId;
+// use boid::BoidId;
 use stdweb::web::{
     CanvasRenderingContext2d
 };
@@ -274,16 +274,16 @@ impl Simulation {
                     if boid_pos.distance(&obs_pos) < object_avoidance_inner_range {
                         let inner_avoidance = object_avoidance_factor * 3.0;
                         // The closer to an obsticle, the stronger this force will be felt.
-                        let accel_x = inner_avoidance / ((boid_pos.x - obs_pos.x) );
-                        let accel_y = inner_avoidance / ((boid_pos.y - obs_pos.y) );
+                        let accel_x = inner_avoidance / (boid_pos.x - obs_pos.x);
+                        let accel_y = inner_avoidance / (boid_pos.y - obs_pos.y);
 
                         boid.acceleration.x += accel_x;
                         boid.acceleration.y += accel_y;
                     } else if boid_pos.distance(&obs_pos) < object_avoidance_range {
                         let outer_avoidance = object_avoidance_factor;
                         // The closer to an obsticle, the stronger this force will be felt.
-                        let accel_x = outer_avoidance / ((boid_pos.x - obs_pos.x) );
-                        let accel_y = outer_avoidance / ((boid_pos.y - obs_pos.y) );
+                        let accel_x = outer_avoidance / (boid_pos.x - obs_pos.x);
+                        let accel_y = outer_avoidance / (boid_pos.y - obs_pos.y);
 
                         boid.acceleration.x += accel_x;
                         boid.acceleration.y += accel_y;

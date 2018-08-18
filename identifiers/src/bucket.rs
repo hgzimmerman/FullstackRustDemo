@@ -6,7 +6,7 @@ use uuid::ParseError;
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct BucketUuid(pub Uuid);
 
-const PARAM_NAME: &'static str = "bucket_uuid";
+const PARAM_NAME: &str = "bucket_uuid";
 
 impl BucketUuid {
     pub fn to_query_parameter(self) -> String {

@@ -19,4 +19,4 @@ exclude = [
 #panic = 'abort'
 
 [profile]
-lto = true
+#lto = true

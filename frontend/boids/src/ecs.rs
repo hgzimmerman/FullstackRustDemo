@@ -55,15 +55,15 @@ pub struct System<T: Entity> {
     group: Vec<Option<T>>
 }
 
-fn find_lowest_available_id<T: Entity>(group: &Vec<Option<T>>) -> Option<T::Id> {
+fn find_lowest_available_id<T: Entity>(group: &[Option<T>]) -> Option<T::Id> {
     let len = group.len();
     if len != 0 {
         for i in 0..len - 1 {
-            if let None = group[i] {
+            if group[i].is_none() {
                 return Some(T::Id::from_index(i))
             }
         }
-        return None
+        None
     } else {
         None
     }
@@ -137,7 +137,7 @@ impl <T: Entity> System<T> {
             .for_each(f)
     }
 
-    pub fn get_with_ids(&self, ids: &Vec<T::Id>) -> Vec<&T> {
+    pub fn get_with_ids(&self, ids: &[T::Id]) -> Vec<&T> {
         self.group
             .iter()
             .filter_map(|x| {
@@ -165,7 +165,7 @@ impl <T: Entity> System<T> {
             }
         } )
     }
-    pub fn apply_to_ids<F>(&mut self, ids: &Vec<T::Id>, mut f: F) where F: FnMut(&mut T) {
+    pub fn apply_to_ids<F>(&mut self, ids: &[T::Id], mut f: F) where F: FnMut(&mut T) {
         self.group
         .iter_mut()
         .filter_map(|x| {
@@ -187,7 +187,7 @@ impl <T: Entity> System<T> {
 impl <T: Mobile> System<T> {
     pub fn add_mobile(&mut self, position: Point, vector: Vector) {
         if let Some(lowest_available_id) = find_lowest_available_id(&self.group) {
-            let entity = T::create_mobile(lowest_available_id.clone(), position, vector);
+            let entity = T::create_mobile(lowest_available_id, position, vector);
             self.group[lowest_available_id.as_index()] = Some(entity);
         }
     }

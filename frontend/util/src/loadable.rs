@@ -101,7 +101,7 @@ impl <T> Loadable<T> {
         }
     }
 
-    pub fn as_option<'a>(&'a self) -> Option<&'a T> {
+    pub fn as_option(&self) -> Option<&T> {
         if let Loadable::Loaded(value) = self {
             Some(value)
         } else {
@@ -109,7 +109,7 @@ impl <T> Loadable<T> {
         }
     }
 
-    pub fn as_mut_option<'a>(&'a mut self) -> Option<&'a mut T> {
+    pub fn as_mut_option(&mut self) -> Option<&mut T> {
         if let Loadable::Loaded(value) = self {
             Some(value)
         } else {
@@ -187,7 +187,7 @@ impl <T> Loadable<T> {
 
     pub fn restricted_custom_view<U, LoadedFn, FailedFn>(&self,
                                      unloaded: Html<U>,
-                                     loading_type: LoadingType<U>,
+                                     loading_type: &LoadingType<U>,
                                      render_fn: LoadedFn,
                                      failed_fn: FailedFn
     ) -> Html<U>

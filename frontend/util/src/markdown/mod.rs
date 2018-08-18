@@ -40,10 +40,10 @@ pub fn render_markdown<COMP>(src: &str) -> Html<COMP>
                     pre.add_child(top.into());
                     top = pre;
                 } else if let Tag::Table(aligns) = tag {
-                    for r in top.childs.iter_mut() {
-                        if let &mut VNode::VTag(ref mut vtag) = r {
+                    for r in &mut top.childs {
+                        if let VNode::VTag(ref mut vtag) = *r {
                             for (i, c) in vtag.childs.iter_mut().enumerate() {
-                                if let &mut VNode::VTag(ref mut vtag) = c {
+                                if let VNode::VTag(ref mut vtag) = *c {
                                     match aligns[i] {
                                         Alignment::None => {}
                                         Alignment::Left => vtag.add_class("text-left"),
@@ -55,8 +55,8 @@ pub fn render_markdown<COMP>(src: &str) -> Html<COMP>
                         }
                     }
                 } else if let Tag::TableHead = tag {
-                    for c in top.childs.iter_mut() {
-                        if let &mut VNode::VTag(ref mut vtag) = c {
+                    for c in &mut top.childs {
+                        if let VNode::VTag(ref mut vtag) = *c {
                             // TODO
                             //                            vtag.tag = "th".into();
                             vtag.add_attribute("scope", &"col");

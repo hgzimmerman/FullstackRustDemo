@@ -63,7 +63,7 @@ pub struct NewBucket {
 
 impl NewBucket {
     pub fn validate_name(name: String) -> Result<String, String> {
-        if name.len() < 1 {
+        if name.is_empty() {
             return Err(
                 "Bucket Name must have some text."
                     .into(),
@@ -167,7 +167,7 @@ impl BucketModel {
     fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
             BucketRequest::GetPublicBuckets,
-            |r| Msg::HandleGetPublicBucketsResponse(r),
+            Msg::HandleGetPublicBucketsResponse,
             link,
         );
     }
@@ -176,7 +176,7 @@ impl BucketModel {
     fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
             BucketRequest::GetBucketsForUser,
-            |r| Msg::HandleGetApprovedBucketsResponse(r),
+            Msg::HandleGetApprovedBucketsResponse,
             link,
         );
     }
@@ -189,7 +189,7 @@ impl BucketModel {
         );
     }
 
-    fn create_bucket(&mut self, bucket: NewBucket) {
+    fn create_bucket(&mut self, bucket: &NewBucket) {
         match bucket.validate() {
             Ok(new_bucket_request) => {
                 self.networking.fetch(
@@ -208,7 +208,7 @@ impl BucketModel {
     fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
             BucketRequest::CreateJoinBucketRequest { bucket_uuid },
-            |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r),
+            Msg::HandleJoinBucketResponse,
             &self.link,
         );
     }
@@ -309,7 +309,7 @@ impl Component for BucketModel {
 
 
                 if let Some(new_bucket) = new_bucket_option {
-                    self.create_bucket(new_bucket)
+                    self.create_bucket(&new_bucket)
                 } else {
                     warn!("app in indeterminate state");
                 }

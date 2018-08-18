@@ -3,7 +3,7 @@
 extern crate stdweb;
 #[macro_use]
 extern crate yew;
-#[macro_use]
+// #[macro_use]
 extern crate log;
 extern crate rand;
 
@@ -117,8 +117,8 @@ impl Component for BoidsModel {
             }
             Resize => {
                 let container: HtmlElement = document().query_selector("#canvas_containing_div").unwrap().unwrap().try_into().unwrap();
-                self.simulation.config.dimensions.width = container.offset_width() as f64;
-                self.simulation.config.dimensions.height = container.offset_height() as f64 - 4.0; // offset that is needed to maintain initial height?
+                self.simulation.config.dimensions.width = f64::from(container.offset_width());
+                self.simulation.config.dimensions.height = f64::from(container.offset_height()) - 4.0; // offset that is needed to maintain initial height?
                 return true;
             }
             Tick => {
@@ -250,7 +250,7 @@ impl Renderable<BoidsModel> for BoidsModel {
                         value=&self.simulation.config.max_speed,
                         min=1.0,
                         max=20.0,
-                        callback = |val| Msg::UpdateMaxSpeed(val),
+                        callback = Msg::UpdateMaxSpeed,
                     />
                     <RangePicker:
                         title="Flocking Affinity",
@@ -258,35 +258,35 @@ impl Renderable<BoidsModel> for BoidsModel {
                         min=0.0,
                         max=10.0,
                         step=0.01,
-                        callback = |val| Msg::UpdateFlockingAffinity(val),
+                        callback = Msg::UpdateFlockingAffinity,
                     />
                     <RangePicker:
                         title="Flocking Distance",
                         value=&self.simulation.config.flocking_distance,
                         min=50.0,
                         max=200.0,
-                        callback = |val| Msg::UpdateFlockingDistance(val),
+                        callback = Msg::UpdateFlockingDistance,
                     />
                     <RangePicker:
                         title="Acceleration Damping Factor",
                         value=&self.simulation.config.acceleration_damping_factor,
                         min=1.0,
                         max=10.0,
-                        callback = |val| Msg::UpdateAccelerationDampingFactor(val),
+                        callback = Msg::UpdateAccelerationDampingFactor,
                     />
                     <RangePicker:
                         title="Obsticle Avoidance Factor",
                         value=&self.simulation.config.obsticle_avoidance_factor,
                         min=0.0,
                         max=15.0,
-                        callback = |val| Msg::UpdateObsticleAvoidanceFactor(val),
+                        callback = Msg::UpdateObsticleAvoidanceFactor,
                     />
                     <RangePicker:
                         title="Obsticle Avoidance Range",
                         value=&self.simulation.config.obsticle_avoidance_range,
                         min=50.0,
                         max=200.0,
-                        callback = |val| Msg::UpdateObsticleAvoidanceRange(val),
+                        callback = Msg::UpdateObsticleAvoidanceRange,
                     />
                 </div>
             </div>

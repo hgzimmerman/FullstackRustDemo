@@ -46,7 +46,7 @@ struct NewQuestion {
 }
 impl NewQuestion {
     fn validator(text: String) -> Result<String, String> {
-        if text.len() < 1 {
+        if text.is_empty() {
             return Err("New question must contain some text".into())
         }
         Ok(text)
@@ -124,7 +124,7 @@ impl BucketLobby {
     fn put_question_back_in_bucket(&mut self, question_uuid: QuestionUuid) {
         self.networking.fetch(
             BucketRequest::PutQuestionBackInBucket{question_uuid},
-            |r| Msg::HandlePutOldQuestionBackInBucketResponse(r),
+            Msg::HandlePutOldQuestionBackInBucketResponse,
             &self.link
          );
 
@@ -134,7 +134,7 @@ impl BucketLobby {
     fn delete_question(&mut self, question_uuid: QuestionUuid, ) {
         self.networking.fetch(
             BucketRequest::DeleteQuestion{question_uuid},
-            |r| Msg::HandleDiscardQuestionResponse(r),
+            Msg::HandleDiscardQuestionResponse,
             &self.link
          );
     }
@@ -209,7 +209,7 @@ impl Component for BucketLobby {
             }
             SubmitAnswer => {
                 let request_option: Option<NewAnswerRequest> = self.active_question.as_option().map(|question_package| {
-                     let answer_text = if question_package.as_ref().answer.inner_text().len() > 0 {
+                     let answer_text = if !question_package.as_ref().answer.inner_text().is_empty() {
                         Some(question_package.as_ref().answer.inner_text())
                     } else {
                         None
@@ -441,7 +441,7 @@ impl Renderable<BucketLobby> for QuestionPackage {
                     <Input:
                         placeholder="Answer",
                         input_state=&self.answer,
-                        on_change=|a| Msg::UpdateAnswer(a),
+                        on_change= Msg::UpdateAnswer,
                         on_enter=|_| Msg::SubmitAnswer,
                     />
                 </div>
@@ -450,7 +450,7 @@ impl Renderable<BucketLobby> for QuestionPackage {
                     <Button: title="Replace Question", onclick=|_| Msg::DrawRandomQuestion, />
                     {
                         // You can't delete a question which already has an answer
-                        if self.question_data.answers.len() < 1 {
+                        if self.question_data.answers.is_empty() {
                             html! {
                                 <Button: title="Discard", onclick=|_| Msg::DiscardQuestion, />
                             }
@@ -478,7 +478,7 @@ impl Renderable<BucketLobby> for NewQuestion {
                     <Input:
                         placeholder="New Question",
                         input_state=&self.question_text,
-                        on_change=|a| Msg::UpdateNewQuestion(a),
+                        on_change= Msg::UpdateNewQuestion,
                         on_enter=|_| Msg::SubmitNewQuestion,
                         validator=Box::new(NewQuestion::validator as InputValidator),
                     />
@@ -496,7 +496,7 @@ impl Renderable<BucketLobby> for AnswerData {
         html! {
             <div>
                 {&format!("{}: ",self.author.display_name)}
-                {self.answer_text.clone().unwrap_or("".into())} // TODO possible misuse of clone here
+                {self.answer_text.clone().unwrap_or_else(||"".into())} // TODO possible misuse of clone here
             </div>
         }
     }
@@ -504,7 +504,7 @@ impl Renderable<BucketLobby> for AnswerData {
 
 impl Renderable<BucketLobby> for QuestionData {
     fn view(&self) -> Html<BucketLobby> {
-        fn answers(answers: &Vec<AnswerData>) -> Html<BucketLobby> {
+        fn answers(answers: &[AnswerData]) -> Html<BucketLobby> {
              html! {
                 {for answers.iter().map(AnswerData::view)}
              }

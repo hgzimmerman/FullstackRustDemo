@@ -61,7 +61,7 @@ impl BucketParticipants {
     fn determine_if_user_is_owner(&mut self, bucket_uuid: BucketUuid) {
         self.networking.fetch(
             BucketRequest::GetIsUserOwnerOfBucket{bucket_uuid},
-            |r| Msg::HandleIsUserOwnerResponse(r),
+            Msg::HandleIsUserOwnerResponse,
             &self.link
         );
     }
@@ -69,7 +69,7 @@ impl BucketParticipants {
     fn remove_user_from_bucket(&mut self, bucket_uuid: BucketUuid, user_uuid: UserUuid) {
         self.networking.fetch(
             BucketRequest::RemoveUserFromBucket{bucket_uuid, user_uuid},
-            |r| Msg::HandleRemoveUserResponse(r),
+            Msg::HandleRemoveUserResponse,
             &self.link
         );
     }

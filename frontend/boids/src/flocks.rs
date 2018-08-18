@@ -47,7 +47,7 @@ impl Flock {
             let mut has_been_added = false;
             
             // Try to add into an existing "flock" first
-            for flock in flocks.iter_mut() {
+            for flock in &mut flocks {
                 let mut should_add: bool = false;
 
                 for b in flock.iter() {
