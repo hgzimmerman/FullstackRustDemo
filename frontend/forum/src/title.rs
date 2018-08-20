@@ -157,6 +157,7 @@ impl Renderable<ForumsTitle> for ForumsTitle {
         }
     }
 }
+
 impl Routable for ForumsTitle {
     fn resolve_props(route: &Route) -> Option<<Self as Component>::Properties> {
         if route.path_segments.get(1).is_none() {

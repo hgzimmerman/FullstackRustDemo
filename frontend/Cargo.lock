@@ -14,8 +14,8 @@ dependencies = [
  "header 0.1.0",
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "web_logger 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -28,8 +28,8 @@ dependencies = [
  "serde_derive 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "util 0.1.0",
  "wire 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -93,7 +93,7 @@ dependencies = [
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.5.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
 ]
 
 [[package]]
@@ -103,7 +103,7 @@ dependencies = [
  "boids 0.1.0",
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "web_logger 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
 ]
 
 [[package]]
@@ -119,8 +119,8 @@ dependencies = [
  "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "util 0.1.0",
  "wire 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -180,8 +180,8 @@ dependencies = [
  "serde_json 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)",
  "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "wire 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -226,8 +226,8 @@ dependencies = [
  "serde_derive 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "util 0.1.0",
  "wire 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -259,8 +259,8 @@ dependencies = [
  "common 0.1.0",
  "failure 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "util 0.1.0",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)",
 ]
 
 [[package]]
@@ -510,7 +510,7 @@ dependencies = [
  "common 0.1.0",
  "pulldown-cmark 0.1.0 (git+https://github.com/google/pulldown-cmark?rev=c1ac9123f1653dc774403634696f848ffecbb01c)",
  "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
 ]
 
 [[package]]
@@ -570,7 +570,7 @@ dependencies = [
 [[package]]
 name = "yew"
 version = "0.5.0"
-source = "git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157#a5213c57430b2f18539aeb25939bdc8c5c348157"
+source = "git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0#49319b8c02a8eeb15ed4c8a8761f83adcee856b0"
 dependencies = [
  "anymap 0.12.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -587,25 +587,26 @@ dependencies = [
 [[package]]
 name = "yew_patterns"
 version = "0.1.0"
-source = "git+https://github.com/hgzimmerman/yew_patterns?rev=63caa9553863382e136ac7b9638c9768422cdd52#63caa9553863382e136ac7b9638c9768422cdd52"
+source = "git+https://github.com/hgzimmerman/yew_patterns?rev=0aac82bb387070a4c40b20e84b33111c704b7e1c#0aac82bb387070a4c40b20e84b33111c704b7e1c"
 dependencies = [
  "serde 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
+ "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
 ]
 
 [[package]]
 name = "yew_router"
 version = "0.1.0"
-source = "git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3#cd4d873ddba0b3bcd45dd3243f86f836960cafe3"
+source = "git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc#08063508edd572273b3d4d62865c4260cea6c0cc"
 dependencies = [
  "log 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.71 (registry+https://github.com/rust-lang/crates.io-index)",
  "stdweb 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "web_logger 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)",
- "yew_patterns 0.1.0 (git+https://github.com/hgzimmerman/yew_patterns?rev=63caa9553863382e136ac7b9638c9768422cdd52)",
+ "yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)",
+ "yew_patterns 0.1.0 (git+https://github.com/hgzimmerman/yew_patterns?rev=0aac82bb387070a4c40b20e84b33111c704b7e1c)",
 ]
 
 [metadata]
@@ -665,6 +666,6 @@ dependencies = [
 "checksum winapi 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "773ef9dcc5f24b7d850d0ff101e542ff24c3b090a9768e03ff889fdef41f00fd"
 "checksum winapi-i686-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-"checksum yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=a5213c57430b2f18539aeb25939bdc8c5c348157)" = "<none>"
-"checksum yew_patterns 0.1.0 (git+https://github.com/hgzimmerman/yew_patterns?rev=63caa9553863382e136ac7b9638c9768422cdd52)" = "<none>"
-"checksum yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=cd4d873ddba0b3bcd45dd3243f86f836960cafe3)" = "<none>"
+"checksum yew 0.5.0 (git+https://github.com/DenisKolodin/yew?rev=49319b8c02a8eeb15ed4c8a8761f83adcee856b0)" = "<none>"
+"checksum yew_patterns 0.1.0 (git+https://github.com/hgzimmerman/yew_patterns?rev=0aac82bb387070a4c40b20e84b33111c704b7e1c)" = "<none>"
+"checksum yew_router 0.1.0 (git+https://github.com/hgzimmerman/YewRouter?rev=08063508edd572273b3d4d62865c4260cea6c0cc)" = "<none>"

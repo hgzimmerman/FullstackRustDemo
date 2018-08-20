@@ -52,7 +52,7 @@ impl Component for Header {
         let cb = link.send_back(|_| Msg::NoOp);
 
 
-        let login_agent = LoginAgent::bridge(link.send_back(|response| {
+        let mut login_agent = LoginAgent::bridge(link.send_back(|response| {
             Msg::HandleLoginResponse(response)
         }));
         login_agent.send(LoginRequest::Query);

@@ -99,7 +99,7 @@ impl Renderable<ForumsList> for ForumData {
         html! {
             <li class="forum-list-element",>
                 <div>
-                    <RouterLink: text=&self.title, route=Route::parse(&format!("forum/{}",self.uuid)), />
+                    <RouterLink: text=&self.title, route=route!("forum/{}",self.uuid), />
                 </div>
                 <div>
                     {&self.description}

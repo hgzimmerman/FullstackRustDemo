@@ -7,7 +7,7 @@
 //! instead of on the database.
 
 
-#![feature(use_extern_macros)]
+// #![feature(use_extern_macros)]
 #![feature(test)]
 
 #![feature(drain_filter)]
