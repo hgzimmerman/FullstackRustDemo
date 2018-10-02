@@ -12,9 +12,9 @@ db = {path = "../db"}
 auth = {path = "../auth"}
 error = {path = "../error"}
 
-rocket = "0.3.13"
-rocket_codegen = "0.3.13"
-rocket_contrib = "0.3.13"
+rocket = "0.3.17"
+rocket_codegen = "0.3.17"
+rocket_contrib = "0.3.17"
 
 chrono = { version = "0.4", features = ["serde"] }
 

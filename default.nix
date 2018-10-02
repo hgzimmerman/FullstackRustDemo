@@ -15,8 +15,9 @@ stdenv.mkDerivation rec {
     pkgconfig
     zlib
     # used for compiling the frontend to js
-    emscripten
-    llvm
+  #    emscripten
+  #  llvm
+    libstdcxx5
     lld
   ];
   shellHook = ''
