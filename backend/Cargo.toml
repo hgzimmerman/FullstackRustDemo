@@ -2,6 +2,7 @@
 members = [
     "error",
     "server",
+    "warp_server",
     "db",
     "db_proc_macros",
     "auth",
