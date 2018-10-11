@@ -89,6 +89,8 @@ use simplelog::TermLogger;
 use simplelog::WriteLogger;
 use std::fs::File;
 use simplelog::LevelFilter;
+use warp::filters::BoxedFilter;
+use serde::Deserialize;
 
 /// Util function that makes replying easier
 pub fn convert_and_json<T, U>(source: T) -> impl Reply where
@@ -139,4 +141,13 @@ pub fn log_attach_in_out<IN: Debug + Default, OUT: Debug + Serialize + Default >
     let out_name = format!("{:?}", OUT::default());
     let out_name = out_name.split_whitespace().next().unwrap();
     info!("Attaching: {:6}| {:25} | In: {} | Out: {}", method, text, in_name, out_name);
+}
+
+pub fn json_body_filter<T> (kb_limit: u64) -> BoxedFilter<(T,)>
+    where
+        T: for<'de> Deserialize<'de> + Send + Sync + 'static
+{
+        warp::body::content_length_limit(1024 * kb_limit)
+            .and(warp::body::json())
+            .boxed()
 }

@@ -141,10 +141,9 @@ fn update_user_display_name() -> BoxedFilter<(impl Reply,)> {
         .and(json_body)
         .and(normal_user_filter())
         .and(db_filter())
-        .and_then(|request: UpdateDisplayNameRequest, _user: UserUuid, conn: Conn| {
-            let current_user_name = request.user_name;
+        .and_then(|request: UpdateDisplayNameRequest, user_uuid: UserUuid, conn: Conn| {
             let new_display_name = request.new_display_name;
-            User::update_user_display_name(current_user_name, new_display_name, &conn)
+            User::update_user_display_name_safe(user_uuid, new_display_name, &conn)
                 .map(crate::convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
         })

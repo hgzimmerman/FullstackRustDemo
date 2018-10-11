@@ -248,6 +248,23 @@ impl User {
             .map_err(User::handle_error)
     }
 
+    // TODO deprecate the update user display name and switch to this impl, replacing the name.
+    pub fn update_user_display_name_safe(user_uuid: UserUuid, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
+        use schema::users::dsl::*;
+
+        let target = users.filter(
+            uuid.eq(user_uuid.0),
+        );
+
+        info!("Updating user display name");
+        diesel::update(target)
+            .set(display_name.eq(
+                new_display_name,
+            ))
+            .get_result(conn)
+            .map_err(User::handle_error)
+    }
+
     /// Deletes the user by their name.
     pub fn delete_user_by_name(name: String, conn: &PgConnection) -> JoeResult<User> {
         use schema::users::dsl::*;

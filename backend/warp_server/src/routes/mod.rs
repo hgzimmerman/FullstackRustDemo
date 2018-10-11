@@ -2,9 +2,18 @@ use warp::filters::BoxedFilter;
 
 mod user;
 mod auth;
+mod article;
+mod answer;
+mod bucket;
+mod chat;
 
 use self::user::user_api;
 use self::auth::auth_api;
+use self::article::article_api;
+use self::answer::answer_api;
+use self::bucket::bucket_api;
+use self::chat::chat_api;
+
 
 use warp;
 use warp::Filter;
@@ -23,15 +32,18 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 //        .or(warp::any().map(|| Response::builder()))
 //        .unify();
 
+    let api = auth_api()
+        .or(user_api())
+        .or(article_api())
+        .or(answer_api())
+        .or(bucket_api())
+        .or(chat_api())
+    ;
 
     warn!("Attaching Main API");
     warp::path("api")
 //        .and(cors)
-        .and(
-            auth_api()
-                .or(user_api())
-//            user_api()
-        )
+        .and(api)
         .recover(customize_error)
         .with(warp::log("api"))
         .boxed()
