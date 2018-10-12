@@ -91,6 +91,8 @@ use std::fs::File;
 use simplelog::LevelFilter;
 use warp::filters::BoxedFilter;
 use serde::Deserialize;
+use uuid::Uuid;
+use std::collections::HashMap;
 
 /// Util function that makes replying easier
 pub fn convert_and_json<T, U>(source: T) -> impl Reply where
@@ -151,3 +153,16 @@ pub fn json_body_filter<T> (kb_limit: u64) -> BoxedFilter<(T,)>
             .and(warp::body::json())
             .boxed()
 }
+
+pub fn query_uuid(key: &'static str) -> BoxedFilter<(Uuid,)> {
+    warp::query::query::<HashMap<String, String>>()
+        .and_then(move |hm: HashMap<String,String>| {
+            hm.get(key)
+                .and_then(|value: &String| {
+                    Uuid::parse_str(&value).ok()
+                })
+                .ok_or(warp::reject())
+        })
+        .boxed()
+}
+

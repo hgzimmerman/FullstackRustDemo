@@ -6,6 +6,10 @@ mod article;
 mod answer;
 mod bucket;
 mod chat;
+mod forum;
+mod message;
+mod post;
+mod question;
 
 use self::user::user_api;
 use self::auth::auth_api;
@@ -13,7 +17,10 @@ use self::article::article_api;
 use self::answer::answer_api;
 use self::bucket::bucket_api;
 use self::chat::chat_api;
-
+use self::forum::forum_api;
+use self::message::message_api;
+use self::post::post_api;
+use self::question::question_api;
 
 use warp;
 use warp::Filter;
@@ -38,6 +45,10 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
         .or(answer_api())
         .or(bucket_api())
         .or(chat_api())
+        .or(forum_api())
+        .or(message_api())
+        .or(post_api())
+        .or(question_api())
     ;
 
     warn!("Attaching Main API");
