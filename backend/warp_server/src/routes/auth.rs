@@ -11,6 +11,8 @@ use crate::error::Error;
 use auth::Secret;
 use wire::login::LoginRequest;
 use auth::ServerJwt;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
 
 pub fn auth_api() -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Auth API");
@@ -40,6 +42,7 @@ pub fn auth_api() -> BoxedFilter<(impl warp::Reply,)> {
 
 
 fn reauth() -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Get, "auth/reauth");
     warp::get2()
         .and(warp::path("reauth"))
         .and(jwt::secret_filter())
@@ -52,6 +55,7 @@ fn reauth() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn login() -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Post, "auth/login");
     warp::post2()
         .and(warp::path("login"))
         .and(jwt::secret_filter())

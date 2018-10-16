@@ -2,7 +2,7 @@ use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use warp;
-use crate::json_body_filter;
+use crate::util::json_body_filter;
 use crate::jwt::normal_user_filter;
 use crate::db_integration::db_filter;
 use wire::answer::NewAnswerRequest;
@@ -18,6 +18,13 @@ use db::answer::NewAnswer;
 use db::answer::Answer;
 use crate::error::Error;
 use wire::answer::AnswerResponse;
+//use crate::log_attach;
+//use crate::HttpMethod;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
+use crate::util::convert_and_json;
+
+
 
 
 pub fn answer_api() -> BoxedFilter<(impl Reply,)> {
@@ -31,6 +38,9 @@ pub fn answer_api() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn answer_question() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "answer/");
+
     warp::post2()
         .and(json_body_filter(16))
         .and(normal_user_filter())
@@ -54,7 +64,7 @@ fn answer_question() -> BoxedFilter<(impl Reply,)> {
                         user: answer_user,
                     }
                 })
-                .map(crate::convert_and_json::<AnswerData,AnswerResponse>)
+                .map(convert_and_json::<AnswerData,AnswerResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()

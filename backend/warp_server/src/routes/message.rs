@@ -6,10 +6,10 @@ use crate::db_integration::db_filter;
 use db::Conn;
 use uuid::Uuid;
 //use db::RetrievableUuid;
-use crate::convert_and_json;
-use crate::convert_vector_and_json;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
 //use crate::uuid_integration::uuid_filter;
-use crate::json_body_filter;
+use crate::util::json_body_filter;
 use identifiers::user::UserUuid;
 use crate::jwt::normal_user_filter;
 use db::Message;
@@ -19,7 +19,9 @@ use wire::message::MessageResponse;
 use db::message::MessageData;
 use wire::message::NewMessageRequest;
 use db::message::NewMessage;
-
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
+use crate::util::query_uuid;
 
 pub fn message_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Message API");
@@ -35,9 +37,12 @@ pub fn message_api() -> BoxedFilter<(impl Reply,)> {
 
 
 fn get_messages_for_chat() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "message/<index=i32>?chat_uuid=<uuid>");
+
     warp::get2()
         .and(warp::path::param())
-        .and(crate::query_uuid("chat_uuid")) // TODO Is this the query??
+        .and(query_uuid("chat_uuid")) // TODO Is this the query??
         .and(normal_user_filter())
         .and(db_filter())
         .and_then(|index: i32, chat_uuid: Uuid, user_uuid: UserUuid, conn: Conn|{
@@ -54,6 +59,9 @@ fn get_messages_for_chat() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn send_message() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "message/send");
+
     warp::post2()
         .and(warp::path::path("send"))
         .and(json_body_filter(20))

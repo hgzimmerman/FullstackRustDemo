@@ -5,11 +5,11 @@ use crate::error::Error;
 use crate::db_integration::db_filter;
 use db::Conn;
 use uuid::Uuid;
-use crate::convert_and_json;
-use crate::convert_vector_and_json;
-use crate::json_body_filter;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
+use crate::util::json_body_filter;
 use identifiers::user::UserUuid;
-use crate::query_uuid;
+use crate::util::query_uuid;
 use db::Question;
 use identifiers::bucket::BucketUuid;
 use wire::question::QuestionResponse;
@@ -20,6 +20,8 @@ use crate::jwt::normal_user_filter;
 use wire::question::NewQuestionRequest;
 use db::Bucket;
 use db::question::NewQuestion;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
 
 
 pub fn question_api() -> BoxedFilter<(impl Reply,)> {
@@ -40,6 +42,9 @@ pub fn question_api() -> BoxedFilter<(impl Reply,)> {
 
 
 pub fn get_questions_for_bucket() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "question?bucket_uuid=<uuid>");
+
     warp::get2()
         .and(query_uuid("bucket_uuid"))
         .and(db_filter())
@@ -54,6 +59,10 @@ pub fn get_questions_for_bucket() -> BoxedFilter<(impl Reply,)> {
 
 
 fn get_random_question() -> BoxedFilter<(impl Reply,)> {
+
+//    log_attach(HttpMethod::Post, "bucket/");
+    log_attach(HttpMethod::Get, "question/random_question?bucket_uuid=<uuid>");
+
     warp::get2()
         .and(warp::path("random_question"))
         .and(query_uuid("bucket_uuid"))
@@ -67,6 +76,9 @@ fn get_random_question() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 fn get_question() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "question/<uuid>");
+
     warp::get2()
         .and(uuid_filter())
         .and(db_filter())
@@ -83,6 +95,9 @@ fn get_question() -> BoxedFilter<(impl Reply,)> {
 
 // TODO there should be a variant that doesn't require auth.
 fn create_question() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "question/");
+
     warp::post2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
@@ -104,6 +119,9 @@ fn create_question() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn delete_question() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Delete, "question/<uuid>");
+
     warp::delete2()
         .and(uuid_filter())
         .and(normal_user_filter())
@@ -118,6 +136,9 @@ fn delete_question() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn put_question_back_in_bucket() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "question/<uuid>/into_bucket/");
+
     warp::put2()
         .and(uuid_filter())
         .and(warp::path("into_bucket"))
@@ -134,6 +155,9 @@ fn put_question_back_in_bucket() -> BoxedFilter<(impl Reply,)> {
 
 
 fn questions_in_bucket() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "question/quantity_in_bucket?bucket_uuid=<uuid>");
+
     warp::get2()
         .and(warp::path("quantity_in_bucket"))
         .and(query_uuid("bucket_uuid"))

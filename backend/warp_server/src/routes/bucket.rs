@@ -8,7 +8,7 @@ use db::Conn;
 use uuid::Uuid;
 use db::bucket::Bucket;
 use db::RetrievableUuid;
-use crate::convert_and_json;
+use crate::util::convert_and_json;
 use wire::bucket::BucketResponse;
 
 

@@ -21,8 +21,12 @@ use db::CreatableUuid;
 use crate::jwt::normal_user_filter;
 use wire::user::UpdateDisplayNameRequest;
 use wire::user::UserRoleRequest;
-use crate::HttpMethod;
-use crate::log_attach;
+//use crate::HttpMethod;
+//use crate::log_attach;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
 
 pub fn user_api() -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching User API");
@@ -86,7 +90,7 @@ fn get_user() -> BoxedFilter<(impl Reply,)> {
         .and(db_filter())
         .and_then(|user_uuid: Uuid, conn: Conn| {
             User::get_by_uuid(user_uuid, &conn)
-                .map(crate::convert_and_json::<User, UserResponse>)
+                .map(convert_and_json::<User, UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -103,7 +107,7 @@ fn get_users() -> BoxedFilter<(impl Reply,)> {
         .and_then(|index: i32, _admin: UserUuid, conn: Conn| {
             User::get_paginated(index, 25, &conn)
                 .map(|x:(Vec<User>,i64)| x.0)
-                .map(crate::convert_vector_and_json::<User,FullUserResponse>)
+                .map(convert_vector_and_json::<User,FullUserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -122,7 +126,7 @@ fn create_user() -> BoxedFilter<(impl Reply,)> {
         .and_then(|new_user: NewUserRequest, _admin: UserUuid, conn: Conn|{
                 let new_user: NewUser = new_user.into();
                 User::create(new_user, &conn)
-                    .map(crate::convert_and_json::<User,UserResponse>)
+                    .map(convert_and_json::<User,UserResponse>)
                     .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -144,7 +148,7 @@ fn update_user_display_name() -> BoxedFilter<(impl Reply,)> {
         .and_then(|request: UpdateDisplayNameRequest, user_uuid: UserUuid, conn: Conn| {
             let new_display_name = request.new_display_name;
             User::update_user_display_name_safe(user_uuid, new_display_name, &conn)
-                .map(crate::convert_and_json::<User,UserResponse>)
+                .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -162,7 +166,7 @@ fn add_role() -> BoxedFilter<(impl Reply,)> {
         .and(db_filter())
         .and_then(|request: UserRoleRequest, _user: UserUuid, conn: Conn| {
             User::add_role_to_user(request.uuid, request.user_role.into(), &conn)
-                .map(crate::convert_and_json::<User,UserResponse>)
+                .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -181,7 +185,7 @@ fn ban_user() -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: Uuid, _user: UserUuid, conn: Conn| {
             let user_uuid = UserUuid(user_uuid);
             User::set_ban_status(user_uuid, true, &conn)
-                .map(crate::convert_and_json::<User,UserResponse>)
+                .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -198,7 +202,7 @@ fn unban_user() -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: Uuid, _user: UserUuid, conn: Conn| {
             let user_uuid = UserUuid(user_uuid);
             User::set_ban_status(user_uuid, false, &conn)
-                .map(crate::convert_and_json::<User,UserResponse>)
+                .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()

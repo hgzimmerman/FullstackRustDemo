@@ -8,14 +8,16 @@ use uuid::Uuid;
 use wire::forum::ForumResponse;
 use db::Forum;
 use db::RetrievableUuid;
-use crate::convert_and_json;
-use crate::convert_vector_and_json;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
 use crate::uuid_integration::uuid_filter;
-use crate::json_body_filter;
+use crate::util::json_body_filter;
 use crate::jwt::admin_user_filter;
 use identifiers::user::UserUuid;
 use wire::forum::NewForumRequest;
 use db::CreatableUuid;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
 
 pub fn forum_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Forum API");
@@ -32,6 +34,9 @@ pub fn forum_api() -> BoxedFilter<(impl Reply,)> {
 
 /// Gets all the forums
 fn get_forums() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "forum/");
+
     warp::get2()
         .and(db_filter())
         .and_then(|conn: Conn|{
@@ -43,6 +48,9 @@ fn get_forums() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn get_forum() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "forum/<uuid>");
+
     warp::get2()
         .and(uuid_filter())
         .and(db_filter())
@@ -55,6 +63,9 @@ fn get_forum() -> BoxedFilter<(impl Reply,)> {
 }
 
 fn create_forum() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "forum/");
+
     warp::post2()
         .and(json_body_filter(4))
         .and(admin_user_filter())

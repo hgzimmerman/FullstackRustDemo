@@ -5,9 +5,9 @@ use crate::error::Error;
 use crate::db_integration::db_filter;
 use db::Conn;
 use uuid::Uuid;
-use crate::convert_and_json;
-use crate::convert_vector_and_json;
-use crate::json_body_filter;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
+use crate::util::json_body_filter;
 use identifiers::user::UserUuid;
 use crate::jwt::normal_user_filter;
 use wire::post::NewPostRequest;
@@ -22,6 +22,8 @@ use db::post::EditPostChangeset;
 use crate::jwt::moderator_user_filter;
 use identifiers::post::PostUuid;
 use crate::uuid_integration::uuid_filter;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
 
 
 pub fn post_api() -> BoxedFilter<(impl Reply,)> {
@@ -40,6 +42,9 @@ pub fn post_api() -> BoxedFilter<(impl Reply,)> {
 
 
 pub fn create_post() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "post/");
+
     warp::post2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
@@ -60,6 +65,9 @@ pub fn create_post() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn edit_post() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "post/");
+
     warp::put2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
@@ -82,6 +90,9 @@ pub fn edit_post() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "post/censor");
+
     warp::put2()
         .and(warp::path("censor"))
         .and(warp::path::param::<Uuid>())
@@ -97,6 +108,9 @@ pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn get_posts_by_user() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "post/users_posts");
+
     warp::get2()
         .and(warp::path("users_posts"))
         .and(uuid_filter())

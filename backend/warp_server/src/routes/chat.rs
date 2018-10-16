@@ -6,9 +6,9 @@ use crate::db_integration::db_filter;
 use db::Conn;
 use uuid::Uuid;
 //use db::RetrievableUuid;
-use crate::convert_and_json;
-use crate::convert_vector_and_json;
-use crate::json_body_filter;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
+use crate::util::json_body_filter;
 use crate::jwt::normal_user_filter;
 use wire::chat::NewChatRequest;
 use identifiers::user::UserUuid;
@@ -22,8 +22,8 @@ use crate::uuid_integration::uuid_filter;
 use wire::chat::ChatResponse;
 use db::chat::ChatData;
 use identifiers::chat::ChatUuid;
-
-
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
 
 pub fn chat_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Chat API");
@@ -41,6 +41,9 @@ pub fn chat_api() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn create() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "chat/");
+
     warp::post2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
@@ -57,6 +60,9 @@ pub fn create() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn add_user_to_chat() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "chat/add_user");
+
     warp::put2()
         .and(warp::path("add_user"))
         .and(json_body_filter(12))
@@ -77,6 +83,9 @@ pub fn add_user_to_chat() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn remove_user_from_chat() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "chat/remove_user");
+
     warp::put2()
         .and(warp::path("remove_user"))
         .and(json_body_filter(12))
@@ -98,6 +107,9 @@ pub fn remove_user_from_chat() -> BoxedFilter<(impl Reply,)> {
 
 
 pub fn get_owned_chats() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "chat/owned");
+
     warp::get2()
         .and(warp::path("owned"))
         .and(normal_user_filter())
@@ -111,6 +123,9 @@ pub fn get_owned_chats() -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn get_chat() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "chat/");
+
     warp::get2()
         .and(uuid_filter())
         .and(normal_user_filter())

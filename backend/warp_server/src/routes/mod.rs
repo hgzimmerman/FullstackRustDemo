@@ -26,18 +26,27 @@ use warp;
 use warp::Filter;
 
 use crate::error::customize_error;
+//use warp::reply::Reply;
 
 pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
-//    use warp::reply::Response;
-//    let cors = warp::any()
-//        .and(warp::header("origin").map(|origin: String| {
-//            Response::builder()
-//                .header("access-control-allow-origin", origin)
-//                .header("vary", "origin")
-//        }))
-//        .or(warp::any().map(|| Response::builder()))
-//        .unify();
+
+    // sort of a fake cors implementation.
+    // TODO replace this once a blessed implementation is released by warp
+    let boxed_cors =             warp::options()
+        .and(warp::header("origin"))
+        .map(|origin: String| {
+            let with_header = warp::reply::with_header(
+                warp::reply(),
+                "access-control-allow-origin",
+                origin
+            );
+            warp::reply::with_header(
+                with_header,
+                "vary",
+                "origin"
+            )
+        });
 
     let api = auth_api()
         .or(user_api())
@@ -53,8 +62,10 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
     warn!("Attaching Main API");
     warp::path("api")
-//        .and(cors)
-        .and(api)
+        .and(
+            api
+            .or(boxed_cors)
+        )
         .recover(customize_error)
         .with(warp::log("api"))
         .boxed()

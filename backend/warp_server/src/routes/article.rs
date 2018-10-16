@@ -14,13 +14,19 @@ use wire::article::ArticlePreviewResponse;
 use crate::jwt::normal_user_filter;
 use identifiers::user::UserUuid;
 use wire::article::MinimalArticleResponse;
-use crate::json_body_filter;
+use crate::util::json_body_filter;
 use wire::article::NewArticleRequest;
 use db::CreatableUuid;
 use db::article::NewArticle;
 //use db::article::ArticleChangeset;
 use db::RetrievableUuid;
 use wire::article::UpdateArticleRequest;
+//use crate::log_attach;
+//use crate::HttpMethod;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
+use crate::util::convert_and_json;
+use crate::util::convert_vector_and_json;
 
 pub fn article_api() -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Article API");
@@ -41,26 +47,30 @@ pub fn article_api() -> BoxedFilter<(impl warp::Reply,)> {
 
 
 fn get_article() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "article/<uuid>");
+
     warp::get2()
         .and(uuid_filter())
         .and(db_filter())
         .and_then(|uuid: Uuid, conn: Conn| {
             let article_uuid = ArticleUuid(uuid);
             Article::get_article_data(article_uuid, &conn)
-                .map(crate::convert_and_json::<ArticleData,FullArticleResponse>)
+                .map(convert_and_json::<ArticleData,FullArticleResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
 }
 
 fn get_published_articles() -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Get, "article/<index=i32>/<page_size=i32>");
     warp::get2()
         .and(warp::path::param::<i32>())
         .and(warp::path::param::<i32>())
         .and(db_filter())
         .and_then(|index: i32, page_size: i32, conn: Conn| {
             Article::get_paginated(index, page_size, &conn)
-                .map(crate::convert_vector_and_json::<ArticleData,ArticlePreviewResponse>)
+                .map(convert_vector_and_json::<ArticleData,ArticlePreviewResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -68,19 +78,25 @@ fn get_published_articles() -> BoxedFilter<(impl Reply,)> {
 
 
 fn get_owned_unpublished_articles() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "article/owned_unpublished");
+
     warp::get2()
         .and(warp::path("owned_unpublished"))
         .and(normal_user_filter())
         .and(db_filter())
         .and_then(|user_uuid: UserUuid, conn: Conn| {
             Article::get_unpublished_articles_for_user(user_uuid, &conn)
-                .map(crate::convert_vector_and_json::<Article,MinimalArticleResponse>)
+                .map(convert_vector_and_json::<Article,MinimalArticleResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
 }
 
 fn create_article() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Post, "article/");
+
     warp::post2()
         .and(json_body_filter(128)) // Allow large articles
         .and(normal_user_filter())
@@ -90,7 +106,7 @@ fn create_article() -> BoxedFilter<(impl Reply,)> {
             request.author_uuid = user_uuid.0; // This api isn't perfect - so the uuid must be gotten from the jwt
 
             Article::create(request.into(), &conn)
-                .map(crate::convert_and_json::<Article,MinimalArticleResponse>)
+                .map(convert_and_json::<Article,MinimalArticleResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -98,6 +114,9 @@ fn create_article() -> BoxedFilter<(impl Reply,)> {
 
 
 fn update_article() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "article/");
+
     warp::put2()
         .and(json_body_filter(128))
         .and(normal_user_filter())
@@ -110,7 +129,7 @@ fn update_article() -> BoxedFilter<(impl Reply,)> {
             }
 
             Article::update_article(request.into(), &conn)
-                .map(crate::convert_and_json::<Article,MinimalArticleResponse>)
+                .map(convert_and_json::<Article,MinimalArticleResponse>)
                 .map_err(Error::convert_and_reject)
         })
         .boxed()
@@ -118,6 +137,9 @@ fn update_article() -> BoxedFilter<(impl Reply,)> {
 
 
 fn publish() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "article/publish/<uuid>");
+
     warp::put2()
         .and(warp::path("publish"))
         .and(uuid_filter())
@@ -137,6 +159,9 @@ fn publish() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 fn unpublish() -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Put, "article/unpublish/<uuid>");
+
     warp::put2()
         .and(warp::path("unpublish"))
         .and(uuid_filter())
