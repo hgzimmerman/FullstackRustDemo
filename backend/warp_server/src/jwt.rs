@@ -12,6 +12,7 @@ use identifiers::user::UserUuid;
 
 
 use crate::error::Error;
+use warp::Rejection;
 
 
 pub fn jwt_filter() -> BoxedFilter<(ServerJwt,)> {
@@ -24,6 +25,25 @@ pub fn jwt_filter() -> BoxedFilter<(ServerJwt,)> {
         })
         .boxed()
 }
+
+
+//
+//pub fn optional_jwt_filter() -> BoxedFilter<(Option<ServerJwt>,)> {
+//
+//    warp::header::header::<String>("Authorization")
+//        .or_else(|_| Ok(None))
+//        .and(secret_filter())
+//        .and_then(|bearer_string: Option<String>, secret: Secret| {
+//            if let Some(bearer_string) = bearer_string {
+//                extract_jwt(bearer_string, &secret)
+//                    .map(Some)
+//                    .or(Ok(None))
+//            } else {
+//                Ok(None)
+//            }
+//        })
+//        .boxed()
+//}
 
 pub fn secret_filter() -> BoxedFilter<(Secret,)> {
     warp::any()
@@ -58,6 +78,24 @@ pub fn normal_user_filter() -> BoxedFilter<(UserUuid,)> {
         })
         .boxed()
 }
+
+pub fn optional_normal_user_filter() -> BoxedFilter<(Option<UserUuid>,)> {
+
+    fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection>{
+         if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
+            return Ok(Some(server_jwt.0.sub))
+        } else {
+                return Ok(None)
+        }
+    }
+    warp::any()
+        .and(jwt_filter())
+        .and_then(handle_jwt)
+        .or(warp::any().map(||None))
+        .unify::<(Option<UserUuid>,)>()
+        .boxed()
+}
+
 
 #[allow(dead_code)]
 pub fn publisher_user_filter() -> BoxedFilter<(UserUuid,)> {

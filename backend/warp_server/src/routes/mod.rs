@@ -10,6 +10,7 @@ mod forum;
 mod message;
 mod post;
 mod question;
+mod thread;
 
 use self::user::user_api;
 use self::auth::auth_api;
@@ -21,6 +22,7 @@ use self::forum::forum_api;
 use self::message::message_api;
 use self::post::post_api;
 use self::question::question_api;
+use self::thread::thread_api;
 
 use warp;
 use warp::Filter;
@@ -33,7 +35,7 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
     // sort of a fake cors implementation.
     // TODO replace this once a blessed implementation is released by warp
-    let boxed_cors =             warp::options()
+    let cors = warp::options()
         .and(warp::header("origin"))
         .map(|origin: String| {
             let with_header = warp::reply::with_header(
@@ -58,13 +60,14 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
         .or(message_api())
         .or(post_api())
         .or(question_api())
+        .or(thread_api())
     ;
 
     warn!("Attaching Main API");
     warp::path("api")
         .and(
             api
-            .or(boxed_cors)
+            .or(cors)
         )
         .recover(customize_error)
         .with(warp::log("api"))

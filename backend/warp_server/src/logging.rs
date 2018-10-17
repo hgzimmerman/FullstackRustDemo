@@ -56,3 +56,13 @@ pub fn setup_logging() {
     ]).expect("Can't get logger.");
 }
 
+#[allow(dead_code)]
+pub fn setup_pretty_logging() {
+    //    if env::var_os("RUST_LOG").is_none() {
+//         Set `RUST_LOG=todos=debug` to see debug logs,
+//         this only shows access logs.
+//        env::set_var("RUST_LOG", "auth=info");
+//    }
+
+//    pretty_env_logger::init();
+}
