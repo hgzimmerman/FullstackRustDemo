@@ -4,7 +4,6 @@ use warp::reply::Reply;
 use crate::error::Error;
 use crate::db_integration::db_filter;
 use db::Conn;
-use uuid::Uuid;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 use crate::util::json_body_filter;
@@ -21,9 +20,9 @@ use db::RetrievableUuid;
 use db::post::EditPostChangeset;
 use crate::jwt::moderator_user_filter;
 use identifiers::post::PostUuid;
-use crate::uuid_integration::uuid_filter;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
+use crate::uuid_integration::uuid_wrap_filter;
 
 
 pub fn post_api() -> BoxedFilter<(impl Reply,)> {
@@ -95,11 +94,11 @@ pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
 
     warp::put2()
         .and(warp::path("censor"))
-        .and(warp::path::param::<Uuid>())
+        .and(uuid_wrap_filter())
+//        .and(warp::path::param::<PosUuid>())
         .and(moderator_user_filter())
         .and(db_filter())
-        .and_then(|post_uuid: Uuid, _user: UserUuid, conn: Conn| {
-            let post_uuid = PostUuid(post_uuid);
+        .and_then(|post_uuid: PostUuid, _user: UserUuid, conn: Conn| {
             Post::censor_post(post_uuid, &conn)
                 .map(convert_and_json::<ChildlessPostData, PostResponse>)
                 .map_err(Error::convert_and_reject)
@@ -113,10 +112,9 @@ pub fn get_posts_by_user() -> BoxedFilter<(impl Reply,)> {
 
     warp::get2()
         .and(warp::path("users_posts"))
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(db_filter())
-        .and_then(|user_uuid: Uuid, conn:Conn| {
-            let user_uuid = UserUuid(user_uuid);
+        .and_then(|user_uuid: UserUuid, conn:Conn| {
             Post::get_posts_by_user(user_uuid, &conn)
                 .map(convert_vector_and_json::<ChildlessPostData, PostResponse>)
                 .map_err(Error::convert_and_reject)

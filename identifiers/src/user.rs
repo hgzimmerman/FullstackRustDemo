@@ -25,9 +25,14 @@ impl AsRef<Uuid> for UserUuid {
 const PARAM_NAME: &str = "user_uuid";
 
 impl Display for UserUuid {
-    //noinspection ALL
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(f, "{}", self.0)
+    }
+}
+
+impl From<Uuid> for UserUuid {
+    fn from(uuid: Uuid) -> UserUuid {
+        UserUuid(uuid)
     }
 }
 

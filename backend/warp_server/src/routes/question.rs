@@ -22,6 +22,7 @@ use db::Bucket;
 use db::question::NewQuestion;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
+use crate::uuid_integration::uuid_wrap_filter;
 
 
 pub fn question_api() -> BoxedFilter<(impl Reply,)> {
@@ -80,10 +81,9 @@ fn get_question() -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "question/<uuid>");
 
     warp::get2()
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(db_filter())
-        .and_then(|question_uuid: Uuid, conn: Conn| {
-            let question_uuid = QuestionUuid(question_uuid);
+        .and_then(|question_uuid: QuestionUuid, conn: Conn| {
             Question::get_full_question(question_uuid, &conn)
                 .map(convert_and_json::<QuestionData, QuestionResponse>)
                 .map_err(Error::convert_and_reject)

@@ -23,6 +23,12 @@ impl Display for PostUuid {
     }
 }
 
+impl From<Uuid> for PostUuid {
+    fn from(uuid: Uuid) -> PostUuid {
+        PostUuid(uuid)
+    }
+}
+
 #[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;

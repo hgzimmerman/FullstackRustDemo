@@ -4,13 +4,11 @@ use warp::reply::Reply;
 use crate::error::Error;
 use crate::db_integration::db_filter;
 use db::Conn;
-use uuid::Uuid;
 use wire::forum::ForumResponse;
 use db::Forum;
 use db::RetrievableUuid;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
-use crate::uuid_integration::uuid_filter;
 use crate::util::json_body_filter;
 use crate::jwt::admin_user_filter;
 use identifiers::user::UserUuid;
@@ -18,6 +16,8 @@ use wire::forum::NewForumRequest;
 use db::CreatableUuid;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
+use crate::uuid_integration::uuid_wrap_filter;
+use identifiers::forum::ForumUuid;
 
 pub fn forum_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Forum API");
@@ -52,10 +52,10 @@ fn get_forum() -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "forum/<uuid>");
 
     warp::get2()
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(db_filter())
-        .and_then(|uuid: Uuid, conn: Conn| {
-            Forum::get_by_uuid(uuid, &conn)
+        .and_then(|uuid: ForumUuid, conn: Conn| {
+            Forum::get_by_uuid(uuid.0, &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
         })

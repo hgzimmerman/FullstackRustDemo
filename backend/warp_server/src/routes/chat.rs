@@ -4,8 +4,6 @@ use warp::reply::Reply;
 use crate::error::Error;
 use crate::db_integration::db_filter;
 use db::Conn;
-use uuid::Uuid;
-//use db::RetrievableUuid;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 use crate::util::json_body_filter;
@@ -18,12 +16,12 @@ use db::chat::NewChat;
 use db::CreatableUuid;
 use wire::chat::ChatUserAssociationRequest;
 use db::chat::ChatUserAssociation;
-use crate::uuid_integration::uuid_filter;
 use wire::chat::ChatResponse;
 use db::chat::ChatData;
 use identifiers::chat::ChatUuid;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
+use crate::uuid_integration::uuid_wrap_filter;
 
 pub fn chat_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Chat API");
@@ -127,11 +125,10 @@ pub fn get_chat() -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "chat/");
 
     warp::get2()
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(normal_user_filter())
         .and(db_filter())
-        .and_then(|chat_uuid: Uuid, _user: UserUuid, conn: Conn|{
-            let chat_uuid = ChatUuid(chat_uuid);
+        .and_then(|chat_uuid: ChatUuid, _user: UserUuid, conn: Conn|{
             Chat::get_full_chat(chat_uuid, &conn)
                 .map(convert_and_json::<ChatData,ChatResponse>)
                 .map_err(Error::convert_and_reject)

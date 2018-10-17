@@ -23,6 +23,12 @@ impl Display for ThreadUuid {
     }
 }
 
+impl From<Uuid> for ThreadUuid {
+    fn from(uuid: Uuid) -> ThreadUuid {
+        ThreadUuid(uuid)
+    }
+}
+
 #[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;

@@ -27,6 +27,7 @@ use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
+use crate::uuid_integration::uuid_wrap_filter;
 
 pub fn article_api() -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Article API");
@@ -51,10 +52,9 @@ fn get_article() -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "article/<uuid>");
 
     warp::get2()
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(db_filter())
-        .and_then(|uuid: Uuid, conn: Conn| {
-            let article_uuid = ArticleUuid(uuid);
+        .and_then(|article_uuid: ArticleUuid, conn: Conn| {
             Article::get_article_data(article_uuid, &conn)
                 .map(convert_and_json::<ArticleData,FullArticleResponse>)
                 .map_err(Error::convert_and_reject)
@@ -142,17 +142,17 @@ fn publish() -> BoxedFilter<(impl Reply,)> {
 
     warp::put2()
         .and(warp::path("publish"))
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(normal_user_filter())
         .and(db_filter())
-        .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: Conn|{
-            let article_to_update: Article = Article::get_by_uuid(uuid, &conn)
+        .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: Conn|{
+            let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
                 return Error::NotAuthorized.reject()
             }
 
-            Article::set_publish_status(ArticleUuid(uuid), true, &conn)
+            Article::set_publish_status(article_uuid, true, &conn)
                 .map(|_| warp::http::StatusCode::NO_CONTENT)
                 .map_err(Error::convert_and_reject)
         })

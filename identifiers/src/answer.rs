@@ -24,6 +24,12 @@ impl Display for AnswerUuid {
     }
 }
 
+impl From<Uuid> for AnswerUuid {
+    fn from(uuid: Uuid) -> AnswerUuid {
+        AnswerUuid(uuid)
+    }
+}
+
 #[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;

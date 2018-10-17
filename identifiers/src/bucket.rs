@@ -23,6 +23,12 @@ impl Display for BucketUuid {
     }
 }
 
+impl From<Uuid> for BucketUuid {
+    fn from(uuid: Uuid) -> BucketUuid {
+        BucketUuid(uuid)
+    }
+}
+
 #[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;

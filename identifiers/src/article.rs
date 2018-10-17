@@ -23,6 +23,11 @@ impl Display for ArticleUuid {
     }
 }
 
+impl From<Uuid> for ArticleUuid {
+    fn from(uuid: Uuid) -> ArticleUuid {
+        ArticleUuid(uuid)
+    }
+}
 
 #[cfg(feature = "rocket_support")]
 mod rocket {

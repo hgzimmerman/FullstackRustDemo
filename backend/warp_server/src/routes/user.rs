@@ -27,6 +27,7 @@ use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
+use crate::uuid_integration::uuid_wrap_filter;
 
 pub fn user_api() -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching User API");
@@ -179,11 +180,10 @@ fn ban_user() -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Put, "user/ban/<uuid>");
     warp::put2()
         .and(path!("ban"))
-        .and(uuid_filter())
+        .and(uuid_wrap_filter::<UserUuid>())
         .and(admin_user_filter())
         .and(db_filter())
-        .and_then(|user_uuid: Uuid, _user: UserUuid, conn: Conn| {
-            let user_uuid = UserUuid(user_uuid);
+        .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: Conn| {
             User::set_ban_status(user_uuid, true, &conn)
                 .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
@@ -196,11 +196,10 @@ fn unban_user() -> BoxedFilter<(impl Reply,)> {
 
     warp::put2()
         .and(warp::path("unban"))
-        .and(uuid_filter())
+        .and(uuid_wrap_filter::<UserUuid>())
         .and(admin_user_filter())
         .and(db_filter())
-        .and_then(|user_uuid: Uuid, _user: UserUuid, conn: Conn| {
-            let user_uuid = UserUuid(user_uuid);
+        .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: Conn| {
             User::set_ban_status(user_uuid, false, &conn)
                 .map(convert_and_json::<User,UserResponse>)
                 .map_err(Error::convert_and_reject)
