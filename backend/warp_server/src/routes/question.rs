@@ -28,6 +28,8 @@ use crate::uuid_integration::uuid_wrap_filter;
 pub fn question_api() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Question API");
     let api = get_questions_for_bucket()
+        .or(get_question())
+        .or(create_question())
         .or(get_random_question())
         .or(get_questions_for_bucket())
         .or(delete_question())

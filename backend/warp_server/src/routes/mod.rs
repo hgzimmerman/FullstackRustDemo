@@ -11,6 +11,7 @@ mod message;
 mod post;
 mod question;
 mod thread;
+mod static_file;
 
 use self::user::user_api;
 use self::auth::auth_api;
@@ -24,11 +25,16 @@ use self::post::post_api;
 use self::question::question_api;
 use self::thread::thread_api;
 
+pub use self::static_file::static_files_handler;
+
+
 use warp;
 use warp::Filter;
 
 use crate::error::customize_error;
 //use warp::reply::Reply;
+
+pub const API_STRING: &str = "api";
 
 pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
@@ -64,12 +70,12 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
     ;
 
     warn!("Attaching Main API");
-    warp::path("api")
+    warp::path(API_STRING)
         .and(
             api
             .or(cors)
         )
         .recover(customize_error)
-        .with(warp::log("api"))
+        .with(warp::log(API_STRING))
         .boxed()
 }
