@@ -1,8 +1,5 @@
-
-
 use warp::Filter;
-
-use warp::reject::Rejection;
+//use warp::reject::Rejection;
 use warp::filters::BoxedFilter;
 use crate::error::Error;
 
@@ -11,10 +8,10 @@ use db::init_pool;
 use db::Pool;
 use db::DATABASE_URL;
 
-pub fn db_filter_impl() -> impl Filter<Extract = (Conn,), Error = Rejection>  {
-    warp::any()
-        .and_then(move || get_conn(&POOL).map_err(|_| warp::reject().with(Error::DatabaseUnavailable)) )
-}
+//pub fn db_filter_impl() -> impl Filter<Extract = (Conn,), Error = Rejection>  {
+//    warp::any()
+//        .and_then(move || get_conn(&POOL).map_err(|_| warp::reject().with(Error::DatabaseUnavailable)) )
+//}
 
 pub fn db_filter() -> BoxedFilter<(Conn,)> {
     warp::any()

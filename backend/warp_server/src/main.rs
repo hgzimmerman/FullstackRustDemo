@@ -27,27 +27,14 @@ mod uuid_integration;
 mod logging;
 mod util;
 
-use warp::Filter;
-//use wire::user::UserResponse;
-//use uuid::Uuid;
-
-//use serde::Deserialize;
-
-//use warp::reject::Rejection;
-//use warp::reply::Reply;
-//use warp::filters::BoxedFilter;
-//use std::env;
 
 use self::logging::setup_logging;
-use self::routes::static_files_handler;
 
 fn main() {
 
     setup_logging();
 
-    let routes = self::routes::api()
-        .or(static_files_handler());
-
-    warp::serve(routes)
+    warp::serve(self::routes::routes())
         .run(([127, 0, 0, 1], 3030))
 }
+

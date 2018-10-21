@@ -6,10 +6,10 @@ use std::fmt::{self, Display};
 use warp::{Rejection, Reply};
 use warp::http::StatusCode;
 use std::fmt::Debug;
-
+use warp;
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Error {
     DatabaseUnavailable,
     DatabaseError(Option<String>),
@@ -56,6 +56,12 @@ impl StdError for Error {
 }
 
 
+/// Takes a rejection, which Warp would otherwise handle in its own way, and transform it into
+/// an Ok(Reply) where the status is set to correspond to the provided error.
+///
+/// This only works if the Rejection is of the custom Error type. Any others will just fall through this unchanged.
+///
+/// This should be used at the top level of the exposed api.
 pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
     let mut resp = err.json();
 

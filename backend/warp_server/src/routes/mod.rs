@@ -32,29 +32,22 @@ use warp;
 use warp::Filter;
 
 use crate::error::customize_error;
-//use warp::reply::Reply;
 
 pub const API_STRING: &str = "api";
 
-pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
+/// Combine the API with the static file handler.
+/// Any missed GETs that doesn't start with '/api' will redirect to the index.html.
+/// Also support CORS, as that should be applied to the whole server.
+pub fn routes() -> BoxedFilter<(impl warp::Reply,)> {
+    api()
+        .or(static_files_handler())
+        .recover(customize_error) // Top level error correction
+        .or(cors()) // For some reason, this needs to come after the recover() section.
+        .boxed()
+}
 
-    // sort of a fake cors implementation.
-    // TODO replace this once a blessed implementation is released by warp
-    let cors = warp::options()
-        .and(warp::header("origin"))
-        .map(|origin: String| {
-            let with_header = warp::reply::with_header(
-                warp::reply(),
-                "access-control-allow-origin",
-                origin
-            );
-            warp::reply::with_header(
-                with_header,
-                "vary",
-                "origin"
-            )
-        });
+fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
     let api = auth_api()
         .or(user_api())
@@ -71,11 +64,58 @@ pub fn api() -> BoxedFilter<(impl warp::Reply,)> {
 
     warn!("Attaching Main API");
     warp::path(API_STRING)
-        .and(
-            api
-            .or(cors)
-        )
-        .recover(customize_error)
+        .and(api)
         .with(warp::log(API_STRING))
         .boxed()
+}
+
+
+
+
+/// sort of a fake cors implementation.
+fn cors() -> BoxedFilter<(impl warp::Reply,)> {
+    // TODO replace this once a blessed implementation is released by warp
+    warp::options()
+        .and(warp::header::<String>("origin"))
+        .map(|origin: String| {
+            let with_header = warp::reply::with_header(
+                warp::reply(),
+                "access-control-allow-origin",
+                origin
+            );
+            warp::reply::with_header(
+                with_header,
+                "vary",
+                "origin"
+            )
+        })
+        .boxed()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::Error;
+
+    #[test]
+    fn routes_redirect_to_index() {
+        assert!(
+            warp::test::request()
+                .path("/yeet")
+                .filter(&routes())
+                .is_ok()
+        )
+    }
+
+    #[test]
+    fn routes_invalid_api_path_still_404s() {
+        let resp = warp::test::request()
+            .path("/api/yeet") // Matches nothing in the API space
+            .reply(&routes());
+
+        let status = resp.status();
+        assert_eq!(status, 404);
+
+    }
 }

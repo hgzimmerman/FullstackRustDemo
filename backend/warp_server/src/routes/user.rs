@@ -10,7 +10,7 @@ use db::Conn;
 use db::user::User;
 use db::RetrievableUuid;
 
-use crate::jwt::jwt_filter;
+//use crate::jwt::jwt_filter;
 use crate::error::Error;
 use crate::jwt::admin_user_filter;
 //use wire::convert_vector;
@@ -64,21 +64,21 @@ pub fn simple_filter() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-pub fn boxed_filter_that_relies_on_db() -> BoxedFilter<(impl Reply,)>{
-    warp::get2()
-        .and(warp::path("yeet"))
-        .and(db_filter())
-        .map(|_conn: Conn| "hello there")
-        .boxed()
-}
+//pub fn boxed_filter_that_relies_on_db() -> BoxedFilter<(impl Reply,)>{
+//    warp::get2()
+//        .and(warp::path("yeet"))
+//        .and(db_filter())
+//        .map(|_conn: Conn| "hello there")
+//        .boxed()
+//}
 
-pub fn jwt_test() -> BoxedFilter<(impl Reply,)> {
-    warp::get2()
-        .and(warp::path("jwt"))
-        .and(jwt_filter())
-        .map(|_| "works")
-        .boxed()
-}
+//pub fn jwt_test() -> BoxedFilter<(impl Reply,)> {
+//    warp::get2()
+//        .and(warp::path("jwt"))
+//        .and(jwt_filter())
+//        .map(|_| "works")
+//        .boxed()
+//}
 
 // ==== Actual User API =====
 
