@@ -13,12 +13,14 @@ use identifiers::user::UserUuid;
 
 use crate::error::Error;
 use warp::Rejection;
+use crate::state::State;
 
+pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
-pub fn jwt_filter() -> BoxedFilter<(ServerJwt,)> {
+pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
     warp::header::header::<String>("Authorization")
         .or_else(|_| Error::MalformedToken.reject())
-        .and(secret_filter())
+        .and(s.secret.clone())
         .and_then(|bearer_string: String, secret: Secret| {
             extract_jwt(bearer_string, &secret)
                 .map_err(|e: Error|warp::reject().with(e))
@@ -45,22 +47,22 @@ pub fn jwt_filter() -> BoxedFilter<(ServerJwt,)> {
 //        .boxed()
 //}
 
-pub fn secret_filter() -> BoxedFilter<(Secret,)> {
-    warp::any()
-        .map(|| get_secret())
-        .boxed()
-}
+//pub fn secret_filter_dep() -> BoxedFilter<(Secret,)> {
+//    warp::any()
+//        .map(|| get_secret())
+//        .boxed()
+//}
 
-pub fn secret_filter_2(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
+pub fn secret_filter(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
     warp::any()
         .map(move || locked_secret.clone())
         .boxed()
 }
 
 #[allow(dead_code)]
-pub fn admin_user_filter() -> BoxedFilter<(UserUuid,)> {
+pub fn admin_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
     warp::any()
-        .and(jwt_filter())
+        .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Admin) {
                 return Ok(server_jwt.0.sub)
@@ -72,9 +74,9 @@ pub fn admin_user_filter() -> BoxedFilter<(UserUuid,)> {
 }
 
 #[allow(dead_code)]
-pub fn normal_user_filter() -> BoxedFilter<(UserUuid,)> {
+pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
     warp::any()
-        .and(jwt_filter())
+        .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
                 return Ok(server_jwt.0.sub)
@@ -85,7 +87,7 @@ pub fn normal_user_filter() -> BoxedFilter<(UserUuid,)> {
         .boxed()
 }
 
-pub fn optional_normal_user_filter() -> BoxedFilter<(Option<UserUuid>,)> {
+pub fn optional_normal_user_filter(s: &State) -> BoxedFilter<(Option<UserUuid>,)> {
 
     fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection>{
          if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
@@ -95,7 +97,7 @@ pub fn optional_normal_user_filter() -> BoxedFilter<(Option<UserUuid>,)> {
         }
     }
     warp::any()
-        .and(jwt_filter())
+        .and(jwt_filter(s))
         .and_then(handle_jwt)
         .or(warp::any().map(||None))
         .unify::<(Option<UserUuid>,)>()
@@ -104,9 +106,9 @@ pub fn optional_normal_user_filter() -> BoxedFilter<(Option<UserUuid>,)> {
 
 
 #[allow(dead_code)]
-pub fn publisher_user_filter() -> BoxedFilter<(UserUuid,)> {
+pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
     warp::any()
-        .and(jwt_filter())
+        .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Publisher) {
                 return Ok(server_jwt.0.sub)
@@ -117,9 +119,9 @@ pub fn publisher_user_filter() -> BoxedFilter<(UserUuid,)> {
         .boxed()
 }
 #[allow(dead_code)]
-pub fn moderator_user_filter() -> BoxedFilter<(UserUuid,)> {
+pub fn moderator_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
     warp::any()
-        .and(jwt_filter())
+        .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Moderator) {
                 return Ok(server_jwt.0.sub)

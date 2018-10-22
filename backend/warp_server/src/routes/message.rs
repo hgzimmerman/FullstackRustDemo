@@ -45,7 +45,7 @@ fn get_messages_for_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::path::param())
         .and(query_uuid("chat_uuid")) // TODO Is this the query??
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|index: i32, chat_uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
             let chat_uuid = ChatUuid(chat_uuid);
@@ -67,7 +67,7 @@ fn send_message(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::post2()
         .and(warp::path::path("send"))
         .and(json_body_filter(20))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewMessageRequest, user_uuid: UserUuid, conn: PooledConn|{
             if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {

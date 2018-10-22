@@ -46,7 +46,7 @@ pub fn thread_api(s: &State) -> BoxedFilter<(impl Reply,)> {
 pub fn create_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::post2()
         .and(json_body_filter(20))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(| request: NewThreadRequest, user_uuid: UserUuid, conn: PooledConn|{
             if request.author_uuid != user_uuid {
@@ -68,7 +68,7 @@ pub fn lock_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
      warp::put2()
          .and(warp::path("lock"))
          .and(uuid_wrap_filter())
-         .and(moderator_user_filter())
+         .and(moderator_user_filter(s))
          .and(s.db.clone())
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::set_lock_status(thread_uuid, true, &conn)
@@ -82,7 +82,7 @@ pub fn unlock_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
      warp::put2()
          .and(warp::path("unlock"))
          .and(uuid_wrap_filter())
-         .and(moderator_user_filter())
+         .and(moderator_user_filter(s))
          .and(s.db.clone())
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::set_lock_status(thread_uuid, false, &conn)
@@ -97,7 +97,7 @@ pub fn archive_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
      warp::delete2()
          .and(warp::path("archive"))
          .and(uuid_wrap_filter::<ThreadUuid>())
-         .and(moderator_user_filter())
+         .and(moderator_user_filter(s))
          .and(s.db.clone())
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::archive_thread(thread_uuid, &conn)
@@ -127,7 +127,7 @@ pub fn get_threads_by_forum_id(s: &State) -> BoxedFilter<(impl Reply,)> {
 pub fn get_thread_contents(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(uuid_wrap_filter::<ThreadUuid>())
-        .and(optional_normal_user_filter())
+        .and(optional_normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>,conn: PooledConn|{
             Thread::get_full_thread(thread_uuid, user_uuid, &conn)

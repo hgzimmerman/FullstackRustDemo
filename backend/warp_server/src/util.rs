@@ -54,7 +54,6 @@ pub fn query_uuid(key: &'static str) -> BoxedFilter<(Uuid,)> {
 
 #[cfg(test)]
 pub mod test {
-//    use std::io::Bytes;
     use bytes::Bytes;
     use std::ops::Deref;
     use serde_json::from_str;
@@ -62,12 +61,17 @@ pub mod test {
     use serde::Deserialize;
 
     pub fn deserialize<T: for<'de> Deserialize<'de>>(response: Response<Bytes>) -> T {
+        let body = response.into_body();
+        let bytes: &[u8] = body.deref();
+        let body_string = std::str::from_utf8(bytes).expect("valid utf8 string");
+        from_str::<T>(body_string).expect("Should be able to deserialize body")
+    }
 
-//            assert!(response.status() == 200);
-            let body = response.into_body();
-            let bytes: &[u8] = body.deref();
-            let body_string = std::str::from_utf8(bytes).expect("valid utf8 string");
-            from_str::<T>(body_string).expect("Should be able to deserialize body")
+    pub fn deserialize_string(response: Response<Bytes>) -> String {
+        let body = response.into_body();
+        let bytes: &[u8] = body.deref();
+        let body_string = std::str::from_utf8(bytes).expect("valid utf8 string");
+        String::from(body_string)
     }
 
 }

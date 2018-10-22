@@ -104,7 +104,7 @@ fn create_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewQuestionRequest, user_uuid: UserUuid, conn: PooledConn| {
             let bucket_uuid: BucketUuid = request.bucket_uuid;
@@ -128,7 +128,7 @@ fn delete_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::delete2()
         .and(uuid_filter())
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|question_uuid: Uuid, _user_uuid: UserUuid, conn: PooledConn | {
             let question_uuid = QuestionUuid(question_uuid);
@@ -146,7 +146,7 @@ fn put_question_back_in_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(uuid_filter())
         .and(warp::path("into_bucket"))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|question_uuid: Uuid, _user_uuid: UserUuid, conn: PooledConn | {
             let question_uuid = QuestionUuid(question_uuid);

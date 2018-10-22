@@ -48,7 +48,7 @@ pub fn create_post(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewPostRequest, user_uuid: UserUuid, conn: PooledConn| {
             // check if token user id matches the request user id.
@@ -71,7 +71,7 @@ pub fn edit_post(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::put2()
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: EditPostRequest, user_uuid: UserUuid, conn: PooledConn|{
              // Prevent editing other users posts
@@ -98,7 +98,7 @@ pub fn censor_post(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path("censor"))
         .and(uuid_wrap_filter())
 //        .and(warp::path::param::<PosUuid>())
-        .and(moderator_user_filter())
+        .and(moderator_user_filter(s))
         .and(s.db.clone())
         .and_then(|post_uuid: PostUuid, _user: UserUuid, conn: PooledConn| {
             Post::censor_post(post_uuid, &conn)

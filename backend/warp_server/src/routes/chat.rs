@@ -46,7 +46,7 @@ pub fn create(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewChatRequest, user_uuid: UserUuid, conn: PooledConn | {
             let mut new_chat: NewChat = request.into();
@@ -66,7 +66,7 @@ pub fn add_user_to_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("add_user"))
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: ChatUserAssociationRequest, user_uuid: UserUuid, conn: PooledConn | {
             if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
@@ -89,7 +89,7 @@ pub fn remove_user_from_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("remove_user"))
         .and(json_body_filter(12))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: ChatUserAssociationRequest, user_uuid: UserUuid, conn: PooledConn | {
             if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
@@ -112,7 +112,7 @@ pub fn get_owned_chats(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::get2()
         .and(warp::path("owned"))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|user_uuid: UserUuid, conn: PooledConn|{
             Chat::get_chats_user_is_in(user_uuid, &conn)
@@ -128,7 +128,7 @@ pub fn get_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::get2()
         .and(uuid_wrap_filter())
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|chat_uuid: ChatUuid, _user: UserUuid, conn: PooledConn|{
             Chat::get_full_chat(chat_uuid, &conn)

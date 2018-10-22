@@ -70,7 +70,7 @@ fn create_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(4))
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewForumRequest, _admin: UserUuid, conn: PooledConn|{
             Forum::create(request.into(), &conn)

@@ -32,8 +32,8 @@ fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "auth/reauth");
     warp::get2()
         .and(warp::path("reauth"))
-        .and(jwt::secret_filter())
-        .and(jwt::jwt_filter())
+        .and(s.secret.clone())
+        .and(jwt::jwt_filter(s))
         .and_then(|secret: Secret, jwt: ServerJwt| {
             auth_db::reauth(jwt, &secret)
                 .map_err(|_| Error::NotAuthorized.simple_reject())
@@ -45,7 +45,7 @@ fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Post, "auth/login");
     warp::post2()
         .and(warp::path("login"))
-        .and(jwt::secret_filter())
+        .and(s.secret.clone())
         .and( s.db.clone())
         .and(warp::body::json())
         .and_then(|secret: Secret, conn: PooledConn, login_request: LoginRequest| {
@@ -53,4 +53,50 @@ fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
                 .map_err(|_| Error::NotAuthorized.simple_reject())
         })
         .boxed()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use testing_fixtures::fixtures::user::UserFixture;
+    use testing_common::setup::setup_warp;
+    use pool::Pool;
+    use crate::util::test::deserialize;
+    use crate::util::test::deserialize_string;
+    use serde_json::to_string as serde_ser;
+    use crate::jwt::AUTHORIZATION_HEADER_KEY;
+    use wire::user::BEARER;
+
+    #[test]
+    fn end_to_end_auth() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+            let request = LoginRequest {
+                user_name: fixture.admin_user.user_name.clone(),
+                password: String::from(testing_fixtures::fixtures::user::PASSWORD),
+            };
+            let request = serde_ser(&request).unwrap();
+            let response = warp::test::request()
+                .method("POST")
+                .body(&request)
+                .path("/auth/login")
+                .reply(&auth_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let jwt_string: String = deserialize_string(response);
+
+            let response = warp::test::request()
+                .method("GET")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER ,jwt_string).as_str())
+                .path("/auth/reauth")
+                .reply(&auth_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let new_jwt_string: String = deserialize_string(response);
+
+            assert_ne!(new_jwt_string, jwt_string);
+
+        })
+    }
 }

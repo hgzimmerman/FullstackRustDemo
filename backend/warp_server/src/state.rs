@@ -36,7 +36,8 @@ impl Default for Config {
     }
 }
 
-use crate::jwt::secret_filter_2;
+//use crate::jwt::secret_filter_2;
+use crate::jwt::secret_filter;
 
 impl State {
     pub fn init(config: Config) -> State {
@@ -51,7 +52,7 @@ impl State {
 
         State {
             db: db_integration::db_filter(pool),
-            secret: secret_filter_2(secret)
+            secret: secret_filter(secret)
         }
     }
 
@@ -60,7 +61,7 @@ impl State {
 //        let secret = Secret::generat`e();
         State {
             db: db_integration::db_filter(pool),
-            secret: secret_filter_2(secret)
+            secret: secret_filter(secret)
         }
     }
 }

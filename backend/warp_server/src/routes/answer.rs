@@ -43,7 +43,7 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(16))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewAnswerRequest, user_uuid: UserUuid, conn: PooledConn|{
             let new_answer: NewAnswerRequest = request;

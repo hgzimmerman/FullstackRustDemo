@@ -70,7 +70,7 @@ fn get_users(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::get2()
         .and(warp::path::param::<i32>())
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|index: i32, _admin: UserUuid, conn: PooledConn| {
             User::get_paginated(index, 25, &conn)
@@ -89,7 +89,7 @@ fn create_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::body::json());
     warp::post2()
         .and(json_body)
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|new_user: NewUserRequest, _admin: UserUuid, conn: PooledConn|{
                 let new_user: NewUser = new_user.into();
@@ -111,7 +111,7 @@ fn update_user_display_name(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("display_name"))
         .and(json_body)
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: UpdateDisplayNameRequest, user_uuid: UserUuid, conn: PooledConn| {
             let new_display_name = request.new_display_name;
@@ -130,7 +130,7 @@ fn add_role(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("assign_role"))
         .and(json_body)
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: UserRoleRequest, _user: UserUuid, conn: PooledConn| {
             User::add_role_to_user(request.uuid, request.user_role.into(), &conn)
@@ -148,7 +148,7 @@ fn ban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(path!("ban"))
         .and(uuid_wrap_filter::<UserUuid>())
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: PooledConn| {
             User::set_ban_status(user_uuid, true, &conn)
@@ -164,7 +164,7 @@ fn unban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("unban"))
         .and(uuid_wrap_filter::<UserUuid>())
-        .and(admin_user_filter())
+        .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: PooledConn| {
             User::set_ban_status(user_uuid, false, &conn)

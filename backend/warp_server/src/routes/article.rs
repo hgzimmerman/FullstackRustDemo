@@ -85,7 +85,7 @@ fn get_owned_unpublished_articles(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::get2()
         .and(warp::path("owned_unpublished"))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             Article::get_unpublished_articles_for_user(user_uuid, &conn)
@@ -101,7 +101,7 @@ fn create_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(128)) // Allow large articles
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewArticleRequest, user_uuid: UserUuid, conn: PooledConn| {
             let mut request: NewArticle = request.into();
@@ -121,7 +121,7 @@ fn update_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::put2()
         .and(json_body_filter(128))
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: UpdateArticleRequest, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(request.uuid.0, &conn)
@@ -145,7 +145,7 @@ fn publish(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("publish"))
         .and(uuid_wrap_filter())
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)
@@ -168,7 +168,7 @@ fn unpublish(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::put2()
         .and(warp::path("unpublish"))
         .and(uuid_filter())
-        .and(normal_user_filter())
+        .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(uuid, &conn)
