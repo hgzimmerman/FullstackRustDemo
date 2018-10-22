@@ -51,6 +51,12 @@ pub fn secret_filter() -> BoxedFilter<(Secret,)> {
         .boxed()
 }
 
+pub fn secret_filter_2(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
+    warp::any()
+        .map(move || locked_secret.clone())
+        .boxed()
+}
+
 #[allow(dead_code)]
 pub fn admin_user_filter() -> BoxedFilter<(UserUuid,)> {
     warp::any()

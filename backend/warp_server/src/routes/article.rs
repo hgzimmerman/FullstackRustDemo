@@ -1,4 +1,4 @@
-use crate::db_integration::db_filter;
+//use crate::db_integration::s.db.clone();
 use crate::uuid_integration::uuid_filter;
 use warp::Filter;
 use warp::filters::BoxedFilter;
@@ -28,18 +28,20 @@ use crate::logging::HttpMethod;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 use crate::uuid_integration::uuid_wrap_filter;
+use crate::state::State;
+use pool::PooledConn;
 
-pub fn article_api() -> BoxedFilter<(impl warp::Reply,)> {
+pub fn article_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Article API");
     warp::path("article")
         .and(
-            get_article()
-                .or(create_article())
-                .or(update_article())
-                .or(get_published_articles())
-                .or(get_owned_unpublished_articles())
-                .or(publish())
-                .or(unpublish())
+            get_article(s)
+                .or(create_article(s))
+                .or(update_article(s))
+                .or(get_published_articles(s))
+                .or(get_owned_unpublished_articles(s))
+                .or(publish(s))
+                .or(unpublish(s))
         )
         .with(warp::log("article"))
         .boxed()
@@ -47,14 +49,14 @@ pub fn article_api() -> BoxedFilter<(impl warp::Reply,)> {
 
 
 
-fn get_article() -> BoxedFilter<(impl Reply,)> {
+fn get_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "article/<uuid>");
 
     warp::get2()
         .and(uuid_wrap_filter())
-        .and(db_filter())
-        .and_then(|article_uuid: ArticleUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|article_uuid: ArticleUuid, conn: PooledConn| {
             Article::get_article_data(article_uuid, &conn)
                 .map(convert_and_json::<ArticleData,FullArticleResponse>)
                 .map_err(Error::convert_and_reject)
@@ -62,13 +64,13 @@ fn get_article() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn get_published_articles() -> BoxedFilter<(impl Reply,)> {
+fn get_published_articles(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "article/<index=i32>/<page_size=i32>");
     warp::get2()
         .and(warp::path::param::<i32>())
         .and(warp::path::param::<i32>())
-        .and(db_filter())
-        .and_then(|index: i32, page_size: i32, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|index: i32, page_size: i32, conn: PooledConn| {
             Article::get_paginated(index, page_size, &conn)
                 .map(convert_vector_and_json::<ArticleData,ArticlePreviewResponse>)
                 .map_err(Error::convert_and_reject)
@@ -77,15 +79,15 @@ fn get_published_articles() -> BoxedFilter<(impl Reply,)> {
 }
 
 
-fn get_owned_unpublished_articles() -> BoxedFilter<(impl Reply,)> {
+fn get_owned_unpublished_articles(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "article/owned_unpublished");
 
     warp::get2()
         .and(warp::path("owned_unpublished"))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|user_uuid: UserUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             Article::get_unpublished_articles_for_user(user_uuid, &conn)
                 .map(convert_vector_and_json::<Article,MinimalArticleResponse>)
                 .map_err(Error::convert_and_reject)
@@ -93,15 +95,15 @@ fn get_owned_unpublished_articles() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn create_article() -> BoxedFilter<(impl Reply,)> {
+fn create_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Post, "article/");
 
     warp::post2()
         .and(json_body_filter(128)) // Allow large articles
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: NewArticleRequest, user_uuid: UserUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|request: NewArticleRequest, user_uuid: UserUuid, conn: PooledConn| {
             let mut request: NewArticle = request.into();
             request.author_uuid = user_uuid.0; // This api isn't perfect - so the uuid must be gotten from the jwt
 
@@ -113,15 +115,15 @@ fn create_article() -> BoxedFilter<(impl Reply,)> {
 }
 
 
-fn update_article() -> BoxedFilter<(impl Reply,)> {
+fn update_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "article/");
 
     warp::put2()
         .and(json_body_filter(128))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: UpdateArticleRequest, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|request: UpdateArticleRequest, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(request.uuid.0, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
@@ -136,7 +138,7 @@ fn update_article() -> BoxedFilter<(impl Reply,)> {
 }
 
 
-fn publish() -> BoxedFilter<(impl Reply,)> {
+fn publish(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "article/publish/<uuid>");
 
@@ -144,8 +146,8 @@ fn publish() -> BoxedFilter<(impl Reply,)> {
         .and(warp::path("publish"))
         .and(uuid_wrap_filter())
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
@@ -158,7 +160,8 @@ fn publish() -> BoxedFilter<(impl Reply,)> {
         })
         .boxed()
 }
-fn unpublish() -> BoxedFilter<(impl Reply,)> {
+
+fn unpublish(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "article/unpublish/<uuid>");
 
@@ -166,8 +169,8 @@ fn unpublish() -> BoxedFilter<(impl Reply,)> {
         .and(warp::path("unpublish"))
         .and(uuid_filter())
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_by_uuid(uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {

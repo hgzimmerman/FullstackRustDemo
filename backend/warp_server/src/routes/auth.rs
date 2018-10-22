@@ -13,20 +13,22 @@ use wire::login::LoginRequest;
 use auth::ServerJwt;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
+use pool::PooledConn;
+use crate::state::State;
 
-pub fn auth_api() -> BoxedFilter<(impl warp::Reply,)> {
+pub fn auth_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Auth API");
     warp::path("auth")
         .and(
-            reauth()
-                .or(login())
+            reauth(s)
+                .or(login(s))
         )
         .with(warp::log("auth"))
         .boxed()
 }
 
 
-fn reauth() -> BoxedFilter<(impl Reply,)> {
+fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "auth/reauth");
     warp::get2()
         .and(warp::path("reauth"))
@@ -39,14 +41,14 @@ fn reauth() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn login() -> BoxedFilter<(impl Reply,)> {
+fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Post, "auth/login");
     warp::post2()
         .and(warp::path("login"))
         .and(jwt::secret_filter())
-        .and(db_integration::db_filter())
+        .and( s.db.clone())
         .and(warp::body::json())
-        .and_then(|secret: Secret, conn: Conn, login_request: LoginRequest| {
+        .and_then(|secret: Secret, conn: PooledConn, login_request: LoginRequest| {
             auth_db::login(login_request, &secret, &conn)
                 .map_err(|_| Error::NotAuthorized.simple_reject())
         })

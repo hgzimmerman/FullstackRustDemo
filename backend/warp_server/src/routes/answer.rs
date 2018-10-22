@@ -4,7 +4,7 @@ use warp::reply::Reply;
 use warp;
 use crate::util::json_body_filter;
 use crate::jwt::normal_user_filter;
-use crate::db_integration::db_filter;
+//use crate::db_integration::s.db.clone();
 use wire::answer::NewAnswerRequest;
 use identifiers::user::UserUuid;
 use identifiers::question::QuestionUuid;
@@ -23,29 +23,29 @@ use wire::answer::AnswerResponse;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::util::convert_and_json;
+use crate::state::State;
+use pool::PooledConn;
 
 
-
-
-pub fn answer_api() -> BoxedFilter<(impl Reply,)> {
+pub fn answer_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Answer API");
     warp::path("answer")
         .and(
-            answer_question()
+            answer_question(s)
         )
         .with(warp::log("answer"))
         .boxed()
 }
 
-fn answer_question() -> BoxedFilter<(impl Reply,)> {
+fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Post, "answer/");
 
     warp::post2()
         .and(json_body_filter(16))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: NewAnswerRequest, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|request: NewAnswerRequest, user_uuid: UserUuid, conn: PooledConn|{
             let new_answer: NewAnswerRequest = request;
             let question_uuid: QuestionUuid = new_answer.question_uuid.clone(); // spurious clone
 

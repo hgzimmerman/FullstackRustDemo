@@ -15,6 +15,7 @@ extern crate migrations_internals;
 
 extern crate server;
 extern crate rocket;
+extern crate pool;
 
 mod query_helper;
 mod database_error;

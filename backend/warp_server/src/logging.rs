@@ -25,6 +25,7 @@ pub fn log_attach(method: HttpMethod, text: &str) {
     info!("Attaching: {:6}| api/{}", method, text);
 }
 
+#[allow(dead_code)]
 pub fn log_attach_in_out<IN: Debug + Default, OUT: Debug + Serialize + Default >(method: HttpMethod, text: &str) {
     let method: &str = match method {
         HttpMethod::Get => "GET",

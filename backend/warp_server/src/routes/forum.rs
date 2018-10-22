@@ -2,7 +2,7 @@ use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use crate::error::Error;
-use crate::db_integration::db_filter;
+//use crate::db_integration::s.db.clone();
 use db::Conn;
 use wire::forum::ForumResponse;
 use db::Forum;
@@ -18,12 +18,14 @@ use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::uuid_integration::uuid_wrap_filter;
 use identifiers::forum::ForumUuid;
+use crate::state::State;
+use pool::PooledConn;
 
-pub fn forum_api() -> BoxedFilter<(impl Reply,)> {
+pub fn forum_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Forum API");
-    let api = get_forums()
-        .or(get_forum())
-        .or(create_forum())
+    let api = get_forums(s)
+        .or(get_forum(s))
+        .or(create_forum(s))
         ;
 
     warp::path("forum")
@@ -33,13 +35,13 @@ pub fn forum_api() -> BoxedFilter<(impl Reply,)> {
 }
 
 /// Gets all the forums
-fn get_forums() -> BoxedFilter<(impl Reply,)> {
+fn get_forums(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "forum/");
 
     warp::get2()
-        .and(db_filter())
-        .and_then(|conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|conn: PooledConn|{
             Forum::get_all(&conn)
                 .map(convert_vector_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
@@ -47,14 +49,14 @@ fn get_forums() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn get_forum() -> BoxedFilter<(impl Reply,)> {
+fn get_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "forum/<uuid>");
 
     warp::get2()
         .and(uuid_wrap_filter())
-        .and(db_filter())
-        .and_then(|uuid: ForumUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|uuid: ForumUuid, conn: PooledConn| {
             Forum::get_by_uuid(uuid.0, &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
@@ -62,15 +64,15 @@ fn get_forum() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn create_forum() -> BoxedFilter<(impl Reply,)> {
+fn create_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Post, "forum/");
 
     warp::post2()
         .and(json_body_filter(4))
         .and(admin_user_filter())
-        .and(db_filter())
-        .and_then(|request: NewForumRequest, _admin: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|request: NewForumRequest, _admin: UserUuid, conn: PooledConn|{
             Forum::create(request.into(), &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)

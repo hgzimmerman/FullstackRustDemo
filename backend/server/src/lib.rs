@@ -138,7 +138,7 @@ pub fn init_rocket(config: Config) -> Rocket {
     let banned_set: BannedSet = BannedSet::new();
 
     // A pool of database connections. These will be distributed to threads as they service requests.
-    let db_pool: db::Pool = db::init_pool(&config.db_url);
+    let db_pool: pool::Pool = pool::init_pool(&config.db_url);
 
     // Create a default Admin user if configured to do so.
     if config.create_admin {

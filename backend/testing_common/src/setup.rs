@@ -11,11 +11,12 @@ use migrations_internals as migrations;
 use rocket::local::Client;
 use server::{Config, init_rocket};
 use testing_fixtures::Fixture;
+use pool::Pool;
 
 use std::sync::{MutexGuard, Mutex};
 
 
-const DATABASE_NAME: &'static str = "weekend_test";
+pub const DATABASE_NAME: &'static str = "weekend_test";
 
 /// Points to the database that tests will be performed on.
 /// The database schema will be destroyed and recreated before every test.
@@ -93,6 +94,28 @@ pub fn setup_client<Fun, Fix >( mut test_function: Fun )
     );
 
     test_function (&fixture, client);
+}
+
+
+pub fn setup_warp<Fun, Fix> (mut test_function: Fun)
+where
+    Fun: FnMut(&Fix, Pool),
+    Fix: Fixture
+{
+        let admin_conn: MutexGuard<PgConnection> = match CONN.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(), // Don't care if the mutex is poisoned
+    };
+    reset_database(&admin_conn);
+
+
+    let actual_connection: PgConnection = PgConnection::establish(DATABASE_URL).expect("Database not available.");
+    run_migrations(&actual_connection);
+    let fixture: Fix = Fix::generate(&actual_connection);
+
+    // Establish a pool, this will be passed in as part of the State object when simulating the api.
+    let testing_pool = pool::init_pool(DATABASE_URL);
+    test_function(&fixture, testing_pool)
 }
 
 /// Drops the database and then recreates it.

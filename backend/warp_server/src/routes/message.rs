@@ -2,7 +2,7 @@ use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use crate::error::Error;
-use crate::db_integration::db_filter;
+//use crate::db_integration::s.db.clone();
 use db::Conn;
 use uuid::Uuid;
 //use db::RetrievableUuid;
@@ -22,11 +22,13 @@ use db::message::NewMessage;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::util::query_uuid;
+use crate::state::State;
+use pool::PooledConn;
 
-pub fn message_api() -> BoxedFilter<(impl Reply,)> {
+pub fn message_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Message API");
-    let api = get_messages_for_chat()
-        .or(send_message())
+    let api = get_messages_for_chat(s)
+        .or(send_message(s))
         ;
 
     warp::path("message")
@@ -36,7 +38,7 @@ pub fn message_api() -> BoxedFilter<(impl Reply,)> {
 }
 
 
-fn get_messages_for_chat() -> BoxedFilter<(impl Reply,)> {
+fn get_messages_for_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "message/<index=i32>?chat_uuid=<uuid>");
 
@@ -44,8 +46,8 @@ fn get_messages_for_chat() -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::param())
         .and(query_uuid("chat_uuid")) // TODO Is this the query??
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|index: i32, chat_uuid: Uuid, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|index: i32, chat_uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
             let chat_uuid = ChatUuid(chat_uuid);
             if !Chat::is_user_in_chat(&chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
                 return Error::BadRequest.reject()
@@ -58,7 +60,7 @@ fn get_messages_for_chat() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-fn send_message() -> BoxedFilter<(impl Reply,)> {
+fn send_message(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Post, "message/send");
 
@@ -66,8 +68,8 @@ fn send_message() -> BoxedFilter<(impl Reply,)> {
         .and(warp::path::path("send"))
         .and(json_body_filter(20))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: NewMessageRequest, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|request: NewMessageRequest, user_uuid: UserUuid, conn: PooledConn|{
             if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
                 return Error::BadRequest.reject()
             }

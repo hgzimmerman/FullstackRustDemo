@@ -29,6 +29,7 @@ extern crate rand;
 extern crate chrono;
 extern crate r2d2_diesel;
 extern crate r2d2;
+extern crate pool;
 
 extern crate rocket;
 extern crate identifiers;
@@ -76,20 +77,22 @@ pub use answer::Answer;
 pub use chat::Chat;
 pub use message::Message;
 
+use pool::Pool;
 
-/// Holds a bunch of connections to the database and hands them out to routes as needed.
-pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
+///// Holds a bunch of connections to the database and hands them out to routes as needed.
+//pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+//
 pub const DATABASE_URL: &'static str = env!("DATABASE_URL");
-
-/// Initializes the pool.
-pub fn init_pool(db_url: &str) -> Pool {
-    //    let config = r2d2::Config::default();
-    let manager = ConnectionManager::<PgConnection>::new(db_url);
-    r2d2::Pool::new(manager).expect(
-        "db pool",
-    )
-}
+//
+///// Initializes the pool.
+//pub fn init_pool(db_url: &str) -> Pool {
+//    //    let config = r2d2::Config::default();
+//    let manager = ConnectionManager::<PgConnection>::new(db_url);
+//    r2d2::Pool::new(manager).expect(
+//        "db pool",
+//    )
+//}
 
 /// Wrapper for PgConnection.
 /// This type can be used in route methods to grab a DB connection from the managed pool.
@@ -102,6 +105,7 @@ impl Conn {
     }
 }
 
+
 impl Deref for Conn {
     type Target = PgConnection;
 
@@ -109,6 +113,42 @@ impl Deref for Conn {
         &self.0
     }
 }
+
+//impl Deref for Pool {
+//    type Target = Option<PgConnection>;
+//    fn deref(&self) -> &Self::Target {
+//        &match self.get()  {
+//            Ok(conn) => Some(conn.0),
+//            Err(_) => None
+//        }
+//    }
+//}
+
+//
+//trait GetPgConnection {
+//    /// None indicates that all connections are occupied and that an error should be returned.
+//    /// Some represents the connection
+//    fn get_conn(&self) -> Result<&PgConnection, ()>;
+//}
+//
+//impl GetPgConnection for Mutex<Pool> {
+//    fn get_conn(&self) -> Result<&PgConnection, ()> {
+//        match self.get() {
+//            Ok(conn) => {
+//                Ok(conn.deref())
+//            },
+//            Err(_) => Err(()) // TODO this should be a timeout error, because the pool.get() internally waits for a timeout.// TODO this should represent a SERVICE_UNAVAILABLE or possibly wait for a conn to free until a timeout occurs
+//        }
+//    }
+//}
+
+//
+//impl GetConnection for Conn {
+//    fn get_conn(&self) -> Result<Conn, ()> {
+//        Ok(self)
+//    }
+//}
+
 
 impl<'a, 'r> FromRequest<'a, 'r> for Conn {
     type Error = ();
@@ -127,6 +167,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for Conn {
         }
     }
 }
+
+
+
 
 
 use uuid::Uuid;

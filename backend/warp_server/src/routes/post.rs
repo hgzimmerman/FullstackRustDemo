@@ -2,7 +2,7 @@ use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use crate::error::Error;
-use crate::db_integration::db_filter;
+//use crate::db_integration::s.db.clone();
 use db::Conn;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
@@ -23,14 +23,16 @@ use identifiers::post::PostUuid;
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::uuid_integration::uuid_wrap_filter;
+use crate::state::State;
+use pool::PooledConn;
 
 
-pub fn post_api() -> BoxedFilter<(impl Reply,)> {
+pub fn post_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Post API");
-    let api = create_post()
-        .or(edit_post())
-        .or(censor_post())
-        .or(get_posts_by_user())
+    let api = create_post(s)
+        .or(edit_post(s))
+        .or(censor_post(s))
+        .or(get_posts_by_user(s))
         ;
 
     warp::path("post")
@@ -40,15 +42,15 @@ pub fn post_api() -> BoxedFilter<(impl Reply,)> {
 }
 
 
-pub fn create_post() -> BoxedFilter<(impl Reply,)> {
+pub fn create_post(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Post, "post/");
 
     warp::post2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: NewPostRequest, user_uuid: UserUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|request: NewPostRequest, user_uuid: UserUuid, conn: PooledConn| {
             // check if token user id matches the request user id.
             // This prevents users from creating posts under other user's names.
             let new_post: NewPost = request.into();
@@ -63,15 +65,15 @@ pub fn create_post() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-pub fn edit_post() -> BoxedFilter<(impl Reply,)> {
+pub fn edit_post(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "post/");
 
     warp::put2()
         .and(json_body_filter(12))
         .and(normal_user_filter())
-        .and(db_filter())
-        .and_then(|request: EditPostRequest, user_uuid: UserUuid, conn: Conn|{
+        .and(s.db.clone())
+        .and_then(|request: EditPostRequest, user_uuid: UserUuid, conn: PooledConn|{
              // Prevent editing other users posts
              let existing_post = Post::get_by_uuid(request.uuid.0, &conn).map_err(Error::convert_and_reject)?;
              if user_uuid.0 != existing_post.author_uuid {
@@ -88,7 +90,7 @@ pub fn edit_post() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
+pub fn censor_post(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "post/censor");
 
@@ -97,8 +99,8 @@ pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
         .and(uuid_wrap_filter())
 //        .and(warp::path::param::<PosUuid>())
         .and(moderator_user_filter())
-        .and(db_filter())
-        .and_then(|post_uuid: PostUuid, _user: UserUuid, conn: Conn| {
+        .and(s.db.clone())
+        .and_then(|post_uuid: PostUuid, _user: UserUuid, conn: PooledConn| {
             Post::censor_post(post_uuid, &conn)
                 .map(convert_and_json::<ChildlessPostData, PostResponse>)
                 .map_err(Error::convert_and_reject)
@@ -106,15 +108,15 @@ pub fn censor_post() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-pub fn get_posts_by_user() -> BoxedFilter<(impl Reply,)> {
+pub fn get_posts_by_user(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Get, "post/users_posts");
 
     warp::get2()
         .and(warp::path("users_posts"))
         .and(uuid_wrap_filter())
-        .and(db_filter())
-        .and_then(|user_uuid: UserUuid, conn:Conn| {
+        .and(s.db.clone())
+        .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             Post::get_posts_by_user(user_uuid, &conn)
                 .map(convert_vector_and_json::<ChildlessPostData, PostResponse>)
                 .map_err(Error::convert_and_reject)

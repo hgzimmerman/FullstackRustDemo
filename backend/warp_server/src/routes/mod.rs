@@ -32,6 +32,7 @@ use warp;
 use warp::Filter;
 
 use crate::error::customize_error;
+use crate::state::State;
 
 pub const API_STRING: &str = "api";
 
@@ -39,27 +40,27 @@ pub const API_STRING: &str = "api";
 /// Combine the API with the static file handler.
 /// Any missed GETs that doesn't start with '/api' will redirect to the index.html.
 /// Also support CORS, as that should be applied to the whole server.
-pub fn routes() -> BoxedFilter<(impl warp::Reply,)> {
-    api()
+pub fn routes(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
+    api(&s)
         .or(static_files_handler())
         .recover(customize_error) // Top level error correction
         .or(cors()) // For some reason, this needs to come after the recover() section.
         .boxed()
 }
 
-fn api() -> BoxedFilter<(impl warp::Reply,)> {
+fn api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
 
-    let api = auth_api()
-        .or(user_api())
-        .or(article_api())
-        .or(answer_api())
-        .or(bucket_api())
-        .or(chat_api())
-        .or(forum_api())
-        .or(message_api())
-        .or(post_api())
-        .or(question_api())
-        .or(thread_api())
+    let api = auth_api(s)
+        .or(user_api(s))
+        .or(article_api(s))
+        .or(answer_api(s))
+        .or(bucket_api(s))
+        .or(chat_api(s))
+        .or(forum_api(s))
+        .or(message_api(s))
+        .or(post_api(s))
+        .or(question_api(s))
+        .or(thread_api(s))
     ;
 
     warn!("Attaching Main API");
@@ -96,14 +97,14 @@ fn cors() -> BoxedFilter<(impl warp::Reply,)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
+//    use crate::error::Error;
 
     #[test]
     fn routes_redirect_to_index() {
         assert!(
             warp::test::request()
                 .path("/yeet")
-                .filter(&routes())
+                .filter(&routes(&State::default()))
                 .is_ok()
         )
     }
@@ -112,7 +113,7 @@ mod tests {
     fn routes_invalid_api_path_still_404s() {
         let resp = warp::test::request()
             .path("/api/yeet") // Matches nothing in the API space
-            .reply(&routes());
+            .reply(&routes(&State::default()));
 
         let status = resp.status();
         assert_eq!(status, 404);

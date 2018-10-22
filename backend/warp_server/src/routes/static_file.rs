@@ -96,7 +96,6 @@ fn static_files_redirect_to_index() {
 
 #[test]
 fn static_invalid_api_path_still_404s() {
-
     use crate::error::Error;
     let err = warp::test::request()
         .path("/api/yeet") // Matches nothing in the API space
