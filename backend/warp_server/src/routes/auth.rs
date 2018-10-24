@@ -57,7 +57,7 @@ fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
 
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
     use testing_fixtures::fixtures::user::UserFixture;
     use testing_common::setup::setup_warp;
@@ -68,6 +68,37 @@ mod tests {
     use crate::jwt::AUTHORIZATION_HEADER_KEY;
     use wire::user::BEARER;
 
+
+    /// Utility for getting the jwt string.
+    /// This should make
+    pub fn get_admin_jwt_string(s: &State, fixture: &UserFixture) -> String {
+        let request = LoginRequest {
+            user_name: fixture.admin_user.user_name.clone(),
+            password: String::from(testing_fixtures::fixtures::user::PASSWORD),
+        };
+        let response = warp::test::request()
+            .method("POST")
+            .json(&request)
+            .path("/auth/login")
+            .reply(&auth_api(&s));
+        let jwt_string: String = deserialize_string(response);
+        jwt_string
+    }
+
+    pub fn get_jwt_string(s: &State, user_name: String) -> String {
+        let request = LoginRequest {
+            user_name,
+            password: String::from(testing_fixtures::fixtures::user::PASSWORD),
+        };
+        let response = warp::test::request()
+            .method("POST")
+            .json(&request)
+            .path("/auth/login")
+            .reply(&auth_api(&s));
+        let jwt_string: String = deserialize_string(response);
+        jwt_string
+    }
+
     #[test]
     fn end_to_end_auth() {
         setup_warp(|fixture: &UserFixture, pool: Pool| {
@@ -76,10 +107,9 @@ mod tests {
                 user_name: fixture.admin_user.user_name.clone(),
                 password: String::from(testing_fixtures::fixtures::user::PASSWORD),
             };
-            let request = serde_ser(&request).unwrap();
             let response = warp::test::request()
                 .method("POST")
-                .body(&request)
+                .json(&request)
                 .path("/auth/login")
                 .reply(&auth_api(&s));
 

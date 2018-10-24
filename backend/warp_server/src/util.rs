@@ -64,6 +64,7 @@ pub mod test {
         let body = response.into_body();
         let bytes: &[u8] = body.deref();
         let body_string = std::str::from_utf8(bytes).expect("valid utf8 string");
+        println!("Body string: {}", body_string);
         from_str::<T>(body_string).expect("Should be able to deserialize body")
     }
 

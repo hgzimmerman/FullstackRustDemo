@@ -64,9 +64,11 @@ fn get_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
+
+
 fn get_users(s: &State) -> BoxedFilter<(impl Reply,)> {
 
-    log_attach(HttpMethod::Get, "user/<i32>");
+    log_attach(HttpMethod::Get, "user/<i32 where i32 >= 1>");
 
     warp::get2()
         .and(warp::path::param::<i32>())
@@ -88,10 +90,11 @@ fn create_user(s: &State) -> BoxedFilter<(impl Reply,)> {
     let json_body = warp::body::content_length_limit(1024 * 16)
         .and(warp::body::json());
     warp::post2()
+        .and(warp::path::index())
         .and(json_body)
-        .and(admin_user_filter(s))
+//        .and(admin_user_filter(s))
         .and(s.db.clone())
-        .and_then(|new_user: NewUserRequest, _admin: UserUuid, conn: PooledConn|{
+        .and_then(|new_user: NewUserRequest, conn: PooledConn|{
                 let new_user: NewUser = new_user.into();
                 User::create(new_user, &conn)
                     .map(convert_and_json::<User,UserResponse>)
@@ -181,6 +184,9 @@ mod tests {
     use testing_common::setup::setup_warp;
     use pool::Pool;
     use crate::util::test::deserialize;
+    use crate::jwt::AUTHORIZATION_HEADER_KEY;
+    use wire::user::BEARER;
+    use wire::user::UserRole;
 
     #[test]
     fn get() {
@@ -197,4 +203,143 @@ mod tests {
             assert_eq!(user.display_name, fixture.normal_user.display_name);
         })
     }
+
+    #[test]
+    fn get_many() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+            let jwt: String = crate::routes::auth::tests::get_admin_jwt_string(&s, fixture);
+            let response = warp::test::request()
+                .method("GET")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path("/user/1") // get the first page
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let users: Vec<FullUserResponse> = deserialize(response);
+
+            assert_eq!(users.len(), 2)
+        })
+    }
+
+    #[test]
+    fn create() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+            let request = NewUserRequest {
+                user_name: String::from("user name"),
+                display_name: String::from("display name"),
+                plaintext_password: String::from("password_aoeuaoeu"),
+            };
+            let response = warp::test::request()
+                .method("POST")
+                .header("Content-Length", "1000") // Requires sized length
+                .json(&request)
+                .path("/user")
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let user: UserResponse = deserialize(response);
+            assert_eq!(user.user_name, String::from("user name"))
+        })
+    }
+
+
+    #[test]
+    fn update_user_display_name() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+
+            let user_name = fixture.normal_user.user_name.clone();
+            let request = UpdateDisplayNameRequest {
+                user_name: user_name.clone(), // TODO, this is bad API design, this should instead use the JWT's user ID to use as a key.
+                new_display_name: String::from("yeet"),
+            };
+            let jwt: String = crate::routes::auth::tests::get_jwt_string(&s, user_name);
+
+            let response = warp::test::request()
+                .method("PUT")
+                .header("Content-Length", "1000") // Requires sized length
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .json(&request)
+                .path("/user/display_name")
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let user: UserResponse = deserialize(response);
+            assert_eq!(user.display_name, String::from("yeet"))
+        })
+    }
+
+    #[test]
+    fn add_role() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+
+            let user_name = fixture.admin_user.user_name.clone();
+            let request = UserRoleRequest {
+                uuid: UserUuid(fixture.normal_user.uuid),
+                user_role: UserRole::Admin.into()
+            };
+            let jwt: String = crate::routes::auth::tests::get_jwt_string(&s, user_name);
+
+            let response = warp::test::request()
+                .method("PUT")
+                .header("Content-Length", "1000") // Requires sized length
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .json(&request)
+                .path("/user/assign_role")
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let user: UserResponse = deserialize(response);
+        })
+    }
+
+    #[test]
+    fn ban() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+
+            let admin_name = fixture.admin_user.user_name.clone();
+            let request = UserRoleRequest {
+                uuid: UserUuid(fixture.normal_user.uuid),
+                user_role: UserRole::Admin.into()
+            };
+            let jwt: String = crate::routes::auth::tests::get_jwt_string(&s, admin_name);
+
+            let response = warp::test::request()
+                .method("PUT")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path(&format!("/user/ban/{}", fixture.normal_user.uuid.clone()))
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let user: UserResponse = deserialize(response);
+        })
+    }
+
+    #[test]
+    fn unban() {
+        setup_warp(|fixture: &UserFixture, pool: Pool| {
+            let s = State::testing_init(pool, fixture.secret.clone());
+
+            let admin_name = fixture.admin_user.user_name.clone();
+            let request = UserRoleRequest {
+                uuid: UserUuid(fixture.normal_user.uuid),
+                user_role: UserRole::Admin.into()
+            };
+            let jwt: String = crate::routes::auth::tests::get_jwt_string(&s, admin_name);
+
+            let response = warp::test::request()
+                .method("PUT")
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt))
+                .path(&format!("/user/unban/{}", fixture.normal_user.uuid.clone()))
+                .reply(&user_api(&s));
+
+            assert_eq!(response.status(), 200);
+            let user: UserResponse = deserialize(response);
+        })
+    }
+
 }
