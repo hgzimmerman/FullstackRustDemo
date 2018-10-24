@@ -1,27 +1,24 @@
-use pool::Pool;
 use pool::PooledConn;
-use warp::reply::Reply;
-use db::Conn;
-use warp::Filter;
-use warp::http::StatusCode;
 use warp::filters::BoxedFilter;
-use crate::error::Error;
-use db::User;
-use wire::user::UserResponse;
-use crate::util::convert_vector_and_json;
-use std::sync::RwLock;
 use auth::Secret;
 use db;
-use crate::db_integration;
 
 
+pub mod db_integration;
+pub mod jwt;
+
+use self::jwt::secret_filter;
+
+
+/// State object that should be accessable to most routes.
+/// This object will hold references to functions that will allow the production
+/// of database connections and secrets used in validating JWTs.
 pub struct State {
     pub db: BoxedFilter<(PooledConn,)>,
-//    pub secret: RwLock<Secret>,
     pub secret: BoxedFilter<(Secret,)>
 }
 
-
+/// Configuration struct used in constructing the State struct.
 pub struct Config {
     specified_secret: Option<String>,
     database_url: &'static str
@@ -36,10 +33,9 @@ impl Default for Config {
     }
 }
 
-//use crate::jwt::secret_filter_2;
-use crate::jwt::secret_filter;
 
 impl State {
+    /// Set up the state.
     pub fn init(config: Config) -> State {
         let pool = pool::init_pool(config.database_url);
 
@@ -56,9 +52,11 @@ impl State {
         }
     }
 
+    /// An initialization of the State struct that should only be used for testing.
+    /// It uses a parameterized Pool, which allows for the same connections used in testing to be provided,
+    /// as well as the same secret used to authorize user sign ins.
     #[cfg(test)]
     pub fn testing_init(pool: Pool, secret: Secret) -> State {
-//        let secret = Secret::generat`e();
         State {
             db: db_integration::db_filter(pool),
             secret: secret_filter(secret)
@@ -67,6 +65,7 @@ impl State {
 }
 
 impl Default for State {
+    /// Default State created using the default config.
     fn default() -> Self {
         State::init(Config::default())
     }

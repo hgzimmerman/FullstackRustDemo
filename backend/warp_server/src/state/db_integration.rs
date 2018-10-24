@@ -2,7 +2,7 @@ use warp::Filter;
 //use warp::reject::Rejection;
 use warp::filters::BoxedFilter;
 use crate::error::Error;
-use r2d2;
+//use r2d2;
 
 //use db::Conn;
 //use db::init_pool;

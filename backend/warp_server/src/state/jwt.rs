@@ -6,7 +6,7 @@ use auth::ServerJwt;
 use std::result::Result::Err;
 use warp::Filter;
 use auth::Secret;
-use std::sync::RwLock;
+//use std::sync::RwLock;
 use wire::user::UserRole;
 use identifiers::user::UserUuid;
 
@@ -18,7 +18,7 @@ use crate::state::State;
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
 pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
-    warp::header::header::<String>("Authorization")
+    warp::header::header::<String>(AUTHORIZATION_HEADER_KEY)
         .or_else(|_| Error::MalformedToken.reject())
         .and(s.secret.clone())
         .and_then(|bearer_string: String, secret: Secret| {
@@ -150,12 +150,12 @@ fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<ServerJwt, Erro
 
 }
 
-
-fn get_secret() -> Secret {
-    SECRET.read().unwrap().clone()
-}
-
-lazy_static! {
-    /// This is an example for using doc comment attributes
-    static ref SECRET: RwLock<Secret> = RwLock::new(Secret::generate());
-}
+//
+//fn get_secret() -> Secret {
+//    SECRET.read().unwrap().clone()
+//}
+//
+//lazy_static! {
+//    /// This is an example for using doc comment attributes
+//    static ref SECRET: RwLock<Secret> = RwLock::new(Secret::generate());
+//}

@@ -9,7 +9,8 @@ use warp::fs::File;
 
 const INDEX_PATH: &str = "../../frontend/app/static/index.html";
 const STATIC_DIR_PATH: &str = "../../frontend/app/static/";
-const WASM_PATH: &str = "../../frontend/app/target/release/app.wasm";
+const APP_WASM: &str = "../../frontend/target/wasm32-unknown-unknown/release/app.wasm";
+const APP_JS: &str =    "../../frontend/target/wasm32-unknown-unknown/release/app.js";
 
 
 /// Expose filters that work with static files
@@ -17,7 +18,8 @@ pub fn static_files_handler() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Static Files handler");
 
     let files = index()
-        .or(wasm())
+        .or(app_wasm())
+        .or(app_js())
         .or(index_static_file_redirect());
 
     warp::any()
@@ -47,17 +49,26 @@ fn index_static_file_redirect() -> BoxedFilter<(impl Reply,)> {
 // TODO, not fully baked yet
 fn index() ->  BoxedFilter<(impl Reply,)> {
     warp::get2()
-        .and(warp::path::index())
         .and(warp::fs::dir(STATIC_DIR_PATH))
+        .and(warp::path::index())
         .boxed()
 }
 
 // TODO not fully baked
-fn wasm() -> BoxedFilter<(impl Reply,)> {
+fn app_wasm() -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::path::path("app.wasm"))
         .and(warp::path::index())
-        .and(warp::fs::dir(WASM_PATH))
+        .and(warp::fs::file(APP_WASM))
+        .boxed()
+}
+// TODO not fully baked
+fn app_js() -> BoxedFilter<(impl Reply,)> {
+    warp::get2()
+        .and(warp::path::path("js"))
+        .and(warp::path::path("app.js"))
+        .and(warp::path::index())
+        .and(warp::fs::file(APP_JS))
         .boxed()
 }
 

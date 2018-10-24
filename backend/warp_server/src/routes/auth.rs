@@ -1,6 +1,6 @@
-use crate::jwt;
-use crate::db_integration;
-use db::Conn;
+use crate::state::jwt::jwt_filter;
+//use crate::db_integration;
+//use db::Conn;
 use warp;
 use warp::Filter;
 use warp::filters::BoxedFilter;
@@ -33,7 +33,7 @@ fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::path("reauth"))
         .and(s.secret.clone())
-        .and(jwt::jwt_filter(s))
+        .and(jwt_filter(s))
         .and_then(|secret: Secret, jwt: ServerJwt| {
             auth_db::reauth(jwt, &secret)
                 .map_err(|_| Error::NotAuthorized.simple_reject())

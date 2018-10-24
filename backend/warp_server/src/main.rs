@@ -11,12 +11,8 @@ extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
 
-extern crate r2d2;
-extern crate r2d2_diesel;
 extern crate diesel;
 extern crate pool;
-#[macro_use]
-extern crate lazy_static;
 
 #[macro_use] extern crate log;
 extern crate pretty_env_logger;
@@ -26,9 +22,9 @@ extern crate testing_fixtures;
 #[cfg(test)]
 extern crate testing_common;
 
-mod db_integration;
+//mod db_integration;
 mod routes;
-mod jwt;
+//mod jwt;
 mod error;
 mod uuid_integration;
 mod logging;
@@ -39,13 +35,7 @@ mod state;
 use self::logging::setup_logging;
 
 
-//lazy_static!(
-//    static ref STATE: State = State {
-//        pool: db::init_pool(db::DATABASE_URL),
-//        secret: RwLock::new(Secret::generate())
-//    };
-//);
-
+const PORT: u16 = 8001;
 fn main() {
     setup_logging();
 
@@ -56,7 +46,7 @@ fn main() {
         .or(test_2(&state));
 
     warp::serve(self::routes::routes(&state))
-        .run(([127, 0, 0, 1], 3030))
+        .run(([127, 0, 0, 1], PORT))
 }
 
 
