@@ -8,6 +8,7 @@ use simplelog::WriteLogger;
 use std::fs::File;
 use simplelog::LevelFilter;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum HttpMethod {
     Get,
     Post,

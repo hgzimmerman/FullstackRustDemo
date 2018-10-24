@@ -1,57 +1,45 @@
 use warp::filters::BoxedFilter;
 use warp;
-//use wire::user::Jwt;
 use wire::user::BEARER;
 use auth::ServerJwt;
 use std::result::Result::Err;
 use warp::Filter;
 use auth::Secret;
-//use std::sync::RwLock;
 use wire::user::UserRole;
 use identifiers::user::UserUuid;
 
 
 use crate::error::Error;
-use warp::Rejection;
 use crate::state::State;
+use warp::reject::Rejection;
+use crate::state::banned_list::BannedList;
 
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
+/// Gets a JWT from the headers, decodes it to determine its authenticity, and then checks if its associated user is banned.
 pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
+    /// Helper fn
+    fn handle_jwt_extraction_and_verification(bearer_string: String, secret: Secret, banned_list: BannedList) -> Result<ServerJwt, Rejection> {
+        let jwt = extract_jwt(bearer_string, &secret)
+            .map_err(Error::simple_reject);
+
+        // Check if the user is banned, and therefore their jwt should be rejected.
+        if let Ok(ref jwt) = &jwt {
+            if banned_list.is_banned(&jwt.0.sub) {
+                return Error::UserBanned.reject()
+            }
+        }
+        jwt
+
+    }
+
     warp::header::header::<String>(AUTHORIZATION_HEADER_KEY)
         .or_else(|_| Error::MalformedToken.reject())
         .and(s.secret.clone())
-        .and_then(|bearer_string: String, secret: Secret| {
-            extract_jwt(bearer_string, &secret)
-                .map_err(|e: Error|warp::reject().with(e))
-        })
+        .and(s.banned_list.clone())
+        .and_then(handle_jwt_extraction_and_verification)
         .boxed()
 }
-
-
-//
-//pub fn optional_jwt_filter() -> BoxedFilter<(Option<ServerJwt>,)> {
-//
-//    warp::header::header::<String>("Authorization")
-//        .or_else(|_| Ok(None))
-//        .and(secret_filter())
-//        .and_then(|bearer_string: Option<String>, secret: Secret| {
-//            if let Some(bearer_string) = bearer_string {
-//                extract_jwt(bearer_string, &secret)
-//                    .map(Some)
-//                    .or(Ok(None))
-//            } else {
-//                Ok(None)
-//            }
-//        })
-//        .boxed()
-//}
-
-//pub fn secret_filter_dep() -> BoxedFilter<(Secret,)> {
-//    warp::any()
-//        .map(|| get_secret())
-//        .boxed()
-//}
 
 pub fn secret_filter(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
     warp::any()
@@ -87,13 +75,14 @@ pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .boxed()
 }
 
+/// Gets an Option<UserUuid> from the request.
 pub fn optional_normal_user_filter(s: &State) -> BoxedFilter<(Option<UserUuid>,)> {
 
     fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection>{
          if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
             return Ok(Some(server_jwt.0.sub))
         } else {
-                return Ok(None)
+             return Ok(None)
         }
     }
     warp::any()
@@ -132,6 +121,7 @@ pub fn moderator_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .boxed()
 }
 
+/// Removes the jwt from the bearer string, and decodes it to determine if it was signed properly.
 fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<ServerJwt, Error>{
     let authorization_words: Vec<String> = bearer_string
         .split_whitespace()

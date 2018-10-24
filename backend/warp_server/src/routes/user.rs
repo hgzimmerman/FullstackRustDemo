@@ -23,6 +23,7 @@ use crate::util::convert_vector_and_json;
 use crate::uuid_integration::uuid_wrap_filter;
 use crate::state::State;
 use pool::PooledConn;
+use crate::state::banned_list::BannedList;
 
 pub fn user_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching User API");
@@ -136,8 +137,6 @@ fn add_role(s: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-// TODO technically incomplete because it fails to prevent active JWTs from authenticating.
-// Needs to get an rwlock to lock around some struct to prevent this like in the Rocket server.
 fn ban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     log_attach(HttpMethod::Put, "user/ban/<uuid>");
@@ -145,11 +144,14 @@ fn ban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(path!("ban"))
         .and(uuid_wrap_filter::<UserUuid>())
         .and(admin_user_filter(s))
+        .and(s.banned_list.clone())
         .and(s.db.clone())
-        .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: PooledConn| {
-            User::set_ban_status(user_uuid, true, &conn)
+        .and_then(|user_uuid: UserUuid, user: UserUuid, banned_list: BannedList, conn: PooledConn| {
+            let resp = User::set_ban_status(user_uuid, true, &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::convert_and_reject);
+            banned_list.ban(user);
+            resp
         })
         .boxed()
 }
@@ -161,11 +163,14 @@ fn unban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(warp::path("unban"))
         .and(uuid_wrap_filter::<UserUuid>())
         .and(admin_user_filter(s))
+        .and(s.banned_list.clone())
         .and(s.db.clone())
-        .and_then(|user_uuid: UserUuid, _user: UserUuid, conn: PooledConn| {
-            User::set_ban_status(user_uuid, false, &conn)
+        .and_then(|user_uuid: UserUuid, user: UserUuid, banned_list: BannedList, conn: PooledConn| {
+            let resp = User::set_ban_status(user_uuid, false, &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::convert_and_reject);
+            banned_list.unban(&user);
+            resp
         })
         .boxed()
 }
@@ -177,7 +182,7 @@ mod tests {
     use testing_common::setup::setup_warp;
     use pool::Pool;
     use crate::util::test::deserialize;
-    use crate::jwt::AUTHORIZATION_HEADER_KEY;
+    use crate::state::jwt::AUTHORIZATION_HEADER_KEY;
     use wire::user::BEARER;
     use wire::user::UserRole;
 
@@ -285,7 +290,7 @@ mod tests {
                 .reply(&user_api(&s));
 
             assert_eq!(response.status(), 200);
-            let user: UserResponse = deserialize(response);
+            let _user: UserResponse = deserialize(response);
         })
     }
 
@@ -308,7 +313,7 @@ mod tests {
                 .reply(&user_api(&s));
 
             assert_eq!(response.status(), 200);
-            let user: UserResponse = deserialize(response);
+            let _user: UserResponse = deserialize(response);
         })
     }
 
@@ -331,7 +336,7 @@ mod tests {
                 .reply(&user_api(&s));
 
             assert_eq!(response.status(), 200);
-            let user: UserResponse = deserialize(response);
+            let _user: UserResponse = deserialize(response);
         })
     }
 

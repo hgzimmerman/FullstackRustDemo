@@ -17,6 +17,7 @@ pub enum Error {
     ExpiredToken,
     MalformedToken,
     NotAuthorized,
+    UserBanned,
     BadRequest,
     NotFound,
     /// Catch all
@@ -44,6 +45,7 @@ impl StdError for Error {
             Error::ExpiredToken => "The provided token has expired, please reauthenticate to acquire a new one",
             Error::MalformedToken => "The token was not formatted correctly",
             Error::NotAuthorized => "You are forbidden from accessing this resource",
+            Error::UserBanned => "Your account has been banned",
             Error::BadRequest => "Your request is malformed",
             Error::InternalServerError => "Internal server error encountered",
             Error::NotFound => "The resource you requested could not be found",
@@ -76,6 +78,7 @@ pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
         Error::ExpiredToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
         Error::MalformedToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
         Error::NotAuthorized => *resp.status_mut() = StatusCode::FORBIDDEN,
+        Error::UserBanned => *resp.status_mut() = StatusCode::FORBIDDEN,
         Error::BadRequest => *resp.status_mut() = StatusCode::BAD_REQUEST,
         Error::NotFound => *resp.status_mut() = StatusCode::NOT_FOUND,
         Error::InternalServerError => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,

@@ -44,7 +44,7 @@ pub const BEARER: &str = "Bearer";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Jwt {
-    /// sub is the user id
+    /// sub is the user uuid
     pub sub: UserUuid,
     pub user_roles: Vec<UserRole>,
     /// exp is the Expiration date, in unix timestamp form

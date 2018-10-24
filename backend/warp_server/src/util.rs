@@ -60,6 +60,8 @@ pub mod test {
     use warp::http::Response;
     use serde::Deserialize;
 
+    /// Used in testing, this function will try to deserialize a response generated from a typical
+    /// warp::testing::request() invocation.
     pub fn deserialize<T: for<'de> Deserialize<'de>>(response: Response<Bytes>) -> T {
         let body = response.into_body();
         let bytes: &[u8] = body.deref();

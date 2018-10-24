@@ -15,6 +15,7 @@ use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use pool::PooledConn;
 use crate::state::State;
+use warp::reject::Rejection;
 
 pub fn auth_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Auth API");
@@ -43,15 +44,18 @@ fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
 
 fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Post, "auth/login");
+
+    fn handle_login(secret: Secret, conn: PooledConn, login_request: LoginRequest) -> Result<impl Reply, Rejection> {
+         auth_db::login(login_request, &secret, &conn)
+                .map_err(|_| Error::NotAuthorized.simple_reject())
+    }
+
     warp::post2()
         .and(warp::path("login"))
         .and(s.secret.clone())
         .and( s.db.clone())
         .and(warp::body::json())
-        .and_then(|secret: Secret, conn: PooledConn, login_request: LoginRequest| {
-            auth_db::login(login_request, &secret, &conn)
-                .map_err(|_| Error::NotAuthorized.simple_reject())
-        })
+        .and_then(handle_login)
         .boxed()
 }
 
@@ -62,10 +66,9 @@ pub mod tests {
     use testing_fixtures::fixtures::user::UserFixture;
     use testing_common::setup::setup_warp;
     use pool::Pool;
-    use crate::util::test::deserialize;
     use crate::util::test::deserialize_string;
     use serde_json::to_string as serde_ser;
-    use crate::jwt::AUTHORIZATION_HEADER_KEY;
+    use crate::state::jwt::AUTHORIZATION_HEADER_KEY;
     use wire::user::BEARER;
 
 

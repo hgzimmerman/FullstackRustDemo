@@ -1,21 +1,27 @@
+/// This module deals with anything in the server that requires some stateful interaction.
+/// This includes DB access, and secret management.
+
+pub mod db_integration;
+pub mod jwt;
+pub mod banned_list;
+
 use pool::PooledConn;
 use warp::filters::BoxedFilter;
 use auth::Secret;
 use db;
-
-
-pub mod db_integration;
-pub mod jwt;
-
 use self::jwt::secret_filter;
-
+use self::banned_list::BannedList;
+use self::banned_list::banned_list_filter;
+#[cfg(test)]
+use pool::Pool;
 
 /// State object that should be accessable to most routes.
 /// This object will hold references to functions that will allow the production
 /// of database connections and secrets used in validating JWTs.
 pub struct State {
     pub db: BoxedFilter<(PooledConn,)>,
-    pub secret: BoxedFilter<(Secret,)>
+    pub secret: BoxedFilter<(Secret,)>,
+    pub banned_list: BoxedFilter<(BannedList,)>
 }
 
 /// Configuration struct used in constructing the State struct.
@@ -24,6 +30,9 @@ pub struct Config {
     database_url: &'static str
 }
 
+/// By default:
+/// * The secret will be randomly generated.
+/// * The database URL will point to the default database as defined by an environment variable.
 impl Default for Config {
     fn default() -> Self {
         Config {
@@ -46,20 +55,28 @@ impl State {
             Secret::generate()
         };
 
+        let banned_list: BannedList = BannedList::default();
+
         State {
             db: db_integration::db_filter(pool),
-            secret: secret_filter(secret)
+            secret: secret_filter(secret),
+            banned_list: banned_list_filter(banned_list)
         }
     }
+}
+
+
+#[cfg(test)]
+impl State {
 
     /// An initialization of the State struct that should only be used for testing.
     /// It uses a parameterized Pool, which allows for the same connections used in testing to be provided,
     /// as well as the same secret used to authorize user sign ins.
-    #[cfg(test)]
     pub fn testing_init(pool: Pool, secret: Secret) -> State {
         State {
             db: db_integration::db_filter(pool),
-            secret: secret_filter(secret)
+            secret: secret_filter(secret),
+            banned_list: banned_list_filter(BannedList::default())
         }
     }
 }
