@@ -13,6 +13,7 @@ use identifiers::article::ArticleUuid;
 use identifiers::user::UserUuid;
 
 
+
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq)]
 #[primary_key(uuid)]
