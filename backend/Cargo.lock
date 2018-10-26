@@ -1767,8 +1767,8 @@ version = "0.1.0"
 dependencies = [
  "auth 0.1.0",
  "bytes 0.4.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "db 0.1.0",
- "diesel 1.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "error 0.1.0",
  "identifiers 0.1.0",
  "log 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",

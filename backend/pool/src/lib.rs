@@ -2,6 +2,7 @@ extern crate r2d2;
 extern crate diesel;
 extern crate r2d2_diesel;
 
+use diesel::Connection;
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
@@ -16,4 +17,8 @@ pub fn init_pool(db_url: &str) -> Pool {
     r2d2::Pool::new(manager).expect(
         "db pool",
     )
+}
+
+pub fn create_single_connection(db_url: &str) -> PgConnection {
+    PgConnection::establish(db_url).expect("Database not available. maybe provided url is wrong, or database is down?")
 }

@@ -25,19 +25,19 @@ pub struct State {
 }
 
 /// Configuration struct used in constructing the State struct.
-pub struct Config {
-    specified_secret: Option<String>,
-    database_url: &'static str
+pub struct StateConfig {
+    pub specified_secret: Option<String>,
+    pub database_url: String
 }
 
 /// By default:
 /// * The secret will be randomly generated.
 /// * The database URL will point to the default database as defined by an environment variable.
-impl Default for Config {
+impl Default for StateConfig {
     fn default() -> Self {
-        Config {
+        StateConfig {
             specified_secret: None,
-            database_url: db::DATABASE_URL,
+            database_url: db::DATABASE_URL.to_string(),
         }
     }
 }
@@ -45,8 +45,8 @@ impl Default for Config {
 
 impl State {
     /// Set up the state.
-    pub fn init(config: Config) -> State {
-        let pool = pool::init_pool(config.database_url);
+    pub fn init(config: StateConfig) -> State {
+        let pool = pool::init_pool(&config.database_url);
 
         // Either randomly generate the secret, or use the user specified text.
         let secret: Secret = if let Some(secret_text) =config.specified_secret {
@@ -84,7 +84,7 @@ impl State {
 impl Default for State {
     /// Default State created using the default config.
     fn default() -> Self {
-        State::init(Config::default())
+        State::init(StateConfig::default())
     }
 }
 
