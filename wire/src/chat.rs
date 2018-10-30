@@ -1,4 +1,4 @@
-use user::UserResponse;
+use crate::user::UserResponse;
 use identifiers::chat::ChatUuid;
 use identifiers::user::UserUuid;
 

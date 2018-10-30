@@ -1,4 +1,4 @@
-use user::UserResponse;
+use crate::user::UserResponse;
 use chrono::NaiveDateTime;
 use uuid::Uuid;
 use identifiers::message::MessageUuid;

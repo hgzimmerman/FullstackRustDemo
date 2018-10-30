@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use user::UserResponse;
+use crate::user::UserResponse;
 use identifiers::article::ArticleUuid;
 use identifiers::user::UserUuid;
 

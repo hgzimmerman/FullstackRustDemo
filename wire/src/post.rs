@@ -1,4 +1,4 @@
-use user::UserResponse;
+use crate::user::UserResponse;
 use chrono::NaiveDateTime;
 use identifiers::post::PostUuid;
 use identifiers::thread::ThreadUuid;

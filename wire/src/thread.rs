@@ -1,5 +1,5 @@
-use user::UserResponse;
-use post::PostResponse;
+use crate::user::UserResponse;
+use crate::post::PostResponse;
 use chrono::NaiveDateTime;
 use identifiers::thread::ThreadUuid;
 use identifiers::forum::ForumUuid;

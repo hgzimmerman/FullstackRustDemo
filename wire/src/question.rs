@@ -1,5 +1,5 @@
-use user::UserResponse;
-use answer::AnswerResponse;
+use crate::user::UserResponse;
+use crate::answer::AnswerResponse;
 use identifiers::question::QuestionUuid;
 use identifiers::bucket::BucketUuid;
 

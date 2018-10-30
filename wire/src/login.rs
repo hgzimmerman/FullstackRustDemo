@@ -1,4 +1,4 @@
-use user::*;
+use crate::user::*;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LoginRequest {
     pub user_name: String,
