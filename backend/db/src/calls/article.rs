@@ -1,10 +1,10 @@
-use schema::articles;
+use crate::schema::articles;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc};
-use user::User;
+use crate::user::User;
 use diesel::BelongingToDsl;
 use error::JoeResult;
 use diesel::PgConnection;
@@ -89,9 +89,9 @@ impl Article {
     }
 
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<ArticleData>> {
-        use schema::articles::dsl::*;
-        use diesel_extensions::pagination::*;
-        use schema::users;
+        use crate::schema::articles::dsl::*;
+        use crate::diesel_extensions::pagination::*;
+        use crate::schema::users;
 
         let (articles_and_users, _count) = articles
             .inner_join(users::table)
@@ -120,8 +120,8 @@ impl Article {
 
     /// Gets the unpublished articles for a given user
     pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Article>> {
-        use schema::articles::dsl::*;
-        use schema::users::dsl::*;
+        use crate::schema::articles::dsl::*;
+        use crate::schema::users::dsl::*;
         //        use schema::users;
 
         let user: User = users
@@ -142,8 +142,8 @@ impl Article {
     /// If true, it will set the publish datetime to the current time, indicating it is published.
     /// If false, it will set the publish column to Null, indicating that it has not been published.
     pub fn set_publish_status(article_uuid: ArticleUuid, publish: bool, conn: &PgConnection) -> JoeResult<Article> {
-        use schema::articles::dsl::*;
-        use schema::articles;
+        use crate::schema::articles::dsl::*;
+        use crate::schema::articles;
 
         let publish_value: Option<NaiveDateTime> = if publish {
             Some(Utc::now().naive_utc())
@@ -161,7 +161,7 @@ impl Article {
 
     /// Applies the changeset to its corresponding article.
     pub fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> JoeResult<Article> {
-        use schema::articles;
+        use crate::schema::articles;
         diesel::update(articles::table)
             .set(&changeset)
             .get_result(conn)

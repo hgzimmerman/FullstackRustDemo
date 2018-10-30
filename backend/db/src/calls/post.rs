@@ -1,9 +1,9 @@
-use schema::posts;
-use schema::post_upvotes;
-use schema::post_downvotes;
+use crate::schema::posts;
+use crate::schema::post_upvotes;
+use crate::schema::post_downvotes;
 use chrono::NaiveDateTime;
-use user::User;
-use thread::Thread;
+use crate::user::User;
+use crate::thread::Thread;
 use error::*;
 use diesel;
 use diesel::RunQueryDsl;
@@ -255,8 +255,8 @@ impl Post {
 
     /// Censors the post, preventing users from seeing it by default.
     pub fn censor_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
-        use schema::posts::dsl::*;
-        use schema::posts;
+        use crate::schema::posts::dsl::*;
+        use crate::schema::posts;
 
         let m_post_uuid: Uuid = post_uuid.0;
 
@@ -279,7 +279,7 @@ impl Post {
 
     /// Gets all of the posts associated with a given user.
     pub fn get_posts_by_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<ChildlessPostData>> {
-        use schema::posts::dsl::*;
+        use crate::schema::posts::dsl::*;
         let user: User = User::get_by_uuid(user_uuid.0, conn)?;
 
         let user_posts: Vec<Post> = Post::belonging_to(&user)
@@ -308,9 +308,9 @@ impl Post {
 
     /// Gets the user associated with a given post
     pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<User> {
-        use schema::posts::dsl::*;
-        use schema::users::dsl::*;
-        use schema::posts;
+        use crate::schema::posts::dsl::*;
+        use crate::schema::users::dsl::*;
+        use crate::schema::posts;
 
         let authors_uuid: Uuid = posts
             .find(post_uuid.0)
@@ -328,8 +328,8 @@ impl Post {
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
     pub fn get_root_post(requested_thread_id: ThreadUuid, conn: &PgConnection) -> JoeResult<Post> {
-        use schema::posts::dsl::*;
-        use thread::Thread;
+        use crate::schema::posts::dsl::*;
+        use crate::thread::Thread;
 
         let thread: Thread = Thread::get_by_uuid(requested_thread_id.0, conn)?;
 
@@ -357,8 +357,8 @@ impl Post {
 
     /// Given the thread uuid, return a tree of posts.
     pub fn get_posts_in_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<PostData> {
-        use schema::posts;
-        use schema::posts::dsl::posts as posts_dsl;
+        use crate::schema::posts;
+        use crate::schema::posts::dsl::posts as posts_dsl;
         use std::collections::HashSet;
 
         let posts: Vec<Post> = posts_dsl
@@ -480,8 +480,8 @@ impl Post {
 
     /// Add a vote record to a post.
     pub fn vote(vote: PostVote, conn: &PgConnection) -> JoeResult<()> {
-        use schema::post_upvotes;
-        use schema::post_downvotes;
+        use crate::schema::post_upvotes;
+        use crate::schema::post_downvotes;
         use diesel::dsl::exists;
         use diesel::select;
 
@@ -550,7 +550,7 @@ impl Post {
 
     /// Removes an upvote from a post.
     fn remove_upvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<()> {
-        use schema::post_upvotes;
+        use crate::schema::post_upvotes;
 
         let target = post_upvotes::table
             .filter(post_upvotes::user_uuid.eq(user_uuid.0))
@@ -562,7 +562,7 @@ impl Post {
     }
     /// Removes a downvote from a post.
     fn remove_downvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<()> {
-        use schema::post_downvotes;
+        use crate::schema::post_downvotes;
 
         let target = post_downvotes::table
             .filter(post_downvotes::user_uuid.eq(user_uuid.0))
@@ -585,8 +585,8 @@ impl Post {
 
     /// Gets the vote counts for a single post.
     pub fn get_vote_counts(post: &Post, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<VoteCounts> {
-        use schema::post_upvotes;
-        use schema::post_downvotes;
+        use crate::schema::post_upvotes;
+        use crate::schema::post_downvotes;
         use diesel::dsl::exists;
         use diesel::select;
 

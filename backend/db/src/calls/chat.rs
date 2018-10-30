@@ -1,7 +1,7 @@
-use schema::chats;
-use schema::junction_chat_users;
+use crate::schema::chats;
+use crate::schema::junction_chat_users;
 // use diesel::RunQueryDsl;
-use user::User;
+use crate::user::User;
 // use diesel::associations::HasTable;
 use diesel;
 use diesel::RunQueryDsl;
@@ -64,7 +64,7 @@ pub struct ChatData {
 
 impl Chat {
     pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
-        use schema::junction_chat_users;
+        use crate::schema::junction_chat_users;
 
         diesel::insert_into(junction_chat_users::table)
             .values(&association)
@@ -75,8 +75,8 @@ impl Chat {
     }
 
     pub fn remove_user_from_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
-        use schema::junction_chat_users::dsl::*;
-        use schema::junction_chat_users;
+        use crate::schema::junction_chat_users::dsl::*;
+        use crate::schema::junction_chat_users;
 
         diesel::delete(junction_chat_users::table)
             .filter(chat_uuid.eq(association.chat_uuid))
@@ -87,10 +87,10 @@ impl Chat {
     }
 
     fn get_users_in_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
-        use schema::junction_chat_users::dsl::junction_chat_users;
+        use crate::schema::junction_chat_users::dsl::junction_chat_users;
         // use schema::users::dsl::*;
-        use schema::users;
-        use schema::junction_chat_users as junctions;
+        use crate::schema::users;
+        use crate::schema::junction_chat_users as junctions;
 
         junction_chat_users
             .filter(junctions::chat_uuid.eq(chat_uuid.0))
@@ -101,8 +101,8 @@ impl Chat {
     }
 
     pub fn is_user_in_chat(chat_uuid: &ChatUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
-        use schema::junction_chat_users::dsl::junction_chat_users;
-        use schema::junction_chat_users as junctions;
+        use crate::schema::junction_chat_users::dsl::junction_chat_users;
+        use crate::schema::junction_chat_users as junctions;
 
 
         let junction = junction_chat_users
@@ -128,10 +128,10 @@ impl Chat {
     }
 
     pub fn get_chats_user_is_in(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Chat>> {
-        use schema::junction_chat_users::dsl::junction_chat_users;
-        use schema::junction_chat_users as junction;
+        use crate::schema::junction_chat_users::dsl::junction_chat_users;
+        use crate::schema::junction_chat_users as junction;
         // use schema::chats::dsl::*;
-        use schema::chats;
+        use crate::schema::chats;
 
         junction_chat_users
             .filter(junction::user_uuid.eq(user_uuid.0))

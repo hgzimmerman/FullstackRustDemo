@@ -30,8 +30,8 @@ use diesel::associations::HasTable;
 use diesel::query_source::Table;
 use diesel::query_builder::QueryId;
 use diesel::query_builder::QueryFragment;
-use schema;
-use User;
+use crate::schema;
+use crate::User;
 use identifiers::user::UserUuid;
 use diesel::Expression;
 

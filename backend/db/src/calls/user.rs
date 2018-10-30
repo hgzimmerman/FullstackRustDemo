@@ -3,7 +3,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc, Duration};
-use schema::users;
+use crate::schema::users;
 use error::JoeResult;
 use diesel::PgConnection;
 use identifiers::user::UserUuid;
@@ -57,7 +57,7 @@ pub struct NewUser {
 impl User {
     /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> JoeResult<User> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
         info!("Getting user with Name: {}", name);
 
         users
@@ -71,7 +71,7 @@ impl User {
     /// Gets a vector of users of length n.
     // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
     pub fn get_users(num_users: i64, conn: &PgConnection) -> JoeResult<Vec<User>> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
         users
             .limit(num_users)
             .load::<User>(conn)
@@ -84,8 +84,8 @@ impl User {
 
         let user_role_id: i32 = i32::from(user_role);
 
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
         use diesel::PgArrayExpressionMethods;
 
         // Diesel can construct queries that operate on the contents of Postgres arrays.
@@ -99,7 +99,7 @@ impl User {
 
     /// If the user has their banned flag set, this will return true.
     pub fn is_user_banned(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
         users
             .find(user_uuid.0)
@@ -110,8 +110,8 @@ impl User {
 
     // TODO, refactor this, only implement the db transaction, logic can go in the login method
     pub fn check_if_locked(&self, conn: &PgConnection) -> JoeResult<bool> {
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
 
         if let Some(l) = self.locked {
             let current_date = Utc::now().naive_utc();
@@ -135,8 +135,8 @@ impl User {
     /// Resets the login failure count to 0.
     /// This should be called after the user logs in successfully.
     pub fn reset_login_failure_count(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<()> {
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
 
         let target = users.filter(
             users::uuid.eq(user_uuid.0),
@@ -152,8 +152,8 @@ impl User {
     /// Based on the number of current failed login attempts in a row, it will calculate the locked period.
     /// It will then store the datetime of unlock, along with an incremented failure count, so that next time it will take longer.
     pub fn record_failed_login(user_uuid: UserUuid, current_failed_attempts: i32, conn: &PgConnection) -> JoeResult<NaiveDateTime> {
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
 
         info!("record_failed_login: setting the expire time and failure count");
         let current_date = Utc::now().naive_utc();
@@ -179,8 +179,8 @@ impl User {
 
     /// Banns or unbans the user.
     pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
         let target = users.filter(
             users::uuid.eq(user_uuid.0),
         );
@@ -194,8 +194,8 @@ impl User {
     /// Adds a role to the user.
     pub fn add_role_to_user(user_uuid: UserUuid, user_role: UserRole, conn: &PgConnection) -> JoeResult<User> {
 
-        use schema::users::dsl::*;
-        use schema::users;
+        use crate::schema::users::dsl::*;
+        use crate::schema::users;
 
         let user = User::get_by_uuid(user_uuid.0, conn)?;
 
@@ -220,8 +220,8 @@ impl User {
 
     /// Gets a number of users at specified offsets.
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
-        use schema::users;
-        use diesel_extensions::pagination::Paginate;
+        use crate::schema::users;
+        use crate::diesel_extensions::pagination::Paginate;
 
         users::table
             .order(users::user_name)
@@ -233,7 +233,7 @@ impl User {
 
     /// Updates the user's display name.
     pub fn update_user_display_name(current_user_name: String, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
         let target = users.filter(
             user_name.eq(current_user_name),
@@ -250,7 +250,7 @@ impl User {
 
     // TODO deprecate the update user display name and switch to this impl, replacing the name.
     pub fn update_user_display_name_safe(user_uuid: UserUuid, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
         let target = users.filter(
             uuid.eq(user_uuid.0),
@@ -267,7 +267,7 @@ impl User {
 
     /// Deletes the user by their name.
     pub fn delete_user_by_name(name: String, conn: &PgConnection) -> JoeResult<User> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
         let target = users.filter(user_name.eq(name));
 

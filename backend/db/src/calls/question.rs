@@ -1,12 +1,12 @@
-use schema::questions;
+use crate::schema::questions;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
-use user::User;
-use bucket::Bucket;
+use crate::user::User;
+use crate::bucket::Bucket;
 use diesel::BelongingToDsl;
-use answer::Answer;
+use crate::answer::Answer;
 use diesel::GroupedBy;
-use answer::AnswerData;
+use crate::answer::AnswerData;
 use error::JoeResult;
 use uuid::Uuid;
 use identifiers::question::QuestionUuid;
@@ -63,8 +63,8 @@ impl Question {
 
     /// Gets a list of all questions across all buckets.
     pub fn get_questions(conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
-        use schema::questions::dsl::*;
-        use schema::users::dsl::*;
+        use crate::schema::questions::dsl::*;
+        use crate::schema::users::dsl::*;
         let questions_and_users = questions
             .inner_join(users)
             .load::<(Question, User)>(conn)
@@ -86,9 +86,9 @@ impl Question {
 
     /// Gets a random question that may have already been answered
     pub fn get_random_question(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
-        use schema::questions::columns::on_floor;
+        use crate::schema::questions::columns::on_floor;
 
         // Get the bucket from which questions will be retrieved.
         let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
@@ -131,7 +131,7 @@ impl Question {
 
     /// Gets groupings of questions, users, and answers for a given bucket id.
     pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
         let bucket = Bucket::get_by_uuid(owning_bucket_uuid.0, &conn)?;
 
         let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
@@ -182,7 +182,7 @@ impl Question {
     /// This does not tightly correspond to the total number of questions associated with the bucket session.
     pub fn get_number_of_questions_in_bucket(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<i64> {
         //        use schema::questions::dsl::*;
-        use schema::questions;
+        use crate::schema::questions;
 
         let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
         Question::belonging_to(&bucket)
@@ -194,7 +194,7 @@ impl Question {
 
     /// Given a question's id, get the question, its answers and user
     pub fn get_full_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
-        use schema::users::dsl::*;
+        use crate::schema::users::dsl::*;
 
         // Get the question
         let question: Question = Question::get_by_uuid(question_uuid.0, conn)?;
@@ -236,8 +236,8 @@ impl Question {
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
     pub fn put_question_in_bucket(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
-        use schema::questions::dsl::*;
-        use schema::questions;
+        use crate::schema::questions::dsl::*;
+        use crate::schema::questions;
 
 
         let m_question_uuid: Uuid = question_uuid.0;
@@ -253,8 +253,8 @@ impl Question {
     }
 
     pub fn put_question_on_floor(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
-        use schema::questions::dsl::*;
-        use schema::questions;
+        use crate::schema::questions::dsl::*;
+        use crate::schema::questions;
 
         let m_question_uuid: Uuid = question_uuid.0;
 

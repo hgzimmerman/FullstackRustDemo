@@ -1,7 +1,7 @@
-use schema::threads;
+use crate::schema::threads;
 use chrono::NaiveDateTime;
-use user::User;
-use forum::Forum;
+use crate::user::User;
+use crate::forum::Forum;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
@@ -13,8 +13,8 @@ use uuid::Uuid;
 use identifiers::thread::ThreadUuid;
 use identifiers::user::UserUuid;
 
-use post::{Post, NewPost};
-use post::{PostData, ChildlessPostData};
+use crate::post::{Post, NewPost};
+use crate::post::{PostData, ChildlessPostData};
 use identifiers::forum::ForumUuid;
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
@@ -66,8 +66,8 @@ pub struct MinimalThreadData {
 impl Thread {
     /// Locks or unlocks the thread, preventing posting and editing if locked
     pub fn set_lock_status(thread_uuid: ThreadUuid, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
-        use schema::threads;
-        use schema::threads::dsl::*;
+        use crate::schema::threads;
+        use crate::schema::threads::dsl::*;
 
         let thread: Thread = diesel::update(threads::table)
             .filter(threads::uuid.eq(thread_uuid.0))
@@ -83,8 +83,8 @@ impl Thread {
     ///
     /// The thread _must_ also be locked in order to not be modifiable.
     pub fn archive_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
-        use schema::threads;
-        use schema::threads::dsl::*;
+        use crate::schema::threads;
+        use crate::schema::threads::dsl::*;
 
         let m_thread_uuid: Uuid = thread_uuid.0;
 
@@ -102,9 +102,9 @@ impl Thread {
     /// Archived threads will not be included.
     #[deprecated]
     pub fn get_threads_in_forum(requested_forum_uuid: ForumUuid, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
-        use schema::threads::dsl::*;
-        use forum::Forum;
-        use schema::users::dsl::*;
+        use crate::schema::threads::dsl::*;
+        use crate::forum::Forum;
+        use crate::schema::users::dsl::*;
 
         let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
 
@@ -132,10 +132,10 @@ impl Thread {
 
     /// Gets threads based on page size and index.
     pub fn get_paginated(requested_forum_uuid: ForumUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
-        use schema::threads::dsl::*;
-        use forum::Forum;
-        use diesel_extensions::pagination::*;
-        use schema::users;
+        use crate::schema::threads::dsl::*;
+        use crate::forum::Forum;
+        use crate::diesel_extensions::pagination::*;
+        use crate::schema::users;
 
         let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
 

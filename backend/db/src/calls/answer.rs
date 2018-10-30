@@ -1,6 +1,6 @@
-use schema::answers;
-use user::User;
-use question::Question;
+use crate::schema::answers;
+use crate::user::User;
+use crate::question::Question;
 //use error::JoeResult;
 use uuid::Uuid;
 

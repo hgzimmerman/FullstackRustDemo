@@ -1,13 +1,13 @@
-use schema::messages;
+use crate::schema::messages;
 use chrono::NaiveDateTime;
 // use diesel::RunQueryDsl;
 // use diesel::ExpressionMethods;
 // use diesel::QueryDsl;
-use user::User;
+use crate::user::User;
 // use diesel::BelongingToDsl;
-use chat::Chat;
+use crate::chat::Chat;
 // use diesel::GroupedBy;
-use diesel_extensions::pagination::*;
+use crate::diesel_extensions::pagination::*;
 use error::JoeResult;
 use diesel::PgConnection;
 use uuid::Uuid;
@@ -133,8 +133,8 @@ impl Message {
 
     pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
         //        use schema::messages::dsl::*;
-        use schema::messages;
-        use schema::users;
+        use crate::schema::messages;
+        use crate::schema::users;
         use diesel::prelude::*;
 
         //        let m_chat_id: Uuid = m_chat_id.0;

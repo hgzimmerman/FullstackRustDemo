@@ -61,7 +61,7 @@ use diesel::Identifiable;
 mod diesel_extensions;
 
 mod calls;
-pub use calls::*;
+pub use crate::calls::*;
 
 pub mod schema;
 
@@ -69,16 +69,16 @@ mod conversions;
 //mod auth;
 
 
-pub use user::User;
-pub use article::Article;
-pub use forum::{Forum, NewForum};
-pub use thread::{Thread, NewThread};
-pub use post::Post;
-pub use bucket::Bucket;
-pub use question::Question;
-pub use answer::Answer;
-pub use chat::Chat;
-pub use message::Message;
+pub use crate::user::User;
+pub use crate::article::Article;
+pub use crate::forum::{Forum, NewForum};
+pub use crate::thread::{Thread, NewThread};
+pub use crate::post::Post;
+pub use crate::bucket::Bucket;
+pub use crate::question::Question;
+pub use crate::answer::Answer;
+pub use crate::chat::Chat;
+pub use crate::message::Message;
 
 use pool::Pool;
 

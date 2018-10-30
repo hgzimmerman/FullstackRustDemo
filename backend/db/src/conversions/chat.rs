@@ -1,4 +1,4 @@
-use chat::*;
+use crate::chat::*;
 use wire::chat::*;
 use wire::user::UserResponse;
 use identifiers::chat::ChatUuid;

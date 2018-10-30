@@ -1,8 +1,8 @@
-use user::*;
+use crate::user::*;
 use wire::user::*;
 use identifiers::user::UserUuid;
 
-use auth_lib::hash_password;
+use crate::auth_lib::hash_password;
 
 
 impl From<User> for UserResponse {

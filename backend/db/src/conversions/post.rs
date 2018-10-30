@@ -1,4 +1,4 @@
-use post::*;
+use crate::post::*;
 use wire::post::*;
 use chrono::Utc;
 //use thread::Thread;

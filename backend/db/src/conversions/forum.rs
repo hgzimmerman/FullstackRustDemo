@@ -1,4 +1,4 @@
-use forum::*;
+use crate::forum::*;
 use wire::forum::*;
 use identifiers::forum::ForumUuid;
 

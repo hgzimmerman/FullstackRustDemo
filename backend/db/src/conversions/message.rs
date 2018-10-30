@@ -1,4 +1,4 @@
-use message::*;
+use crate::message::*;
 use wire::message::*;
 //use wire::chat::*;
 use chrono::Utc;

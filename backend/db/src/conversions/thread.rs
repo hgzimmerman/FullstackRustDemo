@@ -1,4 +1,4 @@
-use thread::*;
+use crate::thread::*;
 use wire::thread::*;
 use chrono::Utc;
 use identifiers::thread::ThreadUuid;

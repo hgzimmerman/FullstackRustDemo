@@ -1,4 +1,4 @@
-use bucket::*;
+use crate::bucket::*;
 use wire::bucket::*;
 use wire::user::*;
 use identifiers::bucket::BucketUuid;

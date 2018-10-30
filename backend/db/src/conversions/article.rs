@@ -1,4 +1,4 @@
-use article::*;
+use crate::article::*;
 use wire::article::*;
 
 use slug;

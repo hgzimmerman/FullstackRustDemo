@@ -1,4 +1,4 @@
-use schema::forums;
+use crate::schema::forums;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]

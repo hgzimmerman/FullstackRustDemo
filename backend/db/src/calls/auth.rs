@@ -1,11 +1,11 @@
 use chrono::{NaiveDateTime, Utc};
 use chrono::Duration;
-use auth_lib::ServerJwt;
-use auth_lib::Secret;
+use crate::auth_lib::ServerJwt;
+use crate::auth_lib::Secret;
 use identifiers::user::UserUuid;
 use wire::user::Jwt;
-use auth_lib::verify_hash;
-use user::User;
+use crate::auth_lib::verify_hash;
+use crate::user::User;
 use wire::login::LoginRequest;
 use error::LoginError;
 use diesel::PgConnection;
