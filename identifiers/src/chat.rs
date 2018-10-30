@@ -32,11 +32,11 @@ impl From<Uuid> for ChatUuid {
 #[cfg(feature = "rocket_support")]
 mod rocket {
     use super::*;
-    use rocket::http::RawStr;
-    use rocket::request::FromParam;
-    use uuid_from_param;
-    use uuid_from_form;
-    use rocket::request::{FromForm, FormItems};
+    use ::rocket::http::RawStr;
+    use ::rocket::request::FromParam;
+    use crate::uuid_from_param;
+    use crate::uuid_from_form;
+    use ::rocket::request::{FromForm, FormItems};
 
     impl<'a> FromParam<'a> for ChatUuid {
         type Error = &'a RawStr;

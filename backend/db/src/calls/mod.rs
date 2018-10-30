@@ -72,22 +72,22 @@ pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -
 }
 
 
-pub fn delete_row_2<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
-    where
-//
-        Model: Queryable<Tab::SqlType, Pg>,
-        Tab: Table
-            + FindDsl<Uuid>,
-        Find<Tab, Uuid>: LoadQuery<PgConnection, Model>,
-        <Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output: IntoUpdateTarget,
-        Model: diesel::Queryable<<<<<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::associations::HasTable>::Table as diesel::Table>::AllColumns as diesel::Expression>::SqlType, diesel::pg::Pg>
-//        <Tab as FindDsl<uuid::Uuid>>::Output: diesel::Identifiable,
-//        <Tab as FindDsl<Uuid>>::Output: HasTable,
-{
-//    let target = table.find(id);
-    diesel::delete(table.find(uuid))
-        .get_result(conn)
-}
+//pub fn delete_row_2<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
+//    where
+////
+//        Model: Queryable<Tab::SqlType, Pg>,
+//        Tab: Table
+//            + FindDsl<Uuid>,
+//        Find<Tab, Uuid>: LoadQuery<PgConnection, Model>,
+//        <Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output: IntoUpdateTarget,
+//        Model: diesel::Queryable<<<<<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::associations::HasTable>::Table as diesel::Table>::AllColumns as diesel::Expression>::SqlType, diesel::pg::Pg>
+////        <Tab as FindDsl<uuid::Uuid>>::Output: diesel::Identifiable,
+////        <Tab as FindDsl<Uuid>>::Output: HasTable,
+//{
+////    let target = table.find(id);
+//    diesel::delete(table.find(uuid))
+//        .get_result(conn)
+//}
 
 //fn delete_user(uuid: UserUuid, conn: &PgConnection) -> Result<User, Error> {
 //    delete_row::<User,_>(schema::users::table, uuid.0, conn)
