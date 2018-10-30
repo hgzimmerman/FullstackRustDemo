@@ -6,7 +6,8 @@
 //! due to aggregation and organization of types belonging to different tables occurs server-side
 //! instead of on the database.
 
-
+//#![recursion_limit="512"]
+//#![recursion_limit="256"]
 // #![feature(use_extern_macros)]
 #![feature(test)]
 // TODO remove this once the use of macros stops emitting a stupid quantity of warnings
