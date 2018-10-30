@@ -31,16 +31,16 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
     quote! {
 
 //        use db::CRDUuid as macro_CRD_uuid;
-        use RetrievableUuid as macro_RetrievableUuid;
-        use CreatableUuid as macro_CreatableUuid;
-        use DeletableUuid as macro_DeletableUuid;
+        use crate::RetrievableUuid as macro_RetrievableUuid;
+        use crate::CreatableUuid as macro_CreatableUuid;
+        use crate::DeletableUuid as macro_DeletableUuid;
         use error::JoeResult as macro_JoeResult_uuid;
         use diesel::PgConnection as macro_PgConnection_uuid;
         use uuid::Uuid as macro_Uuid;
 
         impl macro_CreatableUuid<#insertable> for #name {
             fn create(insert: #insertable, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<Self> {
-                use schema::#table_name;
+                use crate::schema::#table_name;
                 use diesel;
                 use diesel::RunQueryDsl;
 
@@ -54,7 +54,7 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
 
         impl<'a> macro_RetrievableUuid<'a> for #name {
             fn get_by_uuid(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
-                use schema::#table_name::dsl::*;
+                use crate::schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 use diesel::QueryDsl;
 
@@ -65,7 +65,7 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
             }
 
             fn get_all(conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<Vec<#name>> {
-                use schema::#table_name::dsl::*;
+                use crate::schema::#table_name::dsl::*;
                 use diesel::RunQueryDsl;
                 #table_name
                     .load::<#name>(conn)
@@ -73,8 +73,8 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
             }
 
             fn exists(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<bool> {
-                use schema::#table_name;
-                use schema::#table_name::dsl::*;
+                use crate::schema::#table_name;
+                use crate::schema::#table_name::dsl::*;
                 use diesel::select;
                 use diesel::dsl::exists;
                 use diesel::RunQueryDsl;
@@ -89,7 +89,7 @@ fn impl_crd_uuid( ast: &syn::DeriveInput) -> quote::Tokens {
 
         impl<'a> macro_DeletableUuid<'a> for #name {
             fn delete_by_id(item_uuid: macro_Uuid, conn: &macro_PgConnection_uuid) -> macro_JoeResult_uuid<#name> {
-                use schema::#table_name::dsl::*;
+                use crate::schema::#table_name::dsl::*;
                 use diesel::ExpressionMethods;
                 use diesel;
                 use diesel::RunQueryDsl;
