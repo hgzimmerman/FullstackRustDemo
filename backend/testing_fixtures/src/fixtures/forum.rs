@@ -8,7 +8,7 @@ use db::post::{Post, NewPost};
 
 use fixtures::user::UserFixture;
 
-use db::CreatableUuid;
+
 
 
 const FORUM_TITLE: &'static str = "Forum Title";
@@ -42,7 +42,7 @@ impl Fixture for ForumFixture {
             title: String::from(FORUM_TITLE),
             description: String::from(FORUM_DESCRIPTION),
         };
-        let forum = Forum::create(new_forum, conn).expect("create forum");
+        let forum = Forum::create_forum(new_forum, conn).expect("create forum");
 
 
         let new_thread_1: NewThread = NewThread {
@@ -56,8 +56,8 @@ impl Fixture for ForumFixture {
         let mut new_thread_2: NewThread = new_thread_1.clone();
         new_thread_2.title = THREAD_2_TITLE.to_string();
 
-        let thread_1 = Thread::create(new_thread_1, conn).expect("create thread");
-        let thread_2 = Thread::create(new_thread_2, conn).expect("create thread");
+        let thread_1 = Thread::create_thread(new_thread_1, conn).expect("create thread");
+        let thread_2 = Thread::create_thread(new_thread_2, conn).expect("create thread");
 
 
         let new_post_1: NewPost = NewPost {
@@ -72,7 +72,7 @@ impl Fixture for ForumFixture {
         let mut new_post_2: NewPost = new_post_1.clone();
         let mut new_post_3: NewPost = new_post_1.clone();
 
-        let post_1: Post = Post::create(new_post_1, conn).expect("create post");
+        let post_1: Post = Post::create_post(new_post_1, conn).expect("create post");
 
         new_post_2.content = POST_2_CONTENT.to_string();
         new_post_3.content = POST_3_CONTENT.to_string();
@@ -80,8 +80,8 @@ impl Fixture for ForumFixture {
         new_post_3.parent_uuid = Some(post_1.uuid);
 
 
-        let post_2: Post = Post::create(new_post_2, conn).expect("create post");
-        let post_3: Post = Post::create(new_post_3, conn).expect("create post");
+        let post_2: Post = Post::create_post(new_post_2, conn).expect("create post");
+        let post_3: Post = Post::create_post(new_post_3, conn).expect("create post");
 
         ForumFixture {
             user_fixture,

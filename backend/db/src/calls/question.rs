@@ -17,10 +17,11 @@ use crate::schema;
 use diesel;
 use diesel::ExpressionMethods;
 use diesel::PgConnection;
+use identifiers::user::UserUuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewQuestion"]
+//#[insertable = "NewQuestion"]
 #[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_uuid")]
 #[belongs_to(User, foreign_key = "author_uuid")]
@@ -63,8 +64,9 @@ impl Question {
 
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
-        let question: Question = Question::create(new_question, conn)?;
-        let user = User::get_by_uuid(question.author_uuid, conn)?;
+        let question: Question = Question::create_question(new_question, conn)?;
+        let author_uuid = UserUuid(question.author_uuid);
+        let user = User::get_user(author_uuid, conn)?;
 
         Ok(QuestionData {
             question,
@@ -81,7 +83,7 @@ impl Question {
         let questions_and_users = questions
             .inner_join(users)
             .load::<(Question, User)>(conn)
-            .map_err(Question::handle_error)?;
+            .map_err(handle_err::<Question>)?;
 
         let question_data: Vec<QuestionData> = questions_and_users
             .into_iter()
@@ -113,17 +115,17 @@ impl Question {
             .order(RANDOM)
             .filter(on_floor.eq(false)) // Only get a question if it is not on the "floor" (and therefore in the bucket)
             .first::<Question>(conn)
-            .map_err(Question::handle_error)?;
+            .map_err(handle_err::<Question>)?;
         // Get the answers associated with the question.
         let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
             .inner_join(users)
             .load::<(Answer, User)>(conn)
-            .map_err(Answer::handle_error)?;
+            .map_err(handle_err::<Answer>)?;
         // Get the author of the question.
         let user: User = users
             .find(question.author_uuid)
             .first::<User>(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
         // Get them all together.
 
         Ok(QuestionData {
@@ -150,7 +152,7 @@ impl Question {
         let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
             .inner_join(users)
             .load::<(Question, User)>(conn)
-            .map_err(Question::handle_error)?;
+            .map_err(handle_err::<Question>)?;
 
         let questions: Vec<Question> = questions_and_users
             .iter()
@@ -160,7 +162,7 @@ impl Question {
         let answers: Vec<(Answer, User)> = Answer::belonging_to(&questions)
             .inner_join(users)
             .load::<(Answer, User)>(conn)
-            .map_err(Answer::handle_error)?;
+            .map_err(handle_err::<Answer>)?;
         let grouped_answers: Vec<Vec<(Answer, User)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
 
         let data_tuple: Vec<((Question, User), Vec<(Answer, User)>)> = questions_and_users
@@ -202,7 +204,7 @@ impl Question {
             .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
             .count()
             .get_result(conn)
-            .map_err(Question::handle_error)
+            .map_err(handle_err::<Question>)
     }
 
     /// Given a question's id, get the question, its answers and user
@@ -210,7 +212,7 @@ impl Question {
         use crate::schema::users::dsl::*;
 
         // Get the question
-        let question: Question = Question::get_by_uuid(question_uuid.0, conn)?;
+        let question: Question = Question::get_question(question_uuid, conn)?;
 
         let to_answer_data = |x: (Answer, User)| {
             AnswerData {
@@ -223,7 +225,7 @@ impl Question {
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
             .inner_join(users)
             .load::<(Answer, User)>(conn)
-            .map_err(Answer::handle_error)?
+            .map_err(handle_err::<Answer>)?
             .into_iter()
             .map(to_answer_data)
             .collect();
@@ -232,7 +234,7 @@ impl Question {
         let user: User = users
             .find(question.author_uuid)
             .first::<User>(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
 
         Ok(QuestionData {
             question,
@@ -261,7 +263,7 @@ impl Question {
         diesel::update(target)
             .set(on_floor.eq(false))
             .execute(conn)
-            .map_err(Question::handle_error)?;
+            .map_err(handle_err::<Question>)?;
         Ok(question_uuid)
     }
 
@@ -277,7 +279,7 @@ impl Question {
         diesel::update(target)
             .set(on_floor.eq(true))
             .execute(conn)
-            .map_err(Question::handle_error)?;
+            .map_err(handle_err::<Question>)?;
         Ok(question_uuid)
     }
 }

@@ -1,6 +1,6 @@
 use auth::Secret;
 use diesel::PgConnection;
-use db::CreatableUuid;
+
 use db::user::{NewUser, User};
 use Fixture;
 
@@ -42,7 +42,7 @@ impl Fixture for UserFixture {
             banned: false,
             roles: vec![1,2,3,4] // Has all privileges
         };
-        let admin_user: User = User::create(new_admin_user, conn).expect("Couldn't create new admin user");
+        let admin_user: User = User::create_user(new_admin_user, conn).expect("Couldn't create new admin user");
 
         let new_normal_user = NewUser {
             user_name: String::from(NORMAL_USER_NAME),
@@ -52,7 +52,7 @@ impl Fixture for UserFixture {
             banned: false,
             roles: vec![1] // Has only basic privileges
         };
-        let normal_user: User = User::create(new_normal_user, conn).expect("Couldn't create new normal user");
+        let normal_user: User = User::create_user(new_normal_user, conn).expect("Couldn't create new normal user");
 
 
         UserFixture {

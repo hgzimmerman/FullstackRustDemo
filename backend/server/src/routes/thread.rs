@@ -1,7 +1,6 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
 use db::thread::{Thread, NewThread};
 use db::Conn;
 use wire::thread::{NewThreadRequest, ThreadResponse};
@@ -10,7 +9,6 @@ use error::*;
 use identifiers::thread::ThreadUuid;
 use identifiers::forum::ForumUuid;
 use identifiers::user::UserUuid;
-
 use auth_lib::user_authorization::NormalUser;
 use auth_lib::user_authorization::ModeratorUser;
 

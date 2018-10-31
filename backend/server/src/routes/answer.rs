@@ -8,11 +8,10 @@ use error::WeekendAtJoesError;
 use db::Conn;
 use wire::answer::*;
 use auth_lib::user_authorization::NormalUser;
-use db::CreatableUuid;
+
 use db::question::Question;
 use identifiers::question::QuestionUuid;
-use db::RetrievableUuid;
-
+use identifiers::user::UserUuid;
 
 
 /// Answers a bucket question by attaching the answer to the existing question.
@@ -24,7 +23,8 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: C
     let question_uuid: QuestionUuid = new_answer.question_uuid.clone(); // spurious clone
 
     let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user.user_uuid);
-    let answer_user: User = User::get_by_uuid(new_answer.author_uuid, &conn)?;
+    let author_uuid = UserUuid(new_answer.author_uuid);
+    let answer_user: User = User::get_user(author_uuid, &conn)?;
 
 
     Question::put_question_on_floor(question_uuid, &conn)?;

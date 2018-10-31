@@ -6,14 +6,13 @@ use crate::error::Error;
 //use db::Conn;
 use wire::forum::ForumResponse;
 use db::Forum;
-use db::RetrievableUuid;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 use crate::util::json_body_filter;
 use crate::state::jwt::admin_user_filter;
 use identifiers::user::UserUuid;
 use wire::forum::NewForumRequest;
-use db::CreatableUuid;
+
 use crate::logging::log_attach;
 use crate::logging::HttpMethod;
 use crate::uuid_integration::uuid_wrap_filter;
@@ -42,7 +41,7 @@ fn get_forums(s: &State) -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(s.db.clone())
         .and_then(|conn: PooledConn|{
-            Forum::get_all(&conn)
+            Forum::get_forums(&conn)
                 .map(convert_vector_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
         })
@@ -57,7 +56,7 @@ fn get_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(uuid_wrap_filter())
         .and(s.db.clone())
         .and_then(|uuid: ForumUuid, conn: PooledConn| {
-            Forum::get_by_uuid(uuid.0, &conn)
+            Forum::get_forum(uuid, &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
         })
@@ -73,7 +72,7 @@ fn create_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(admin_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewForumRequest, _admin: UserUuid, conn: PooledConn|{
-            Forum::create(request.into(), &conn)
+            Forum::create_forum(request.into(), &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
                 .map_err(Error::convert_and_reject)
         })

@@ -5,7 +5,6 @@ use crate::error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use uuid::Uuid;
-//use db::RetrievableUuid;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 //use crate::uuid_integration::uuid_filter;

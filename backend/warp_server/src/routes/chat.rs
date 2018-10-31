@@ -13,7 +13,6 @@ use identifiers::user::UserUuid;
 use wire::chat::MinimalChatResponse;
 use db::Chat;
 use db::chat::NewChat;
-use db::CreatableUuid;
 use wire::chat::ChatUserAssociationRequest;
 use db::chat::ChatUserAssociation;
 use wire::chat::ChatResponse;

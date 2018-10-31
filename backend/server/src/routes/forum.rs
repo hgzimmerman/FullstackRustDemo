@@ -1,7 +1,6 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-use db::CreatableUuid;
 use db::forum::Forum;
 use error::JoeResult;
 use db::Conn;
@@ -10,7 +9,6 @@ use wire::forum::NewForumRequest;
 use auth_lib::user_authorization::AdminUser;
 use routes::convert_vector;
 use identifiers::forum::ForumUuid;
-use db::RetrievableUuid;
 
 
 /// Gets all of the forums.
@@ -18,7 +16,7 @@ use db::RetrievableUuid;
 /// This operation is available to anyone.
 #[get("/forums")]
 fn get_forums(conn: Conn) -> JoeResult<Json<Vec<ForumResponse>>> {
-    Forum::get_all(&conn)
+    Forum::get_forums(&conn)
         .map(convert_vector)
         .map(Json)
 }
@@ -26,7 +24,7 @@ fn get_forums(conn: Conn) -> JoeResult<Json<Vec<ForumResponse>>> {
 /// Gets a single forum.
 #[get("/<forum_uuid>")]
 fn get_forum(forum_uuid: ForumUuid, conn: Conn) -> JoeResult<Json<ForumResponse>> {
-    Forum::get_by_uuid(forum_uuid.0, &conn)
+    Forum::get_forum(forum_uuid, &conn)
         .map(ForumResponse::from)
         .map(Json)
 }
@@ -35,7 +33,7 @@ fn get_forum(forum_uuid: ForumUuid, conn: Conn) -> JoeResult<Json<ForumResponse>
 /// This operation is available to admins.
 #[post("/create", data = "<new_forum>")]
 fn create_forum(new_forum: Json<NewForumRequest>, _admin: AdminUser, conn: Conn) -> JoeResult<Json<ForumResponse>> {
-    Forum::create(new_forum.into_inner().into(), &conn)
+    Forum::create_forum(new_forum.into_inner().into(), &conn)
         .map(ForumResponse::from)
         .map(Json)
 }

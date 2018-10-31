@@ -61,7 +61,7 @@ mod configuration {
     use wire::user::UserRole;
     use db::User;
     use db::user::NewUser;
-    use db::CreatableUuid;
+
     use crate::error::Error;
     use crate::state::StateConfig;
     use clap::App;
@@ -130,7 +130,7 @@ mod configuration {
             UserRole::Publisher.into(),
             UserRole::Unprivileged.into(),
         ];
-        User::create(user, &conn)
+        User::create_user(user, &conn)
             .map_err(|_| Error::DatabaseError(Some(String::from("Admin User already exists"))))
     }
 

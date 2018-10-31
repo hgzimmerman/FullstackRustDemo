@@ -1,7 +1,6 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
 use db::post::*;
 use error::WeekendAtJoesError;
 use db::Conn;
@@ -9,7 +8,6 @@ use wire::post::{PostResponse, NewPostRequest, EditPostRequest};
 use auth_lib::user_authorization::NormalUser;
 use auth_lib::user_authorization::ModeratorUser;
 use error::VectorMappable;
-use db::RetrievableUuid;
 use identifiers::post::PostUuid;
 use identifiers::thread::ThreadUuid;
 use identifiers::user::UserUuid;
@@ -37,7 +35,7 @@ fn create_post(new_post: Json<NewPostRequest>, login_user: NormalUser, conn: Con
 #[put("/edit", data = "<edit_post_request>")]
 fn edit_post(edit_post_request: Json<EditPostRequest>, login_user: NormalUser, conn: Conn) -> Result<Json<PostResponse>, WeekendAtJoesError> {
     // Prevent editing other users posts
-    let existing_post = Post::get_by_uuid(edit_post_request.0.uuid.0, &conn)?;
+    let existing_post = Post::get_post(edit_post_request.0.uuid, &conn)?;
     if login_user.user_uuid.0 != existing_post.author_uuid {
         return Err(WeekendAtJoesError::BadRequest);
     }

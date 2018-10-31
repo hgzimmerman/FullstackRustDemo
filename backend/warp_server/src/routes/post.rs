@@ -16,7 +16,6 @@ use db::post::NewPost;
 use db::post::ChildlessPostData;
 use wire::post::EditPostRequest;
 use identifiers::thread::ThreadUuid;
-use db::RetrievableUuid;
 use db::post::EditPostChangeset;
 use crate::state::jwt::moderator_user_filter;
 use identifiers::post::PostUuid;
@@ -75,7 +74,7 @@ pub fn edit_post(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|request: EditPostRequest, user_uuid: UserUuid, conn: PooledConn|{
              // Prevent editing other users posts
-             let existing_post = Post::get_by_uuid(request.uuid.0, &conn).map_err(Error::convert_and_reject)?;
+             let existing_post = Post::get_post(request.uuid, &conn).map_err(Error::convert_and_reject)?;
              if user_uuid.0 != existing_post.author_uuid {
                  return Error::BadRequest.reject()
              }

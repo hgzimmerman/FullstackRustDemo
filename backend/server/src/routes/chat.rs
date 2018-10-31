@@ -10,9 +10,6 @@ use auth_lib::user_authorization::NormalUser;
 use error::JoeResult;
 //use db::Creatable;
 use error::*;
-use db::CreatableUuid;
-use db::RetrievableUuid;
-
 use log::info;
 
 

@@ -1,7 +1,6 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
 use db::message::*;
 use error::WeekendAtJoesError;
 use db::Conn;

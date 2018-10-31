@@ -6,9 +6,9 @@ use error::JoeResult;
 use crate::calls::prelude::*;
 use crate::schema;
 
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewForum"]
+//#[insertable = "NewForum"]
 #[table_name = "forums"]
 pub struct Forum {
     /// Primary Key.
@@ -29,6 +29,9 @@ pub struct NewForum {
 impl Forum {
     pub fn get_forum(uuid: ForumUuid,conn: &PgConnection) -> JoeResult<Forum> {
         get_row::<Forum,_>(schema::forums::table, uuid.0, conn)
+    }
+    pub fn get_forums(conn: &PgConnection) -> JoeResult<Vec<Forum>> {
+        get_rows::<Forum,_>(schema::forums::table, conn)
     }
     pub fn delete_forum(uuid: ForumUuid, conn: &PgConnection) -> JoeResult<Forum> {
         delete_row::<Forum,_>(schema::forums::table, uuid.0, conn)

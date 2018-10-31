@@ -20,9 +20,9 @@ use crate::calls::prelude::*;
 use crate::schema;
 
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewThread"]
+//#[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Forum, foreign_key = "forum_uuid")]
 #[table_name = "threads"]
@@ -88,8 +88,10 @@ impl Thread {
             .filter(threads::uuid.eq(thread_uuid.0))
             .set(locked.eq(is_locked))
             .get_result(conn)
-            .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_uuid(thread.author_uuid, conn)?;
+            .map_err(handle_err::<Thread>)?;
+
+        let author_uuid_a = UserUuid(thread.author_uuid);
+        let user: User = User::get_user(author_uuid_a, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -107,8 +109,9 @@ impl Thread {
             .filter(threads::uuid.eq(m_thread_uuid))
             .set(archived.eq(true))
             .get_result(conn)
-            .map_err(Thread::handle_error)?;
-        let user: User = User::get_by_uuid(thread.author_uuid, conn)?;
+            .map_err(handle_err::<Thread>)?;
+        let author_uuid_a = UserUuid(thread.author_uuid);
+        let user: User = User::get_user(author_uuid_a, conn)?;
 
         Ok(MinimalThreadData { thread, user })
     }
@@ -121,7 +124,7 @@ impl Thread {
         use crate::forum::Forum;
         use crate::schema::users::dsl::*;
 
-        let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
+        let forum: Forum = Forum::get_forum(requested_forum_uuid, conn)?;
 
         // Get the threads that belong to the forum, and then get the users that are associated with the threads.
         let threads_and_users: Vec<(Thread, User)> = Thread::belonging_to(&forum)
@@ -130,7 +133,7 @@ impl Thread {
             .limit(num_threads)
             .inner_join(users)
             .load::<(Thread, User)>(conn)
-            .map_err(Thread::handle_error)?;
+            .map_err(handle_err::<Thread>)?;
 
 
         let min_threads = threads_and_users
@@ -152,7 +155,7 @@ impl Thread {
         use crate::diesel_extensions::pagination::*;
         use crate::schema::users;
 
-        let forum: Forum = Forum::get_by_uuid(requested_forum_uuid.0, conn)?;
+        let forum: Forum = Forum::get_forum(requested_forum_uuid, conn)?;
 
         let (thread_users, _count) = Thread::belonging_to(&forum)
             .inner_join(users::table)
@@ -161,7 +164,7 @@ impl Thread {
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<(Thread, User)>(conn)
-            .map_err(Thread::handle_error)?;
+            .map_err(handle_err::<Thread>)?;
 
         let minimal_threads = thread_users
             .into_iter()
@@ -181,7 +184,7 @@ impl Thread {
 
     /// Creates a thread with an initial post.
     pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &PgConnection) -> JoeResult<ThreadData> {
-        let thread: Thread = Thread::create(new_thread, conn)?;
+        let thread: Thread = Thread::create_thread(new_thread, conn)?;
 
         let new_post: NewPost = NewPost::from((thread.clone(), post_content));
 
@@ -196,9 +199,10 @@ impl Thread {
 
     /// Gets every bit of data related to a thread.
     pub fn get_full_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<ThreadData> {
-        let thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
+        let thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         let post: PostData = Post::get_posts_in_thread(thread_uuid, user_uuid, conn)?;
-        let user = User::get_by_uuid(thread.author_uuid, conn)?;
+        let author_uuid = UserUuid(thread.author_uuid);
+        let user = User::get_user(author_uuid, conn)?;
         Ok(ThreadData { thread, post, user })
     }
 }

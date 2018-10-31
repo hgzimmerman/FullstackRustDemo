@@ -1,14 +1,12 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-
 use db::question::*;
 use db::bucket::Bucket;
 use error::WeekendAtJoesError;
 use error::VectorMappable;
 use db::Conn;
 use wire::question::*;
-
 use error::*;
 use log::info;
 use identifiers::question::QuestionUuid;

@@ -19,9 +19,8 @@ use wire::user::*;
 
 
 /// The database's representation of a user.
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, PartialEq, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, PartialEq, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewUser"]
 #[table_name = "users"]
 pub struct User {
     /// The primary key
@@ -76,7 +75,7 @@ impl User {
         users
             .filter(user_name.eq(name))
             .first::<User>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
 
@@ -88,7 +87,7 @@ impl User {
         users
             .limit(num_users)
             .load::<User>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     // TODO make this take a list of roles.
@@ -107,7 +106,7 @@ impl User {
                 vec![user_role_id],
             ))
             .load::<User>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     /// If the user has their banned flag set, this will return true.
@@ -118,7 +117,7 @@ impl User {
             .find(user_uuid.0)
             .select(banned)
             .first::<bool>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     // TODO, refactor this, only implement the db transaction, logic can go in the login method
@@ -136,7 +135,7 @@ impl User {
                 diesel::update(target)
                     .set(locked.eq(None::<NaiveDateTime>))
                     .execute(conn)
-                    .map_err(User::handle_error)?;
+                    .map_err(handle_err::<User>)?;
                 Ok(false)
             }
         } else {
@@ -157,7 +156,7 @@ impl User {
         diesel::update(target)
             .set(failed_login_count.eq(0))
             .execute(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
         Ok(())
     }
 
@@ -185,7 +184,7 @@ impl User {
                 ),
             ))
             .execute(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
 
         return Ok(expire_datetime);
     }
@@ -200,7 +199,7 @@ impl User {
         diesel::update(target)
             .set(banned.eq(is_banned))
             .get_result(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
 
     }
 
@@ -210,7 +209,7 @@ impl User {
         use crate::schema::users::dsl::*;
         use crate::schema::users;
 
-        let user = User::get_by_uuid(user_uuid.0, conn)?;
+        let user = User::get_user(user_uuid, conn)?;
 
         let user_role_id: i32 = i32::from(user_role);
         if user.roles.contains(&user_role_id) {
@@ -227,7 +226,7 @@ impl User {
             diesel::update(target)
                 .set(roles.eq(new_roles))
                 .get_result(conn)
-                .map_err(User::handle_error)
+                .map_err(handle_err::<User>)
         }
     }
 
@@ -241,7 +240,7 @@ impl User {
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<User>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     /// Updates the user's display name.
@@ -258,7 +257,7 @@ impl User {
                 new_display_name,
             ))
             .get_result(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     // TODO deprecate the update user display name and switch to this impl, replacing the name.
@@ -275,7 +274,7 @@ impl User {
                 new_display_name,
             ))
             .get_result(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     /// Deletes the user by their name.
@@ -286,7 +285,7 @@ impl User {
 
         diesel::delete(target)
             .get_result(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 }
 

@@ -11,8 +11,6 @@ use identifiers::question::QuestionUuid;
 //use db::Conn;
 use db::Question;
 use db::User;
-use db::CreatableUuid;
-use db::RetrievableUuid;
 use db::answer::AnswerData;
 use db::answer::NewAnswer;
 use db::answer::Answer;
@@ -50,7 +48,8 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
             let question_uuid: QuestionUuid = new_answer.question_uuid.clone(); // spurious clone
 
             let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user_uuid);
-            let answer_user: User = User::get_by_uuid(new_answer.author_uuid, &conn)
+            let author_uuid = UserUuid(new_answer.author_uuid);
+            let answer_user: User = User::get_user(author_uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
 
 

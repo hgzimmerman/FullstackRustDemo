@@ -13,8 +13,6 @@ use log::info;
 use auth_lib::BannedSet;
 use rocket::State;
 use identifiers::user::UserUuid;
-use db::CreatableUuid;
-use db::RetrievableUuid;
 
 
 
@@ -25,7 +23,7 @@ use auth_lib::user_authorization::AdminUser;
 /// Provided they know the id of the user, this information is available to anyone.
 #[get("/<user_uuid>")]
 fn get_user(user_uuid: UserUuid, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
-    User::get_by_uuid(user_uuid.0, &conn)
+    User::get_user(user_uuid, &conn)
         .map(UserResponse::from)
         .map(Json)
 }
@@ -54,7 +52,7 @@ fn get_users_with_role(role_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult
 #[post("/", data = "<new_user>")]
 pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> JoeResult<Json<UserResponse>> {
     let new_user: NewUser = new_user.into_inner().into();
-    User::create(new_user, &conn)
+    User::create_user(new_user, &conn)
         .map(UserResponse::from)
         .map(Json)
 }

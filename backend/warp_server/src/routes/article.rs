@@ -16,10 +16,9 @@ use identifiers::user::UserUuid;
 use wire::article::MinimalArticleResponse;
 use crate::util::json_body_filter;
 use wire::article::NewArticleRequest;
-use db::CreatableUuid;
+
 use db::article::NewArticle;
 //use db::article::ArticleChangeset;
-use db::RetrievableUuid;
 use wire::article::UpdateArticleRequest;
 //use crate::log_attach;
 //use crate::HttpMethod;

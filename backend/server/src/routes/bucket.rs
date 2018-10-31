@@ -1,7 +1,6 @@
 use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
-use db::RetrievableUuid;
 use db::bucket::*;
 use error::JoeResult;
 use db::Conn;
@@ -9,7 +8,7 @@ use wire::bucket::*;
 use wire::user::UserResponse;
 use auth_lib::user_authorization::NormalUser;
 use routes::convert_vector;
-use db::CreatableUuid;
+
 use identifiers::bucket::BucketUuid;
 use identifiers::user::UserUuid;
 use uuid::Uuid;

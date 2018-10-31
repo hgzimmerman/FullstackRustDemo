@@ -17,13 +17,14 @@ use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
 use crate::calls::prelude::*;
 use crate::schema;
+use identifiers::user::UserUuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
 #[belongs_to(Message, foreign_key = "reply_uuid")]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Chat, foreign_key = "chat_uuid")]
-#[insertable = "NewMessage"]
+//#[insertable = "NewMessage"]
 #[table_name = "messages"]
 pub struct Message {
     /// Primary Key.
@@ -82,7 +83,7 @@ impl Message {
     //         .paginate(page_index.into())
     //         .per_page(page_size.into())
     //         .load_and_count_pages::<(Message, User)>(conn.deref())
-    //         .map_err(Message::handle_error);
+    //         .map_err(handle_err::<Message>);
 
     //     // users::table
     //     //     .inner_join(messages::table)
@@ -92,14 +93,15 @@ impl Message {
     //     //     .paginate(page_index.into())
     //     //     .per_page(page_size.into())
     //     //     .load_and_count_pages::<(User, Message)>(conn.deref())
-    //     //     .map_err(Message::handle_error);
+    //     //     .map_err(handle_err::<Message>);
 
     //     unimplemented!()
     // }
 
     pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> JoeResult<MessageData> {
-        let message = Message::create(new_message, conn)?;
-        let author = User::get_by_uuid(message.author_uuid, conn)?;
+        let message = Message::create_message_simple(new_message, conn)?;
+        let author_uuid = UserUuid(message.author_uuid);
+        let author = User::get_user(author_uuid, conn)?;
         // Get only the first reply in the possible chain of replies.
         if message.reply_uuid.is_some() {
             // The unwrap is safe because the if_some condition was checked above
@@ -120,8 +122,9 @@ impl Message {
     }
 
     fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
-        let message = Message::get_by_uuid(uuid.0, conn)?;
-        let author = User::get_by_uuid(message.author_uuid, conn)?;
+        let message = Message::get_message_simple(uuid, conn)?;
+        let author_uuid = UserUuid(message.author_uuid);
+        let author = User::get_user(author_uuid, conn)?;
         // If the parameter instructs to get the reply, and the reply id exists, get it.
         if with_reply && message.reply_uuid.is_some() {
             // The unwrap is safe because the if_some condition was checked above
@@ -157,7 +160,7 @@ impl Message {
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<(Message, User)>(conn) // Apparently just `load` doesn't work, so we use this instead and throw away the count.
-            .map_err(Message::handle_error)?;
+            .map_err(handle_err::<Message>)?;
 
         let collected_messages: Vec<Message> = messages_and_users
             .iter()
@@ -168,7 +171,7 @@ impl Message {
         let replied = Message::belonging_to(&collected_messages) // I'm not 100% sure that this gets the intended messages. Write a test to check.
             .inner_join(users::table)
             .load::<(Message, User)>(conn)
-            .map_err(Message::handle_error)?
+            .map_err(handle_err::<Message>)?
             .grouped_by(&collected_messages);
 
         let message_data = messages_and_users

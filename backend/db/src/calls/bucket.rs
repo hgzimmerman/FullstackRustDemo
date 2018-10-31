@@ -11,7 +11,7 @@ use identifiers::user::UserUuid;
 use crate::calls::prelude::*;
 use crate::schema;
 
-#[derive(Debug, Clone, Identifiable, Queryable, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
 //#[insertable = "NewBucket"]
 #[table_name = "buckets"]
@@ -95,7 +95,7 @@ impl Bucket {
             .filter(junctions::user_uuid.eq(user_uuid.0))
             .select(junctions::bucket_uuid)
             .load::<Uuid>(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
 
 
         buckets
@@ -103,7 +103,7 @@ impl Bucket {
             .filter(buckets::uuid.ne_all(bucket_uuids_in_which_the_user_is_already_a_member_or_has_requested_to_join)) // If buckets are in this set, don't return them
             .select(buckets::all_columns)
             .load::<Bucket>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     pub fn add_user_to_bucket(new_bucket_user: NewBucketUser, conn: &PgConnection) -> JoeResult<()> {
@@ -112,7 +112,7 @@ impl Bucket {
         diesel::insert_into(junction_bucket_users::table)
             .values(&new_bucket_user)
             .execute(conn)
-            .map_err(Bucket::handle_error)?;
+            .map_err(handle_err::<Bucket>)?;
         Ok(())
     }
 
@@ -126,7 +126,7 @@ impl Bucket {
             .inner_join(buckets::table)
             .select(buckets::all_columns)
             .load::<Bucket>(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     /// Helper function.
@@ -144,7 +144,7 @@ impl Bucket {
             .inner_join(users::table)
             .select(users::all_columns)
             .load::<User>(conn)
-            .map_err(Bucket::handle_error)
+            .map_err(handle_err::<Bucket>)
     }
 
 
@@ -170,7 +170,7 @@ impl Bucket {
             .inner_join(buckets::table)
             .select(buckets::all_columns)
             .load::<Bucket>(conn)
-            .map_err(Bucket::handle_error)?;
+            .map_err(handle_err::<Bucket>)?;
 
         // This is an ineffecient query. Its time will scale linearly (with a high constant) with the number of buckets the user owns.
         let bucket_users = buckets
@@ -220,7 +220,7 @@ impl Bucket {
         diesel::update(junction_bucket_users::table)
             .set(&changeset)
             .get_result(conn)
-            .map_err(Bucket::handle_error)
+            .map_err(handle_err::<Bucket>)
     }
 
     pub fn set_bucket_publicity(bucket_uuid: BucketUuid, publicity: bool, conn: &PgConnection) -> JoeResult<()> {
@@ -241,7 +241,7 @@ impl Bucket {
         diesel::update(target)
             .set(buckets::is_public_until.eq(expire_time))
             .execute(conn)
-            .map_err(Bucket::handle_error)?;
+            .map_err(handle_err::<Bucket>)?;
 
         Ok(())
     }
@@ -258,7 +258,7 @@ impl Bucket {
         diesel::update(target)
             .set(junctions::approved.eq(approval))
             .execute(conn)
-            .map_err(Bucket::handle_error)?;
+            .map_err(handle_err::<Bucket>)?;
 
         Ok(())
     }
@@ -273,7 +273,7 @@ impl Bucket {
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))
             .filter(junctions::user_uuid.eq(user_uuid.0))
             .execute(conn)
-            .map_err(Bucket::handle_error)?;
+            .map_err(handle_err::<Bucket>)?;
         Ok(())
     }
 }

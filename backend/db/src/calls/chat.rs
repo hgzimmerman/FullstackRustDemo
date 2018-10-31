@@ -18,7 +18,7 @@ use crate::calls::prelude::*;
 use crate::schema;
 
 
-#[derive(Debug, Clone, Identifiable, Queryable, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
 //#[insertable = "NewChat"]
 #[table_name = "chats"]
@@ -81,7 +81,7 @@ impl Chat {
         diesel::insert_into(junction_chat_users::table)
             .values(&association)
             .execute(conn)
-            .map_err(Chat::handle_error)?;
+            .map_err(handle_err::<Chat>)?;
 
         Ok(())
     }
@@ -94,7 +94,7 @@ impl Chat {
             .filter(chat_uuid.eq(association.chat_uuid))
             .filter(user_uuid.eq(association.user_uuid))
             .execute(conn)
-            .map_err(Chat::handle_error)?;
+            .map_err(handle_err::<Chat>)?;
         Ok(())
     }
 
@@ -109,7 +109,7 @@ impl Chat {
             .inner_join(users::table)
             .select(users::all_columns)
             .load::<User>(conn)
-            .map_err(Chat::handle_error)
+            .map_err(handle_err::<Chat>)
     }
 
     pub fn is_user_in_chat(chat_uuid: &ChatUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
@@ -121,7 +121,7 @@ impl Chat {
             .filter(junctions::user_uuid.eq(user_uuid.0))
             .filter(junctions::chat_uuid.eq(chat_uuid.0))
             .load::<JunctionChatUsers>(conn)
-            .map_err(Chat::handle_error)?;
+            .map_err(handle_err::<Chat>)?;
         Ok(junction.get(0).is_some())
     }
 
@@ -151,6 +151,6 @@ impl Chat {
             .inner_join(chats::table)
             .select(chats::all_columns)
             .load::<Chat>(conn)
-            .map_err(Chat::handle_error)
+            .map_err(handle_err::<Chat>)
     }
 }

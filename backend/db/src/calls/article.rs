@@ -16,7 +16,7 @@ use crate::schema;
 
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, ErrorHandler, Debug, PartialEq, TypeName)]
+#[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq, TypeName)]
 #[primary_key(uuid)]
 //#[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_uuid")]
@@ -115,7 +115,7 @@ impl Article {
             .paginate(page_index.into())
             .per_page(page_size.into())
             .load_and_count_pages::<(Article, User)>(conn)
-            .map_err(Article::handle_error)?;
+            .map_err(handle_err::<Article>)?;
 
         let article_data = articles_and_users
             .into_iter()
@@ -142,14 +142,14 @@ impl Article {
         let user: User = users
             .find(user_uuid.0)
             .get_result::<User>(conn)
-            .map_err(User::handle_error)?;
+            .map_err(handle_err::<User>)?;
 
 
         Article::belonging_to(&user)
             .filter(publish_date.is_null())
             .order(publish_date)
             .load::<Article>(conn)
-            .map_err(Article::handle_error)
+            .map_err(handle_err::<Article>)
 
     }
 
@@ -170,7 +170,7 @@ impl Article {
             .filter(articles::uuid.eq(article_uuid.0))
             .set(publish_date.eq(publish_value))
             .get_result(conn)
-            .map_err(Article::handle_error)
+            .map_err(handle_err::<Article>)
     }
 
 
@@ -180,6 +180,6 @@ impl Article {
         diesel::update(articles::table)
             .set(&changeset)
             .get_result(conn)
-            .map_err(Article::handle_error)
+            .map_err(handle_err::<Article>)
     }
 }

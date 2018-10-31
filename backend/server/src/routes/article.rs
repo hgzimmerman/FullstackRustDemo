@@ -9,8 +9,6 @@ use rocket::response::status::NoContent;
 use error::WeekendAtJoesError;
 use auth_lib::user_authorization::NormalUser;
 use identifiers::article::ArticleUuid;
-use db::RetrievableUuid;
-use db::CreatableUuid;
 
 
 /// Gets an article by id.

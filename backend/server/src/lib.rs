@@ -6,7 +6,7 @@
 // #![feature(proc_macro)]
 
 
-#![feature(use_extern_macros)]
+//#![feature(use_extern_macros)]
 
 extern crate db;
 extern crate error;
@@ -249,7 +249,7 @@ mod configuration {
     use db::user::{NewUser, User};
     use db::Conn;
     use error::JoeResult;
-    use db::CreatableUuid;
+
 
     pub fn create_admin(conn: &Conn) -> JoeResult<User> {
         let mut user: NewUser = NewUserRequest {
@@ -263,6 +263,6 @@ mod configuration {
             UserRole::Publisher.into(),
             UserRole::Unprivileged.into(),
         ];
-        User::create(user, conn)
+        User::create_user(user, conn)
     }
 }

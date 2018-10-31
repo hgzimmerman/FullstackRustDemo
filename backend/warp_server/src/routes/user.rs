@@ -3,16 +3,13 @@ use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use wire::user::UserResponse;
 use identifiers::user::UserUuid;
-use uuid::Uuid;
-use crate::uuid_integration::uuid_filter;
 use db::user::User;
-use db::RetrievableUuid;
 use crate::error::Error;
 use crate::state::jwt::admin_user_filter;
 use wire::user::FullUserResponse;
 use wire::user::NewUserRequest;
 use db::user::NewUser;
-use db::CreatableUuid;
+
 use crate::state::jwt::normal_user_filter;
 use wire::user::UpdateDisplayNameRequest;
 use wire::user::UserRoleRequest;
@@ -48,10 +45,10 @@ fn get_user(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "user/<uuid>");
 
     warp::get2()
-        .and(uuid_filter())
+        .and(uuid_wrap_filter())
         .and(s.db.clone())
-        .and_then(|user_uuid: Uuid, conn: PooledConn| {
-            User::get_by_uuid(user_uuid, &conn)
+        .and_then(|user_uuid: UserUuid, conn: PooledConn| {
+            User::get_user(user_uuid, &conn)
                 .map(convert_and_json::<User, UserResponse>)
                 .map_err(Error::convert_and_reject)
         })
@@ -90,7 +87,7 @@ fn create_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|new_user: NewUserRequest, conn: PooledConn|{
                 let new_user: NewUser = new_user.into();
-                User::create(new_user, &conn)
+                User::create_user(new_user, &conn)
                     .map(convert_and_json::<User,UserResponse>)
                     .map_err(Error::convert_and_reject)
         })

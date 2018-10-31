@@ -24,45 +24,23 @@ use uuid::Uuid;
 use diesel::insertable::Insertable;
 use diesel::query_source::Queryable;
 use diesel::pg::Pg;
-use diesel::associations::Identifiable;
 use diesel::query_builder::IntoUpdateTarget;
 use diesel::associations::HasTable;
 use diesel::query_source::Table;
 use diesel::query_builder::QueryId;
 use diesel::query_builder::QueryFragment;
-use crate::schema;
-use crate::User;
-use identifiers::user::UserUuid;
 use diesel::Expression;
 use diesel::query_builder::AsQuery;
 use diesel::delete;
 use diesel::query_builder::DeleteStatement;
 use diesel::sql_types::HasSqlType;
-use diesel::insert_into;
 use diesel::query_builder::InsertStatement;
-use diesel::query_dsl::load_dsl::ExecuteDsl;
-use diesel::query_builder::Query;
-use diesel::expression::SelectableExpression;
-use diesel::expression::NonAggregate;
 use diesel::query_builder::AsChangeset;
 use diesel::query_source::QuerySource;
-use diesel::query_dsl::filter_dsl::FilterDsl;
-use std::fmt::Debug;
-use crate::calls::user::NewUser;
-use diesel::query_builder::UpdateStatement;
 use diesel::helper_types::Update;
-use crate::calls::article::ArticleChangeset;
-use crate::Article;
-use diesel::select;
-use diesel::expression::exists::exists;
-use diesel::query_builder::SelectQuery;
-use diesel::expression::subselect::ValidSubselect;
-use diesel::query_builder::SelectStatement;
-use diesel::expression::exists::Exists;
-use diesel::helper_types::Select;
-use diesel::query_dsl::select_dsl::SelectDsl;
 use typename::TypeName;
 use error::WeekendAtJoesError;
+
 
 
 pub mod prelude {
@@ -71,6 +49,7 @@ pub mod prelude {
     pub use super::delete_row;
     pub use super::create_row;
     pub use super::update_row;
+    pub use super::handle_err;
 }
 
 pub fn handle_err<T: TypeName>(error: Error) -> WeekendAtJoesError {
@@ -99,7 +78,7 @@ pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) 
 #[inline(always)]
 pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, WeekendAtJoesError>
     where
-    Table: RunQueryDsl<Model> + Query + LoadQuery<PgConnection, Model>,
+    Table: RunQueryDsl<Model> + LoadQuery<PgConnection, Model>,
     Model: TypeName
 {
     table.load::<Model>(conn)

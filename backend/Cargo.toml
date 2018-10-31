@@ -4,7 +4,6 @@ members = [
     "server",
     "warp_server",
     "db",
-    "db_proc_macros",
     "auth",
     "testing_common",
     "testing_fixtures",

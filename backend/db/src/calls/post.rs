@@ -24,9 +24,8 @@ use crate::schema;
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Thread, foreign_key = "thread_uuid")]
 #[belongs_to(Post, foreign_key = "parent_uuid")]
@@ -215,7 +214,7 @@ impl Post {
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
         //        use schema::posts;
 
-        let target_thread: Thread = Thread::get_by_uuid(thread_uuid.0, conn)?;
+        let target_thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         if target_thread.locked || target_thread.archived {
             return Err(WeekendAtJoesError::ThreadImmutable);
         }
@@ -223,11 +222,12 @@ impl Post {
 
         let modified_post: Post = edit_post_changeset
             .save_changes(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         let votes: VoteCounts = Post::get_vote_counts(&modified_post, user_uuid, conn)?;
 
-        let user = User::get_by_uuid(modified_post.author_uuid, conn)?;
+        let author_uuid = UserUuid(modified_post.author_uuid);
+        let user = User::get_user(author_uuid, conn)?;
         Ok(ChildlessPostData {
             post: modified_post,
             user,
@@ -238,7 +238,8 @@ impl Post {
 
     /// Creates a post, and also gets the associated author for the post.
     pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
-        let thread: Thread = Thread::get_by_uuid(new_post.thread_uuid, conn)?;
+        let thread_uuid = ThreadUuid(new_post.thread_uuid);
+        let thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         if thread.locked || thread.archived {
             return Err(WeekendAtJoesError::ThreadImmutable);
         }
@@ -254,8 +255,9 @@ impl Post {
             }
         };
 
-        let post: Post = Post::create(new_post, conn)?;
-        let user: User = User::get_by_uuid(post.author_uuid, conn)?;
+        let post: Post = Post::create_post(new_post, conn)?;
+        let author_uuid = UserUuid(post.author_uuid);
+        let user: User = User::get_user(author_uuid, conn)?;
         let user_uuid = UserUuid(post.author_uuid);
         let votes: VoteCounts = Post::get_vote_counts(&post, user_uuid, conn)?;
         let post_data = ChildlessPostData {
@@ -277,8 +279,9 @@ impl Post {
             .filter(posts::uuid.eq(m_post_uuid))
             .set(censored.eq(true))
             .get_result(conn)
-            .map_err(Post::handle_error)?;
-        let user = User::get_by_uuid(censored_post.author_uuid, conn)?;
+            .map_err(handle_err::<Post>)?;
+        let author_uuid_a = UserUuid(censored_post.author_uuid);
+        let user = User::get_user(author_uuid_a, conn)?;
         let user_uuid = UserUuid(user.uuid);
         let votes = Post::get_vote_counts(&censored_post, user_uuid,conn)?;
 
@@ -293,12 +296,12 @@ impl Post {
     /// Gets all of the posts associated with a given user.
     pub fn get_posts_by_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<ChildlessPostData>> {
         use crate::schema::posts::dsl::*;
-        let user: User = User::get_by_uuid(user_uuid.0, conn)?;
+        let user: User = User::get_user(user_uuid, conn)?;
 
         let user_posts: Vec<Post> = Post::belonging_to(&user)
             .order(created_date)
             .load::<Post>(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         let votes = Post::get_votes_for_posts(&user_posts, Some(user_uuid), conn)?;
         let posts_and_votes: Vec<(Post, VoteCounts)> = user_posts.into_iter().zip(votes.into_iter()).collect();
@@ -329,22 +332,22 @@ impl Post {
             .find(post_uuid.0)
             .select(posts::author_uuid)
             .first::<Uuid>(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         users
             .find(authors_uuid)
             .first(conn)
-            .map_err(User::handle_error)
+            .map_err(handle_err::<User>)
     }
 
     /// Gets the first post associated with a thread.
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
-    pub fn get_root_post(requested_thread_id: ThreadUuid, conn: &PgConnection) -> JoeResult<Post> {
+    pub fn get_root_post(requested_thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<Post> {
         use crate::schema::posts::dsl::*;
         use crate::thread::Thread;
 
-        let thread: Thread = Thread::get_by_uuid(requested_thread_id.0, conn)?;
+        let thread: Thread = Thread::get_thread(requested_thread_uuid, conn)?;
 
         // Because this method is used in the context of a thread that could be immutable,
         // it should be subject to the locking mechanism.
@@ -357,12 +360,13 @@ impl Post {
                 parent_uuid.is_null(), // There should only be one thread that has a null parent, and that is the OP/root post
             )
             .first::<Post>(conn)
-            .map_err(Post::handle_error)
+            .map_err(handle_err::<Post>)
     }
 
     pub fn get_individual_post(post_uuid: PostUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
-        let post = Post::get_by_uuid(post_uuid.0, conn)?;
-        let user = User::get_by_uuid(post.author_uuid, conn)?;
+        let post = Post::get_post(post_uuid, conn)?;
+        let author_uuid = UserUuid(post.author_uuid);
+        let user = User::get_user(author_uuid, conn)?;
         let votes = Post::get_vote_counts(&post, user_uuid,conn)?;
         Ok(ChildlessPostData { post, user, votes })
     }
@@ -377,7 +381,7 @@ impl Post {
         let posts: Vec<Post> = posts_dsl
             .filter(posts::thread_uuid.eq(thread_uuid.0))
             .load::<Post>(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
 
         if posts.len() == 0 {
@@ -399,7 +403,8 @@ impl Post {
         let mut users: Vec<User> = Vec::with_capacity(user_uuids.len());
 
         for uuid in user_uuids {
-            users.push(User::get_by_uuid(uuid, conn)?);
+            let uuid = UserUuid(uuid);
+            users.push(User::get_user(uuid, conn)?);
         }
 
         let users: HashMap<Uuid, User> = users.into_iter().map(|u| (u.uuid, u)).collect();
@@ -466,7 +471,7 @@ impl Post {
     /// and then pruning it down to the desired subsection of the tree.
     pub fn get_post_and_children(post_uuid: PostUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<PostData> {
         // Get the post so we can get the thread
-        let post = Post::get_by_uuid(post_uuid.0, conn)?;
+        let post = Post::get_post(post_uuid, conn)?;
         let thread_uuid: ThreadUuid = ThreadUuid(post.thread_uuid);
         let post_tree: PostData = Post::get_posts_in_thread(thread_uuid, user_uuid, conn)?;
 
@@ -511,7 +516,7 @@ impl Post {
                 )
             )
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
 
         let downvote_exists: bool = select(
@@ -522,7 +527,7 @@ impl Post {
                 )
             )
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         match vote {
             PostVote::Up(vote) => {
@@ -535,7 +540,7 @@ impl Post {
                     return diesel::insert_into(post_upvotes::table)
                         .values(upvote)
                         .execute(conn)
-                        .map_err(Post::handle_error)
+                        .map_err(handle_err::<Post>)
                         .map(|_| ())
                 } else {
                     return Err(WeekendAtJoesError::BadRequest)
@@ -551,7 +556,7 @@ impl Post {
                     return diesel::insert_into(post_downvotes::table)
                         .values(downvote)
                         .execute(conn)
-                        .map_err(Post::handle_error)
+                        .map_err(handle_err::<Post>)
                         .map(|_| ());
                 } else {
                     return  Err(WeekendAtJoesError::BadRequest)
@@ -570,7 +575,7 @@ impl Post {
             .filter(post_upvotes::post_uuid.eq(post_uuid.0));
         diesel::delete(target)
             .execute(conn)
-            .map_err(Post::handle_error)
+            .map_err(handle_err::<Post>)
             .map(|_| ())
     }
     /// Removes a downvote from a post.
@@ -582,7 +587,7 @@ impl Post {
             .filter(post_downvotes::post_uuid.eq(post_uuid.0));
         diesel::delete(target)
             .execute(conn)
-            .map_err(Post::handle_error)
+            .map_err(handle_err::<Post>)
             .map(|_| ())
     }
 
@@ -606,11 +611,11 @@ impl Post {
         let up: i64 = PostUpvote::belonging_to(post)
             .count()
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
         let down: i64 = PostDownvote::belonging_to(post)
             .count()
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
 
         let user_voted_up: bool = select(
@@ -621,7 +626,7 @@ impl Post {
                 )
             )
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         let user_voted_down: bool = select(
             exists(
@@ -631,7 +636,7 @@ impl Post {
                 )
             )
             .get_result(conn)
-            .map_err(Post::handle_error)?;
+            .map_err(handle_err::<Post>)?;
 
         let counts: VoteCounts = VoteCounts {
             up,
@@ -651,7 +656,7 @@ impl Post {
             Some(user_uuid) => {
                 let up_counts: Vec<(i64, bool)> = PostUpvote::belonging_to(posts)
                     .load(conn)
-                    .map_err(Post::handle_error)?
+                    .map_err(handle_err::<Post>)?
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostUpvote>| {
@@ -662,7 +667,7 @@ impl Post {
                     .collect();
                 let down_counts: Vec<(i64, bool)> = PostDownvote::belonging_to(posts)
                     .load(conn)
-                    .map_err(Post::handle_error)?
+                    .map_err(handle_err::<Post>)?
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostDownvote>| {
@@ -687,14 +692,14 @@ impl Post {
             None => {
                 let up_counts: Vec<i64> = PostUpvote::belonging_to(posts)
                     .load(conn)
-                    .map_err(Post::handle_error)?
+                    .map_err(handle_err::<Post>)?
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostUpvote>| l.len() as i64)
                     .collect();
                 let down_counts: Vec<i64> = PostDownvote::belonging_to(posts)
                     .load(conn)
-                    .map_err(Post::handle_error)?
+                    .map_err(handle_err::<Post>)?
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostDownvote>| l.len() as i64)

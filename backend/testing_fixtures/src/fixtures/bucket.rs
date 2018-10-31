@@ -2,7 +2,7 @@ use fixtures::user::UserFixture;
 use db::bucket::{Bucket, NewBucket, NewBucketUser};
 use db::question::{Question, NewQuestion};
 
-use db::CreatableUuid;
+
 
 use diesel::PgConnection;
 use chrono::Utc;
@@ -63,7 +63,7 @@ impl Fixture for BucketFixture {
             question_text: QUESTION_TEXT_1.to_string(),
             on_floor: false, // In the bucket
         };
-        let question_1 = Question::create(new_question, conn).expect("Create question");
+        let question_1 = Question::create_question(new_question, conn).expect("Create question");
 
 
         let new_question = NewQuestion {
@@ -72,7 +72,7 @@ impl Fixture for BucketFixture {
             question_text: QUESTION_TEXT_2.to_string(),
             on_floor: false, // In the bucket
         };
-        let question_2 = Question::create(new_question, conn).expect("Create question");
+        let question_2 = Question::create_question(new_question, conn).expect("Create question");
 
         BucketFixture {
             user_fixture,

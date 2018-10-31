@@ -11,7 +11,7 @@ use identifiers::user::UserUuid;
 use identifiers::bucket::BucketUuid;
 use identifiers::question::QuestionUuid;
 
-use db::CreatableUuid;
+
 use testing_fixtures::fixtures::bucket::BucketFixture;
 
 

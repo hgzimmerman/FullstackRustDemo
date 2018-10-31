@@ -9,7 +9,7 @@ use identifiers::answer::AnswerUuid;
 use crate::calls::prelude::*;
 use crate::schema;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
 #[table_name = "answers"]
 //#[insertable = "NewAnswer"]

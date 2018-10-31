@@ -18,7 +18,7 @@ path = "tests/integration.rs"
 
 wire = { path = "../../wire"}  # TODO Remove this ???
 identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
-db_proc_macros = { path = "../db_proc_macros"}
+#db_proc_macros = { path = "../db_proc_macros"}
 error = { path = "../error" }
 auth = { path = "../auth"}
 

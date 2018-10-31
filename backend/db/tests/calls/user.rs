@@ -6,8 +6,8 @@ use test::Bencher;
 
 
 
-use db::CreatableUuid;
-use db::RetrievableUuid;
+
+;
 use identifiers::user::UserUuid;
 
 use testing_fixtures::fixtures::user::UserFixture;
@@ -25,7 +25,7 @@ fn user_fixture_test() {
 
 #[test]
 fn delete_user() {
-    use db::RetrievableUuid;
+    ;
     setup(|fixture: &UserFixture, conn: &PgConnection| {
         User::delete_user_by_name(fixture.normal_user.user_name.clone(), conn)
             .expect("Should have deleted user");
@@ -130,7 +130,7 @@ fn get_users() {
 
 #[bench]
 fn get_user_bench(b: &mut Bencher) {
-    use db::RetrievableUuid;
+    ;
     setup(|fixture: &UserFixture, conn: &PgConnection| {
         b.iter(
             || User::get_by_uuid(fixture.admin_user.uuid, &conn),
@@ -140,7 +140,7 @@ fn get_user_bench(b: &mut Bencher) {
 
 #[bench]
 fn crd_user_bench(b: &mut Bencher) {
-    use db::RetrievableUuid;
+    ;
     setup(|_fixture: &EmptyFixture, conn: &PgConnection| {
 
         fn crud(conn: &PgConnection) {
