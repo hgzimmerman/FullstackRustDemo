@@ -16,7 +16,7 @@ use diesel;
 use diesel::ExpressionMethods;
 use diesel::PgConnection;
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewQuestion"]
 #[table_name = "questions"]

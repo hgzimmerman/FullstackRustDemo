@@ -22,7 +22,7 @@ use log::info;
 
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewPost"]
 #[belongs_to(User, foreign_key = "author_uuid")]
@@ -368,7 +368,7 @@ impl Post {
 
 
         if posts.len() == 0 {
-            return Err(WeekendAtJoesError::NotFound { type_name: "Post" })
+            return Err(WeekendAtJoesError::NotFound { type_name: "Post".to_string() })
         }
         // We now know that there is at least one post.
 

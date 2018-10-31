@@ -1,7 +1,7 @@
 use crate::schema::forums;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewForum"]
 #[table_name = "forums"]

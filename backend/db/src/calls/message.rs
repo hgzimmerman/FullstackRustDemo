@@ -17,7 +17,7 @@ use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
 
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[belongs_to(Message, foreign_key = "reply_uuid")]
 #[belongs_to(User, foreign_key = "author_uuid")]

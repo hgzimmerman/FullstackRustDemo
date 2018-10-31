@@ -37,6 +37,10 @@ extern crate pool;
 extern crate rocket;
 extern crate identifiers;
 
+extern crate typename;
+#[macro_use]
+extern crate typename_derive;
+
 #[macro_use(log)]
 extern crate log;
 extern crate simplelog;

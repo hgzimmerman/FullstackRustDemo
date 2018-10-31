@@ -61,76 +61,91 @@ use diesel::query_builder::SelectStatement;
 use diesel::expression::exists::Exists;
 use diesel::helper_types::Select;
 use diesel::query_dsl::select_dsl::SelectDsl;
+use typename::TypeName;
+use error::WeekendAtJoesError;
 
+pub fn handle_err<T: TypeName>(error: Error) -> WeekendAtJoesError {
+    match error {
+        Error::NotFound => WeekendAtJoesError::NotFound { type_name: T::type_name() },
+        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
+    }
+}
 
 /// Generic function for getting a whole row from a given table.
 #[inline(always)]
-pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
+pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
     where
         Table: FindDsl<Uuid>,
         Find<Table, Uuid>: LoadQuery<PgConnection, Model>,
+        Model: TypeName
 {
     table
         .find(uuid)
         .get_result::<Model>(conn)
+        .map_err(handle_err::<Model>)
 }
 
-fn get_user(uuid: UserUuid,conn: &PgConnection) -> Result<User, Error> {
+fn get_user(uuid: UserUuid,conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
     get_row::<User,_>(schema::users::table, uuid.0, conn)
 }
 
 #[inline(always)]
-pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, Error>
+pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, WeekendAtJoesError>
     where
     Table: RunQueryDsl<Model> + Query + LoadQuery<PgConnection, Model>,
+    Model: TypeName
 {
     table.load::<Model>(conn)
+        .map_err(handle_err::<Model>)
 }
 
 
 
 /// Generic function for deleting a row from a given table.
 #[inline(always)]
-pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
+pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
     where
-
-        Tab: FindDsl<Uuid> + Table ,
+        Tab: FindDsl<Uuid> + Table,
         <Tab as FindDsl<Uuid>>::Output: IntoUpdateTarget,
         Pg: HasSqlType<<<<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns as Expression>::SqlType>,
         <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryId,
         <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryFragment<Pg>,
         DeleteStatement<<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table, <<Tab as FindDsl<Uuid>>::Output as IntoUpdateTarget>::WhereClause>: LoadQuery<PgConnection, Model>,
+        Model: TypeName
 {
     delete(table.find(uuid))
         .get_result::<Model>(conn)
+        .map_err(handle_err::<Model>)
 }
 
-fn delete_user(uuid: UserUuid, conn: &PgConnection) -> Result<User, Error> {
+fn delete_user(uuid: UserUuid, conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
     delete_row::<User,_>(schema::users::table, uuid.0, conn)
 }
 
 
 /// Generic function for updating a row for a given table with a given changeset.
 #[inline(always)]
-fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, Error>
+fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
 where
     Chg: AsChangeset<Target=<Tab as HasTable>::Table>,
     Tab: QuerySource + IntoUpdateTarget,
-    Update<Tab, Chg>: LoadQuery<PgConnection, Model>
+    Update<Tab, Chg>: LoadQuery<PgConnection, Model>,
+    Model: TypeName
 {
     diesel::update(table)
         .set(changeset)
         .get_result::<Model>(conn)
+        .map_err(handle_err::<Model>)
 }
 
-fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> Result<Article, Error> {
+fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> Result<Article, WeekendAtJoesError> {
     update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
 }
 
 
 /// Generic function for creating a row for a given table with a given "new" struct for that row type.
 #[inline(always)]
-fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, Error>
+fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
 where
     NewModel: Insertable<Tab>,
     InsertStatement<Tab, NewModel>: AsQuery,
@@ -139,14 +154,16 @@ where
     Model: Queryable<<InsertStatement<Tab, <NewModel as Insertable<Tab>>::Values> as AsQuery>::SqlType, Pg>,
     Pg: HasSqlType<<InsertStatement<Tab, <NewModel as Insertable<Tab>>::Values> as AsQuery>::SqlType>,
     <InsertStatement<Tab, <NewModel as Insertable<Tab>>::Values> as AsQuery>::Query: QueryId,
-    <InsertStatement<Tab, <NewModel as Insertable<Tab>>::Values> as AsQuery>::Query: QueryFragment<Pg>
+    <InsertStatement<Tab, <NewModel as Insertable<Tab>>::Values> as AsQuery>::Query: QueryFragment<Pg>,
+    Model: TypeName
 {
     insert.insert_into(table)
         .get_result::<Model>(conn)
+        .map_err(handle_err::<Model>)
 }
 
 
-fn create_user(new_user: NewUser, conn: &PgConnection) -> Result<User, Error> {
+fn create_user(new_user: NewUser, conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
     create_row::<User, NewUser,_>(schema::users::table, new_user, conn)
 }
 

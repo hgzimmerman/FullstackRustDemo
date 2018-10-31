@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 
 
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[table_name = "answers"]
 #[insertable = "NewAnswer"]

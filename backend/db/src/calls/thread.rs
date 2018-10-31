@@ -17,7 +17,7 @@ use crate::post::{Post, NewPost};
 use crate::post::{PostData, ChildlessPostData};
 use identifiers::forum::ForumUuid;
 
-#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_uuid")]

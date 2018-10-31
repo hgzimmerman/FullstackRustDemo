@@ -32,7 +32,7 @@ impl<T> VectorMappable<T> for JoeResult<Vec<T>> {
 pub enum WeekendAtJoesError {
     DatabaseError(Option<String>),
     InternalServerError,
-    NotFound { type_name: &'static str },
+    NotFound { type_name: String },
     BadRequest,
     /// The used did not have privalages to access the given method.
     NotAuthorized { reason: &'static str },
@@ -50,7 +50,7 @@ pub enum WeekendAtJoesError {
 
 pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) -> WeekendAtJoesError {
     match diesel_error {
-        Error::NotFound => WeekendAtJoesError::NotFound { type_name },
+        Error::NotFound => WeekendAtJoesError::NotFound { type_name: type_name.to_string() },
         _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", diesel_error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
     }
 }

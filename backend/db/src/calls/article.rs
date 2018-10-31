@@ -15,7 +15,7 @@ use identifiers::user::UserUuid;
 
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq)]
+#[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_uuid")]

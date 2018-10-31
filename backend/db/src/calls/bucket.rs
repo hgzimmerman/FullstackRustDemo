@@ -9,7 +9,7 @@ use uuid::Uuid;
 use identifiers::bucket::BucketUuid;
 use identifiers::user::UserUuid;
 
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler)]
+#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[insertable = "NewBucket"]
 #[table_name = "buckets"]

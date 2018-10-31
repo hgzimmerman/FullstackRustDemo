@@ -30,6 +30,8 @@ pool = {path = "../pool"}
 
 #rust-crypto = "0.2.36"
 #frank_jwt = "3.0.0"
+typename = "0.1.0"
+typename_derive = "0.1.1"
 
 serde = "1.0.14"
 #serde_json = "1.0.3"
