@@ -31,7 +31,7 @@ pub fn get_bucket_by_uuid(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(uuid_wrap_filter())
         .and(s.db.clone())
         .and_then(|bucket_uuid: BucketUuid, conn: PooledConn| {
-            Bucket::get_by_uuid(bucket_uuid.0, &conn)
+            Bucket::get_bucket(bucket_uuid, &conn)
                 .map(convert_and_json::<Bucket, BucketResponse>)
                 .map_err(Error::convert_and_reject)
         })

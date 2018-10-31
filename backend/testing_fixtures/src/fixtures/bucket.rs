@@ -33,7 +33,7 @@ impl Fixture for BucketFixture {
             bucket_name: BUCKET_NAME_1.to_string(),
             is_public_until: None,
         };
-        let private_bucket = Bucket::create(new_bucket, conn).expect("create bucket");
+        let private_bucket = Bucket::create_bucket(new_bucket, conn).expect("create bucket");
         let owner = NewBucketUser {
             bucket_uuid: private_bucket.uuid,
             user_uuid: user_fixture.normal_user.uuid,
@@ -47,7 +47,7 @@ impl Fixture for BucketFixture {
             bucket_name: BUCKET_NAME_2.to_string(),
             is_public_until: Some(Utc::now().naive_utc() + Duration::days(1)),
         };
-        let joinable_bucket = Bucket::create(new_bucket, conn).expect("create bucket");
+        let joinable_bucket = Bucket::create_bucket(new_bucket, conn).expect("create bucket");
 
         let owner = NewBucketUser {
             bucket_uuid: joinable_bucket.uuid,

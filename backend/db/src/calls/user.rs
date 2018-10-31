@@ -8,6 +8,8 @@ use error::JoeResult;
 use diesel::PgConnection;
 use identifiers::user::UserUuid;
 use uuid::Uuid;
+use crate::calls::prelude::*;
+use crate::schema;
 
 //use log::info;
 use log::info;
@@ -55,6 +57,17 @@ pub struct NewUser {
 
 
 impl User {
+
+    pub fn get_user(uuid: UserUuid,conn: &PgConnection) -> JoeResult<User> {
+        get_row::<User,_>(schema::users::table, uuid.0, conn)
+    }
+    pub fn delete_user(uuid: UserUuid, conn: &PgConnection) -> JoeResult<User> {
+        delete_row::<User,_>(schema::users::table, uuid.0, conn)
+    }
+    pub fn create_user(new_user: NewUser, conn: &PgConnection) -> JoeResult<User> {
+        create_row::<User, NewUser,_>(schema::users::table, new_user, conn)
+    }
+
     /// Gets the user by their user name.
     pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> JoeResult<User> {
         use crate::schema::users::dsl::*;

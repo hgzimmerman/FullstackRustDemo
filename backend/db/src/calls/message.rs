@@ -15,7 +15,8 @@ use uuid::Uuid;
 //use diesel::pg::types::sql_types::Uuid;
 use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
-
+use crate::calls::prelude::*;
+use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
@@ -55,6 +56,15 @@ pub struct MessageData {
 }
 
 impl Message {
+    pub fn get_message_simple(uuid: MessageUuid,conn: &PgConnection) -> JoeResult<Message> {
+        get_row::<Message,_>(schema::messages::table, uuid.0, conn)
+    }
+    pub fn delete_message(uuid: MessageUuid, conn: &PgConnection) -> JoeResult<Message> {
+        delete_row::<Message,_>(schema::messages::table, uuid.0, conn)
+    }
+    pub fn create_message_simple(new: NewMessage, conn: &PgConnection) -> JoeResult<Message> {
+        create_row::<Message, NewMessage,_>(schema::messages::table, new, conn)
+    }
     // pub fn get_paginated(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
     //     use schema::messages::dsl::*;
     //     use schema::messages;

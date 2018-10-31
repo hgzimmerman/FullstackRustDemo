@@ -8,10 +8,12 @@ use chrono::{NaiveDateTime, Utc, Duration};
 use uuid::Uuid;
 use identifiers::bucket::BucketUuid;
 use identifiers::user::UserUuid;
+use crate::calls::prelude::*;
+use crate::schema;
 
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewBucket"]
+//#[insertable = "NewBucket"]
 #[table_name = "buckets"]
 pub struct Bucket {
     /// Primary Key.
@@ -70,6 +72,17 @@ pub struct UsersInBucketData {
 
 
 impl Bucket {
+
+    pub fn get_bucket(uuid: BucketUuid,conn: &PgConnection) -> JoeResult<Bucket> {
+        get_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
+    }
+    pub fn delete_bucket(uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Bucket> {
+        delete_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
+    }
+    pub fn create_bucket(new: NewBucket, conn: &PgConnection) -> JoeResult<Bucket> {
+        create_row::<Bucket, NewBucket,_>(schema::buckets::table, new, conn)
+    }
+
     /// Get buckets that are public, but the user is not a member of
     pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
         use crate::schema::buckets::dsl::*;

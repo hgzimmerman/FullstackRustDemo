@@ -11,13 +11,14 @@ use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::article::ArticleUuid;
 use identifiers::user::UserUuid;
-
+use crate::calls::prelude::*;
+use crate::schema;
 
 
 /// The database's representation of an article
-#[derive(Clone, Queryable, Identifiable, Associations, CrdUuid, ErrorHandler, Debug, PartialEq, TypeName)]
+#[derive(Clone, Queryable, Identifiable, Associations, ErrorHandler, Debug, PartialEq, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewArticle"]
+//#[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[table_name = "articles"]
 pub struct Article {
@@ -65,6 +66,20 @@ pub struct ArticleData {
 
 
 impl Article {
+
+    pub fn get_article(uuid: ArticleUuid,conn: &PgConnection) -> JoeResult<Article> {
+        get_row::<Article,_>(schema::articles::table, uuid.0, conn)
+    }
+    pub fn delete_article(uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<Article> {
+        delete_row::<Article,_>(schema::articles::table, uuid.0, conn)
+    }
+    pub fn create_article(new: NewArticle, conn: &PgConnection) -> JoeResult<Article> {
+        create_row::<Article, NewArticle,_>(schema::articles::table, new, conn)
+    }
+    pub fn update_article_2(changeset: ArticleChangeset, conn: &PgConnection) -> JoeResult<Article> {
+        update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
+    }
+
     // /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
     // /// The the returned articles will only include ones with a publish date.
     // pub fn get_recent_published_articles(number_of_articles: i64, conn: &Conn) -> JoeResult<Vec<Article>> {
@@ -83,8 +98,8 @@ impl Article {
 
     pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<ArticleData> {
 
-        let article = Article::get_by_uuid(article_uuid.0, conn)?;
-        let user = User::get_by_uuid(article.author_uuid, conn)?;
+        let article = Article::get_article(article_uuid, conn)?;
+        let user = User::get_user(UserUuid(article.author_uuid), conn)?;
         Ok(ArticleData { article, user })
     }
 

@@ -107,7 +107,7 @@ fn create_article(s: &State) -> BoxedFilter<(impl Reply,)> {
             let mut request: NewArticle = request.into();
             request.author_uuid = user_uuid.0; // This api isn't perfect - so the uuid must be gotten from the jwt
 
-            Article::create(request.into(), &conn)
+            Article::create_article(request.into(), &conn)
                 .map(convert_and_json::<Article,MinimalArticleResponse>)
                 .map_err(Error::convert_and_reject)
         })
@@ -124,7 +124,7 @@ fn update_article(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: UpdateArticleRequest, user_uuid: UserUuid, conn: PooledConn|{
-            let article_to_update: Article = Article::get_by_uuid(request.uuid.0, &conn)
+            let article_to_update: Article = Article::get_article(request.uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
                 return Error::NotAuthorized.reject();
@@ -148,7 +148,7 @@ fn publish(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: PooledConn|{
-            let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)
+            let article_to_update: Article = Article::get_article(article_uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
                 return Error::NotAuthorized.reject()
@@ -170,8 +170,9 @@ fn unpublish(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(uuid_filter())
         .and(normal_user_filter(s))
         .and(s.db.clone())
-        .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
-            let article_to_update: Article = Article::get_by_uuid(uuid, &conn)
+        .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: PooledConn| {
+            let article_uuid = ArticleUuid(uuid);
+            let article_to_update: Article = Article::get_article(article_uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
                 return Error::NotAuthorized.reject()

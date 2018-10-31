@@ -64,6 +64,15 @@ use diesel::query_dsl::select_dsl::SelectDsl;
 use typename::TypeName;
 use error::WeekendAtJoesError;
 
+
+pub mod prelude {
+    pub use super::get_row;
+    pub use super::get_rows;
+    pub use super::delete_row;
+    pub use super::create_row;
+    pub use super::update_row;
+}
+
 pub fn handle_err<T: TypeName>(error: Error) -> WeekendAtJoesError {
     match error {
         Error::NotFound => WeekendAtJoesError::NotFound { type_name: T::type_name() },
@@ -85,9 +94,7 @@ pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) 
         .map_err(handle_err::<Model>)
 }
 
-fn get_user(uuid: UserUuid,conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
-    get_row::<User,_>(schema::users::table, uuid.0, conn)
-}
+
 
 #[inline(always)]
 pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, WeekendAtJoesError>
@@ -118,14 +125,10 @@ pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -
         .map_err(handle_err::<Model>)
 }
 
-fn delete_user(uuid: UserUuid, conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
-    delete_row::<User,_>(schema::users::table, uuid.0, conn)
-}
-
 
 /// Generic function for updating a row for a given table with a given changeset.
 #[inline(always)]
-fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
 where
     Chg: AsChangeset<Target=<Tab as HasTable>::Table>,
     Tab: QuerySource + IntoUpdateTarget,
@@ -138,14 +141,12 @@ where
         .map_err(handle_err::<Model>)
 }
 
-fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> Result<Article, WeekendAtJoesError> {
-    update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
-}
+
 
 
 /// Generic function for creating a row for a given table with a given "new" struct for that row type.
 #[inline(always)]
-fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
 where
     NewModel: Insertable<Tab>,
     InsertStatement<Tab, NewModel>: AsQuery,
@@ -163,9 +164,7 @@ where
 }
 
 
-fn create_user(new_user: NewUser, conn: &PgConnection) -> Result<User, WeekendAtJoesError> {
-    create_row::<User, NewUser,_>(schema::users::table, new_user, conn)
-}
+
 
 //fn row_exists<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<bool, Error>
 //where

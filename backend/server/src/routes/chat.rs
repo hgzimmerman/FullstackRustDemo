@@ -28,7 +28,7 @@ fn create_chat(new_chat: Json<NewChatRequest>, user: NormalUser, conn: Conn) -> 
         return Err(WeekendAtJoesError::BadRequest);
     }
 
-    Chat::create(new_chat, &conn)
+    Chat::create_chat(new_chat, &conn)
         .map(MinimalChatResponse::from)
         .map(Json)
 }
@@ -54,7 +54,8 @@ fn add_user_to_chat(association: Json<ChatUserAssociationRequest>, user: NormalU
 fn remove_user_from_chat(request: Json<ChatUserAssociationRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<()>> {
 
     let association: ChatUserAssociation = request.into_inner().into();
-    let chat: Chat = Chat::get_by_uuid(association.chat_uuid, &conn)?;
+    let chat_uuid = ChatUuid(association.chat_uuid);
+    let chat: Chat = Chat::get_chat(chat_uuid, &conn)?;
 
     if chat.leader_uuid != user.user_uuid.0 {
         info!("User without chat leader status tried to remove user");

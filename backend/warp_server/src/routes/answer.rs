@@ -57,7 +57,7 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
             Question::put_question_on_floor(question_uuid, &conn)
                 .map_err(Error::convert_and_reject)?;
 
-            Answer::create(new_answer, &conn)
+            Answer::create_answer(new_answer, &conn)
                 .map(|answer| {
                     AnswerData {
                         answer,

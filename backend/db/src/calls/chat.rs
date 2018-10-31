@@ -14,12 +14,13 @@ use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::chat::ChatUuid;
 use identifiers::user::UserUuid;
+use crate::calls::prelude::*;
+use crate::schema;
 
 
-
-#[derive(Debug, Clone, Identifiable, Queryable, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
-#[insertable = "NewChat"]
+//#[insertable = "NewChat"]
 #[table_name = "chats"]
 pub struct Chat {
     /// Primary Key.
@@ -63,6 +64,17 @@ pub struct ChatData {
 
 
 impl Chat {
+
+    pub fn get_chat(uuid: ChatUuid,conn: &PgConnection) -> JoeResult<Chat> {
+        get_row::<Chat,_>(schema::chats::table, uuid.0, conn)
+    }
+    pub fn delete_chat(uuid: ChatUuid, conn: &PgConnection) -> JoeResult<Chat> {
+        delete_row::<Chat,_>(schema::chats::table, uuid.0, conn)
+    }
+    pub fn create_chat(new: NewChat, conn: &PgConnection) -> JoeResult<Chat> {
+        create_row::<Chat, NewChat,_>(schema::chats::table, new, conn)
+    }
+
     pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
         use crate::schema::junction_chat_users;
 
@@ -116,8 +128,9 @@ impl Chat {
 
     pub fn get_full_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> JoeResult<ChatData> {
         //        let chat_uuid: Uuid = chat_uuid.0;
-        let chat: Chat = Chat::get_by_uuid(chat_uuid.0, &conn)?;
-        let leader: User = User::get_by_uuid(chat.leader_uuid, &conn)?;
+        let chat: Chat = Chat::get_chat(chat_uuid, &conn)?;
+        let leader_uuid = UserUuid(chat.leader_uuid);
+        let leader: User = User::get_user(leader_uuid, &conn)?;
         let chat_users: Vec<User> = Chat::get_users_in_chat(chat_uuid, &conn)?;
 
         Ok(ChatData {

@@ -19,6 +19,8 @@ use identifiers::user::UserUuid;
 use uuid::Uuid;
 use chrono::Utc;
 use log::info;
+use crate::calls::prelude::*;
+use crate::schema;
 
 use std::collections::HashMap;
 
@@ -197,6 +199,17 @@ impl From<ChildlessPostData> for PostData {
 
 
 impl Post {
+
+    pub fn get_post(uuid: PostUuid,conn: &PgConnection) -> JoeResult<Post> {
+        get_row::<Post,_>(schema::posts::table, uuid.0, conn)
+    }
+    pub fn delete_post(uuid: PostUuid, conn: &PgConnection) -> JoeResult<Post> {
+        delete_row::<Post,_>(schema::posts::table, uuid.0, conn)
+    }
+    pub fn create_post(new: NewPost, conn: &PgConnection) -> JoeResult<Post> {
+        create_row::<Post, NewPost,_>(schema::posts::table, new, conn)
+    }
+
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
     pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {

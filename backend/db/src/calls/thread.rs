@@ -16,6 +16,9 @@ use identifiers::user::UserUuid;
 use crate::post::{Post, NewPost};
 use crate::post::{PostData, ChildlessPostData};
 use identifiers::forum::ForumUuid;
+use crate::calls::prelude::*;
+use crate::schema;
+
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, CrdUuid, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
@@ -64,6 +67,18 @@ pub struct MinimalThreadData {
 }
 
 impl Thread {
+
+    pub fn get_thread(uuid: ThreadUuid,conn: &PgConnection) -> JoeResult<Thread> {
+        get_row::<Thread,_>(schema::threads::table, uuid.0, conn)
+    }
+    pub fn delete_thread(uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<Thread> {
+        delete_row::<Thread,_>(schema::threads::table, uuid.0, conn)
+    }
+    pub fn create_thread(new: NewThread, conn: &PgConnection) -> JoeResult<Thread> {
+        create_row::<Thread, NewThread,_>(schema::threads::table, new, conn)
+    }
+
+
     /// Locks or unlocks the thread, preventing posting and editing if locked
     pub fn set_lock_status(thread_uuid: ThreadUuid, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
         use crate::schema::threads;

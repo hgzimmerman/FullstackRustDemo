@@ -82,7 +82,7 @@ fn get_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn) -> JoeResul
         return Err(e);
     }
 
-    Bucket::get_by_uuid(bucket_uuid.0, &conn)
+    Bucket::get_bucket(bucket_uuid, &conn)
         .map(BucketResponse::from)
         .map(Json)
 }
@@ -149,7 +149,7 @@ fn request_to_join_bucket(bucket_uuid: BucketUuid, user: NormalUser, conn: Conn)
 #[post("/create", data = "<new_bucket>")]
 fn create_bucket(new_bucket: Json<NewBucketRequest>, user: NormalUser, conn: Conn) -> JoeResult<Json<BucketResponse>> {
     // create the bucket
-    let bucket_response = Bucket::create(new_bucket.into_inner().into(), &conn)
+    let bucket_response = Bucket::create_bucket(new_bucket.into_inner().into(), &conn)
         .map(BucketResponse::from)
         .map(Json)?;
 

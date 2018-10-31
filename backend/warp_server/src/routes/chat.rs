@@ -51,7 +51,7 @@ pub fn create(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|request: NewChatRequest, user_uuid: UserUuid, conn: PooledConn | {
             let mut new_chat: NewChat = request.into();
             new_chat.leader_uuid = user_uuid.0;
-            Chat::create(new_chat, &conn)
+            Chat::create_chat(new_chat, &conn)
                 .map(convert_and_json::<Chat,MinimalChatResponse>)
                 .map_err(Error::convert_and_reject)
 

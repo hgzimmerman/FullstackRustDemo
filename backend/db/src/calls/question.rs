@@ -11,6 +11,8 @@ use error::JoeResult;
 use uuid::Uuid;
 use identifiers::question::QuestionUuid;
 use identifiers::bucket::BucketUuid;
+use crate::calls::prelude::*;
+use crate::schema;
 
 use diesel;
 use diesel::ExpressionMethods;
@@ -48,6 +50,17 @@ pub struct QuestionData {
 }
 
 impl Question {
+
+    pub fn get_question(uuid: QuestionUuid,conn: &PgConnection) -> JoeResult<Question> {
+        get_row::<Question,_>(schema::questions::table, uuid.0, conn)
+    }
+    pub fn delete_question(uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
+        delete_row::<Question,_>(schema::questions::table, uuid.0, conn)
+    }
+    pub fn create_question(new: NewQuestion, conn: &PgConnection) -> JoeResult<Question> {
+        create_row::<Question, NewQuestion,_>(schema::questions::table, new, conn)
+    }
+
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
         let question: Question = Question::create(new_question, conn)?;
@@ -91,7 +104,7 @@ impl Question {
         use crate::schema::questions::columns::on_floor;
 
         // Get the bucket from which questions will be retrieved.
-        let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
+        let bucket = Bucket::get_bucket(bucket_uuid, &conn)?;
 
         no_arg_sql_function!(RANDOM, (), "Represents the sql RANDOM() function");
 
@@ -132,7 +145,7 @@ impl Question {
     /// Gets groupings of questions, users, and answers for a given bucket id.
     pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
         use crate::schema::users::dsl::*;
-        let bucket = Bucket::get_by_uuid(owning_bucket_uuid.0, &conn)?;
+        let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
 
         let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
             .inner_join(users)
@@ -184,7 +197,7 @@ impl Question {
         //        use schema::questions::dsl::*;
         use crate::schema::questions;
 
-        let bucket = Bucket::get_by_uuid(bucket_uuid.0, &conn)?;
+        let bucket = Bucket::get_bucket(bucket_uuid, &conn)?;
         Question::belonging_to(&bucket)
             .filter(questions::on_floor.eq(false)) // if its not on the floor, it is in the bucket.
             .count()
@@ -228,10 +241,10 @@ impl Question {
         })
     }
 
-    pub fn delete_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
-        let question_uuid = question_uuid.0;
-        Question::delete_by_id(question_uuid, conn)
-    }
+//    pub fn delete_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
+//        let question_uuid = question_uuid.0;
+//        Question::delete_by_id(question_uuid, conn)
+//    }
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.

@@ -15,8 +15,6 @@ use log::info;
 use error::LoginResult;
 
 
-
-
 pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) -> LoginResult {
     info!("Logging in for user: {}", &login_request.user_name);
 

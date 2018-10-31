@@ -50,7 +50,7 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
         });
     }
 
-    Article::create(new_article.into_inner().into(), &conn)
+    Article::create_article(new_article.into_inner().into(), &conn)
         .map(MinimalArticleResponse::from)
         .map(Json)
 }
@@ -59,7 +59,7 @@ fn create_article(new_article: Json<NewArticleRequest>, user: NormalUser, conn: 
 /// The user id of the user must match the article being updated.
 #[put("/", data = "<update_article_request>")]
 fn update_article(update_article_request: Json<UpdateArticleRequest>, user: NormalUser, conn: Conn) -> Result<Json<MinimalArticleResponse>, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_uuid(update_article_request.uuid.0, &conn)?;
+    let article_to_update: Article = Article::get_article(update_article_request.uuid, &conn)?;
     if article_to_update.author_uuid != user.user_uuid.0 {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
@@ -74,7 +74,7 @@ fn update_article(update_article_request: Json<UpdateArticleRequest>, user: Norm
 /// Given an article id, set the corresponding article's date_published column to contain the current date.
 #[put("/publish/<article_uuid>")]
 fn publish_article(article_uuid: ArticleUuid, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)?;
+    let article_to_update: Article = Article::get_article(article_uuid, &conn)?;
     if article_to_update.author_uuid != user.user_uuid.0 {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }
@@ -86,7 +86,7 @@ fn publish_article(article_uuid: ArticleUuid, user: NormalUser, conn: Conn) -> R
 /// Given an article id, set the corresponding article's date_published colum to NULL.
 #[put("/unpublish/<article_uuid>")]
 fn unpublish_article(article_uuid: ArticleUuid, user: NormalUser, conn: Conn) -> Result<NoContent, WeekendAtJoesError> {
-    let article_to_update: Article = Article::get_by_uuid(article_uuid.0, &conn)?;
+    let article_to_update: Article = Article::get_article(article_uuid, &conn)?;
     if article_to_update.author_uuid != user.user_uuid.0 {
         return Err(WeekendAtJoesError::NotAuthorized { reason: "Article being updated does not match the user's id." });
     }

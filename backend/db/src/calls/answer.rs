@@ -3,13 +3,16 @@ use crate::user::User;
 use crate::question::Question;
 //use error::JoeResult;
 use uuid::Uuid;
+use diesel::pg::PgConnection;
+use error::JoeResult;
+use identifiers::answer::AnswerUuid;
+use crate::calls::prelude::*;
+use crate::schema;
 
-
-
-#[derive(Debug, Clone, Identifiable, Queryable, Associations, CrdUuid, ErrorHandler, TypeName)]
+#[derive(Debug, Clone, Identifiable, Queryable, Associations, ErrorHandler, TypeName)]
 #[primary_key(uuid)]
 #[table_name = "answers"]
-#[insertable = "NewAnswer"]
+//#[insertable = "NewAnswer"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Question, foreign_key = "question_uuid")]
 pub struct Answer {
@@ -32,4 +35,16 @@ pub struct NewAnswer {
 pub struct AnswerData {
     pub answer: Answer,
     pub user: User,
+}
+
+impl Answer {
+    pub fn get_answer(uuid: AnswerUuid,conn: &PgConnection) -> JoeResult<Answer> {
+        get_row::<Answer,_>(schema::answers::table, uuid.0, conn)
+    }
+    pub fn delete_answer(uuid: AnswerUuid, conn: &PgConnection) -> JoeResult<Answer> {
+        delete_row::<Answer,_>(schema::answers::table, uuid.0, conn)
+    }
+    pub fn create_answer(new: NewAnswer, conn: &PgConnection) -> JoeResult<Answer> {
+        create_row::<Answer, NewAnswer,_>(schema::answers::table, new, conn)
+    }
 }

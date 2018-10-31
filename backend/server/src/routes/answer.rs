@@ -29,7 +29,7 @@ fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: C
 
     Question::put_question_on_floor(question_uuid, &conn)?;
 
-    Answer::create(new_answer, &conn)
+    Answer::create_answer(new_answer, &conn)
         .map(|answer| {
             AnswerData {
                 answer,
