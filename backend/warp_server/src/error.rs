@@ -66,10 +66,14 @@ impl StdError for Error {
 /// This should be used at the top level of the exposed api.
 pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
     let mut resp = err.json();
+    if err.is_not_found() {
+        *resp.status_mut() = StatusCode::NOT_FOUND;
+        return Ok(resp)
+    }
 
-    let cause = match err.into_cause::<crate::error::Error>() {
-        Ok(ok) => ok,
-        Err(err) => return Err(err)
+    let cause = match err.find_cause::<crate::error::Error>() {
+        Some(ok) => ok,
+        None => return Ok(resp)
     };
     match *cause {
         Error::DatabaseUnavailable => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
@@ -93,6 +97,7 @@ impl From<WeekendAtJoesError> for Error {
     fn from(e: WeekendAtJoesError) -> Self {
         use self::WeekendAtJoesError::*;
         match e {
+            DatabaseUnavailable => Error::DatabaseUnavailable,
             DatabaseError(s) => Error::DatabaseError(s),
             InternalServerError => Error::InternalServerError,
             NotFound { type_name: _ } => Error::NotFound,
@@ -103,9 +108,11 @@ impl From<WeekendAtJoesError> for Error {
             ExpiredToken => Error::ExpiredToken,
             MissingToken => Error::MalformedToken,
             MalformedToken => Error::MalformedToken,
+            UserBanned => Error::UserBanned
         }
     }
 }
+
 
 
 
@@ -114,11 +121,13 @@ impl Error {
     /// With the use of or_else(), or just inside of a map() or and_then(),
     /// this allows you to reject a request with a locally defined error.
     pub fn reject<T>(self) -> Result<T, Rejection> {
-        Err(warp::reject::reject().with(self))
+//        Err(warp::reject::reject().with(self))
+        Err(warp::reject::custom(self))
     }
 
     pub fn simple_reject(self) -> Rejection {
         warp::reject::reject().with(self)
+//        warp::reject::custom(self)
     }
 
 
@@ -127,6 +136,7 @@ impl Error {
         let error: Error = other_error.into();
         let rejection = warp::reject::server_error(); // Use server_error() because there is a precedence for the errors and 400 is suprisingly high, preventing the rewrite from working
         let rejection = rejection.with(error);
+//        let rejection = warp::reject::custom(error);
         warn!("{:?}", rejection);
         rejection
     }

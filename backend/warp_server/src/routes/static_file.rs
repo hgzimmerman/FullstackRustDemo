@@ -38,7 +38,8 @@ fn index_static_file_redirect() -> BoxedFilter<(impl Reply,)> {
             // Reject the request if the path starts with /api/
             if let Some(first_segment) = segments.segments().next() {
                 if first_segment == API_STRING {
-                    return Error::NotFound.reject()
+//                    return Error::NotFound.reject()
+                    return Err(warp::reject::not_found()) // TODO maybe keep this in the Error Type
                 }
             }
             Ok(file)
@@ -116,7 +117,8 @@ fn static_invalid_api_path_still_404s() {
         Ok(_) => panic!("Error was expected, found valid Reply"),
         Err(e) => e
     };
-    let err = *err.into_cause::<Error>().expect("Should be a cause.");
-    assert_eq!(err, Error::NotFound)
+    assert!(err.is_not_found())
+//    let err = *err.into_cause::<Error>().expect("Should be a cause.");
+//    assert_eq!(err, Error::NotFound)
 
 }
