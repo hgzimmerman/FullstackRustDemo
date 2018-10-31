@@ -49,7 +49,14 @@ use diesel::query_source::QuerySource;
 use diesel::query_dsl::filter_dsl::FilterDsl;
 use std::fmt::Debug;
 use crate::calls::user::NewUser;
+use diesel::query_builder::UpdateStatement;
+use diesel::helper_types::Update;
+use crate::calls::article::ArticleChangeset;
+use crate::Article;
 
+
+/// Generic function for getting a whole row from a given table.
+#[inline(always)]
 pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
     where
         Table: FindDsl<Uuid>,
@@ -65,17 +72,13 @@ fn get_user(uuid: UserUuid,conn: &PgConnection) -> Result<User, Error> {
 }
 
 
+/// Generic function for deleting a row from a given table.
+#[inline(always)]
 pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
     where
 
         Tab: FindDsl<Uuid> + Table ,
         <Tab as FindDsl<Uuid>>::Output: IntoUpdateTarget,
-        // For execute
-//        <<<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::associations::HasTable>::Table as diesel::QuerySource>::FromClause: QueryFragment<Pg>,
-//        <<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::query_builder::IntoUpdateTarget>::WhereClause: QueryId,
-//        <<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::associations::HasTable>::Table: QueryId,
-//        <<Tab as diesel::query_dsl::filter_dsl::FindDsl<uuid::Uuid>>::Output as diesel::query_builder::IntoUpdateTarget>::WhereClause: QueryFragment<Pg>,
-        // for get result
         Pg: HasSqlType<<<<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns as Expression>::SqlType>,
         <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryId,
         <<<Tab as FindDsl<Uuid>>::Output as HasTable>::Table as Table>::AllColumns: QueryFragment<Pg>,
@@ -90,21 +93,26 @@ fn delete_user(uuid: UserUuid, conn: &PgConnection) -> Result<User, Error> {
 }
 
 
-//fn update_row<'a, Chg: 'a, Tab>(table: Tab, changeset: &Chg, conn: &PgConnection) -> ()
-//where
-//    &'a Chg: AsChangeset<Target = Tab>,
-//    Tab: QuerySource + Table + HasTable,
-////    Tab: FilterDsl,
-//    &'a Chg: IntoUpdateTarget,
-//    <<<Tab as HasTable>::Table as AsQuery>::Query as FilterDsl<Chg>>::Output: IntoUpdateTarget
-////    Tab as FilterDsl
-////    UpdateStatement<_>: LoadQuery<PgConnection, Model>
-//{
-//    diesel::update(table)
-//        .set(changeset);
-//}
+/// Generic function for updating a row for a given table with a given changeset.
+#[inline(always)]
+fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, Error>
+where
+    Chg: AsChangeset<Target=<Tab as HasTable>::Table>,
+    Tab: QuerySource + IntoUpdateTarget,
+    Update<Tab, Chg>: LoadQuery<PgConnection, Model>
+{
+    diesel::update(table)
+        .set(changeset)
+        .get_result::<Model>(conn)
+}
+
+fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> Result<Article, Error> {
+    update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
+}
 
 
+/// Generic function for creating a row for a given table with a given "new" struct for that row type.
+#[inline(always)]
 fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, Error>
 where
     NewModel: Insertable<Tab>,
@@ -119,7 +127,6 @@ where
     insert.insert_into(table)
         .get_result::<Model>(conn)
 }
-
 
 
 fn create_user(new_user: NewUser, conn: &PgConnection) -> Result<User, Error> {
