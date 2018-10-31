@@ -53,6 +53,14 @@ use diesel::query_builder::UpdateStatement;
 use diesel::helper_types::Update;
 use crate::calls::article::ArticleChangeset;
 use crate::Article;
+use diesel::select;
+use diesel::expression::exists::exists;
+use diesel::query_builder::SelectQuery;
+use diesel::expression::subselect::ValidSubselect;
+use diesel::query_builder::SelectStatement;
+use diesel::expression::exists::Exists;
+use diesel::helper_types::Select;
+use diesel::query_dsl::select_dsl::SelectDsl;
 
 
 /// Generic function for getting a whole row from a given table.
@@ -70,6 +78,15 @@ pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) 
 fn get_user(uuid: UserUuid,conn: &PgConnection) -> Result<User, Error> {
     get_row::<User,_>(schema::users::table, uuid.0, conn)
 }
+
+#[inline(always)]
+pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, Error>
+    where
+    Table: RunQueryDsl<Model> + Query + LoadQuery<PgConnection, Model>,
+{
+    table.load::<Model>(conn)
+}
+
 
 
 /// Generic function for deleting a row from a given table.
@@ -132,3 +149,25 @@ where
 fn create_user(new_user: NewUser, conn: &PgConnection) -> Result<User, Error> {
     create_row::<User, NewUser,_>(schema::users::table, new_user, conn)
 }
+
+//fn row_exists<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<bool, Error>
+//where
+//    Tab: FindDsl<Uuid> + Table,
+//    <Tab as FindDsl<uuid::Uuid>>::Output: SelectQuery,
+//    <Tab as FindDsl<uuid::Uuid>>::Output: QueryId,
+//    <Tab as FindDsl<uuid::Uuid>>::Output: ValidSubselect<()>,
+//    <Tab as FindDsl<Uuid>>::Output : SelectDsl<Exists<<Tab as FindDsl<Uuid>>::Output>>,
+//    Find<Tab, Uuid>: LoadQuery<PgConnection, Model>,
+////    SelectStatement<(), Select=Exists<<Table as FindDsl<Uuid>>::Output>>: QueryFragment<Pg>//, SelectClause<Exists<<Table as FindDsl<uuid::Uuid>>::Output>>>: QueryFragment<Pg>
+//{
+////    table.find(uuid)
+////        .select(exists)
+//
+////    select(exists(table.filter(table.primary_key().eq(uuid))))
+//    table
+////        .find(uuid)
+//        .count()
+//        .get_result::<i32>(conn)
+//}
+//
+//use diesel::QueryDsl;
