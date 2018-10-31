@@ -5,7 +5,7 @@ extern crate syn;
 #[macro_use]
 extern crate quote;
 
-use proc_macro::TokenStream;
+use self::proc_macro::TokenStream;
 
 
 /// CRD stands for Create, Read, Delete.

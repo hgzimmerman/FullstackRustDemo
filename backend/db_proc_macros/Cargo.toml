@@ -2,6 +2,7 @@
 name = "db_proc_macros"
 version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
+edition = "2018"
 
 [lib]
 proc-macro = true
