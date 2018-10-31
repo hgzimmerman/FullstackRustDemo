@@ -5,8 +5,8 @@ use db::Conn;
 //use db::Retrievable;
 use db::user::User;
 use wire::user::*;
-use error::WeekendAtJoesError;
-use error::JoeResult;
+use error::Error;
+use error::BackendResult;
 //use auth_lib::user_authorization::*;
 use db::user::NewUser;
 use log::info;
@@ -22,7 +22,7 @@ use auth_lib::user_authorization::AdminUser;
 /// Gets basic info about an user.
 /// Provided they know the id of the user, this information is available to anyone.
 #[get("/<user_uuid>")]
-fn get_user(user_uuid: UserUuid, conn: Conn) -> Result<Json<UserResponse>, WeekendAtJoesError> {
+fn get_user(user_uuid: UserUuid, conn: Conn) -> Result<Json<UserResponse>, Error> {
     User::get_user(user_uuid, &conn)
         .map(UserResponse::from)
         .map(Json)
@@ -32,7 +32,7 @@ fn get_user(user_uuid: UserUuid, conn: Conn) -> Result<Json<UserResponse>, Weeke
 /// This request is paginated. It will return vectors of users, 25 at a time.
 /// This operation is only available to an admin.
 #[get("/users/<index>")]
-fn get_users(index: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<Vec<FullUserResponse>>> {
+fn get_users(index: i32, _admin: AdminUser, conn: Conn) -> BackendResult<Json<Vec<FullUserResponse>>> {
     User::get_paginated(index, 25, &conn)
         .map(|x| x.0)
         .map(convert_vector)
@@ -42,7 +42,7 @@ fn get_users(index: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<Vec<Fu
 /// Get all users with the specified role id.
 /// This operation is only available to an admin.
 #[get("/users_with_role/<role_id>")]
-fn get_users_with_role(role_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult<Json<Vec<UserResponse>>> {
+fn get_users_with_role(role_id: i32, _admin: AdminUser, conn: Conn) -> BackendResult<Json<Vec<UserResponse>>> {
     User::get_users_with_role(role_id.into(), &conn)
         .map(convert_vector)
         .map(Json)
@@ -50,7 +50,7 @@ fn get_users_with_role(role_id: i32, _admin: AdminUser, conn: Conn) -> JoeResult
 
 /// It doesn't require any account to create a new user.
 #[post("/", data = "<new_user>")]
-pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> JoeResult<Json<UserResponse>> {
+pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> BackendResult<Json<UserResponse>> {
     let new_user: NewUser = new_user.into_inner().into();
     User::create_user(new_user, &conn)
         .map(UserResponse::from)
@@ -60,7 +60,7 @@ pub fn create_user(new_user: Json<NewUserRequest>, conn: Conn) -> JoeResult<Json
 
 /// Allow a user to update their display name.
 #[put("/", data = "<data>")]
-fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalUser, conn: Conn) -> BackendResult<Json<UserResponse>> {
     info!("updating user display name");
     let request: UpdateDisplayNameRequest = data.into_inner();
 
@@ -75,7 +75,7 @@ fn update_user_display_name(data: Json<UpdateDisplayNameRequest>, _user: NormalU
 /// Assigns a role to a user.
 /// This operation is only available to an admin.
 #[put("/assign_role", data = "<data>")]
-fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> BackendResult<Json<UserResponse>> {
 
     User::add_role_to_user(data.uuid, data.user_role.into(), &conn)
         .map(UserResponse::from)
@@ -88,7 +88,7 @@ fn assign_role(data: Json<UserRoleRequest>, _admin: AdminUser, conn: Conn) -> Jo
 /// Because the user's identifier is immediately added to the banned set,
 /// JWTs can cease to be validated as soon as the user is banned.
 #[put("/ban/<user_uuid>")]
-fn ban_user(user_uuid: UserUuid, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn ban_user(user_uuid: UserUuid, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> BackendResult<Json<UserResponse>> {
 
     // Set the banned state so the JWT resolvers can check for bans without checking a DB.
     banned_set.ban_user(user_uuid);
@@ -102,7 +102,7 @@ fn ban_user(user_uuid: UserUuid, _admin: AdminUser, banned_set: State<BannedSet>
 /// Because the user id is removed from the banned set,
 /// any outstanding JWTs the banned user may have become viable again.
 #[put("/unban/<user_uuid>")]
-fn unban_user(user_uuid: UserUuid, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> JoeResult<Json<UserResponse>> {
+fn unban_user(user_uuid: UserUuid, _admin: AdminUser, banned_set: State<BannedSet>, conn: Conn) -> BackendResult<Json<UserResponse>> {
 
     banned_set.unban_user(&user_uuid);
 

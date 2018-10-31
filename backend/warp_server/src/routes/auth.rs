@@ -37,7 +37,7 @@ fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(jwt_filter(s))
         .and_then(|secret: Secret, jwt: ServerJwt| {
             auth_db::reauth(jwt, &secret)
-                .map_err(|_| Error::NotAuthorized.simple_reject())
+                .map_err(|_| Error::NotAuthorized{reason: "Could not reauth"}.simple_reject())
         })
         .boxed()
 }
@@ -47,7 +47,7 @@ fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     fn handle_login(secret: Secret, conn: PooledConn, login_request: LoginRequest) -> Result<impl Reply, Rejection> {
          auth_db::login(login_request, &secret, &conn)
-                .map_err(|_| Error::NotAuthorized.simple_reject())
+             .map_err(|_| Error::NotAuthorized{reason: "Invalid password or username"}.simple_reject()) // TODO I can do better than this error message.
     }
 
     warp::post2()

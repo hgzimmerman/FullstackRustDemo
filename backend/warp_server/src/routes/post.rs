@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use crate::util::convert_and_json;
@@ -58,7 +58,7 @@ pub fn create_post(s: &State) -> BoxedFilter<(impl Reply,)> {
             }
             Post::create_and_get_user(new_post, &conn)
                 .map(convert_and_json::<ChildlessPostData, PostResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
 
         })
         .boxed()
@@ -74,7 +74,7 @@ pub fn edit_post(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|request: EditPostRequest, user_uuid: UserUuid, conn: PooledConn|{
              // Prevent editing other users posts
-             let existing_post = Post::get_post(request.uuid, &conn).map_err(Error::convert_and_reject)?;
+             let existing_post = Post::get_post(request.uuid, &conn).map_err(Error::simple_reject)?;
              if user_uuid.0 != existing_post.author_uuid {
                  return Error::BadRequest.reject()
              }
@@ -84,7 +84,7 @@ pub fn edit_post(s: &State) -> BoxedFilter<(impl Reply,)> {
              let thread_id: ThreadUuid = edit_post_request.thread_uuid;
              Post::modify_post(edit_post_changeset, thread_id, user_uuid, &conn)
                 .map(convert_and_json::<ChildlessPostData, PostResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -102,7 +102,7 @@ pub fn censor_post(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|post_uuid: PostUuid, _user: UserUuid, conn: PooledConn| {
             Post::censor_post(post_uuid, &conn)
                 .map(convert_and_json::<ChildlessPostData, PostResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -118,7 +118,7 @@ pub fn get_posts_by_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             Post::get_posts_by_user(user_uuid, &conn)
                 .map(convert_vector_and_json::<ChildlessPostData, PostResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

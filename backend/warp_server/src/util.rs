@@ -46,7 +46,7 @@ pub fn query_uuid(key: &'static str) -> BoxedFilter<(Uuid,)> {
                 .and_then(|value: &String| {
                     Uuid::parse_str(&value).ok()
                 })
-                .ok_or(warp::reject())
+                .ok_or(warp::reject::not_found()) // TODO, create an error variant for MethodNotAllowed (maybe)
         })
         .boxed()
 }

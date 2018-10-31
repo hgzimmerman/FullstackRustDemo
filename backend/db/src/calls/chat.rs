@@ -9,7 +9,7 @@ use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 // use diesel::Table;
 // use diesel::query_dsl::InternalJoinDsl;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::chat::ChatUuid;
@@ -65,17 +65,17 @@ pub struct ChatData {
 
 impl Chat {
 
-    pub fn get_chat(uuid: ChatUuid,conn: &PgConnection) -> JoeResult<Chat> {
+    pub fn get_chat(uuid: ChatUuid,conn: &PgConnection) -> BackendResult<Chat> {
         get_row::<Chat,_>(schema::chats::table, uuid.0, conn)
     }
-    pub fn delete_chat(uuid: ChatUuid, conn: &PgConnection) -> JoeResult<Chat> {
+    pub fn delete_chat(uuid: ChatUuid, conn: &PgConnection) -> BackendResult<Chat> {
         delete_row::<Chat,_>(schema::chats::table, uuid.0, conn)
     }
-    pub fn create_chat(new: NewChat, conn: &PgConnection) -> JoeResult<Chat> {
+    pub fn create_chat(new: NewChat, conn: &PgConnection) -> BackendResult<Chat> {
         create_row::<Chat, NewChat,_>(schema::chats::table, new, conn)
     }
 
-    pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
+    pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_chat_users;
 
         diesel::insert_into(junction_chat_users::table)
@@ -86,7 +86,7 @@ impl Chat {
         Ok(())
     }
 
-    pub fn remove_user_from_chat(association: ChatUserAssociation, conn: &PgConnection) -> JoeResult<()> {
+    pub fn remove_user_from_chat(association: ChatUserAssociation, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_chat_users::dsl::*;
         use crate::schema::junction_chat_users;
 
@@ -98,7 +98,7 @@ impl Chat {
         Ok(())
     }
 
-    fn get_users_in_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    fn get_users_in_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         use crate::schema::junction_chat_users::dsl::junction_chat_users;
         // use schema::users::dsl::*;
         use crate::schema::users;
@@ -112,7 +112,7 @@ impl Chat {
             .map_err(handle_err::<Chat>)
     }
 
-    pub fn is_user_in_chat(chat_uuid: &ChatUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn is_user_in_chat(chat_uuid: &ChatUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<bool> {
         use crate::schema::junction_chat_users::dsl::junction_chat_users;
         use crate::schema::junction_chat_users as junctions;
 
@@ -126,7 +126,7 @@ impl Chat {
     }
 
 
-    pub fn get_full_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> JoeResult<ChatData> {
+    pub fn get_full_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> BackendResult<ChatData> {
         //        let chat_uuid: Uuid = chat_uuid.0;
         let chat: Chat = Chat::get_chat(chat_uuid, &conn)?;
         let leader_uuid = UserUuid(chat.leader_uuid);
@@ -140,7 +140,7 @@ impl Chat {
         })
     }
 
-    pub fn get_chats_user_is_in(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Chat>> {
+    pub fn get_chats_user_is_in(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Chat>> {
         use crate::schema::junction_chat_users::dsl::junction_chat_users;
         use crate::schema::junction_chat_users as junction;
         // use schema::chats::dsl::*;

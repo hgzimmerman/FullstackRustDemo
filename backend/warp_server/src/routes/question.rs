@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use uuid::Uuid;
@@ -57,7 +57,7 @@ pub fn get_questions_for_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
             let bucket_uuid = BucketUuid(bucket_uuid);
             Question::get_questions_for_bucket(bucket_uuid, &conn)
                 .map(convert_vector_and_json::<QuestionData, QuestionResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -76,7 +76,7 @@ fn get_random_question(s: &State) -> BoxedFilter<(impl Reply,)> {
             let bucket_uuid = BucketUuid(bucket_uuid);
             Question::get_random_question(bucket_uuid, &conn)
                 .map(convert_and_json::<QuestionData, QuestionResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -90,7 +90,7 @@ fn get_question(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|question_uuid: QuestionUuid, conn: PooledConn| {
             Question::get_full_question(question_uuid, &conn)
                 .map(convert_and_json::<QuestionData, QuestionResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 
@@ -117,7 +117,7 @@ fn create_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
             Question::create_data(new_question, &conn)
                 .map(convert_and_json::<QuestionData, QuestionResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -133,7 +133,7 @@ fn delete_question(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|question_uuid: Uuid, _user_uuid: UserUuid, conn: PooledConn | {
             let question_uuid = QuestionUuid(question_uuid);
             Question::delete_question(question_uuid.clone(), &conn)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
                 .map(|_| warp::reply::json(&question_uuid))
         })
         .boxed()
@@ -151,7 +151,7 @@ fn put_question_back_in_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|question_uuid: Uuid, _user_uuid: UserUuid, conn: PooledConn | {
             let question_uuid = QuestionUuid(question_uuid);
             Question::put_question_in_bucket(question_uuid, &conn)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
                 .map(|_| warp::reply::json(&question_uuid))
         })
         .boxed()
@@ -170,7 +170,7 @@ fn questions_in_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
             let bucket_uuid = BucketUuid(bucket_uuid);
             Question::get_number_of_questions_in_bucket(bucket_uuid, &conn)
                 .map(convert_and_json::<i64, i64>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

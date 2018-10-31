@@ -2,7 +2,7 @@ use crate::schema::forums;
 use uuid::Uuid;
 use diesel::pg::PgConnection;
 use identifiers::forum::ForumUuid;
-use error::JoeResult;
+use error::BackendResult;
 use crate::calls::prelude::*;
 use crate::schema;
 
@@ -27,16 +27,16 @@ pub struct NewForum {
 }
 
 impl Forum {
-    pub fn get_forum(uuid: ForumUuid,conn: &PgConnection) -> JoeResult<Forum> {
+    pub fn get_forum(uuid: ForumUuid,conn: &PgConnection) -> BackendResult<Forum> {
         get_row::<Forum,_>(schema::forums::table, uuid.0, conn)
     }
-    pub fn get_forums(conn: &PgConnection) -> JoeResult<Vec<Forum>> {
+    pub fn get_forums(conn: &PgConnection) -> BackendResult<Vec<Forum>> {
         get_rows::<Forum,_>(schema::forums::table, conn)
     }
-    pub fn delete_forum(uuid: ForumUuid, conn: &PgConnection) -> JoeResult<Forum> {
+    pub fn delete_forum(uuid: ForumUuid, conn: &PgConnection) -> BackendResult<Forum> {
         delete_row::<Forum,_>(schema::forums::table, uuid.0, conn)
     }
-    pub fn create_forum(new: NewForum, conn: &PgConnection) -> JoeResult<Forum> {
+    pub fn create_forum(new: NewForum, conn: &PgConnection) -> BackendResult<Forum> {
         create_row::<Forum, NewForum,_>(schema::forums::table, new, conn)
     }
 }

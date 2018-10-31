@@ -1,7 +1,7 @@
 use crate::schema::buckets;
 use crate::schema::junction_bucket_users;
 use crate::user::User;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::prelude::*;
 use diesel;
 use chrono::{NaiveDateTime, Utc, Duration};
@@ -73,18 +73,18 @@ pub struct UsersInBucketData {
 
 impl Bucket {
 
-    pub fn get_bucket(uuid: BucketUuid,conn: &PgConnection) -> JoeResult<Bucket> {
+    pub fn get_bucket(uuid: BucketUuid,conn: &PgConnection) -> BackendResult<Bucket> {
         get_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
     }
-    pub fn delete_bucket(uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Bucket> {
+    pub fn delete_bucket(uuid: BucketUuid, conn: &PgConnection) -> BackendResult<Bucket> {
         delete_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
     }
-    pub fn create_bucket(new: NewBucket, conn: &PgConnection) -> JoeResult<Bucket> {
+    pub fn create_bucket(new: NewBucket, conn: &PgConnection) -> BackendResult<Bucket> {
         create_row::<Bucket, NewBucket,_>(schema::buckets::table, new, conn)
     }
 
     /// Get buckets that are public, but the user is not a member of
-    pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
+    pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
         use crate::schema::buckets::dsl::*;
         use crate::schema::buckets;
         use crate::schema::junction_bucket_users as junctions;
@@ -106,7 +106,7 @@ impl Bucket {
             .map_err(handle_err::<User>)
     }
 
-    pub fn add_user_to_bucket(new_bucket_user: NewBucketUser, conn: &PgConnection) -> JoeResult<()> {
+    pub fn add_user_to_bucket(new_bucket_user: NewBucketUser, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users;
 
         diesel::insert_into(junction_bucket_users::table)
@@ -116,7 +116,7 @@ impl Bucket {
         Ok(())
     }
 
-    pub fn get_buckets_user_belongs_to(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Bucket>> {
+    pub fn get_buckets_user_belongs_to(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
 
@@ -132,7 +132,7 @@ impl Bucket {
     /// Helper function.
     /// Gets users depending on the approval column.
     /// It will exclude the user making the request.
-    fn get_users_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, approval: bool, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    fn get_users_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, approval: bool, conn: &PgConnection) -> BackendResult<Vec<User>> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
         use crate::schema::users;
@@ -150,14 +150,14 @@ impl Bucket {
 
     /// This function gets all players that are part of the bucket,
     /// excluding the active user
-    pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid, true, conn)
     }
-    fn get_users_requiring_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    fn get_users_requiring_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid,false, conn)
     }
 
-    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<UsersInBucketData>> {
+    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<UsersInBucketData>> {
         use crate::schema::junction_bucket_users::dsl::*;
         use crate::schema::junction_bucket_users as junctions;
         use crate::schema::buckets;
@@ -214,7 +214,7 @@ impl Bucket {
             .unwrap_or(false)
     }
 
-    pub fn apply_changeset(changeset: BucketUserChangeset, conn: &PgConnection) -> JoeResult<BucketUser> {
+    pub fn apply_changeset(changeset: BucketUserChangeset, conn: &PgConnection) -> BackendResult<BucketUser> {
         use crate::schema::junction_bucket_users;
 
         diesel::update(junction_bucket_users::table)
@@ -223,7 +223,7 @@ impl Bucket {
             .map_err(handle_err::<Bucket>)
     }
 
-    pub fn set_bucket_publicity(bucket_uuid: BucketUuid, publicity: bool, conn: &PgConnection) -> JoeResult<()> {
+    pub fn set_bucket_publicity(bucket_uuid: BucketUuid, publicity: bool, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::buckets::dsl::*;
         use crate::schema::buckets;
 
@@ -246,7 +246,7 @@ impl Bucket {
         Ok(())
     }
 
-    pub fn set_user_approval(user_uuid: UserUuid, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> JoeResult<()> {
+    pub fn set_user_approval(user_uuid: UserUuid, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
 
@@ -265,7 +265,7 @@ impl Bucket {
 
     /// Removes the user from the junction table for the given bucket.
     /// This has the effect of denying any request to join the bucket, as well as kicking a user out of the bucket.
-    pub fn remove_user_from_bucket(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<()> {
+    pub fn remove_user_from_bucket(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users as junctions;
 
 

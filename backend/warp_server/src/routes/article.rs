@@ -7,7 +7,7 @@ use warp::reply::Reply;
 use uuid::Uuid;
 use identifiers::article::ArticleUuid;
 use wire::article::FullArticleResponse;
-use crate::error::Error;
+//use crate::error::Error;
 use db::Article;
 use db::article::ArticleData;
 use wire::article::ArticlePreviewResponse;
@@ -29,6 +29,7 @@ use crate::util::convert_vector_and_json;
 use crate::uuid_integration::uuid_wrap_filter;
 use crate::state::State;
 use pool::PooledConn;
+use error::Error;
 
 pub fn article_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Article API");
@@ -58,7 +59,7 @@ fn get_article(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|article_uuid: ArticleUuid, conn: PooledConn| {
             Article::get_article_data(article_uuid, &conn)
                 .map(convert_and_json::<ArticleData,FullArticleResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -72,7 +73,7 @@ fn get_published_articles(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|index: i32, page_size: i32, conn: PooledConn| {
             Article::get_paginated(index, page_size, &conn)
                 .map(convert_vector_and_json::<ArticleData,ArticlePreviewResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -89,7 +90,7 @@ fn get_owned_unpublished_articles(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             Article::get_unpublished_articles_for_user(user_uuid, &conn)
                 .map(convert_vector_and_json::<Article,MinimalArticleResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -108,7 +109,7 @@ fn create_article(s: &State) -> BoxedFilter<(impl Reply,)> {
 
             Article::create_article(request.into(), &conn)
                 .map(convert_and_json::<Article,MinimalArticleResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -124,14 +125,14 @@ fn update_article(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|request: UpdateArticleRequest, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_article(request.uuid, &conn)
-                .map_err(Error::convert_and_reject)?;
+                .map_err(Error::simple_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
-                return Error::NotAuthorized.reject();
+                return Error::NotAuthorized {reason: "User not author"}.reject()
             }
 
             Article::update_article(request.into(), &conn)
                 .map(convert_and_json::<Article,MinimalArticleResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -148,14 +149,14 @@ fn publish(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|article_uuid: ArticleUuid, user_uuid: UserUuid, conn: PooledConn|{
             let article_to_update: Article = Article::get_article(article_uuid, &conn)
-                .map_err(Error::convert_and_reject)?;
+                .map_err(Error::simple_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
-                return Error::NotAuthorized.reject()
+                return Error::NotAuthorized {reason: "User not author"}.reject()
             }
 
             Article::set_publish_status(article_uuid, true, &conn)
                 .map(|_| warp::http::StatusCode::NO_CONTENT)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -172,14 +173,15 @@ fn unpublish(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|uuid: Uuid, user_uuid: UserUuid, conn: PooledConn| {
             let article_uuid = ArticleUuid(uuid);
             let article_to_update: Article = Article::get_article(article_uuid, &conn)
-                .map_err(Error::convert_and_reject)?;
+                .map_err(Error::simple_reject)?;
             if article_to_update.author_uuid != user_uuid.0 {
-                return Error::NotAuthorized.reject()
+                return Error::NotAuthorized {reason: "User not author"}.reject()
+
             }
 
             Article::set_publish_status(ArticleUuid(uuid), false, &conn)
                 .map(|_| warp::http::StatusCode::NO_CONTENT)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

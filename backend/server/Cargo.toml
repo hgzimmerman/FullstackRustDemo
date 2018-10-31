@@ -10,7 +10,7 @@ identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
 
 db = {path = "../db"}
 auth = {path = "../auth"}
-error = {path = "../error"}
+error = {path = "../error", features = ["rocket_support"]}
 pool = {path = "../pool"}
 
 rocket = "0.3.17"

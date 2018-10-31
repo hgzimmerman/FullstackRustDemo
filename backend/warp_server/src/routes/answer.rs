@@ -14,7 +14,7 @@ use db::User;
 use db::answer::AnswerData;
 use db::answer::NewAnswer;
 use db::answer::Answer;
-use crate::error::Error;
+use error::Error;
 use wire::answer::AnswerResponse;
 //use crate::log_attach;
 //use crate::HttpMethod;
@@ -50,11 +50,11 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
             let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user_uuid);
             let author_uuid = UserUuid(new_answer.author_uuid);
             let answer_user: User = User::get_user(author_uuid, &conn)
-                .map_err(Error::convert_and_reject)?;
+                .map_err(Error::simple_reject)?;
 
 
             Question::put_question_on_floor(question_uuid, &conn)
-                .map_err(Error::convert_and_reject)?;
+                .map_err(Error::simple_reject)?;
 
             Answer::create_answer(new_answer, &conn)
                 .map(|answer| {
@@ -64,7 +64,7 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
                     }
                 })
                 .map(convert_and_json::<AnswerData,AnswerResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

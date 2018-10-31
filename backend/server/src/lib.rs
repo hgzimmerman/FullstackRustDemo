@@ -248,10 +248,10 @@ mod configuration {
     use wire::user::*;
     use db::user::{NewUser, User};
     use db::Conn;
-    use error::JoeResult;
+    use error::BackendResult;
 
 
-    pub fn create_admin(conn: &Conn) -> JoeResult<User> {
+    pub fn create_admin(conn: &Conn) -> BackendResult<User> {
         let mut user: NewUser = NewUserRequest {
             user_name: "Admin".into(),
             display_name: "Admin".into(),

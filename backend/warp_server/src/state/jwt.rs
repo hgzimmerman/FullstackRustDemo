@@ -9,10 +9,11 @@ use wire::user::UserRole;
 use identifiers::user::UserUuid;
 
 
-use crate::error::Error;
+//use crate::error::Error;
 use crate::state::State;
 use warp::reject::Rejection;
 use crate::state::banned_list::BannedList;
+use error::Error;
 
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 
@@ -55,7 +56,7 @@ pub fn admin_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
             if server_jwt.0.user_roles.contains(&UserRole::Admin) {
                 return Ok(server_jwt.0.sub)
             } else {
-                Error::NotAuthorized.reject()
+                Error::NotAuthorized{reason: "JWT does not contain Admin privilege"}.reject()
             }
         })
         .boxed()
@@ -69,7 +70,8 @@ pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
             if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
                 return Ok(server_jwt.0.sub)
             } else {
-                Error::NotAuthorized.reject()
+
+                Error::NotAuthorized{reason: "JWT does not contain Basic User privilege"}.reject()
             }
         })
         .boxed()
@@ -102,7 +104,7 @@ pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
             if server_jwt.0.user_roles.contains(&UserRole::Publisher) {
                 return Ok(server_jwt.0.sub)
             } else {
-                Error::NotAuthorized.reject()
+                Error::NotAuthorized{reason: "JWT does not contain Publisher privilege"}.reject()
             }
         })
         .boxed()
@@ -115,7 +117,7 @@ pub fn moderator_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
             if server_jwt.0.user_roles.contains(&UserRole::Moderator) {
                 return Ok(server_jwt.0.sub)
             } else {
-                Error::NotAuthorized.reject()
+                Error::NotAuthorized{reason: "JWT does not contain Moderator privilege"}.reject()
             }
         })
         .boxed()

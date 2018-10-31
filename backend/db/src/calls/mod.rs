@@ -19,7 +19,7 @@ use diesel::dsl::Find;
 use diesel::pg::PgConnection;
 use diesel::query_dsl::{LoadQuery, RunQueryDsl};
 use diesel::query_dsl::filter_dsl::FindDsl;
-use diesel::result::Error;
+use diesel::result::Error as DieselError;
 use uuid::Uuid;
 use diesel::insertable::Insertable;
 use diesel::query_source::Queryable;
@@ -39,7 +39,7 @@ use diesel::query_builder::AsChangeset;
 use diesel::query_source::QuerySource;
 use diesel::helper_types::Update;
 use typename::TypeName;
-use error::WeekendAtJoesError;
+use error::Error;
 
 
 
@@ -52,16 +52,16 @@ pub mod prelude {
     pub use super::handle_err;
 }
 
-pub fn handle_err<T: TypeName>(error: Error) -> WeekendAtJoesError {
+pub fn handle_err<T: TypeName>(error: DieselError) -> Error {
     match error {
-        Error::NotFound => WeekendAtJoesError::NotFound { type_name: T::type_name() },
-        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
+        DieselError::NotFound => Error::NotFound { type_name: T::type_name() },
+        _ => Error::DatabaseError(Some(format!("{:?}", error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
     }
 }
 
 /// Generic function for getting a whole row from a given table.
 #[inline(always)]
-pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
     where
         Table: FindDsl<Uuid>,
         Find<Table, Uuid>: LoadQuery<PgConnection, Model>,
@@ -76,7 +76,7 @@ pub fn get_row<'a, Model, Table>(table: Table, uuid: Uuid, conn: &PgConnection) 
 
 
 #[inline(always)]
-pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, WeekendAtJoesError>
+pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<Vec<Model>, Error>
     where
     Table: RunQueryDsl<Model> + LoadQuery<PgConnection, Model>,
     Model: TypeName
@@ -89,7 +89,7 @@ pub fn get_rows<'a, Model, Table>(table: Table, conn: &PgConnection) -> Result<V
 
 /// Generic function for deleting a row from a given table.
 #[inline(always)]
-pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -> Result<Model, Error>
     where
         Tab: FindDsl<Uuid> + Table,
         <Tab as FindDsl<Uuid>>::Output: IntoUpdateTarget,
@@ -107,7 +107,7 @@ pub fn delete_row<'a, Model, Tab>(table: Tab, uuid: Uuid, conn: &PgConnection) -
 
 /// Generic function for updating a row for a given table with a given changeset.
 #[inline(always)]
-pub fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn update_row<'a, Model, Chg, Tab>(table: Tab, changeset: Chg, conn: &PgConnection) -> Result<Model, Error>
 where
     Chg: AsChangeset<Target=<Tab as HasTable>::Table>,
     Tab: QuerySource + IntoUpdateTarget,
@@ -125,7 +125,7 @@ where
 
 /// Generic function for creating a row for a given table with a given "new" struct for that row type.
 #[inline(always)]
-pub fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, WeekendAtJoesError>
+pub fn create_row<Model, NewModel, Tab>(table: Tab, insert: NewModel, conn: &PgConnection) -> Result<Model, Error>
 where
     NewModel: Insertable<Tab>,
     InsertStatement<Tab, NewModel>: AsQuery,

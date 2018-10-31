@@ -4,7 +4,7 @@ use crate::question::Question;
 //use error::JoeResult;
 use uuid::Uuid;
 use diesel::pg::PgConnection;
-use error::JoeResult;
+use error::BackendResult;
 use identifiers::answer::AnswerUuid;
 use crate::calls::prelude::*;
 use crate::schema;
@@ -38,13 +38,13 @@ pub struct AnswerData {
 }
 
 impl Answer {
-    pub fn get_answer(uuid: AnswerUuid,conn: &PgConnection) -> JoeResult<Answer> {
+    pub fn get_answer(uuid: AnswerUuid,conn: &PgConnection) -> BackendResult<Answer> {
         get_row::<Answer,_>(schema::answers::table, uuid.0, conn)
     }
-    pub fn delete_answer(uuid: AnswerUuid, conn: &PgConnection) -> JoeResult<Answer> {
+    pub fn delete_answer(uuid: AnswerUuid, conn: &PgConnection) -> BackendResult<Answer> {
         delete_row::<Answer,_>(schema::answers::table, uuid.0, conn)
     }
-    pub fn create_answer(new: NewAnswer, conn: &PgConnection) -> JoeResult<Answer> {
+    pub fn create_answer(new: NewAnswer, conn: &PgConnection) -> BackendResult<Answer> {
         create_row::<Answer, NewAnswer,_>(schema::answers::table, new, conn)
     }
 }

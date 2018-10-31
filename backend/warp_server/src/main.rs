@@ -9,7 +9,7 @@ extern crate wire;
 extern crate auth;
 extern crate uuid;
 extern crate identifiers;
-extern crate error as joe_error;
+extern crate error;
 
 extern crate serde;
 extern crate serde_json;
@@ -28,7 +28,7 @@ extern crate testing_fixtures;
 extern crate testing_common;
 
 mod routes;
-mod error;
+//mod error;
 mod uuid_integration;
 mod logging;
 mod util;

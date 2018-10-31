@@ -7,7 +7,7 @@ use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::BelongingToDsl;
 use diesel::ExpressionMethods;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::thread::ThreadUuid;
@@ -68,19 +68,19 @@ pub struct MinimalThreadData {
 
 impl Thread {
 
-    pub fn get_thread(uuid: ThreadUuid,conn: &PgConnection) -> JoeResult<Thread> {
+    pub fn get_thread(uuid: ThreadUuid,conn: &PgConnection) -> BackendResult<Thread> {
         get_row::<Thread,_>(schema::threads::table, uuid.0, conn)
     }
-    pub fn delete_thread(uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<Thread> {
+    pub fn delete_thread(uuid: ThreadUuid, conn: &PgConnection) -> BackendResult<Thread> {
         delete_row::<Thread,_>(schema::threads::table, uuid.0, conn)
     }
-    pub fn create_thread(new: NewThread, conn: &PgConnection) -> JoeResult<Thread> {
+    pub fn create_thread(new: NewThread, conn: &PgConnection) -> BackendResult<Thread> {
         create_row::<Thread, NewThread,_>(schema::threads::table, new, conn)
     }
 
 
     /// Locks or unlocks the thread, preventing posting and editing if locked
-    pub fn set_lock_status(thread_uuid: ThreadUuid, is_locked: bool, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
+    pub fn set_lock_status(thread_uuid: ThreadUuid, is_locked: bool, conn: &PgConnection) -> BackendResult<MinimalThreadData> {
         use crate::schema::threads;
         use crate::schema::threads::dsl::*;
 
@@ -99,7 +99,7 @@ impl Thread {
     /// Archives the thread, preventing it from being seen in typical requests.
     ///
     /// The thread _must_ also be locked in order to not be modifiable.
-    pub fn archive_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<MinimalThreadData> {
+    pub fn archive_thread(thread_uuid: ThreadUuid, conn: &PgConnection) -> BackendResult<MinimalThreadData> {
         use crate::schema::threads;
         use crate::schema::threads::dsl::*;
 
@@ -119,7 +119,7 @@ impl Thread {
     /// Gets all of the most recent threads in a forum.
     /// Archived threads will not be included.
     #[deprecated]
-    pub fn get_threads_in_forum(requested_forum_uuid: ForumUuid, num_threads: i64, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_threads_in_forum(requested_forum_uuid: ForumUuid, num_threads: i64, conn: &PgConnection) -> BackendResult<Vec<MinimalThreadData>> {
         use crate::schema::threads::dsl::*;
         use crate::forum::Forum;
         use crate::schema::users::dsl::*;
@@ -149,7 +149,7 @@ impl Thread {
     }
 
     /// Gets threads based on page size and index.
-    pub fn get_paginated(requested_forum_uuid: ForumUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MinimalThreadData>> {
+    pub fn get_paginated(requested_forum_uuid: ForumUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<Vec<MinimalThreadData>> {
         use crate::schema::threads::dsl::*;
         use crate::forum::Forum;
         use crate::diesel_extensions::pagination::*;
@@ -183,7 +183,7 @@ impl Thread {
 
 
     /// Creates a thread with an initial post.
-    pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &PgConnection) -> JoeResult<ThreadData> {
+    pub fn create_thread_with_initial_post(new_thread: NewThread, post_content: String, conn: &PgConnection) -> BackendResult<ThreadData> {
         let thread: Thread = Thread::create_thread(new_thread, conn)?;
 
         let new_post: NewPost = NewPost::from((thread.clone(), post_content));
@@ -198,7 +198,7 @@ impl Thread {
     }
 
     /// Gets every bit of data related to a thread.
-    pub fn get_full_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<ThreadData> {
+    pub fn get_full_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<ThreadData> {
         let thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         let post: PostData = Post::get_posts_in_thread(thread_uuid, user_uuid, conn)?;
         let author_uuid = UserUuid(thread.author_uuid);

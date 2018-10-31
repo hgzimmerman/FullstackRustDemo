@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use db::bucket::Bucket;
@@ -32,7 +32,7 @@ pub fn get_bucket_by_uuid(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|bucket_uuid: BucketUuid, conn: PooledConn| {
             Bucket::get_bucket(bucket_uuid, &conn)
                 .map(convert_and_json::<Bucket, BucketResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

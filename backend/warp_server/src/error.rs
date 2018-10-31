@@ -34,7 +34,7 @@ impl Display for Error {
 impl StdError for Error {
     fn description(&self) -> &str {
         match self {
-            Error::DatabaseUnavailable => "Could not acquire a connection to the database, the connection pool may be occupied",
+            Error::DatabaseUnavailable => "Could not acquire a connection to the database, the connection pool may be exhausted",
             Error::DatabaseError(e) => {
                 match e {
                     Some(s) => &s,

@@ -8,7 +8,7 @@ use crate::user::User;
 use crate::chat::Chat;
 // use diesel::GroupedBy;
 use crate::diesel_extensions::pagination::*;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 //use diesel::sql_types::Uuid;
@@ -57,13 +57,13 @@ pub struct MessageData {
 }
 
 impl Message {
-    pub fn get_message_simple(uuid: MessageUuid,conn: &PgConnection) -> JoeResult<Message> {
+    pub fn get_message_simple(uuid: MessageUuid,conn: &PgConnection) -> BackendResult<Message> {
         get_row::<Message,_>(schema::messages::table, uuid.0, conn)
     }
-    pub fn delete_message(uuid: MessageUuid, conn: &PgConnection) -> JoeResult<Message> {
+    pub fn delete_message(uuid: MessageUuid, conn: &PgConnection) -> BackendResult<Message> {
         delete_row::<Message,_>(schema::messages::table, uuid.0, conn)
     }
-    pub fn create_message_simple(new: NewMessage, conn: &PgConnection) -> JoeResult<Message> {
+    pub fn create_message_simple(new: NewMessage, conn: &PgConnection) -> BackendResult<Message> {
         create_row::<Message, NewMessage,_>(schema::messages::table, new, conn)
     }
     // pub fn get_paginated(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
@@ -98,7 +98,7 @@ impl Message {
     //     unimplemented!()
     // }
 
-    pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> JoeResult<MessageData> {
+    pub fn create_message(new_message: NewMessage, conn: &PgConnection) -> BackendResult<MessageData> {
         let message = Message::create_message_simple(new_message, conn)?;
         let author_uuid = UserUuid(message.author_uuid);
         let author = User::get_user(author_uuid, conn)?;
@@ -121,7 +121,7 @@ impl Message {
         }
     }
 
-    fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> JoeResult<MessageData> {
+    fn get_message(uuid: MessageUuid, with_reply: bool, conn: &PgConnection) -> BackendResult<MessageData> {
         let message = Message::get_message_simple(uuid, conn)?;
         let author_uuid = UserUuid(message.author_uuid);
         let author = User::get_user(author_uuid, conn)?;
@@ -144,7 +144,7 @@ impl Message {
         }
     }
 
-    pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<MessageData>> {
+    pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<Vec<MessageData>> {
         //        use schema::messages::dsl::*;
         use crate::schema::messages;
         use crate::schema::users;

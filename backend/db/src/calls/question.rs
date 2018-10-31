@@ -7,7 +7,7 @@ use diesel::BelongingToDsl;
 use crate::answer::Answer;
 use diesel::GroupedBy;
 use crate::answer::AnswerData;
-use error::JoeResult;
+use error::BackendResult;
 use uuid::Uuid;
 use identifiers::question::QuestionUuid;
 use identifiers::bucket::BucketUuid;
@@ -52,18 +52,18 @@ pub struct QuestionData {
 
 impl Question {
 
-    pub fn get_question(uuid: QuestionUuid,conn: &PgConnection) -> JoeResult<Question> {
+    pub fn get_question(uuid: QuestionUuid,conn: &PgConnection) -> BackendResult<Question> {
         get_row::<Question,_>(schema::questions::table, uuid.0, conn)
     }
-    pub fn delete_question(uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
+    pub fn delete_question(uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<Question> {
         delete_row::<Question,_>(schema::questions::table, uuid.0, conn)
     }
-    pub fn create_question(new: NewQuestion, conn: &PgConnection) -> JoeResult<Question> {
+    pub fn create_question(new: NewQuestion, conn: &PgConnection) -> BackendResult<Question> {
         create_row::<Question, NewQuestion,_>(schema::questions::table, new, conn)
     }
 
     /// Creates a new bucket
-    pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> JoeResult<QuestionData> {
+    pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> BackendResult<QuestionData> {
         let question: Question = Question::create_question(new_question, conn)?;
         let author_uuid = UserUuid(question.author_uuid);
         let user = User::get_user(author_uuid, conn)?;
@@ -77,7 +77,7 @@ impl Question {
     }
 
     /// Gets a list of all questions across all buckets.
-    pub fn get_questions(conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
+    pub fn get_questions(conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
         use crate::schema::questions::dsl::*;
         use crate::schema::users::dsl::*;
         let questions_and_users = questions
@@ -100,7 +100,7 @@ impl Question {
 
 
     /// Gets a random question that may have already been answered
-    pub fn get_random_question(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
+    pub fn get_random_question(bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<QuestionData> {
         use crate::schema::users::dsl::*;
 
         use crate::schema::questions::columns::on_floor;
@@ -145,7 +145,7 @@ impl Question {
 
 
     /// Gets groupings of questions, users, and answers for a given bucket id.
-    pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<Vec<QuestionData>> {
+    pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
         use crate::schema::users::dsl::*;
         let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
 
@@ -195,7 +195,7 @@ impl Question {
 
     /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
     /// This does not tightly correspond to the total number of questions associated with the bucket session.
-    pub fn get_number_of_questions_in_bucket(bucket_uuid: BucketUuid, conn: &PgConnection) -> JoeResult<i64> {
+    pub fn get_number_of_questions_in_bucket(bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<i64> {
         //        use schema::questions::dsl::*;
         use crate::schema::questions;
 
@@ -208,7 +208,7 @@ impl Question {
     }
 
     /// Given a question's id, get the question, its answers and user
-    pub fn get_full_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionData> {
+    pub fn get_full_question(question_uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<QuestionData> {
         use crate::schema::users::dsl::*;
 
         // Get the question
@@ -250,7 +250,7 @@ impl Question {
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
-    pub fn put_question_in_bucket(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
+    pub fn put_question_in_bucket(question_uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<QuestionUuid> {
         use crate::schema::questions::dsl::*;
         use crate::schema::questions;
 
@@ -267,7 +267,7 @@ impl Question {
         Ok(question_uuid)
     }
 
-    pub fn put_question_on_floor(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<QuestionUuid> {
+    pub fn put_question_on_floor(question_uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<QuestionUuid> {
         use crate::schema::questions::dsl::*;
         use crate::schema::questions;
 

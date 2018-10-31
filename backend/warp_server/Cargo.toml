@@ -14,7 +14,7 @@ uuid = {version = "0.6", features = ["serde", "v4"] }
 log = "0.4"
 simplelog = "^0.5.0"
 auth = {path = "../auth"}
-error = {path = "../error"}
+error = {path = "../error", features = ["warp_support"]}
 pool = {path = "../pool"}
 
 

@@ -6,7 +6,7 @@ use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc};
 use crate::user::User;
 use diesel::BelongingToDsl;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
 use identifiers::article::ArticleUuid;
@@ -67,16 +67,16 @@ pub struct ArticleData {
 
 impl Article {
 
-    pub fn get_article(uuid: ArticleUuid,conn: &PgConnection) -> JoeResult<Article> {
+    pub fn get_article(uuid: ArticleUuid,conn: &PgConnection) -> BackendResult<Article> {
         get_row::<Article,_>(schema::articles::table, uuid.0, conn)
     }
-    pub fn delete_article(uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn delete_article(uuid: ArticleUuid, conn: &PgConnection) -> BackendResult<Article> {
         delete_row::<Article,_>(schema::articles::table, uuid.0, conn)
     }
-    pub fn create_article(new: NewArticle, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn create_article(new: NewArticle, conn: &PgConnection) -> BackendResult<Article> {
         create_row::<Article, NewArticle,_>(schema::articles::table, new, conn)
     }
-    pub fn update_article_2(changeset: ArticleChangeset, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn update_article_2(changeset: ArticleChangeset, conn: &PgConnection) -> BackendResult<Article> {
         update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
     }
 
@@ -96,14 +96,14 @@ impl Article {
     //     ))
     // }
 
-    pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> JoeResult<ArticleData> {
+    pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> BackendResult<ArticleData> {
 
         let article = Article::get_article(article_uuid, conn)?;
         let user = User::get_user(UserUuid(article.author_uuid), conn)?;
         Ok(ArticleData { article, user })
     }
 
-    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<Vec<ArticleData>> {
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<Vec<ArticleData>> {
         use crate::schema::articles::dsl::*;
         use crate::diesel_extensions::pagination::*;
         use crate::schema::users;
@@ -134,7 +134,7 @@ impl Article {
 
 
     /// Gets the unpublished articles for a given user
-    pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<Article>> {
+    pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Article>> {
         use crate::schema::articles::dsl::*;
         use crate::schema::users::dsl::*;
         //        use schema::users;
@@ -156,7 +156,7 @@ impl Article {
     /// Sets the date for the article's publish date.
     /// If true, it will set the publish datetime to the current time, indicating it is published.
     /// If false, it will set the publish column to Null, indicating that it has not been published.
-    pub fn set_publish_status(article_uuid: ArticleUuid, publish: bool, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn set_publish_status(article_uuid: ArticleUuid, publish: bool, conn: &PgConnection) -> BackendResult<Article> {
         use crate::schema::articles::dsl::*;
         use crate::schema::articles;
 
@@ -175,7 +175,7 @@ impl Article {
 
 
     /// Applies the changeset to its corresponding article.
-    pub fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> JoeResult<Article> {
+    pub fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> BackendResult<Article> {
         use crate::schema::articles;
         diesel::update(articles::table)
             .set(&changeset)

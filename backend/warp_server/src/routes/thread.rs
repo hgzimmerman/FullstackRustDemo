@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+//use crate::error::Error;
 use crate::util::convert_and_json;
 use crate::util::convert_vector_and_json;
 //use crate::uuid_integration::uuid_filter;
@@ -23,6 +23,7 @@ use identifiers::forum::ForumUuid;
 use crate::uuid_integration::uuid_wrap_filter;
 use crate::state::State;
 use pool::PooledConn;
+use error::Error;
 
 pub fn thread_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Thread API");
@@ -56,7 +57,7 @@ pub fn create_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
 
             Thread::create_thread_with_initial_post(new_thread, post_content, &conn)
                 .map(convert_and_json::<ThreadData,ThreadResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -70,7 +71,7 @@ pub fn lock_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::set_lock_status(thread_uuid, true, &conn)
                  .map(convert_and_json::<MinimalThreadData,MinimalThreadResponse>)
-                 .map_err(Error::convert_and_reject)
+                 .map_err(Error::simple_reject)
          })
          .boxed()
 }
@@ -84,7 +85,7 @@ pub fn unlock_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::set_lock_status(thread_uuid, false, &conn)
                  .map(convert_and_json::<MinimalThreadData,MinimalThreadResponse>)
-                 .map_err(Error::convert_and_reject)
+                 .map_err(Error::simple_reject)
 
          })
          .boxed()
@@ -99,7 +100,7 @@ pub fn archive_thread(s: &State) -> BoxedFilter<(impl Reply,)> {
          .and_then(|thread_uuid: ThreadUuid, _moderator: UserUuid, conn: PooledConn| {
              Thread::archive_thread(thread_uuid, &conn)
                  .map(convert_and_json::<MinimalThreadData,MinimalThreadResponse>)
-                 .map_err(Error::convert_and_reject)
+                 .map_err(Error::simple_reject)
 
          })
          .boxed()
@@ -115,7 +116,7 @@ pub fn get_threads_by_forum_id(s: &State) -> BoxedFilter<(impl Reply,)> {
             let results_per_page: i32 = 25;
             Thread::get_paginated(forum_uuid, index, results_per_page, &conn)
                 .map(convert_vector_and_json::<MinimalThreadData,MinimalThreadResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
 
         })
         .boxed()
@@ -129,7 +130,7 @@ pub fn get_thread_contents(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>,conn: PooledConn|{
             Thread::get_full_thread(thread_uuid, user_uuid, &conn)
                 .map(convert_and_json::<ThreadData,ThreadResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

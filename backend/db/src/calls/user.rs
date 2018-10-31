@@ -4,7 +4,7 @@ use diesel::QueryDsl;
 use diesel::ExpressionMethods;
 use chrono::{NaiveDateTime, Utc, Duration};
 use crate::schema::users;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::PgConnection;
 use identifiers::user::UserUuid;
 use uuid::Uuid;
@@ -57,18 +57,18 @@ pub struct NewUser {
 
 impl User {
 
-    pub fn get_user(uuid: UserUuid,conn: &PgConnection) -> JoeResult<User> {
+    pub fn get_user(uuid: UserUuid,conn: &PgConnection) -> BackendResult<User> {
         get_row::<User,_>(schema::users::table, uuid.0, conn)
     }
-    pub fn delete_user(uuid: UserUuid, conn: &PgConnection) -> JoeResult<User> {
+    pub fn delete_user(uuid: UserUuid, conn: &PgConnection) -> BackendResult<User> {
         delete_row::<User,_>(schema::users::table, uuid.0, conn)
     }
-    pub fn create_user(new_user: NewUser, conn: &PgConnection) -> JoeResult<User> {
+    pub fn create_user(new_user: NewUser, conn: &PgConnection) -> BackendResult<User> {
         create_row::<User, NewUser,_>(schema::users::table, new_user, conn)
     }
 
     /// Gets the user by their user name.
-    pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> JoeResult<User> {
+    pub fn get_user_by_user_name(name: &str, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::users::dsl::*;
         info!("Getting user with Name: {}", name);
 
@@ -82,7 +82,7 @@ impl User {
 
     /// Gets a vector of users of length n.
     // TODO: consider also specifing a step, so that this can be used in a proper pagenation system.
-    pub fn get_users(num_users: i64, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    pub fn get_users(num_users: i64, conn: &PgConnection) -> BackendResult<Vec<User>> {
         use crate::schema::users::dsl::*;
         users
             .limit(num_users)
@@ -92,7 +92,7 @@ impl User {
 
     // TODO make this take a list of roles.
     /// For the given role, get all users with the that role.
-    pub fn get_users_with_role(user_role: UserRole, conn: &PgConnection) -> JoeResult<Vec<User>> {
+    pub fn get_users_with_role(user_role: UserRole, conn: &PgConnection) -> BackendResult<Vec<User>> {
 
         let user_role_id: i32 = i32::from(user_role);
 
@@ -110,7 +110,7 @@ impl User {
     }
 
     /// If the user has their banned flag set, this will return true.
-    pub fn is_user_banned(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn is_user_banned(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<bool> {
         use crate::schema::users::dsl::*;
 
         users
@@ -121,7 +121,7 @@ impl User {
     }
 
     // TODO, refactor this, only implement the db transaction, logic can go in the login method
-    pub fn check_if_locked(&self, conn: &PgConnection) -> JoeResult<bool> {
+    pub fn check_if_locked(&self, conn: &PgConnection) -> BackendResult<bool> {
         use crate::schema::users::dsl::*;
         use crate::schema::users;
 
@@ -146,7 +146,7 @@ impl User {
 
     /// Resets the login failure count to 0.
     /// This should be called after the user logs in successfully.
-    pub fn reset_login_failure_count(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<()> {
+    pub fn reset_login_failure_count(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::users::dsl::*;
         use crate::schema::users;
 
@@ -163,7 +163,7 @@ impl User {
     /// This method is to be called after a user has failed to log in.
     /// Based on the number of current failed login attempts in a row, it will calculate the locked period.
     /// It will then store the datetime of unlock, along with an incremented failure count, so that next time it will take longer.
-    pub fn record_failed_login(user_uuid: UserUuid, current_failed_attempts: i32, conn: &PgConnection) -> JoeResult<NaiveDateTime> {
+    pub fn record_failed_login(user_uuid: UserUuid, current_failed_attempts: i32, conn: &PgConnection) -> BackendResult<NaiveDateTime> {
         use crate::schema::users::dsl::*;
         use crate::schema::users;
 
@@ -190,7 +190,7 @@ impl User {
     }
 
     /// Banns or unbans the user.
-    pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> JoeResult<User> {
+    pub fn set_ban_status(user_uuid: UserUuid, is_banned: bool, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::users::dsl::*;
         use crate::schema::users;
         let target = users.filter(
@@ -204,7 +204,7 @@ impl User {
     }
 
     /// Adds a role to the user.
-    pub fn add_role_to_user(user_uuid: UserUuid, user_role: UserRole, conn: &PgConnection) -> JoeResult<User> {
+    pub fn add_role_to_user(user_uuid: UserUuid, user_role: UserRole, conn: &PgConnection) -> BackendResult<User> {
 
         use crate::schema::users::dsl::*;
         use crate::schema::users;
@@ -231,7 +231,7 @@ impl User {
     }
 
     /// Gets a number of users at specified offsets.
-    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> JoeResult<(Vec<User>, i64)> {
+    pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<(Vec<User>, i64)> {
         use crate::schema::users;
         use crate::diesel_extensions::pagination::Paginate;
 
@@ -244,7 +244,7 @@ impl User {
     }
 
     /// Updates the user's display name.
-    pub fn update_user_display_name(current_user_name: String, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
+    pub fn update_user_display_name(current_user_name: String, new_display_name: String, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::users::dsl::*;
 
         let target = users.filter(
@@ -261,7 +261,7 @@ impl User {
     }
 
     // TODO deprecate the update user display name and switch to this impl, replacing the name.
-    pub fn update_user_display_name_safe(user_uuid: UserUuid, new_display_name: String, conn: &PgConnection) -> JoeResult<User> {
+    pub fn update_user_display_name_safe(user_uuid: UserUuid, new_display_name: String, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::users::dsl::*;
 
         let target = users.filter(
@@ -278,7 +278,7 @@ impl User {
     }
 
     /// Deletes the user by their name.
-    pub fn delete_user_by_name(name: String, conn: &PgConnection) -> JoeResult<User> {
+    pub fn delete_user_by_name(name: String, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::users::dsl::*;
 
         let target = users.filter(user_name.eq(name));

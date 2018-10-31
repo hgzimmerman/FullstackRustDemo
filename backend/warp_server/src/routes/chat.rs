@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use crate::util::convert_and_json;
@@ -52,7 +52,7 @@ pub fn create(s: &State) -> BoxedFilter<(impl Reply,)> {
             new_chat.leader_uuid = user_uuid.0;
             Chat::create_chat(new_chat, &conn)
                 .map(convert_and_json::<Chat,MinimalChatResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
 
         })
         .boxed()
@@ -68,14 +68,14 @@ pub fn add_user_to_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: ChatUserAssociationRequest, user_uuid: UserUuid, conn: PooledConn | {
-            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
+            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::simple_reject)? {
                 info!("User not in a chat tried to add a user to that chat.");
                 return Error::BadRequest.reject()
             }
             let association: ChatUserAssociation = request.into();
             Chat::add_user_to_chat(association, &conn)
                 .map(|_|warp::http::StatusCode::OK)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
 
         })
         .boxed()
@@ -91,14 +91,14 @@ pub fn remove_user_from_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: ChatUserAssociationRequest, user_uuid: UserUuid, conn: PooledConn | {
-            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
+            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::simple_reject)? {
                 info!("User not in a chat tried to remove a user from that chat.");
                 return Error::BadRequest.reject()
             }
             let association: ChatUserAssociation = request.into();
             Chat::remove_user_from_chat(association, &conn)
                 .map(|_|warp::http::StatusCode::OK)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
 
         })
         .boxed()
@@ -116,7 +116,7 @@ pub fn get_owned_chats(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, conn: PooledConn|{
             Chat::get_chats_user_is_in(user_uuid, &conn)
                 .map(convert_vector_and_json::<Chat,MinimalChatResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -132,7 +132,7 @@ pub fn get_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|chat_uuid: ChatUuid, _user: UserUuid, conn: PooledConn|{
             Chat::get_full_chat(chat_uuid, &conn)
                 .map(convert_and_json::<ChatData,ChatResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

@@ -4,7 +4,7 @@ use rocket::Route;
 
 use db::answer::*;
 use db::user::User;
-use error::WeekendAtJoesError;
+use error::Error;
 use db::Conn;
 use wire::answer::*;
 use auth_lib::user_authorization::NormalUser;
@@ -18,7 +18,7 @@ use identifiers::user::UserUuid;
 /// This will also remove the question from consideration when randomly selecting questions (putting it on the floor).
 /// This operation is available to any user.
 #[post("/create", data = "<new_answer>")]
-fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, WeekendAtJoesError> {
+fn answer_question(new_answer: Json<NewAnswerRequest>, user: NormalUser, conn: Conn) -> Result<Json<AnswerResponse>, Error> {
     let new_answer: NewAnswerRequest = new_answer.into_inner();
     let question_uuid: QuestionUuid = new_answer.question_uuid.clone(); // spurious clone
 

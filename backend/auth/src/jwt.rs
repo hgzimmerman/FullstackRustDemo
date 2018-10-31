@@ -10,7 +10,7 @@ use log::{warn, info};
 use Secret;
 use banned_set::BannedSet;
 
-use error::WeekendAtJoesError;
+use error::Error;
 use error::JwtError;
 
 use wire::user::{Jwt, UserRole, BEARER};
@@ -60,9 +60,9 @@ impl ServerJwt {
 /// Raw JWTs can be gotten via the request
 /// This should only be used for reauth.
 impl<'a, 'r> FromRequest<'a, 'r> for ServerJwt {
-    type Error = WeekendAtJoesError;
+    type Error = Error;
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<ServerJwt, Error> {
         let jwt: ServerJwt = extract_jwt_from_request(request)?;
         let jwt: ServerJwt = validate_jwt_expiry_time(jwt)?;
 
@@ -72,13 +72,13 @@ impl<'a, 'r> FromRequest<'a, 'r> for ServerJwt {
 
 
 /// Given a request, extract the JWT struct from the headers in the request.
-fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
+fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcome<ServerJwt, Error> {
     let keys: Vec<_> = request
         .headers()
         .get("Authorization")
         .collect();
     if keys.len() != 1 {
-        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MissingToken));
+        return Outcome::Failure((Status::Unauthorized, Error::MissingToken));
     };
 
     let key = keys[0];
@@ -88,7 +88,7 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
         Outcome::Success(s) => s.inner(),
         _ => {
             warn!("Couldn't get secret from state.");
-            return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
+            return Outcome::Failure((Status::InternalServerError, Error::InternalServerError));
         }
     };
 
@@ -98,10 +98,10 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
         .collect();
 
     if authorization_words.len() != 2 {
-        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MalformedToken));
+        return Outcome::Failure((Status::Unauthorized, Error::MalformedToken));
     }
     if authorization_words[0] != BEARER {
-        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::MalformedToken));
+        return Outcome::Failure((Status::Unauthorized, Error::MalformedToken));
     }
     let jwt_str: &str = &authorization_words[1];
 
@@ -109,16 +109,16 @@ fn extract_jwt_from_request<'a, 'r>(request: &'a Request<'r>) -> request::Outcom
         Ok(jwt) => Outcome::Success(jwt),
         Err(_) => {
             info!("Token couldn't be deserialized.");
-            Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::IllegalToken))
+            Outcome::Failure((Status::Unauthorized, Error::IllegalToken))
         }
     }
 }
 
 /// Make sure that the JWT hasn't expired yet.
-fn validate_jwt_expiry_time(jwt: ServerJwt) -> request::Outcome<ServerJwt, WeekendAtJoesError> {
+fn validate_jwt_expiry_time(jwt: ServerJwt) -> request::Outcome<ServerJwt, Error> {
     if jwt.0.exp < Utc::now().naive_utc() {
         info!("Token expired.");
-        return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::ExpiredToken));
+        return Outcome::Failure((Status::Unauthorized, Error::ExpiredToken));
     }
     Outcome::Success(jwt)
 }
@@ -161,9 +161,9 @@ pub mod user_authorization {
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for NormalUser {
-        type Error = WeekendAtJoesError;
+        type Error = Error;
 
-        fn from_request(request: &'a Request<'r>) -> request::Outcome<NormalUser, WeekendAtJoesError> {
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<NormalUser, Error> {
             extract_role_from_request::<NormalUser>(request)
         }
     }
@@ -187,9 +187,9 @@ pub mod user_authorization {
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for AdminUser {
-        type Error = WeekendAtJoesError;
+        type Error = Error;
 
-        fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, WeekendAtJoesError> {
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<AdminUser, Error> {
             extract_role_from_request::<AdminUser>(request)
         }
     }
@@ -214,15 +214,15 @@ pub mod user_authorization {
         }
     }
     impl<'a, 'r> FromRequest<'a, 'r> for ModeratorUser {
-        type Error = WeekendAtJoesError;
+        type Error = Error;
 
-        fn from_request(request: &'a Request<'r>) -> request::Outcome<ModeratorUser, WeekendAtJoesError> {
+        fn from_request(request: &'a Request<'r>) -> request::Outcome<ModeratorUser, Error> {
             extract_role_from_request::<ModeratorUser>(request)
         }
     }
 
 
-    fn extract_role_from_request<'a, 'r, T>(request: &'a Request<'r>) -> request::Outcome<T, WeekendAtJoesError>
+    fn extract_role_from_request<'a, 'r, T>(request: &'a Request<'r>) -> request::Outcome<T, Error>
     where
         T: FromJwt,
     {
@@ -233,19 +233,19 @@ pub mod user_authorization {
 
         let user = match T::from_jwt(&jwt.0) {
             Ok(user) => user,
-            Err(_) => return Outcome::Failure((Status::Forbidden, WeekendAtJoesError::NotAuthorized { reason: "User does not have that role." })),
+            Err(_) => return Outcome::Failure((Status::Forbidden, Error::NotAuthorized { reason: "User does not have that role." })),
         };
 
         // Check for stateful banned status
         match request.guard::<State<BannedSet>>() {
             Outcome::Success(set) => {
                 if set.is_user_banned(&user.get_uuid()) {
-                    return Outcome::Failure((Status::Unauthorized, WeekendAtJoesError::BadRequest));
+                    return Outcome::Failure((Status::Unauthorized, Error::BadRequest));
                 }
             }
             _ => {
                 warn!("Couldn't get banned set from state.");
-                return Outcome::Failure((Status::InternalServerError, WeekendAtJoesError::InternalServerError));
+                return Outcome::Failure((Status::InternalServerError, Error::InternalServerError));
             }
         }
 

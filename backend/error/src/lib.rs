@@ -1,6 +1,6 @@
 extern crate diesel;
 
-use diesel::result::Error;
+use diesel::result::Error as DieselError;
 
 #[cfg(feature = "rocket_support")]
 extern crate rocket;
@@ -9,17 +9,17 @@ extern crate rocket;
 extern crate warp;
 
 
-pub type JoeResult<T> = Result<T, WeekendAtJoesError>;
+pub type BackendResult<T> = Result<T, Error>;
 
 /// A hack that allows the conversion of Result<Vec<T>,E> to Result<Vec<W>,E> as a one liner
 pub trait VectorMappable<T> {
-    fn map_vec<W>(self) -> JoeResult<Vec<W>>
+    fn map_vec<W>(self) -> BackendResult<Vec<W>>
     where
         W: From<T>;
 }
 
-impl<T> VectorMappable<T> for JoeResult<Vec<T>> {
-    fn map_vec<W>(self) -> JoeResult<Vec<W>>
+impl<T> VectorMappable<T> for BackendResult<Vec<T>> {
+    fn map_vec<W>(self) -> BackendResult<Vec<W>>
     where
         W: From<T>,
     {
@@ -32,7 +32,7 @@ impl<T> VectorMappable<T> for JoeResult<Vec<T>> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum WeekendAtJoesError {
+pub enum Error {
     DatabaseUnavailable,
     DatabaseError(Option<String>),
     InternalServerError,
@@ -79,15 +79,15 @@ pub enum JwtError {
     SerializeError,
 }
 
-pub fn handle_diesel_error(diesel_error: Error, type_name: &'static str) -> WeekendAtJoesError {
+pub fn handle_diesel_error(diesel_error: DieselError, type_name: &'static str) -> Error {
     match diesel_error {
-        Error::NotFound => WeekendAtJoesError::NotFound { type_name: type_name.to_string() },
-        _ => WeekendAtJoesError::DatabaseError(Some(format!("{:?}", diesel_error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
+        DieselError::NotFound => Error::NotFound { type_name: type_name.to_string() },
+        _ => Error::DatabaseError(Some(format!("{:?}", diesel_error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
     }
 }
 
 pub trait ErrorFormatter {
-    fn handle_error(diesel_error: Error) -> WeekendAtJoesError;
+    fn handle_error(diesel_error: DieselError) -> Error;
 }
 
 #[cfg(feature = "rocket_support")]
@@ -97,11 +97,11 @@ mod rocket_support {
     use rocket::http::Status;
     use rocket::request::Request;
 
-    impl<'r> Responder<'r> for WeekendAtJoesError {
+    impl<'r> Responder<'r> for Error {
         fn respond_to(self, req: &Request) -> Result<Response<'r>, Status> {
             let mut build = Response::build();
 
-            use WeekendAtJoesError::*;
+            use Error::*;
             match self {
                 DatabaseUnavailable => {
                     build
@@ -111,7 +111,7 @@ mod rocket_support {
                             .respond_to(req)?);
                     build
                         .status(Status::InternalServerError)
-                        .ok
+                        .ok()
                 }
                 DatabaseError(db_error) => {
                     if let Some(error_message) = db_error {
@@ -187,6 +187,13 @@ mod rocket_support {
                         .status(Status::Unauthorized)
                         .ok()
                 }
+                UserBanned => {
+                    build
+                        .merge("Your account has been banned."
+                            .respond_to(req)?)
+                        .status(Status::Forbidden)
+                        .ok()
+                }
             }
         }
     }
@@ -219,33 +226,33 @@ pub mod warp_support {
     use warp::reply::Reply;
     use warp::http::StatusCode;
 
-    impl Display for WeekendAtJoesError {
+    impl Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
             let description: String = match self {
-                WeekendAtJoesError::DatabaseUnavailable => "Could not acquire a connection to the database, the connection pool may be occupied".to_string(),
-                WeekendAtJoesError::DatabaseError(e) => {
+                Error::DatabaseUnavailable => "Could not acquire a connection to the database, the connection pool may be occupied".to_string(),
+                Error::DatabaseError(e) => {
                     match e {
                         Some(s) => s.clone(),
                         None => "A problem occurred with the database".to_string()
                     }
                 }
-                WeekendAtJoesError::IllegalToken => "The provided token is invalid".to_string(),
-                WeekendAtJoesError::ExpiredToken => "The provided token has expired, please reauthenticate to acquire a new one".to_string(),
-                WeekendAtJoesError::MalformedToken => "The token was not formatted correctly".to_string(),
-                WeekendAtJoesError::ThreadImmutable => "The Thread you are trying to interact with has been locked, preventing modification".to_string(),
-                WeekendAtJoesError::MissingToken => "The Api route was expecting a JWT token and none was provided. Try logging in.".to_string(),
-                WeekendAtJoesError::NotAuthorized {reason} => format!("You are forbidden from accessing this resource. ({})", reason),
-                WeekendAtJoesError::UserBanned => "Your account has been banned".to_string(),
-                WeekendAtJoesError::BadRequest => "Your request is malformed".to_string(),
-                WeekendAtJoesError::InternalServerError => "Internal server error encountered".to_string(),
-                WeekendAtJoesError::NotFound {type_name}=> format!("The resource ({})you requested could not be found", type_name),
+                Error::IllegalToken => "The provided token is invalid".to_string(),
+                Error::ExpiredToken => "The provided token has expired, please reauthenticate to acquire a new one".to_string(),
+                Error::MalformedToken => "The token was not formatted correctly".to_string(),
+                Error::ThreadImmutable => "The Thread you are trying to interact with has been locked, preventing modification".to_string(),
+                Error::MissingToken => "The Api route was expecting a JWT token and none was provided. Try logging in.".to_string(),
+                Error::NotAuthorized {reason} => format!("You are forbidden from accessing this resource. ({})", reason),
+                Error::UserBanned => "Your account has been banned".to_string(),
+                Error::BadRequest => "Your request is malformed".to_string(),
+                Error::InternalServerError => "Internal server error encountered".to_string(),
+                Error::NotFound {type_name}=> format!("The resource ({})you requested could not be found", type_name),
             };
             write!(f, "{}", description)
         }
     }
 
-    impl StdError for WeekendAtJoesError {
+    impl StdError for Error {
         fn cause(&self) -> Option<&StdError> {
             None
         }
@@ -259,28 +266,44 @@ pub mod warp_support {
     /// This should be used at the top level of the exposed api.
     pub fn customize_error(err: Rejection) -> Result<impl Reply, Rejection> {
         let mut resp = err.json();
+        if err.is_not_found() {
+            *resp.status_mut() = StatusCode::NOT_FOUND;
+            return Ok(resp)
+        }
 
-        let cause = match err.into_cause::<crate::WeekendAtJoesError>() {
-            Ok(ok) => ok,
-            Err(err) => return Err(err)
+        let cause = match err.find_cause::<Error>() {
+            Some(ok) => ok,
+            None => return Ok(resp)
         };
         match *cause {
-            WeekendAtJoesError::DatabaseUnavailable => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
-            WeekendAtJoesError::DatabaseError(_) => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
-            WeekendAtJoesError::IllegalToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
-            WeekendAtJoesError::ExpiredToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
-            WeekendAtJoesError::MalformedToken => *resp.status_mut() = StatusCode::UNAUTHORIZED, // Unauthorized is for requests that require authentication and the authentication is out of date or not present
-            WeekendAtJoesError::NotAuthorized {..} => *resp.status_mut() = StatusCode::FORBIDDEN, // Forbidden is for requests that will not served due to a lack of privileges
-            WeekendAtJoesError::UserBanned => *resp.status_mut() = StatusCode::FORBIDDEN,
-            WeekendAtJoesError::BadRequest => *resp.status_mut() = StatusCode::BAD_REQUEST,
-            WeekendAtJoesError::NotFound {..}=> *resp.status_mut() = StatusCode::NOT_FOUND,
-            WeekendAtJoesError::InternalServerError => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
-            WeekendAtJoesError::ThreadImmutable => *resp.status_mut() = StatusCode::BAD_REQUEST,
-            WeekendAtJoesError::MissingToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
+            Error::DatabaseUnavailable => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
+            Error::DatabaseError(_) => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
+            Error::IllegalToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
+            Error::ExpiredToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
+            Error::MalformedToken => *resp.status_mut() = StatusCode::UNAUTHORIZED, // Unauthorized is for requests that require authentication and the authentication is out of date or not present
+            Error::NotAuthorized {..} => *resp.status_mut() = StatusCode::FORBIDDEN, // Forbidden is for requests that will not served due to a lack of privileges
+            Error::UserBanned => *resp.status_mut() = StatusCode::FORBIDDEN,
+            Error::BadRequest => *resp.status_mut() = StatusCode::BAD_REQUEST,
+            Error::NotFound {..}=> *resp.status_mut() = StatusCode::NOT_FOUND,
+            Error::InternalServerError => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
+            Error::ThreadImmutable => *resp.status_mut() = StatusCode::BAD_REQUEST,
+            Error::MissingToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
         }
 
 //        warn!("rewrote error response: {:?}", resp);
         Ok(resp)
+    }
+
+    impl Error {
+        pub fn reject<T>(self) -> Result<T, Rejection> {
+//        Err(warp::reject::reject().with(self))
+            Err(warp::reject::custom(self))
+        }
+
+        pub fn simple_reject(self) -> Rejection {
+            warp::reject::reject().with(self)
+//        warp::reject::custom(self)
+        }
     }
 
 }

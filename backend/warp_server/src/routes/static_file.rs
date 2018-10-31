@@ -3,7 +3,7 @@ use warp::filters::BoxedFilter;
 use warp::reply::Reply;
 use warp;
 use crate::routes::API_STRING;
-use crate::error::Error;
+//use crate::error::Error;
 use warp::path::Peek;
 use warp::fs::File;
 
@@ -51,7 +51,7 @@ fn index_static_file_redirect() -> BoxedFilter<(impl Reply,)> {
 fn index() ->  BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::fs::dir(STATIC_DIR_PATH))
-        .and(warp::path::index())
+        .and(warp::path::end())
         .boxed()
 }
 
@@ -59,7 +59,7 @@ fn index() ->  BoxedFilter<(impl Reply,)> {
 fn app_wasm() -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::path::path("app.wasm"))
-        .and(warp::path::index())
+        .and(warp::path::end())
         .and(warp::fs::file(APP_WASM))
         .boxed()
 }
@@ -68,7 +68,7 @@ fn app_js() -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::path::path("js"))
         .and(warp::path::path("app.js"))
-        .and(warp::path::index())
+        .and(warp::path::end())
         .and(warp::fs::file(APP_JS))
         .boxed()
 }

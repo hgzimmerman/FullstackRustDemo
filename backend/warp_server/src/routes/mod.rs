@@ -31,7 +31,7 @@ pub use self::static_file::static_files_handler;
 use warp;
 use warp::Filter;
 
-use crate::error::customize_error;
+use error::warp_support::customize_error;
 use crate::state::State;
 
 pub const API_STRING: &str = "api";

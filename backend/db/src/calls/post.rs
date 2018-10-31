@@ -10,7 +10,7 @@ use diesel::RunQueryDsl;
 use diesel::ExpressionMethods;
 use diesel::BelongingToDsl;
 use diesel::QueryDsl;
-use error::JoeResult;
+use error::BackendResult;
 use diesel::SaveChangesDsl;
 use diesel::PgConnection;
 use identifiers::post::PostUuid;
@@ -199,24 +199,24 @@ impl From<ChildlessPostData> for PostData {
 
 impl Post {
 
-    pub fn get_post(uuid: PostUuid,conn: &PgConnection) -> JoeResult<Post> {
+    pub fn get_post(uuid: PostUuid,conn: &PgConnection) -> BackendResult<Post> {
         get_row::<Post,_>(schema::posts::table, uuid.0, conn)
     }
-    pub fn delete_post(uuid: PostUuid, conn: &PgConnection) -> JoeResult<Post> {
+    pub fn delete_post(uuid: PostUuid, conn: &PgConnection) -> BackendResult<Post> {
         delete_row::<Post,_>(schema::posts::table, uuid.0, conn)
     }
-    pub fn create_post(new: NewPost, conn: &PgConnection) -> JoeResult<Post> {
+    pub fn create_post(new: NewPost, conn: &PgConnection) -> BackendResult<Post> {
         create_row::<Post, NewPost,_>(schema::posts::table, new, conn)
     }
 
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
-    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
         //        use schema::posts;
 
         let target_thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         if target_thread.locked || target_thread.archived {
-            return Err(WeekendAtJoesError::ThreadImmutable);
+            return Err(Error::ThreadImmutable);
         }
 
 
@@ -237,11 +237,11 @@ impl Post {
 
 
     /// Creates a post, and also gets the associated author for the post.
-    pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
         let thread_uuid = ThreadUuid(new_post.thread_uuid);
         let thread: Thread = Thread::get_thread(thread_uuid, conn)?;
         if thread.locked || thread.archived {
-            return Err(WeekendAtJoesError::ThreadImmutable);
+            return Err(Error::ThreadImmutable);
         }
 
         // Do not allow the post to be created if the thread already has an "original post"
@@ -251,7 +251,7 @@ impl Post {
             if let Err(_) = Post::get_root_post(thread_uuid, conn) {
                 info!("New post created for new thread.");
             } else {
-                return Err(WeekendAtJoesError::BadRequest) // TODO need better error
+                return Err(Error::BadRequest) // TODO need better error
             }
         };
 
@@ -269,7 +269,7 @@ impl Post {
     }
 
     /// Censors the post, preventing users from seeing it by default.
-    pub fn censor_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn censor_post(post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
         use crate::schema::posts::dsl::*;
         use crate::schema::posts;
 
@@ -294,7 +294,7 @@ impl Post {
     }
 
     /// Gets all of the posts associated with a given user.
-    pub fn get_posts_by_user(user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<Vec<ChildlessPostData>> {
+    pub fn get_posts_by_user(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<ChildlessPostData>> {
         use crate::schema::posts::dsl::*;
         let user: User = User::get_user(user_uuid, conn)?;
 
@@ -323,7 +323,7 @@ impl Post {
 
 
     /// Gets the user associated with a given post
-    pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<User> {
+    pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<User> {
         use crate::schema::posts::dsl::*;
         use crate::schema::users::dsl::*;
         use crate::schema::posts;
@@ -343,7 +343,7 @@ impl Post {
     /// Gets the first post associated with a thread.
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
-    pub fn get_root_post(requested_thread_uuid: ThreadUuid, conn: &PgConnection) -> JoeResult<Post> {
+    pub fn get_root_post(requested_thread_uuid: ThreadUuid, conn: &PgConnection) -> BackendResult<Post> {
         use crate::schema::posts::dsl::*;
         use crate::thread::Thread;
 
@@ -352,7 +352,7 @@ impl Post {
         // Because this method is used in the context of a thread that could be immutable,
         // it should be subject to the locking mechanism.
         if thread.locked || thread.archived {
-            return Err(WeekendAtJoesError::ThreadImmutable);
+            return Err(Error::ThreadImmutable);
         }
 
         Post::belonging_to(&thread)
@@ -363,7 +363,7 @@ impl Post {
             .map_err(handle_err::<Post>)
     }
 
-    pub fn get_individual_post(post_uuid: PostUuid, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<ChildlessPostData> {
+    pub fn get_individual_post(post_uuid: PostUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
         let post = Post::get_post(post_uuid, conn)?;
         let author_uuid = UserUuid(post.author_uuid);
         let user = User::get_user(author_uuid, conn)?;
@@ -373,7 +373,7 @@ impl Post {
 
 
     /// Given the thread uuid, return a tree of posts.
-    pub fn get_posts_in_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<PostData> {
+    pub fn get_posts_in_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<PostData> {
         use crate::schema::posts;
         use crate::schema::posts::dsl::posts as posts_dsl;
         use std::collections::HashSet;
@@ -385,7 +385,7 @@ impl Post {
 
 
         if posts.len() == 0 {
-            return Err(WeekendAtJoesError::NotFound { type_name: "Post".to_string() })
+            return Err(Error::NotFound { type_name: "Post".to_string() })
         }
         // We now know that there is at least one post.
 
@@ -423,7 +423,7 @@ impl Post {
         // We are making the assumption that there is at least one post that meets the root criteria.
         // Practically speaking, there should be exactly one, but we rely on reasonable insertions
         // and modifications to enforce that.
-        let root: (Post, VoteCounts) = root.into_iter().next().ok_or(WeekendAtJoesError::InternalServerError)?;
+        let root: (Post, VoteCounts) = root.into_iter().next().ok_or(Error::InternalServerError)?;
 
 
         /// Recursive function to assemble posts out of the list of post data.
@@ -469,7 +469,7 @@ impl Post {
     ///
     /// The current implementation has overhead as it requires getting all the posts in a thread
     /// and then pruning it down to the desired subsection of the tree.
-    pub fn get_post_and_children(post_uuid: PostUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<PostData> {
+    pub fn get_post_and_children(post_uuid: PostUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<PostData> {
         // Get the post so we can get the thread
         let post = Post::get_post(post_uuid, conn)?;
         let thread_uuid: ThreadUuid = ThreadUuid(post.thread_uuid);
@@ -497,7 +497,7 @@ impl Post {
     }
 
     /// Add a vote record to a post.
-    pub fn vote(vote: PostVote, conn: &PgConnection) -> JoeResult<()> {
+    pub fn vote(vote: PostVote, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::post_upvotes;
         use crate::schema::post_downvotes;
         use diesel::dsl::exists;
@@ -543,7 +543,7 @@ impl Post {
                         .map_err(handle_err::<Post>)
                         .map(|_| ())
                 } else {
-                    return Err(WeekendAtJoesError::BadRequest)
+                    return Err(Error::BadRequest)
                 }
             },
             PostVote::Down(vote) => {
@@ -559,7 +559,7 @@ impl Post {
                         .map_err(handle_err::<Post>)
                         .map(|_| ());
                 } else {
-                    return  Err(WeekendAtJoesError::BadRequest)
+                    return  Err(Error::BadRequest)
                 }
             }
         };
@@ -567,7 +567,7 @@ impl Post {
     }
 
     /// Removes an upvote from a post.
-    fn remove_upvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<()> {
+    fn remove_upvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::post_upvotes;
 
         let target = post_upvotes::table
@@ -579,7 +579,7 @@ impl Post {
             .map(|_| ())
     }
     /// Removes a downvote from a post.
-    fn remove_downvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<()> {
+    fn remove_downvote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::post_downvotes;
 
         let target = post_downvotes::table
@@ -593,7 +593,7 @@ impl Post {
 
 
     /// Remove any vote for the post
-    pub fn revoke_vote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> JoeResult<()> {
+    pub fn revoke_vote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<()> {
         let x = Post::remove_upvote(user_uuid, post_uuid, conn);
         let y = Post::remove_downvote(user_uuid, post_uuid, conn);
 
@@ -602,7 +602,7 @@ impl Post {
     }
 
     /// Gets the vote counts for a single post.
-    pub fn get_vote_counts(post: &Post, user_uuid: UserUuid, conn: &PgConnection) -> JoeResult<VoteCounts> {
+    pub fn get_vote_counts(post: &Post, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<VoteCounts> {
         use crate::schema::post_upvotes;
         use crate::schema::post_downvotes;
         use diesel::dsl::exists;
@@ -649,7 +649,7 @@ impl Post {
 
     // TODO make this take a reference to a vector of posts, then only return the votes, not a tuple.
     /// Given a vector of posts, make a request to get the vote counts for each and associate the counts with the posts.
-    pub fn get_votes_for_posts(posts: &Vec<Post>, user_uuid: Option<UserUuid>, conn: &PgConnection) -> JoeResult<Vec<VoteCounts>> {
+    pub fn get_votes_for_posts(posts: &Vec<Post>, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<Vec<VoteCounts>> {
         use diesel::GroupedBy;
 
         match user_uuid {

@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use wire::forum::ForumResponse;
@@ -43,7 +43,7 @@ fn get_forums(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|conn: PooledConn|{
             Forum::get_forums(&conn)
                 .map(convert_vector_and_json::<Forum, ForumResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -58,7 +58,7 @@ fn get_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|uuid: ForumUuid, conn: PooledConn| {
             Forum::get_forum(uuid, &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -74,7 +74,7 @@ fn create_forum(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|request: NewForumRequest, _admin: UserUuid, conn: PooledConn|{
             Forum::create_forum(request.into(), &conn)
                 .map(convert_and_json::<Forum, ForumResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

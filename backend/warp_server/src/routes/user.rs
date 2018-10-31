@@ -4,7 +4,6 @@ use warp::reply::Reply;
 use wire::user::UserResponse;
 use identifiers::user::UserUuid;
 use db::user::User;
-use crate::error::Error;
 use crate::state::jwt::admin_user_filter;
 use wire::user::FullUserResponse;
 use wire::user::NewUserRequest;
@@ -21,6 +20,7 @@ use crate::uuid_integration::uuid_wrap_filter;
 use crate::state::State;
 use pool::PooledConn;
 use crate::state::banned_list::BannedList;
+use error::Error;
 
 pub fn user_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching User API");
@@ -50,7 +50,7 @@ fn get_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, conn: PooledConn| {
             User::get_user(user_uuid, &conn)
                 .map(convert_and_json::<User, UserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -69,7 +69,7 @@ fn get_users(s: &State) -> BoxedFilter<(impl Reply,)> {
             User::get_paginated(index, 25, &conn)
                 .map(|x:(Vec<User>,i64)| x.0)
                 .map(convert_vector_and_json::<User,FullUserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -81,7 +81,7 @@ fn create_user(s: &State) -> BoxedFilter<(impl Reply,)> {
     let json_body = warp::body::content_length_limit(1024 * 16)
         .and(warp::body::json());
     warp::post2()
-        .and(warp::path::index())
+        .and(warp::path::end())
         .and(json_body)
 //        .and(admin_user_filter(s))
         .and(s.db.clone())
@@ -89,7 +89,7 @@ fn create_user(s: &State) -> BoxedFilter<(impl Reply,)> {
                 let new_user: NewUser = new_user.into();
                 User::create_user(new_user, &conn)
                     .map(convert_and_json::<User,UserResponse>)
-                    .map_err(Error::convert_and_reject)
+                    .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -111,7 +111,7 @@ fn update_user_display_name(s: &State) -> BoxedFilter<(impl Reply,)> {
             let new_display_name = request.new_display_name;
             User::update_user_display_name_safe(user_uuid, new_display_name, &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -129,7 +129,7 @@ fn add_role(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|request: UserRoleRequest, _user: UserUuid, conn: PooledConn| {
             User::add_role_to_user(request.uuid, request.user_role.into(), &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -146,7 +146,7 @@ fn ban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, user: UserUuid, banned_list: BannedList, conn: PooledConn| {
             let resp = User::set_ban_status(user_uuid, true, &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject);
+                .map_err(Error::simple_reject);
             banned_list.ban(user);
             resp
         })
@@ -165,7 +165,7 @@ fn unban_user(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and_then(|user_uuid: UserUuid, user: UserUuid, banned_list: BannedList, conn: PooledConn| {
             let resp = User::set_ban_status(user_uuid, false, &conn)
                 .map(convert_and_json::<User,UserResponse>)
-                .map_err(Error::convert_and_reject);
+                .map_err(Error::simple_reject);
             banned_list.unban(&user);
             resp
         })

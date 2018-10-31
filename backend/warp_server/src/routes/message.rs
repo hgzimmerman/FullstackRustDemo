@@ -1,7 +1,7 @@
 use warp::Filter;
 use warp::filters::BoxedFilter;
 use warp::reply::Reply;
-use crate::error::Error;
+use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use uuid::Uuid;
@@ -48,13 +48,13 @@ fn get_messages_for_chat(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.db.clone())
         .and_then(|index: i32, chat_uuid: Uuid, user_uuid: UserUuid, conn: PooledConn|{
             let chat_uuid = ChatUuid(chat_uuid);
-            if !Chat::is_user_in_chat(&chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
+            if !Chat::is_user_in_chat(&chat_uuid, user_uuid, &conn).map_err(Error::simple_reject)? {
                 return Error::BadRequest.reject()
             }
 
             Message::get_messages_for_chat(chat_uuid, index, 25, &conn)
                 .map(convert_vector_and_json::<MessageData, MessageResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }
@@ -69,7 +69,7 @@ fn send_message(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(normal_user_filter(s))
         .and(s.db.clone())
         .and_then(|request: NewMessageRequest, user_uuid: UserUuid, conn: PooledConn|{
-            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::convert_and_reject)? {
+            if !Chat::is_user_in_chat(&request.chat_uuid, user_uuid, &conn).map_err(Error::simple_reject)? {
                 return Error::BadRequest.reject()
             }
             if request.author_uuid != user_uuid {
@@ -79,7 +79,7 @@ fn send_message(s: &State) -> BoxedFilter<(impl Reply,)> {
             let new_message: NewMessage = request.into();
             Message::create_message(new_message, &conn)
                   .map(convert_and_json::<MessageData, MessageResponse>)
-                .map_err(Error::convert_and_reject)
+                .map_err(Error::simple_reject)
         })
         .boxed()
 }

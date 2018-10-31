@@ -8,7 +8,9 @@
 //! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the JWT in the request header.
 
 
-#![feature(use_extern_macros)]
+//#![feature(use_extern_macros)]
+
+// TODO Remove hard dependency on rocket, make it optional.
 
 extern crate wire;
 extern crate crypto;
