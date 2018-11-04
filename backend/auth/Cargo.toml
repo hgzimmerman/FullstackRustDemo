@@ -3,15 +3,19 @@ name = "auth"
 version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
+
+[features]
+default = ["rocket_support"]
+rocket_support = ["rocket", "rocket_contrib", "identifiers/rocket_support"]
+
 [dependencies]
-identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
+identifiers = { path = "../../identifiers"}
 wire = { path = "../../wire"}
 error = {path = "../error"}
-#db = { path = "../db" }
 
 rust-crypto = "0.2.36"
 frank_jwt = "3.0.0"
-
+serde_json = "1.0.3"
 
 chrono = { version = "0.4", features = ["serde"] }
 
@@ -19,8 +23,7 @@ rand = "0.4.1"
 log = "0.3.8"
 simplelog = "^0.5.0"
 
-rocket = "0.3.13"
-rocket_contrib = "0.3.13"
+rocket = {version = "0.3.17", optional = true}
+rocket_contrib = {version = "0.3.17", optional = true }
 
 
-serde_json = "1.0.3"

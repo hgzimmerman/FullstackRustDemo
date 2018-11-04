@@ -13,11 +13,14 @@ path = "tests/bench.rs"
 name = "integration_tests"
 path = "tests/integration.rs"
 
+[features]
+default = []
+rocket_support = ["rocket", "identifiers/rocket_support"]
 
 [dependencies]
 
 wire = { path = "../../wire"}  # TODO Remove this ???
-identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
+identifiers = { path = "../../identifiers" }
 #db_proc_macros = { path = "../db_proc_macros"}
 error = { path = "../error" }
 auth = { path = "../auth"}
@@ -38,7 +41,7 @@ serde = "1.0.14"
 
 slug = "0.1.2"
 rand = "0.4.1"
-rocket = "0.3.13" # TODO Remove rocket dependency here
+rocket = {version = "0.3.13", optional = true }# TODO Remove rocket dependency here
 
 
 log = "0.3.8"

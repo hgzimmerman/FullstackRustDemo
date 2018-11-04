@@ -8,8 +8,8 @@ authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 wire = { path = "../../wire"}
 identifiers = { path = "../../identifiers" ,features=["rocket_support"]}
 
-db = {path = "../db"}
-auth = {path = "../auth"}
+db = {path = "../db", features = ["rocket_support"]}
+auth = {path = "../auth", features = ["rocket_support"]}
 error = {path = "../error", features = ["rocket_support"]}
 pool = {path = "../pool"}
 
