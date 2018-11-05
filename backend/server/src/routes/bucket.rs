@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 use db::bucket::*;
 use error::BackendResult;
-use db::Conn;
+use pool::Conn;
 use wire::bucket::*;
 use wire::user::UserResponse;
 use auth_lib::user_authorization::NormalUser;

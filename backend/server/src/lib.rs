@@ -26,6 +26,7 @@ extern crate test;
 
 extern crate chrono;
 extern crate rocket_cors;
+extern crate pool;
 
 
 extern crate clap;
@@ -35,10 +36,6 @@ use rocket::Rocket;
 
 mod routes;
 use routes::*;
-//mod db;
-//mod auth;
-//mod error;
-//use auth::{Secret, BannedSet};
 use db::user::User;
 use db::article::Article;
 use db::forum::Forum;
@@ -89,7 +86,7 @@ impl Default for Config {
         Config {
             create_admin: false,
             secret_key: None,
-            db_url: db::DATABASE_URL.to_string(),
+            db_url: pool::DATABASE_URL.to_string(),
             enable_cors: false
         }
     }
@@ -142,7 +139,7 @@ pub fn init_rocket(config: Config) -> Rocket {
 
     // Create a default Admin user if configured to do so.
     if config.create_admin {
-        let conn = db::Conn::new(db_pool.get().unwrap());
+        let conn = pool::Conn::new(db_pool.get().unwrap());
         match configuration::create_admin(&conn) {
             Ok(user) => warn!("Admin created. You should change its password. The name of the Admin user is: '{}'", user.user_name),
             Err(e) => error!("Failed to create Admin: {:?}", e),
@@ -233,7 +230,7 @@ pub fn parse_arguments() -> Config {
     let secret_key: Option<String> = matches.value_of(SECRET_KEY).map(
         String::from,
     );
-    let db_url: String = db::DATABASE_URL.to_string();
+    let db_url: String = pool::DATABASE_URL.to_string();
 
     Config {
         create_admin,
@@ -247,7 +244,7 @@ pub fn parse_arguments() -> Config {
 mod configuration {
     use wire::user::*;
     use db::user::{NewUser, User};
-    use db::Conn;
+    use pool::Conn;
     use error::BackendResult;
 
 

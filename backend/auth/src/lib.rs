@@ -8,9 +8,6 @@
 //! By specifying one of these user types on a routable method, rocket will not route the request to it unless it can resolve the role in the JWT in the request header.
 
 
-//#![feature(use_extern_macros)]
-
-// TODO Remove hard dependency on rocket, make it optional.
 
 #[cfg(feature = "rocket_support")]
 extern crate rocket;
@@ -21,17 +18,13 @@ extern crate wire;
 extern crate crypto;
 extern crate frank_jwt;
 extern crate chrono;
-
 #[macro_use]
 extern crate serde_json;
-
 #[macro_use]
 extern crate log;
 extern crate simplelog;
-
 extern crate identifiers;
 extern crate error;
-
 extern crate rand;
 
 mod jwt;
@@ -42,11 +35,8 @@ mod secret;
 
 #[cfg(feature = "rocket_support")]
 pub use jwt::user_authorization;
-
 pub use jwt::ServerJwt;
-
 pub use password::{hash_password, verify_hash};
-
 pub use banned_set::BannedSet;
 pub use secret::Secret;
 

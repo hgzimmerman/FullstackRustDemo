@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 use db::forum::Forum;
 use error::BackendResult;
-use db::Conn;
+use pool::Conn;
 use wire::forum::ForumResponse;
 use wire::forum::NewForumRequest;
 use auth_lib::user_authorization::AdminUser;

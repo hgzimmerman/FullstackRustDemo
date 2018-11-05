@@ -5,7 +5,7 @@ use db::question::*;
 use db::bucket::Bucket;
 use error::Error;
 use error::VectorMappable;
-use db::Conn;
+use pool::Conn;
 use wire::question::*;
 use error::*;
 use log::info;

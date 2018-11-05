@@ -8,7 +8,6 @@ pub mod banned_list;
 use pool::PooledConn;
 use warp::filters::BoxedFilter;
 use auth::Secret;
-use db;
 use self::jwt::secret_filter;
 use self::banned_list::BannedList;
 use self::banned_list::banned_list_filter;
@@ -37,7 +36,7 @@ impl Default for StateConfig {
     fn default() -> Self {
         StateConfig {
             specified_secret: None,
-            database_url: db::DATABASE_URL.to_string(),
+            database_url: pool::DATABASE_URL.to_string(),
         }
     }
 }

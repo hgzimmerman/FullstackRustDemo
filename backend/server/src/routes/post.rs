@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 use db::post::*;
 use error::Error;
-use db::Conn;
+use pool::Conn;
 use wire::post::{PostResponse, NewPostRequest, EditPostRequest};
 use auth_lib::user_authorization::NormalUser;
 use auth_lib::user_authorization::ModeratorUser;

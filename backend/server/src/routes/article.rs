@@ -1,7 +1,7 @@
 use rocket::Route;
 use rocket_contrib::Json;
 use super::{Routable, convert_vector};
-use db::Conn;
+use pool::Conn;
 
 use db::article::*;
 use wire::article::*;

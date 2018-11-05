@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 use db::message::*;
 use error::Error;
-use db::Conn;
+use pool::Conn;
 use wire::message::*;
 use auth_lib::user_authorization::NormalUser;
 use error::*;

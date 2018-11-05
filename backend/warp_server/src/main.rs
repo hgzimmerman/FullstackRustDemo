@@ -104,7 +104,7 @@ mod configuration {
             String::from,
         );
 
-        let database_url: String = db::DATABASE_URL.to_string();
+        let database_url: String = pool::DATABASE_URL.to_string();
 
         let config = Config {
             create_admin,

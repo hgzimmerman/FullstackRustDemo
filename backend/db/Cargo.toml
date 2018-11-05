@@ -13,15 +13,10 @@ path = "tests/bench.rs"
 name = "integration_tests"
 path = "tests/integration.rs"
 
-[features]
-default = []
-rocket_support = ["rocket", "identifiers/rocket_support"]
-
 [dependencies]
 
-wire = { path = "../../wire"}  # TODO Remove this ???
+wire = { path = "../../wire"}
 identifiers = { path = "../../identifiers" }
-#db_proc_macros = { path = "../db_proc_macros"}
 error = { path = "../error" }
 auth = { path = "../auth"}
 
@@ -31,17 +26,13 @@ r2d2-diesel = "1.0.0"
 r2d2 = "*"
 pool = {path = "../pool"}
 
-#rust-crypto = "0.2.36"
-#frank_jwt = "3.0.0"
 typename = "0.1.0"
 typename_derive = "0.1.1"
 
 serde = "1.0.14"
-#serde_json = "1.0.3"
 
 slug = "0.1.2"
 rand = "0.4.1"
-rocket = {version = "0.3.13", optional = true }# TODO Remove rocket dependency here
 
 
 log = "0.3.8"

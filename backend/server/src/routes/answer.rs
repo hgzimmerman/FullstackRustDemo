@@ -5,7 +5,7 @@ use rocket::Route;
 use db::answer::*;
 use db::user::User;
 use error::Error;
-use db::Conn;
+use pool::Conn;
 use wire::answer::*;
 use auth_lib::user_authorization::NormalUser;
 

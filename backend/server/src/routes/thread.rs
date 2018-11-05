@@ -2,7 +2,7 @@ use rocket_contrib::Json;
 use routes::Routable;
 use rocket::Route;
 use db::thread::{Thread, NewThread};
-use db::Conn;
+use pool::Conn;
 use wire::thread::{NewThreadRequest, ThreadResponse};
 use wire::thread::MinimalThreadResponse;
 use error::*;

@@ -3,7 +3,7 @@ use routes::Routable;
 use rocket::Route;
 
 use db::chat::*;
-use db::Conn;
+use pool::Conn;
 use wire::chat::*;
 use identifiers::chat::ChatUuid;
 use auth_lib::user_authorization::NormalUser;
