@@ -1,14 +1,10 @@
 use crate::schema::chats;
 use crate::schema::junction_chat_users;
-// use diesel::RunQueryDsl;
 use crate::user::User;
-// use diesel::associations::HasTable;
 use diesel;
 use diesel::RunQueryDsl;
 use diesel::QueryDsl;
 use diesel::ExpressionMethods;
-// use diesel::Table;
-// use diesel::query_dsl::InternalJoinDsl;
 use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
@@ -20,7 +16,6 @@ use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewChat"]
 #[table_name = "chats"]
 pub struct Chat {
     /// Primary Key.

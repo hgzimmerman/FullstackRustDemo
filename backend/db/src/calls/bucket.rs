@@ -13,7 +13,6 @@ use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewBucket"]
 #[table_name = "buckets"]
 pub struct Bucket {
     /// Primary Key.
@@ -83,7 +82,45 @@ impl Bucket {
         create_row::<Bucket, NewBucket,_>(schema::buckets::table, new, conn)
     }
 
+    pub fn get_bucket_by_name(bucket_name: String, conn: &PgConnection) -> BackendResult<Bucket> {
+        use crate::schema::buckets::dsl::{
+            bucket_name as table_bucket_name,
+            buckets
+        };
+
+        buckets
+            .filter(table_bucket_name.eq(bucket_name))
+            .first::<Bucket>(conn)
+            .map_err(handle_err::<Bucket>)
+    }
+
+    pub fn get_buckets_user_owns(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
+        use crate::schema::buckets::dsl::{
+            bucket_name as table_bucket_name,
+            buckets,
+            uuid as table_bucket_uuid
+        };
+        use crate::schema::junction_bucket_users::dsl::{
+            junction_bucket_users,
+            user_uuid as junction_user_uuid,
+            owner as junction_owner,
+            bucket_uuid as junction_bucket_uuid
+        };
+        let bucket_uuids: Vec<Uuid> = junction_bucket_users
+            .filter(junction_user_uuid.eq(user_uuid.0))
+            .filter(junction_owner.eq(true))
+            .select(junction_bucket_uuid)
+            .load::<Uuid>(conn)
+            .map_err(handle_err::<Bucket>)?;
+
+        buckets
+            .filter(table_bucket_uuid.eq_any(bucket_uuids))
+            .load::<Bucket>(conn)
+            .map_err(handle_err::<Bucket>)
+    }
+
     /// Get buckets that are public, but the user is not a member of
+    #[deprecated]
     pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
         use crate::schema::buckets::dsl::*;
         use crate::schema::buckets;
@@ -106,6 +143,7 @@ impl Bucket {
             .map_err(handle_err::<User>)
     }
 
+    #[deprecated]
     pub fn add_user_to_bucket(new_bucket_user: NewBucketUser, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users;
 
@@ -116,6 +154,7 @@ impl Bucket {
         Ok(())
     }
 
+    #[deprecated]
     pub fn get_buckets_user_belongs_to(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
@@ -132,6 +171,7 @@ impl Bucket {
     /// Helper function.
     /// Gets users depending on the approval column.
     /// It will exclude the user making the request.
+    #[deprecated]
     fn get_users_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, approval: bool, conn: &PgConnection) -> BackendResult<Vec<User>> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
@@ -150,13 +190,17 @@ impl Bucket {
 
     /// This function gets all players that are part of the bucket,
     /// excluding the active user
+    #[deprecated]
     pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid, true, conn)
     }
+
+    #[deprecated]
     fn get_users_requiring_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid,false, conn)
     }
 
+    #[deprecated]
     pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<UsersInBucketData>> {
         use crate::schema::junction_bucket_users::dsl::*;
         use crate::schema::junction_bucket_users as junctions;
@@ -201,6 +245,8 @@ impl Bucket {
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?
+
+    #[deprecated]
     pub fn is_user_approved(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
@@ -214,6 +260,7 @@ impl Bucket {
             .unwrap_or(false)
     }
 
+    #[deprecated]
     pub fn apply_changeset(changeset: BucketUserChangeset, conn: &PgConnection) -> BackendResult<BucketUser> {
         use crate::schema::junction_bucket_users;
 
@@ -223,6 +270,7 @@ impl Bucket {
             .map_err(handle_err::<Bucket>)
     }
 
+    #[deprecated]
     pub fn set_bucket_publicity(bucket_uuid: BucketUuid, publicity: bool, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::buckets::dsl::*;
         use crate::schema::buckets;
@@ -246,6 +294,7 @@ impl Bucket {
         Ok(())
     }
 
+    #[deprecated]
     pub fn set_user_approval(user_uuid: UserUuid, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
         use crate::schema::junction_bucket_users as junctions;
@@ -265,6 +314,8 @@ impl Bucket {
 
     /// Removes the user from the junction table for the given bucket.
     /// This has the effect of denying any request to join the bucket, as well as kicking a user out of the bucket.
+
+    #[deprecated]
     pub fn remove_user_from_bucket(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<()> {
         use crate::schema::junction_bucket_users as junctions;
 

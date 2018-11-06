@@ -18,7 +18,6 @@ use crate::schema;
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewArticle"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[table_name = "articles"]
 pub struct Article {

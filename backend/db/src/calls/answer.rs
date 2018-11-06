@@ -12,7 +12,6 @@ use crate::schema;
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
 #[table_name = "answers"]
-//#[insertable = "NewAnswer"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Question, foreign_key = "question_uuid")]
 pub struct Answer {

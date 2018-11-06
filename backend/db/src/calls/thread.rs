@@ -22,7 +22,6 @@ use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Associations, Queryable, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewThread"]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Forum, foreign_key = "forum_uuid")]
 #[table_name = "threads"]

@@ -1,18 +1,11 @@
 use crate::schema::messages;
 use chrono::NaiveDateTime;
-// use diesel::RunQueryDsl;
-// use diesel::ExpressionMethods;
-// use diesel::QueryDsl;
 use crate::user::User;
-// use diesel::BelongingToDsl;
 use crate::chat::Chat;
-// use diesel::GroupedBy;
 use crate::diesel_extensions::pagination::*;
 use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
-//use diesel::sql_types::Uuid;
-//use diesel::pg::types::sql_types::Uuid;
 use identifiers::message::MessageUuid;
 use identifiers::chat::ChatUuid;
 use crate::calls::prelude::*;
@@ -24,7 +17,6 @@ use identifiers::user::UserUuid;
 #[belongs_to(Message, foreign_key = "reply_uuid")]
 #[belongs_to(User, foreign_key = "author_uuid")]
 #[belongs_to(Chat, foreign_key = "chat_uuid")]
-//#[insertable = "NewMessage"]
 #[table_name = "messages"]
 pub struct Message {
     /// Primary Key.

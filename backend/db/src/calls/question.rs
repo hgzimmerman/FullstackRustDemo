@@ -21,7 +21,6 @@ use identifiers::user::UserUuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewQuestion"]
 #[table_name = "questions"]
 #[belongs_to(Bucket, foreign_key = "bucket_uuid")]
 #[belongs_to(User, foreign_key = "author_uuid")]

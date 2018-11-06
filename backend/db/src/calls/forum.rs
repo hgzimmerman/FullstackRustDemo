@@ -8,7 +8,6 @@ use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
-//#[insertable = "NewForum"]
 #[table_name = "forums"]
 pub struct Forum {
     /// Primary Key.
