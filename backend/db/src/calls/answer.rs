@@ -1,13 +1,15 @@
-use crate::schema::answers;
-use crate::user::User;
-use crate::question::Question;
+use crate::{
+    schema::answers,
+    user::User,
+    question::Question,
+    calls::prelude::*,
+    schema
+};
 //use error::JoeResult;
 use uuid::Uuid;
 use diesel::pg::PgConnection;
 use error::BackendResult;
 use identifiers::answer::AnswerUuid;
-use crate::calls::prelude::*;
-use crate::schema;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]

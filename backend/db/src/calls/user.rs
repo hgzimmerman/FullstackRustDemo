@@ -1,11 +1,13 @@
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
+use diesel::{
+    RunQueryDsl,
+    diesel,
+    QueryDsl,
+    ExpressionMethods,
+    PgConnection
+};
 use chrono::{NaiveDateTime, Utc, Duration};
 use crate::schema::users;
 use error::BackendResult;
-use diesel::PgConnection;
 use identifiers::user::UserUuid;
 use uuid::Uuid;
 use crate::calls::prelude::*;

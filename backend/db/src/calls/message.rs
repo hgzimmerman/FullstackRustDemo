@@ -1,16 +1,20 @@
-use crate::schema::messages;
 use chrono::NaiveDateTime;
-use crate::user::User;
-use crate::chat::Chat;
-use crate::diesel_extensions::pagination::*;
+use crate::{
+    user::User,
+    schema::messages,
+    chat::Chat,
+    diesel_extensions::pagination::*,
+    calls::prelude::*,
+    schema
+};
 use error::BackendResult;
 use diesel::PgConnection;
 use uuid::Uuid;
-use identifiers::message::MessageUuid;
-use identifiers::chat::ChatUuid;
-use crate::calls::prelude::*;
-use crate::schema;
-use identifiers::user::UserUuid;
+use identifiers::{
+    message::MessageUuid,
+    chat::ChatUuid,
+    user::UserUuid
+};
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]

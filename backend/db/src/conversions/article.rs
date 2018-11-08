@@ -4,8 +4,10 @@ use wire::article::*;
 use slug;
 use rand;
 use rand::Rng;
-use identifiers::article::ArticleUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    article::ArticleUuid,
+    user::UserUuid
+};
 
 impl From<Article> for MinimalArticleResponse {
     fn from(article: Article) -> MinimalArticleResponse {

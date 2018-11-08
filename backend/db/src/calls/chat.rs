@@ -1,17 +1,23 @@
-use crate::schema::chats;
-use crate::schema::junction_chat_users;
-use crate::user::User;
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
+use crate::{
+    user::User,
+    schema::junction_chat_users,
+    schema::chats,
+    calls::prelude::*,
+    schema
+};
+use diesel::{
+    QueryDsl,
+    RunQueryDsl,
+    diesel,
+    ExpressionMethods,
+    PgConnection
+};
 use error::BackendResult;
-use diesel::PgConnection;
 use uuid::Uuid;
-use identifiers::chat::ChatUuid;
-use identifiers::user::UserUuid;
-use crate::calls::prelude::*;
-use crate::schema;
+use identifiers::{
+    chat::ChatUuid,
+    user::UserUuid
+};
 
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]

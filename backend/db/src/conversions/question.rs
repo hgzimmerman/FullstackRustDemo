@@ -1,9 +1,11 @@
 use crate::question::*;
 use wire::question::*;
 use wire::answer::AnswerResponse;
-use identifiers::question::QuestionUuid;
-use identifiers::bucket::BucketUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    bucket::BucketUuid,
+    question::QuestionUuid,
+    user::UserUuid
+};
 
 impl From<QuestionData> for QuestionResponse {
     fn from(data: QuestionData) -> QuestionResponse {

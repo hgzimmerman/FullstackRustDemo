@@ -1,18 +1,24 @@
-use crate::schema::articles;
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::ExpressionMethods;
+use crate::{
+    schema::articles,
+    user::User,
+    calls::prelude::*,
+    schema
+};
+use diesel::{
+    RunQueryDsl,
+    diesel,
+    QueryDsl,
+    ExpressionMethods,
+    BelongingToDsl,
+    PgConnection
+};
 use chrono::{NaiveDateTime, Utc};
-use crate::user::User;
-use diesel::BelongingToDsl;
 use error::BackendResult;
-use diesel::PgConnection;
 use uuid::Uuid;
-use identifiers::article::ArticleUuid;
-use identifiers::user::UserUuid;
-use crate::calls::prelude::*;
-use crate::schema;
+use identifiers::{
+    article::ArticleUuid,
+    user::UserUuid
+};
 
 
 /// The database's representation of an article

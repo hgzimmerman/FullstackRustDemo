@@ -1,26 +1,34 @@
-use crate::schema::posts;
-use crate::schema::post_upvotes;
-use crate::schema::post_downvotes;
+use crate::{
+    schema::{
+        post_upvotes,
+        posts,
+        post_downvotes,
+        schema
+    },
+    user::User,
+    thread::Thread,
+    calls::prelude::*,
+};
 use chrono::NaiveDateTime;
-use crate::user::User;
-use crate::thread::Thread;
 use error::*;
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::ExpressionMethods;
-use diesel::BelongingToDsl;
-use diesel::QueryDsl;
+use diesel::{
+    RunQueryDsl,
+    diesel,
+    ExpressionMethods,
+    BelongingToDsl,
+    QueryDsl,
+    SaveChangesDsl,
+    PgConnection
+};
 use error::BackendResult;
-use diesel::SaveChangesDsl;
-use diesel::PgConnection;
-use identifiers::post::PostUuid;
-use identifiers::thread::ThreadUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    post::PostUuid,
+    thread::ThreadUuid,
+    user::UserUuid
+};
 use uuid::Uuid;
 use chrono::Utc;
 use log::info;
-use crate::calls::prelude::*;
-use crate::schema;
 
 use std::collections::HashMap;
 

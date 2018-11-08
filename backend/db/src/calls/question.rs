@@ -1,23 +1,30 @@
-use crate::schema::questions;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use crate::user::User;
-use crate::bucket::Bucket;
-use diesel::BelongingToDsl;
-use crate::answer::Answer;
-use diesel::GroupedBy;
-use crate::answer::AnswerData;
+use diesel::{
+    RunQueryDsl,
+    QueryDsl,
+    BelongingToDsl,
+    GroupedBy,
+    diesel,
+    ExpressionMethods,
+    PgConnection
+};
+use crate::{
+    answer::{
+        Answer,
+        AnswerData
+    },
+    bucket::Bucket,
+    user::User,
+    schema::questions,
+    calls::prelude::*,
+    schema
+};
 use error::BackendResult;
 use uuid::Uuid;
-use identifiers::question::QuestionUuid;
-use identifiers::bucket::BucketUuid;
-use crate::calls::prelude::*;
-use crate::schema;
-
-use diesel;
-use diesel::ExpressionMethods;
-use diesel::PgConnection;
-use identifiers::user::UserUuid;
+use identifiers::{
+    question::QuestionUuid,
+    bucket::BucketUuid,
+    user::UserUuid
+};
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]

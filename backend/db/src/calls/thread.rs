@@ -2,20 +2,24 @@ use crate::schema::threads;
 use chrono::NaiveDateTime;
 use crate::user::User;
 use crate::forum::Forum;
-use diesel;
-use diesel::RunQueryDsl;
-use diesel::QueryDsl;
-use diesel::BelongingToDsl;
-use diesel::ExpressionMethods;
+use diesel::{
+    RunQueryDsl,
+    diesel,
+    QueryDsl,
+    BelongingToDsl,
+    ExpressionMethods,
+    PgConnection
+};
 use error::BackendResult;
-use diesel::PgConnection;
 use uuid::Uuid;
-use identifiers::thread::ThreadUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    thread::ThreadUuid,
+    user::UserUuid,
+    forum::ForumUuid
+};
 
 use crate::post::{Post, NewPost};
 use crate::post::{PostData, ChildlessPostData};
-use identifiers::forum::ForumUuid;
 use crate::calls::prelude::*;
 use crate::schema;
 

@@ -1,15 +1,25 @@
-use crate::schema::buckets;
-use crate::schema::junction_bucket_users;
-use crate::user::User;
+use crate::{
+    schema::buckets,
+    schema::junction_bucket_users,
+    user::User,
+    calls::prelude::*,
+    schema
+};
 use error::BackendResult;
-use diesel::prelude::*;
-use diesel;
-use chrono::{NaiveDateTime, Utc, Duration};
+use diesel::{
+    prelude::*,
+    diesel
+};
+use chrono::{
+    NaiveDateTime,
+    Utc,
+    Duration
+};
 use uuid::Uuid;
-use identifiers::bucket::BucketUuid;
-use identifiers::user::UserUuid;
-use crate::calls::prelude::*;
-use crate::schema;
+use identifiers::{
+    bucket::BucketUuid,
+    user::UserUuid
+};
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]

@@ -13,31 +13,31 @@ pub mod chat;
 pub mod message;
 
 
-
-
-use diesel::dsl::Find;
-use diesel::pg::PgConnection;
-use diesel::query_dsl::{LoadQuery, RunQueryDsl};
-use diesel::query_dsl::filter_dsl::FindDsl;
-use diesel::result::Error as DieselError;
 use uuid::Uuid;
-use diesel::insertable::Insertable;
-use diesel::query_source::Queryable;
-use diesel::pg::Pg;
-use diesel::query_builder::IntoUpdateTarget;
-use diesel::associations::HasTable;
-use diesel::query_source::Table;
-use diesel::query_builder::QueryId;
-use diesel::query_builder::QueryFragment;
-use diesel::Expression;
-use diesel::query_builder::AsQuery;
-use diesel::delete;
-use diesel::query_builder::DeleteStatement;
-use diesel::sql_types::HasSqlType;
-use diesel::query_builder::InsertStatement;
-use diesel::query_builder::AsChangeset;
-use diesel::query_source::QuerySource;
-use diesel::helper_types::Update;
+use diesel::{
+    query_builder::IntoUpdateTarget,
+    pg::Pg,
+    query_source::Queryable,
+    insertable::Insertable,
+    result::Error as DieselError,
+    query_dsl::filter_dsl::FindDsl,
+    query_dsl::{LoadQuery, RunQueryDsl},
+    pg::PgConnection,
+    dsl::Find,
+    associations::HasTable,
+    query_source::Table,
+    query_builder::QueryId,
+    query_builder::QueryFragment,
+    Expression,
+    query_builder::AsQuery,
+    delete,
+    query_builder::DeleteStatement,
+    sql_types::HasSqlType,
+    query_builder::InsertStatement,
+    query_builder::AsChangeset,
+    query_source::QuerySource,
+    helper_types::Update
+};
 use typename::TypeName;
 use error::Error;
 

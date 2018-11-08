@@ -1,18 +1,26 @@
-use chrono::{NaiveDateTime, Utc};
-use chrono::Duration;
-use crate::auth_lib::ServerJwt;
-use crate::auth_lib::Secret;
+use chrono::{
+    NaiveDateTime,
+    Utc,
+    Duration
+};
+use crate::{
+    auth_lib::ServerJwt,
+    auth_lib::Secret,
+    auth_lib::verify_hash,
+    user::User
+};
 use identifiers::user::UserUuid;
-use wire::user::Jwt;
-use crate::auth_lib::verify_hash;
-use crate::user::User;
-use wire::login::LoginRequest;
-use error::LoginError;
+use wire::{
+    user::Jwt,
+    login::LoginRequest
+};
+use error::{
+    LoginError,
+    LoginResult
+};
 use diesel::PgConnection;
 
 use log::info;
-
-use error::LoginResult;
 
 
 pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) -> LoginResult {

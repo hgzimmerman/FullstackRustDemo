@@ -1,8 +1,10 @@
 use crate::thread::*;
 use wire::thread::*;
 use chrono::Utc;
-use identifiers::thread::ThreadUuid;
-use identifiers::forum::ForumUuid;
+use identifiers::{
+    thread::ThreadUuid,
+    forum::ForumUuid
+};
 
 impl From<NewThreadRequest> for NewThread {
     fn from(request: NewThreadRequest) -> NewThread {

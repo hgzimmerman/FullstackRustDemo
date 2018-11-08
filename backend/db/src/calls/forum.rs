@@ -1,10 +1,12 @@
-use crate::schema::forums;
 use uuid::Uuid;
 use diesel::pg::PgConnection;
 use identifiers::forum::ForumUuid;
 use error::BackendResult;
-use crate::calls::prelude::*;
-use crate::schema;
+use crate::{
+    calls::prelude::*,
+    schema::forums,
+    schema
+};
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
