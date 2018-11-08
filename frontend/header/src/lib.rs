@@ -107,13 +107,13 @@ impl Renderable<Header> for Header {
             }
         };
 
-        let bucket_questions = if self.is_logged_in {
-            html! {
-                <RouterLink: text="Bucket Questions", route=route!("bucket"), />
-            }
-        } else {
-            util::wrappers::empty_vdom_node()
-        };
+//        let bucket_questions = if self.is_logged_in {
+//            html! {
+//                <RouterLink: text="Bucket Questions", route=route!("bucket"), />
+//            }
+//        } else {
+//            util::wrappers::empty_vdom_node()
+//        };
 
         html! {
             <div class="header",>
@@ -126,7 +126,7 @@ impl Renderable<Header> for Header {
                         <RouterLink: text="Forums", route=route!("forum"), />
                     </span>
                     <span>
-                        {bucket_questions}
+                        <RouterLink: text="Bucket Questions", route=route!("bucket"), />
                     </span>
                     <span>
                         {log_in_out}

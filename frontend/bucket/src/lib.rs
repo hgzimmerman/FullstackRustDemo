@@ -3,11 +3,9 @@ extern crate yew;
 #[macro_use]
 extern crate yew_router;
 extern crate failure;
-//extern crate context;
 extern crate wire;
 extern crate identifiers;
 extern crate util;
-//extern crate routes;
 extern crate common;
 #[macro_use]
 extern crate serde_derive;
@@ -25,8 +23,8 @@ use yew_router::router_agent::RouterSenderBase;
 mod bucket;
 mod buckets;
 mod new_bucket;
-mod bucket_participants;
-mod bucket_management;
+//mod bucket_participants;
+//mod bucket_management;
 mod requests;
 
 
@@ -34,26 +32,16 @@ use util::button::Button;
 use bucket::BucketLobby;
 use util::loadable::Loadable;
 use wire::bucket::BucketResponse;
-//use util::input::InputValidator;
-//use util::input::Input;
 use util::input::InputState;
 use util::uploadable::Uploadable;
 use wire::bucket::NewBucketRequest;
-use bucket_participants::BucketParticipants;
-use bucket_management::BucketManagement;
-use buckets::BucketLists;
-use buckets::ApprovedBucket;
-use buckets::PublicBucket;
 use identifiers::bucket::BucketUuid;
-
 use common::fetch::Networking;
 use common::fetch::FetchResponse;
 use common::datatypes::bucket::BucketData;
-
 use requests::BucketRequest;
 use yew_router::components::RouterButton;
-
-
+use buckets::BucketFinder;
 
 
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -136,7 +124,8 @@ pub struct BucketModel {
 
 
 pub enum BucketPage {
-    BucketList(BucketLists),
+//    BucketList(BucketLists),
+    BucketFinder(BucketFinder),
     Bucket(Loadable<BucketData>),
     Create(Uploadable<NewBucket>),
 }
@@ -145,14 +134,16 @@ pub enum BucketPage {
 pub enum Msg {
     NavigateToBucket { bucket_uuid: BucketUuid },
     NavigateToCreateBucket,
-    HandleGetPublicBucketsResponse(FetchResponse<Vec<BucketResponse>>),
-    HandleGetApprovedBucketsResponse(FetchResponse<Vec<BucketResponse>>),
+    SearchForBucket,
+    UpdateSearchedBucketName(InputState),
+//    HandleGetPublicBucketsResponse(FetchResponse<Vec<BucketResponse>>),
+//    HandleGetApprovedBucketsResponse(FetchResponse<Vec<BucketResponse>>),
     HandleGetBucketResponse(FetchResponse<BucketData>),
-    HandleJoinBucketResponse(FetchResponse<()>),
+//    HandleJoinBucketResponse(FetchResponse<()>),
     CreateBucket,
     UpdateBucketName(InputState),
-    ChangeDropDownState(DropDownPaneVariant),
-    RequestToJoinBucket { bucket_uuid: BucketUuid },
+//    ChangeDropDownState(DropDownPaneVariant),
+//    RequestToJoinBucket { bucket_uuid: BucketUuid },
     NoOp, // TODO remove me
 }
 
@@ -164,22 +155,22 @@ impl Default for Msg {
 
 impl BucketModel {
     /// Gets the list of buckets the user can request to join.
-    fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
-        networking.fetch(
-            &BucketRequest::GetPublicBuckets,
-            Msg::HandleGetPublicBucketsResponse,
-            link,
-        );
-    }
+//    fn get_public_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
+//        networking.fetch(
+//            &BucketRequest::GetPublicBuckets,
+//            Msg::HandleGetPublicBucketsResponse,
+//            link,
+//        );
+//    }
 
     /// Gets the list of buckets the user can join.
-    fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
-        networking.fetch(
-            &BucketRequest::GetBucketsForUser,
-            Msg::HandleGetApprovedBucketsResponse,
-            link,
-        );
-    }
+//    fn get_approved_buckets(networking: &mut Networking, link: &ComponentLink<Self>) {
+//        networking.fetch(
+//            &BucketRequest::GetBucketsForUser,
+//            Msg::HandleGetApprovedBucketsResponse,
+//            link,
+//        );
+//    }
 
     fn get_bucket(bucket_uuid: BucketUuid, networking: &mut Networking, link: &ComponentLink<Self>) {
         networking.fetch(
@@ -205,13 +196,13 @@ impl BucketModel {
             }
         }
     }
-    fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
-        self.networking.fetch(
-            &BucketRequest::CreateJoinBucketRequest { bucket_uuid },
-            Msg::HandleJoinBucketResponse,
-            &self.link,
-        );
-    }
+//    fn request_to_join_bucket(&mut self, bucket_uuid: BucketUuid) {
+//        self.networking.fetch(
+//            &BucketRequest::CreateJoinBucketRequest { bucket_uuid },
+//            Msg::HandleJoinBucketResponse,
+//            &self.link,
+//        );
+//    }
 }
 
 impl Component for BucketModel {
@@ -223,10 +214,12 @@ impl Component for BucketModel {
 
         let bucket_page: BucketPage = match props {
             BucketRoute::BucketList => {
-                Self::get_public_buckets(&mut networking, &link);
-                Self::get_approved_buckets(&mut networking, &link);
-                BucketPage::BucketList(BucketLists::default())
+//                Self::get_public_buckets(&mut networking, &link);
+//                Self::get_approved_buckets(&mut networking, &link);
+//                BucketPage::BucketList(BucketLists::default())
+                BucketPage::BucketFinder(BucketFinder::default())
             }
+
             BucketRoute::Bucket { bucket_uuid } => {
                 Self::get_bucket(bucket_uuid, &mut networking, &link);
                 BucketPage::Bucket(Loadable::default())
@@ -263,42 +256,53 @@ impl Component for BucketModel {
                     ),
                 )
             }
-            HandleGetPublicBucketsResponse(buckets_response) => {
-
-                let public_buckets_response: FetchResponse<Vec<PublicBucket>> = buckets_response.map(
-                    |x: Vec<BucketResponse>| {
-                        x.into_iter()
-                            .map(BucketData::from)
-                            .map(PublicBucket)
-                            .collect()
-                    },
-                );
-                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
-                    bucket_list.public_buckets = Loadable::from_fetch_response(public_buckets_response);
+            UpdateSearchedBucketName(bucket_name) => {
+                if let BucketPage::BucketFinder(ref mut find_bucket) = self.bucket_page {
+                    find_bucket.bucket_name = bucket_name;
                 } else {
-                    let mut bucket_lists = BucketLists::default();
-                    bucket_lists.public_buckets = Loadable::from_fetch_response(public_buckets_response);
-                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+                    warn!("Incoherent state. Expected page to be /create");
+                    return false;
                 }
             }
-            HandleGetApprovedBucketsResponse(buckets_response) => {
-                let approved_buckets_response: FetchResponse<Vec<ApprovedBucket>> = buckets_response.map(
-                    |x: Vec<BucketResponse>| {
-                        x.into_iter()
-                            .map(BucketData::from)
-                            .map(ApprovedBucket)
-                            .collect()
-                    },
-                );
-
-                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
-                    bucket_list.approved_buckets = Loadable::from_fetch_response(approved_buckets_response);
-                } else {
-                    let mut bucket_lists = BucketLists::default();
-                    bucket_lists.approved_buckets = Loadable::from_fetch_response(approved_buckets_response);
-                    self.bucket_page = BucketPage::BucketList(bucket_lists)
-                }
+            SearchForBucket => {
+                unimplemented!()
             }
+//            HandleGetPublicBucketsResponse(buckets_response) => {
+//
+//                let public_buckets_response: FetchResponse<Vec<PublicBucket>> = buckets_response.map(
+//                    |x: Vec<BucketResponse>| {
+//                        x.into_iter()
+//                            .map(BucketData::from)
+//                            .map(PublicBucket)
+//                            .collect()
+//                    },
+//                );
+//                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+//                    bucket_list.public_buckets = Loadable::from_fetch_response(public_buckets_response);
+//                } else {
+//                    let mut bucket_lists = BucketLists::default();
+//                    bucket_lists.public_buckets = Loadable::from_fetch_response(public_buckets_response);
+//                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+//                }
+//            }
+//            HandleGetApprovedBucketsResponse(buckets_response) => {
+//                let approved_buckets_response: FetchResponse<Vec<ApprovedBucket>> = buckets_response.map(
+//                    |x: Vec<BucketResponse>| {
+//                        x.into_iter()
+//                            .map(BucketData::from)
+//                            .map(ApprovedBucket)
+//                            .collect()
+//                    },
+//                );
+//
+//                if let BucketPage::BucketList(ref mut bucket_list) = self.bucket_page {
+//                    bucket_list.approved_buckets = Loadable::from_fetch_response(approved_buckets_response);
+//                } else {
+//                    let mut bucket_lists = BucketLists::default();
+//                    bucket_lists.approved_buckets = Loadable::from_fetch_response(approved_buckets_response);
+//                    self.bucket_page = BucketPage::BucketList(bucket_lists)
+//                }
+//            }
             HandleGetBucketResponse(bucket_data_response) => self.bucket_page = BucketPage::Bucket(Loadable::from_fetch_response(bucket_data_response)),
             CreateBucket => {
                 let new_bucket_option: Option<NewBucket> = if let BucketPage::Create(ref mut new_bucket) = self.bucket_page {
@@ -322,23 +326,23 @@ impl Component for BucketModel {
                     return false;
                 }
             }
-            ChangeDropDownState(drop_down_state) => {
-                if self.drop_down_state == drop_down_state {
-                    self.drop_down_state = DropDownPaneVariant::Closed // close the drop down pane if the current one is already selected
-                } else {
-                    self.drop_down_state = drop_down_state
-                }
-            }
-            RequestToJoinBucket { bucket_uuid } => {
-                self.request_to_join_bucket(bucket_uuid)
-                //                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
-            }
-            HandleJoinBucketResponse(_response) => {
-                //                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
-                //                    bucket_lists
-                //                }
-                //TODO this used to be a "noop" but it should probably do something
-            }
+//            ChangeDropDownState(drop_down_state) => {
+//                if self.drop_down_state == drop_down_state {
+//                    self.drop_down_state = DropDownPaneVariant::Closed // close the drop down pane if the current one is already selected
+//                } else {
+//                    self.drop_down_state = drop_down_state
+//                }
+//            }
+//            RequestToJoinBucket { bucket_uuid } => {
+//                self.request_to_join_bucket(bucket_uuid)
+//                //                self.networking.fetch(BucketRequest::CreateJoinBucketRequest{bucket_uuid}, |r: FetchResponse<()>| Msg::HandleJoinBucketResponse(r) , &self.link);
+//            }
+//            HandleJoinBucketResponse(_response) => {
+//                //                if let BucketPage::BucketList(ref mut bucket_lists) = self.bucket_page {
+//                //                    bucket_lists
+//                //                }
+//                //TODO this used to be a "noop" but it should probably do something
+//            }
             NoOp => {}
         }
         true
@@ -346,9 +350,10 @@ impl Component for BucketModel {
     fn change(&mut self, props: Self::Properties) -> ShouldRender {
         let bucket_page: BucketPage = match props {
             BucketRoute::BucketList => {
-                Self::get_public_buckets(&mut self.networking, &self.link);
-                Self::get_approved_buckets(&mut self.networking, &self.link);
-                BucketPage::BucketList(BucketLists::default())
+//                Self::get_public_buckets(&mut self.networking, &self.link);
+//                Self::get_approved_buckets(&mut self.networking, &self.link);
+//                BucketPage::BucketList(BucketLists::default())
+                BucketPage::BucketFinder(BucketFinder::default())
             }
             BucketRoute::Bucket { bucket_uuid } => {
                 Self::get_bucket(bucket_uuid, &mut self.networking, &self.link);
@@ -374,7 +379,8 @@ impl Renderable<BucketModel> for BucketModel {
         }
 
         let page = match self.bucket_page {
-            BucketList(ref buckets) => buckets.view(),
+//            BucketList(ref buckets) => buckets.view(),
+            BucketFinder(ref finder) => finder.view(),
             Bucket(ref bucket) => bucket.default_view(bucket_lobby_fn),
             Create(ref new_bucket) => {
                 html! {
@@ -390,13 +396,13 @@ impl Renderable<BucketModel> for BucketModel {
             DropDownPaneVariant::Closed => ::util::wrappers::empty_vdom_node(),
             DropDownPaneVariant::ManageBuckets => {
                 html! {
-                <BucketManagement: />
+//                <BucketManagement: />
             }
             }
             DropDownPaneVariant::ViewParticipants => {
                 if let Bucket(ref bucket) = self.bucket_page {
                     html! {
-                        <BucketParticipants: bucket_data=bucket,/>
+//                        <BucketParticipants: bucket_data=bucket,/>
                     }
                 } else {
                     ::util::wrappers::empty_vdom_node()
@@ -406,17 +412,17 @@ impl Renderable<BucketModel> for BucketModel {
 
 
         let title_content = match self.bucket_page {
-            BucketList(_) => {
+            BucketFinder(ref finder) => {
                 html! {
                 <div class=("flexbox-horiz","full-width"),>
                     <div class="flexbox-expand", >
-                        {"Buckets"}
+                        {"Find yo Bucket"}
                     </div>
                     <div>
                         <RouterButton: text="Create Bucket", route=route!("bucket/create"), />
                     </div>
                     <div style="position: relative",>
-                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
+//                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
                         {pane}
                     </div>
                 </div>
@@ -436,8 +442,8 @@ impl Renderable<BucketModel> for BucketModel {
                     </div>
                     <div style="position: relative",>
 
-                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
-                        <Button: title="Participants", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ViewParticipants), />
+//                        <Button: title="Manage", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ManageBuckets), />
+//                        <Button: title="Participants", onclick=|_| Msg::ChangeDropDownState(DropDownPaneVariant::ViewParticipants), />
                         {pane}
                     </div>
                 </div>

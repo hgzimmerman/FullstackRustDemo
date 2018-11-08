@@ -43,8 +43,16 @@ pub const API_STRING: &str = "api";
 pub fn routes(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     api(&s)
         .or(static_files_handler())
+        .or(cors()) // Handle Options requests
         .recover(customize_error) // Top level error correction
-        .or(cors()) // For some reason, this needs to come after the recover() section.
+        .map(|r| {
+            // In order for CORS to work properly, every response has to contain the Access-Control-Allow-Origin header
+            warp::reply::with_header(
+                r,
+                "Access-Control-Allow-Origin",
+                "*"
+            )
+        })
         .boxed()
 }
 
@@ -78,17 +86,20 @@ fn cors() -> BoxedFilter<(impl warp::Reply,)> {
     // TODO replace this once a blessed implementation is released by warp
     warp::options()
         .and(warp::header::<String>("origin"))
-        .map(|origin: String| {
+        .map(|_origin: String| {
             let with_header = warp::reply::with_header(
                 warp::reply(),
-                "access-control-allow-origin",
-                origin
-            );
-            warp::reply::with_header(
-                with_header,
                 "vary",
                 "origin"
-            )
+            );
+            let with_header = warp::reply::with_header(
+                with_header,
+                "Access-Control-Allow-Headers",
+                "content-type"
+            );
+
+            with_header
+
         })
         .boxed()
 }
@@ -97,7 +108,6 @@ fn cors() -> BoxedFilter<(impl warp::Reply,)> {
 #[cfg(test)]
 mod tests {
     use super::*;
-//    use crate::error::Error;
 
     #[test]
     fn routes_redirect_to_index() {

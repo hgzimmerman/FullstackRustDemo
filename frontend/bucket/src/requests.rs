@@ -13,9 +13,11 @@ use wire::answer::*;
 
 #[derive(Serialize, Deserialize)]
 pub enum BucketRequest {
-    GetPublicBuckets,
-    GetBucketsForUser,
+//    GetPublicBuckets,
+//    GetBucketsForUser,
     GetBucket{bucket_uuid: BucketUuid},
+    GetBucketByName{bucket_name: String},
+    GetBucketsUserOwns,
     CreateBucket(NewBucketRequest),
     GetRandomQuestion { bucket_uuid: BucketUuid },
     GetQuestions { bucket_uuid: BucketUuid},
@@ -23,13 +25,13 @@ pub enum BucketRequest {
     CreateQuestion(NewQuestionRequest),
     DeleteQuestion{question_uuid: QuestionUuid},
     PutQuestionBackInBucket{question_uuid: QuestionUuid},
-    SetBucketPublicStatus{bucket_uuid: BucketUuid, is_public: bool},
-    ApproveUserForBucket {bucket_uuid: BucketUuid, user_uuid: UserUuid},
-    RemoveUserFromBucket {bucket_uuid: BucketUuid, user_uuid: UserUuid},
-    GetUnapprovedUsersForOwnedBuckets,
-    GetUsersInBucket{bucket_uuid: BucketUuid},
-    GetIsUserOwnerOfBucket{bucket_uuid: BucketUuid},
-    CreateJoinBucketRequest {bucket_uuid: BucketUuid},
+//    SetBucketPublicStatus{bucket_uuid: BucketUuid, is_public: bool},
+//    ApproveUserForBucket {bucket_uuid: BucketUuid, user_uuid: UserUuid},
+//    RemoveUserFromBucket {bucket_uuid: BucketUuid, user_uuid: UserUuid},
+//    GetUnapprovedUsersForOwnedBuckets,
+//    GetUsersInBucket{bucket_uuid: BucketUuid},
+//    GetIsUserOwnerOfBucket{bucket_uuid: BucketUuid},
+//    CreateJoinBucketRequest {bucket_uuid: BucketUuid},
     GetNumberOfQuestionsInBucket {bucket_uuid: BucketUuid}
 }
 
@@ -37,23 +39,25 @@ impl FetchRequest for BucketRequest {
     fn resolve_path(&self) -> String {
         use self::BucketRequest::*;
         match *self {
-            GetPublicBuckets => "buckets/public".into(),
-            GetBucketsForUser => "buckets/approved".into(),
+//            GetPublicBuckets => "buckets/public".into(),
+//            GetBucketsForUser => "buckets/approved".into(),
             GetBucket{bucket_uuid} => format!("buckets/{}", bucket_uuid),
-            CreateBucket(_) => "buckets/create".into(),
+            GetBucketByName {ref bucket_name} => format!("buckets/{}", bucket_name),
+            GetBucketsUserOwns => format!("buckets/owned"),
+            CreateBucket(_) => "buckets".into(),
             GetRandomQuestion { bucket_uuid } => format!("question/random_question?bucket_uuid={}", bucket_uuid),
             GetQuestions { bucket_uuid } => format!("question?bucket_uuid={}", bucket_uuid),
             AnswerQuestion(_) => "answer/create".into(),
             CreateQuestion(_) => "question/create".into(),
             DeleteQuestion {question_uuid} => format!("question/{}", question_uuid),
             PutQuestionBackInBucket {question_uuid} => format!("question/{}/into_bucket", question_uuid),
-            SetBucketPublicStatus {bucket_uuid, is_public} => format!("buckets/{}/publicity?is_public={}", bucket_uuid, is_public),
-            ApproveUserForBucket {bucket_uuid, user_uuid} => format!("buckets/{}/approval?user_id={}",bucket_uuid, user_uuid),
-            RemoveUserFromBucket {bucket_uuid, user_uuid} => format!("buckets/{}?user_id={}",bucket_uuid, user_uuid),
-            GetUnapprovedUsersForOwnedBuckets => "buckets/unapproved_users_for_owned_buckets".into(),
-            GetUsersInBucket {bucket_uuid} => format!("buckets/{}/users", bucket_uuid),
-            GetIsUserOwnerOfBucket {bucket_uuid}  => format!{"buckets/{}/user_owner_status", bucket_uuid},
-            CreateJoinBucketRequest {bucket_uuid} => format!{"buckets/{}/user_join_request", bucket_uuid},
+//            SetBucketPublicStatus {bucket_uuid, is_public} => format!("buckets/{}/publicity?is_public={}", bucket_uuid, is_public),
+//            ApproveUserForBucket {bucket_uuid, user_uuid} => format!("buckets/{}/approval?user_id={}",bucket_uuid, user_uuid),
+//            RemoveUserFromBucket {bucket_uuid, user_uuid} => format!("buckets/{}?user_id={}",bucket_uuid, user_uuid),
+//            GetUnapprovedUsersForOwnedBuckets => "buckets/unapproved_users_for_owned_buckets".into(),
+//            GetUsersInBucket {bucket_uuid} => format!("buckets/{}/users", bucket_uuid),
+//            GetIsUserOwnerOfBucket {bucket_uuid}  => format!{"buckets/{}/user_owner_status", bucket_uuid},
+//            CreateJoinBucketRequest {bucket_uuid} => format!{"buckets/{}/user_join_request", bucket_uuid},
             GetNumberOfQuestionsInBucket {bucket_uuid} => format!("/api/question/quantity_in_bucket?bucket_uuid={}", bucket_uuid)
         }
     }
@@ -61,9 +65,11 @@ impl FetchRequest for BucketRequest {
         use self::BucketRequest::*;
         use self::Auth::*;
         match *self {
-            GetPublicBuckets => Required,
-            GetBucketsForUser => Required,
-            GetBucket{..} => Required,
+//            GetPublicBuckets => Required,
+//            GetBucketsForUser => Required,
+            GetBucket{..} => NotRequired,
+            GetBucketByName {..} => NotRequired,
+            GetBucketsUserOwns => Required,
             CreateBucket(_) => Required,
             GetRandomQuestion {..} => NotRequired,
             GetQuestions {..} => NotRequired,
@@ -71,13 +77,13 @@ impl FetchRequest for BucketRequest {
             CreateQuestion(_) => Required,
             DeleteQuestion {..} => Required,
             PutQuestionBackInBucket {..} => Required,
-            SetBucketPublicStatus {..} => Required,
-            ApproveUserForBucket {..} => Required,
-            RemoveUserFromBucket {..} => Required,
-            GetUnapprovedUsersForOwnedBuckets => Required,
-            GetUsersInBucket {..} => Required,
-            GetIsUserOwnerOfBucket {..} => Required,
-            CreateJoinBucketRequest {..} => Required,
+//            SetBucketPublicStatus {..} => Required,
+//            ApproveUserForBucket {..} => Required,
+//            RemoveUserFromBucket {..} => Required,
+//            GetUnapprovedUsersForOwnedBuckets => Required,
+//            GetUsersInBucket {..} => Required,
+//            GetIsUserOwnerOfBucket {..} => Required,
+//            CreateJoinBucketRequest {..} => Required,
             GetNumberOfQuestionsInBucket {..} => Required
         }
     }
@@ -87,9 +93,11 @@ impl FetchRequest for BucketRequest {
 
         let empty: String = "".to_string();
         match self {
-            GetPublicBuckets => Get,
-            GetBucketsForUser => Get,
+//            GetPublicBuckets => Get,
+//            GetBucketsForUser => Get,
             GetBucket {..} => Get,
+            GetBucketByName {..} => Get,
+            GetBucketsUserOwns => Get,
             CreateBucket(r) => Post(to_body(r)),
             GetRandomQuestion {..} => Get,
             GetQuestions {..} => Get,
@@ -97,13 +105,13 @@ impl FetchRequest for BucketRequest {
             CreateQuestion(r) => Post(to_body(r)),
             DeleteQuestion {..} => Delete,
             PutQuestionBackInBucket {..} => Put(empty), // no body
-            SetBucketPublicStatus {..} => Put(empty),
-            ApproveUserForBucket {..} => Put(empty),
-            RemoveUserFromBucket {..} => Delete,
-            GetUnapprovedUsersForOwnedBuckets => Get,
-            GetUsersInBucket {..} => Get,
-            GetIsUserOwnerOfBucket {..} => Get,
-            CreateJoinBucketRequest {..} => Post(empty),
+//            SetBucketPublicStatus {..} => Put(empty),
+//            ApproveUserForBucket {..} => Put(empty),
+//            RemoveUserFromBucket {..} => Delete,
+//            GetUnapprovedUsersForOwnedBuckets => Get,
+//            GetUsersInBucket {..} => Get,
+//            GetIsUserOwnerOfBucket {..} => Get,
+//            CreateJoinBucketRequest {..} => Post(empty),
             GetNumberOfQuestionsInBucket {..} => Get
         }
     }

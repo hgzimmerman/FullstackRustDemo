@@ -14,11 +14,16 @@ use pool::PooledConn;
 use crate::state::jwt::normal_user_filter;
 use identifiers::user::UserUuid;
 use crate::util::convert_vector_and_json;
+use crate::logging::log_attach;
+use crate::logging::HttpMethod;
+use crate::util::json_body_filter;
+use wire::bucket::NewBucketRequest;
 
 
 pub fn bucket_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Bucket API");
     let api = get_bucket_by_uuid(s)
+        .or(create_bucket(s))
         .or(get_bucket_by_name(s))
         .or(get_buckets_belonging_to_user(s))
     ;
@@ -31,6 +36,8 @@ pub fn bucket_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
 
 
 pub fn get_bucket_by_uuid(s: &State) -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Get, "bucket/<uuid>");
+
     warp::get2()
         .and(uuid_wrap_filter())
         .and(s.db.clone())
@@ -42,7 +49,24 @@ pub fn get_bucket_by_uuid(s: &State) -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
+pub fn create_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Post, "bucket/");
+
+    warp::post2()
+        .and(json_body_filter(4))
+        .and(normal_user_filter(s))
+        .and(s.db.clone())
+        .and_then(|request: NewBucketRequest, user_uuid: UserUuid, conn: PooledConn| {
+            Bucket::create_bucket(request.into(), &conn)
+                .map(convert_and_json::<Bucket, BucketResponse>)
+                .map_err(Error::simple_reject)
+        })
+        .boxed()
+}
+
 pub fn get_bucket_by_name(s: &State) -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Get, "bucket/<name>");
+
     warp::get2()
         .and(warp::path::param())
         .and(s.db.clone())
@@ -55,6 +79,8 @@ pub fn get_bucket_by_name(s: &State) -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn get_buckets_belonging_to_user(s: &State) -> BoxedFilter<(impl Reply,)> {
+
+    log_attach(HttpMethod::Get, "bucket/owned");
     warp::get2()
         .and(warp::path::path("owned"))
         .and(normal_user_filter(s))

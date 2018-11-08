@@ -28,7 +28,7 @@ pub enum Auth {
     NotRequired,
 }
 
-/// Not all are included, but isn't intended to be exhaustive
+/// Not all are included, but isn't intended to be exhaustive.
 pub enum HttpMethod {
     Get,
     Post(String),
@@ -276,7 +276,7 @@ struct Reauth;
 
 impl FetchRequest for Reauth {
     fn resolve_path(&self) -> String {
-        "/auth/reauth".into()
+        "/auth/reauth".to_string()
     }
 
     fn resolve_auth(&self) -> Auth {
