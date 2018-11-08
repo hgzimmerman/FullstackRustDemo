@@ -8,9 +8,13 @@ pub mod banned_list;
 use pool::PooledConn;
 use warp::filters::BoxedFilter;
 use auth::Secret;
-use self::jwt::secret_filter;
-use self::banned_list::BannedList;
-use self::banned_list::banned_list_filter;
+use self::{
+    jwt::secret_filter,
+    banned_list::{
+        BannedList,
+        banned_list_filter
+    }
+};
 #[cfg(test)]
 use pool::Pool;
 

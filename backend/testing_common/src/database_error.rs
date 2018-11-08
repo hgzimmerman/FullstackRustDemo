@@ -1,8 +1,11 @@
 use diesel::result;
 
-use std::convert::From;
-use std::error::Error;
-use std::{fmt, io};
+use std::{
+    convert::From,
+    error::Error,
+    fmt,
+    io
+};
 
 use self::DatabaseError::*;
 

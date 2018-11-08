@@ -2,9 +2,20 @@ use diesel::PgConnection;
 use chrono::Utc;
 use Fixture;
 
-use db::forum::{Forum, NewForum};
-use db::thread::{Thread, NewThread};
-use db::post::{Post, NewPost};
+use db::{
+    forum::{
+        Forum,
+        NewForum
+    },
+    thread::{
+        Thread,
+        NewThread
+    },
+    post::{
+        Post,
+        NewPost
+    }
+};
 
 use fixtures::user::UserFixture;
 

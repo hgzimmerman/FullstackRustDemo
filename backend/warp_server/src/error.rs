@@ -3,10 +3,13 @@ use error::WeekendAtJoesError;
 use std::error::Error as StdError;
 use std::fmt::{self, Display};
 
-use warp::{Rejection, Reply};
-use warp::http::StatusCode;
+use warp::{
+    Rejection,
+    Reply,
+    http::StatusCode,
+    warp
+};
 use std::fmt::Debug;
-use warp;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]

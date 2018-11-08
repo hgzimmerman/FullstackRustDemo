@@ -3,7 +3,7 @@ use diesel::{
     QueryDsl,
     BelongingToDsl,
     GroupedBy,
-    diesel,
+    self,
     ExpressionMethods,
     PgConnection
 };

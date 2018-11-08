@@ -1,7 +1,9 @@
-use warp;
-use warp::filters::BoxedFilter;
+use warp::{
+    self,
+    filters::BoxedFilter,
+    Filter
+};
 use uuid::Uuid;
-use warp::Filter;
 
 
 /// TODO move this into util

@@ -2,8 +2,10 @@ use crate::article::*;
 use wire::article::*;
 
 use slug;
-use rand;
-use rand::Rng;
+use rand::{
+    self,
+    Rng
+};
 use identifiers::{
     article::ArticleUuid,
     user::UserUuid

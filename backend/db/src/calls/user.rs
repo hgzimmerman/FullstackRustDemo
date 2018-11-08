@@ -1,6 +1,6 @@
 use diesel::{
     RunQueryDsl,
-    diesel,
+    self,
     QueryDsl,
     ExpressionMethods,
     PgConnection

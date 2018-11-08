@@ -1,29 +1,43 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use uuid::Uuid;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::util::json_body_filter;
+use crate::{
+    util::{
+        convert_and_json,
+        convert_vector_and_json,
+        json_body_filter,
+        query_uuid
+    },
+    uuid_integration::{
+        uuid_filter,
+        uuid_wrap_filter
+    },
+    state::jwt::normal_user_filter,
+    logging::log_attach,
+    logging::HttpMethod,
+    state::State
+};
 use identifiers::user::UserUuid;
-use crate::util::query_uuid;
-use db::Question;
 use identifiers::bucket::BucketUuid;
-use wire::question::QuestionResponse;
-use db::question::QuestionData;
-use crate::uuid_integration::uuid_filter;
+use wire::{
+    question::{
+        QuestionResponse,
+        NewQuestionRequest
+    }
+};
+use db::{
+    question::QuestionData,
+    Question,
+    Bucket,
+    question::NewQuestion
+};
 use identifiers::question::QuestionUuid;
-use crate::state::jwt::normal_user_filter;
-use wire::question::NewQuestionRequest;
-use db::Bucket;
-use db::question::NewQuestion;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
 use pool::PooledConn;
 
 

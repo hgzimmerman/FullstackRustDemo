@@ -35,9 +35,13 @@ mod util;
 mod state;
 
 use self::logging::setup_logging;
-use crate::state::StateConfig;
-use crate::state::State;
-use crate::configuration::Config;
+use crate::{
+    state::{
+        StateConfig,
+        State
+    },
+    configuration::Config
+};
 
 const PORT: u16 = 8001;
 fn main() {
@@ -57,22 +61,29 @@ fn main() {
 }
 
 mod configuration {
-    use wire::user::NewUserRequest;
-    use wire::user::UserRole;
+    use wire::{
+        user::NewUserRequest,
+        user::UserRole
+    };
     use db::User;
     use db::user::NewUser;
 
-    use crate::error::Error;
-    use crate::state::StateConfig;
-    use clap::App;
-    use clap::Arg;
+    use crate::{
+        error::Error,
+        state::StateConfig
+    };
+    use clap::{
+        App,
+        Arg
+    };
+
 
     pub struct Config {
         pub create_admin: bool
     }
 
 
-
+    /// Parses CLI arguments and provides a config for pre-launch setup and another config the server.
     pub fn parse_arguments() -> (Config, StateConfig) {
         const CREATE_ADMIN: &'static str = "create_admin";
         const SECRET_KEY: &'static str = "secret_key";

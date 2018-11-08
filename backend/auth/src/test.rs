@@ -1,8 +1,11 @@
 use super::*;
-use wire::user::UserRole;
+use wire::{
+    user::{
+        UserRole,
+        Jwt
+    }
+};
 use chrono::Utc;
-
-use wire::user::Jwt;
 
 //use log::{info, warn};
 use identifiers::user::UserUuid;

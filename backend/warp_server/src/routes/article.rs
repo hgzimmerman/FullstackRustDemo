@@ -1,33 +1,42 @@
-//use crate::db_integration::s.db.clone();
-use crate::uuid_integration::uuid_filter;
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 //use db::Conn;
 use uuid::Uuid;
 use identifiers::article::ArticleUuid;
-use wire::article::FullArticleResponse;
-//use crate::error::Error;
-use db::Article;
-use db::article::ArticleData;
-use wire::article::ArticlePreviewResponse;
-use crate::state::jwt::normal_user_filter;
+use db::{
+    article::{
+        Article,
+        ArticleData,
+        NewArticle
+    }
+};
+use wire::{
+    article::{
+        ArticlePreviewResponse,
+        FullArticleResponse,
+        MinimalArticleResponse,
+        NewArticleRequest,
+        UpdateArticleRequest
+    }
+};
 use identifiers::user::UserUuid;
-use wire::article::MinimalArticleResponse;
-use crate::util::json_body_filter;
-use wire::article::NewArticleRequest;
 
-use db::article::NewArticle;
-//use db::article::ArticleChangeset;
-use wire::article::UpdateArticleRequest;
-//use crate::log_attach;
-//use crate::HttpMethod;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
+use crate::{
+    logging::log_attach,
+    util::{
+        json_body_filter,
+        convert_and_json,
+        convert_vector_and_json
+    },
+    state::jwt::normal_user_filter,
+    uuid_integration::uuid_filter,
+    logging::HttpMethod,
+    uuid_integration::uuid_wrap_filter,
+    state::State
+};
 use pool::PooledConn;
 use error::Error;
 

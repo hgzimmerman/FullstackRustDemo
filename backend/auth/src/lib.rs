@@ -33,10 +33,14 @@ mod banned_set;
 mod secret;
 
 
-#[cfg(feature = "rocket_support")]
-pub use jwt::user_authorization;
-pub use jwt::ServerJwt;
-pub use password::{hash_password, verify_hash};
+pub use jwt::{
+    user_authorization,
+    ServerJwt
+};
+pub use password::{
+    hash_password,
+    verify_hash
+};
 pub use banned_set::BannedSet;
 pub use secret::Secret;
 

@@ -1,27 +1,45 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
-//use crate::error::Error;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-//use crate::uuid_integration::uuid_filter;
-use crate::util::json_body_filter;
-use identifiers::user::UserUuid;
-use crate::state::jwt::normal_user_filter;
-use db::NewThread;
-use wire::thread::NewThreadRequest;
-use db::Thread;
-use wire::thread::ThreadResponse;
-use db::thread::ThreadData;
-use warp;
-use crate::state::jwt::moderator_user_filter;
-use identifiers::thread::ThreadUuid;
-use db::thread::MinimalThreadData;
-use wire::thread::MinimalThreadResponse;
-use crate::state::jwt::optional_normal_user_filter;
-use identifiers::forum::ForumUuid;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply,
+    self
+};
+use crate::{
+    util::{
+        convert_and_json,
+        convert_vector_and_json,
+        json_body_filter
+    },
+    state::{
+        jwt::{
+            normal_user_filter,
+            moderator_user_filter,
+            optional_normal_user_filter
+        },
+        State
+    },
+    uuid_integration::uuid_wrap_filter,
+};
+use identifiers::{
+    user::UserUuid,
+    thread::ThreadUuid,
+    forum::ForumUuid
+};
+use db::{
+    thread::{
+        NewThread,
+        Thread,
+        ThreadData,
+        MinimalThreadData
+    }
+};
+use wire::{
+    thread::{
+        NewThreadRequest,
+        ThreadResponse,
+        MinimalThreadResponse
+    }
+};
 use pool::PooledConn;
 use error::Error;
 

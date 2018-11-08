@@ -2,11 +2,13 @@ use serde::Serialize;
 use std::fmt::Debug;
 
 
-use simplelog::CombinedLogger;
-use simplelog::TermLogger;
-use simplelog::WriteLogger;
+use simplelog::{
+    CombinedLogger,
+    TermLogger,
+    WriteLogger,
+    LevelFilter
+};
 use std::fs::File;
-use simplelog::LevelFilter;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HttpMethod {

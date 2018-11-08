@@ -1,9 +1,13 @@
-use crate::user::UserResponse;
-use crate::post::PostResponse;
+use crate::{
+    user::UserResponse,
+    post::PostResponse
+};
 use chrono::NaiveDateTime;
-use identifiers::thread::ThreadUuid;
-use identifiers::forum::ForumUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    thread::ThreadUuid,
+    forum::ForumUuid,
+    user::UserUuid
+};
 
 
 /// Used when requesting that a thread be created.

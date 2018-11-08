@@ -1,21 +1,25 @@
-use crate::state::jwt::jwt_filter;
-//use crate::db_integration;
-//use db::Conn;
-use warp;
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    filters::BoxedFilter,
+    Filter,
+    self,
+    reply::Reply,
+    reject::Rejection
+};
 
 use db::auth as auth_db;
-use crate::error::Error;
-use auth::Secret;
+use crate::{
+    error::Error,
+    state::jwt::jwt_filter,
+    logging::log_attach,
+    logging::HttpMethod,
+    state::State
+};
+use auth::{
+    Secret,
+    ServerJwt
+};
 use wire::login::LoginRequest;
-use auth::ServerJwt;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
 use pool::PooledConn;
-use crate::state::State;
-use warp::reject::Rejection;
 
 pub fn auth_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Auth API");

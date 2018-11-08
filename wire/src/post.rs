@@ -1,8 +1,10 @@
 use crate::user::UserResponse;
 use chrono::NaiveDateTime;
-use identifiers::post::PostUuid;
-use identifiers::thread::ThreadUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    post::PostUuid,
+    thread::ThreadUuid,
+    user::UserUuid
+};
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

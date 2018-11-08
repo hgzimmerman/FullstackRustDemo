@@ -1,23 +1,35 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use db::bucket::Bucket;
-use crate::util::convert_and_json;
-use wire::bucket::BucketResponse;
-use crate::uuid_integration::uuid_wrap_filter;
-use identifiers::bucket::BucketUuid;
-use crate::state::State;
+use crate::{
+    util::convert_and_json,
+    uuid_integration::uuid_wrap_filter,
+    state::State,
+    state::jwt::normal_user_filter,
+    util::convert_vector_and_json,
+    logging::{
+        log_attach,
+        HttpMethod
+    },
+    util::json_body_filter
+};
+use wire::{
+    bucket::{
+        BucketResponse,
+        NewBucketRequest
+    }
+};
+use identifiers::{
+    bucket::BucketUuid,
+    user::UserUuid
+};
 use pool::PooledConn;
-use crate::state::jwt::normal_user_filter;
-use identifiers::user::UserUuid;
-use crate::util::convert_vector_and_json;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::util::json_body_filter;
-use wire::bucket::NewBucketRequest;
 
 
 pub fn bucket_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {

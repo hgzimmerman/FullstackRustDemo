@@ -3,7 +3,7 @@ use crate::{
         post_upvotes,
         posts,
         post_downvotes,
-        schema
+        self
     },
     user::User,
     thread::Thread,
@@ -13,7 +13,7 @@ use chrono::NaiveDateTime;
 use error::*;
 use diesel::{
     RunQueryDsl,
-    diesel,
+    self,
     ExpressionMethods,
     BelongingToDsl,
     QueryDsl,

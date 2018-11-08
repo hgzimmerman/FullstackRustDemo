@@ -1,10 +1,11 @@
 use crate::user::UserResponse;
 use chrono::NaiveDateTime;
 use uuid::Uuid;
-use identifiers::message::MessageUuid;
-use identifiers::chat::ChatUuid;
-use identifiers::user::UserUuid;
-
+use identifiers::{
+    message::MessageUuid,
+    chat::ChatUuid,
+    user::UserUuid
+};
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

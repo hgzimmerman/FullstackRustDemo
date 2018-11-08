@@ -1,27 +1,39 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
-//use crate::db_integration::s.db.clone();
-//use db::Conn;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::util::json_body_filter;
-use crate::state::jwt::normal_user_filter;
-use wire::chat::NewChatRequest;
-use identifiers::user::UserUuid;
-use wire::chat::MinimalChatResponse;
-use db::Chat;
-use db::chat::NewChat;
-use wire::chat::ChatUserAssociationRequest;
-use db::chat::ChatUserAssociation;
-use wire::chat::ChatResponse;
-use db::chat::ChatData;
-use identifiers::chat::ChatUuid;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
+use crate::{
+    util::convert_and_json,
+    util::convert_vector_and_json,
+    util::json_body_filter,
+    state::jwt::normal_user_filter,
+    logging::log_attach,
+    logging::HttpMethod,
+    uuid_integration::uuid_wrap_filter,
+    state::State
+};
+use identifiers::{
+    user::UserUuid,
+    chat::ChatUuid
+};
+use wire::{
+    chat::{
+        MinimalChatResponse,
+        NewChatRequest,
+        ChatUserAssociationRequest,
+        ChatResponse
+    }
+};
+use db::{
+    chat::{
+        Chat,
+        NewChat,
+        ChatUserAssociation,
+        ChatData
+    }
+};
 use pool::PooledConn;
 
 pub fn chat_api(s: &State) -> BoxedFilter<(impl Reply,)> {

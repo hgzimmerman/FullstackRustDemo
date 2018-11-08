@@ -1,5 +1,7 @@
-use rand;
-use rand::{Rng};
+use rand::{
+    self,
+    Rng
+};
 
 /// The secret contains a random string that is generated at startup.
 /// This will be different every time the server restarts.

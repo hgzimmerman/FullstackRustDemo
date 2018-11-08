@@ -1,24 +1,36 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
-//use crate::db_integration::s.db.clone();
-//use db::Conn;
-use wire::forum::ForumResponse;
+use wire::{
+    forum::{
+        ForumResponse,
+        NewForumRequest
+    }
+};
 use db::Forum;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::util::json_body_filter;
-use crate::state::jwt::admin_user_filter;
-use identifiers::user::UserUuid;
-use wire::forum::NewForumRequest;
-
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::uuid_integration::uuid_wrap_filter;
-use identifiers::forum::ForumUuid;
-use crate::state::State;
+use crate::{
+    util::{
+        convert_vector_and_json,
+        convert_and_json,
+        json_body_filter
+    },
+    state::jwt::admin_user_filter,
+    logging::{
+        log_attach,
+        HttpMethod
+    },
+    uuid_integration::uuid_wrap_filter,
+    state::State
+};
+use identifiers::{
+    user::UserUuid,
+    forum::ForumUuid
+};
 use pool::PooledConn;
+
 
 pub fn forum_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Forum API");

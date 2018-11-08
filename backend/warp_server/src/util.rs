@@ -1,13 +1,13 @@
-// TODO move these to a util file
-use warp::Reply;
 use serde::Serialize;
 use wire::convert_vector;
-
-use warp::filters::BoxedFilter;
+use warp::{
+    filters::BoxedFilter,
+    Reply,
+    Filter
+};
 use serde::Deserialize;
 use uuid::Uuid;
 use std::collections::HashMap;
-use warp::Filter;
 
 /// Util function that makes replying easier
 pub fn convert_and_json<T, U>(source: T) -> impl Reply where

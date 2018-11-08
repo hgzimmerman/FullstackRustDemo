@@ -4,7 +4,7 @@ use crate::user::User;
 use crate::forum::Forum;
 use diesel::{
     RunQueryDsl,
-    diesel,
+    self,
     QueryDsl,
     BelongingToDsl,
     ExpressionMethods,

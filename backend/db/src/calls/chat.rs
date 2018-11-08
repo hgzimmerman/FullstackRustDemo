@@ -8,7 +8,7 @@ use crate::{
 use diesel::{
     QueryDsl,
     RunQueryDsl,
-    diesel,
+    self,
     ExpressionMethods,
     PgConnection
 };

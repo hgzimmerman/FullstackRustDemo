@@ -1,12 +1,22 @@
 use fixtures::user::UserFixture;
-use db::bucket::{Bucket, NewBucket, NewBucketUser};
-use db::question::{Question, NewQuestion};
-
+use db::{
+    bucket::{
+        Bucket,
+        NewBucket,
+        NewBucketUser
+    },
+    question::{
+        Question,
+        NewQuestion
+    }
+};
 
 
 use diesel::PgConnection;
-use chrono::Utc;
-use chrono::Duration;
+use chrono::{
+    Utc,
+    Duration
+};
 use Fixture;
 
 const BUCKET_NAME_1: &'static str = "Private Bucket";

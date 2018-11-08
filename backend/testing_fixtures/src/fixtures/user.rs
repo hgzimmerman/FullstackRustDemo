@@ -1,7 +1,10 @@
 use auth::Secret;
 use diesel::PgConnection;
 
-use db::user::{NewUser, User};
+use db::user::{
+    NewUser,
+    User
+};
 use Fixture;
 
 use auth::hash_password;

@@ -1,7 +1,14 @@
-use uuid::Uuid;
-use std::fmt::{Display, Formatter};
-use std::fmt::Result as FormatResult;
-use uuid::ParseError;
+use uuid::{
+    Uuid,
+    ParseError
+};
+use std::{
+    fmt::{
+        Display,
+        Formatter,
+        Result as FormatResult
+    }
+};
 
 #[derive(Deserialize, Serialize, Clone, Copy, Debug, PartialEq, Default, Hash, Eq)]
 pub struct QuestionUuid(pub Uuid);

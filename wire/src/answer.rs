@@ -1,6 +1,8 @@
 use crate::user::UserResponse;
-use identifiers::answer::AnswerUuid;
-use identifiers::question::QuestionUuid;
+use identifiers::{
+    answer::AnswerUuid,
+    question::QuestionUuid
+};
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

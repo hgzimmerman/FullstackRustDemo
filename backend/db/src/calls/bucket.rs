@@ -8,7 +8,7 @@ use crate::{
 use error::BackendResult;
 use diesel::{
     prelude::*,
-    diesel
+    self
 };
 use chrono::{
     NaiveDateTime,

@@ -1,27 +1,42 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
 use uuid::Uuid;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-//use crate::uuid_integration::uuid_filter;
-use crate::util::json_body_filter;
+use crate::{
+    util::{
+        convert_and_json,
+        convert_vector_and_json,
+        json_body_filter,
+        query_uuid
+    },
+    state::jwt::normal_user_filter,
+    logging::{
+        log_attach,
+        HttpMethod
+    },
+    state::State
+};
 use identifiers::user::UserUuid;
-use crate::state::jwt::normal_user_filter;
-use db::Message;
-use db::Chat;
+use db::{
+    Message,
+    Chat,
+    message::{
+        MessageData,
+        NewMessage
+    }
+};
 use identifiers::chat::ChatUuid;
-use wire::message::MessageResponse;
-use db::message::MessageData;
-use wire::message::NewMessageRequest;
-use db::message::NewMessage;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::util::query_uuid;
-use crate::state::State;
+use wire::{
+    message::{
+        MessageResponse,
+        NewMessageRequest
+    }
+};
 use pool::PooledConn;
 
 pub fn message_api(s: &State) -> BoxedFilter<(impl Reply,)> {

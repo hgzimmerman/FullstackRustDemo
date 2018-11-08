@@ -1,10 +1,12 @@
-use diesel::PgConnection;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::RunQueryDsl;
-use diesel::OptionalExtension;
-use diesel::QueryResult;
-use diesel::Connection;
+use diesel::{
+    RunQueryDsl,
+    QueryDsl,
+    ExpressionMethods,
+    PgConnection,
+    OptionalExtension,
+    QueryResult,
+    Connection
+};
 use query_helper;
 use database_error::{ DatabaseResult, DatabaseError};
 use migrations_internals as migrations;

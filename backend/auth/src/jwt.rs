@@ -1,4 +1,8 @@
-use frank_jwt::{Algorithm, encode, decode};
+use frank_jwt::{
+    Algorithm,
+    encode,
+    decode
+};
 use serde_json;
 use Secret;
 use error::JwtError;

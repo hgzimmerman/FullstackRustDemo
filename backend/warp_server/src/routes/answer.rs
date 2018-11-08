@@ -1,27 +1,37 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
-use warp;
-use crate::util::json_body_filter;
-use crate::state::jwt::normal_user_filter;
-//use crate::db_integration::s.db.clone();
-use wire::answer::NewAnswerRequest;
-use identifiers::user::UserUuid;
-use identifiers::question::QuestionUuid;
-//use db::Conn;
-use db::Question;
-use db::User;
-use db::answer::AnswerData;
-use db::answer::NewAnswer;
-use db::answer::Answer;
+use warp::{
+    filters::BoxedFilter,
+    Filter,
+    reply::Reply,
+    self
+};
+use crate::{
+    state::jwt::normal_user_filter,
+    util::json_body_filter,
+    logging::log_attach,
+    logging::HttpMethod,
+    util::convert_and_json,
+    state::State
+};
+use wire::{
+    answer::{
+        NewAnswerRequest,
+        AnswerResponse
+    }
+};
+use identifiers::{
+    user::UserUuid,
+    question::QuestionUuid
+};
+use db::{
+    Question,
+    User,
+    answer::{
+        AnswerData,
+        NewAnswer,
+        Answer
+    }
+};
 use error::Error;
-use wire::answer::AnswerResponse;
-//use crate::log_attach;
-//use crate::HttpMethod;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::util::convert_and_json;
-use crate::state::State;
 use pool::PooledConn;
 
 

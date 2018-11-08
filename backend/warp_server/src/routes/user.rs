@@ -1,25 +1,35 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
-use wire::user::UserResponse;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use identifiers::user::UserUuid;
 use db::user::User;
-use crate::state::jwt::admin_user_filter;
-use wire::user::FullUserResponse;
-use wire::user::NewUserRequest;
+use wire::{
+    user::NewUserRequest,
+    user::FullUserResponse,
+    user::UserResponse,
+    user::UpdateDisplayNameRequest,
+    user::UserRoleRequest
+};
 use db::user::NewUser;
 
-use crate::state::jwt::normal_user_filter;
-use wire::user::UpdateDisplayNameRequest;
-use wire::user::UserRoleRequest;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
+use crate::{
+    state::{
+        jwt::{
+            normal_user_filter,
+            admin_user_filter
+        },
+        State,
+        banned_list::BannedList
+    },
+    logging::log_attach,
+    logging::HttpMethod,
+    util::convert_and_json,
+    util::convert_vector_and_json,
+    uuid_integration::uuid_wrap_filter,
+};
 use pool::PooledConn;
-use crate::state::banned_list::BannedList;
 use error::Error;
 
 pub fn user_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {

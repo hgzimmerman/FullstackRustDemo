@@ -1,17 +1,21 @@
-use warp::filters::BoxedFilter;
-use warp;
+use warp::{
+    self,
+    filters::BoxedFilter,
+    Filter,
+    reject::Rejection
+};
 use wire::user::BEARER;
-use auth::ServerJwt;
+use auth::{
+    ServerJwt,
+    Secret
+};
 use std::result::Result::Err;
-use warp::Filter;
-use auth::Secret;
 use wire::user::UserRole;
 use identifiers::user::UserUuid;
 
 
 //use crate::error::Error;
 use crate::state::State;
-use warp::reject::Rejection;
 use crate::state::banned_list::BannedList;
 use error::Error;
 

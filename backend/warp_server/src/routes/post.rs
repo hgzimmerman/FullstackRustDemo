@@ -1,28 +1,42 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
+use warp::{
+    Filter,
+    filters::BoxedFilter,
+    reply::Reply
+};
 use error::Error;
-//use crate::db_integration::s.db.clone();
-//use db::Conn;
-use crate::util::convert_and_json;
-use crate::util::convert_vector_and_json;
-use crate::util::json_body_filter;
-use identifiers::user::UserUuid;
-use crate::state::jwt::normal_user_filter;
-use wire::post::NewPostRequest;
-use db::Post;
-use wire::post::PostResponse;
-use db::post::NewPost;
-use db::post::ChildlessPostData;
-use wire::post::EditPostRequest;
-use identifiers::thread::ThreadUuid;
-use db::post::EditPostChangeset;
-use crate::state::jwt::moderator_user_filter;
-use identifiers::post::PostUuid;
-use crate::logging::log_attach;
-use crate::logging::HttpMethod;
-use crate::uuid_integration::uuid_wrap_filter;
-use crate::state::State;
+use crate::{
+    util::{
+        convert_and_json,
+        convert_vector_and_json,
+        json_body_filter
+    },
+    state::jwt::normal_user_filter,
+    state::jwt::moderator_user_filter,
+    logging::log_attach,
+    logging::HttpMethod,
+    uuid_integration::uuid_wrap_filter,
+    state::State
+};
+use wire::{
+    post::{
+        NewPostRequest,
+        PostResponse,
+        EditPostRequest
+    }
+};
+use db::{
+    post::{
+        Post,
+        NewPost,
+        ChildlessPostData,
+        EditPostChangeset
+    }
+};
+use identifiers::{
+    thread::ThreadUuid,
+    user::UserUuid,
+    post::PostUuid
+};
 use pool::PooledConn;
 
 

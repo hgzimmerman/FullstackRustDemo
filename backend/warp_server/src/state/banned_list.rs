@@ -1,9 +1,15 @@
-use std::sync::Arc;
-use std::collections::BTreeSet;
+use std::{
+    sync::{
+        Arc,
+        RwLock
+    },
+    collections::BTreeSet,
+};
 use identifiers::user::UserUuid;
-use std::sync::RwLock;
-use warp::filters::BoxedFilter;
-use warp::Filter;
+use warp::{
+    filters::BoxedFilter,
+    Filter
+};
 
 
 /// The BannedList contains a list of users that should not have access to the system.

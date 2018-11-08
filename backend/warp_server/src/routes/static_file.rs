@@ -1,11 +1,13 @@
-use warp::Filter;
-use warp::filters::BoxedFilter;
-use warp::reply::Reply;
-use warp;
+use warp::{
+    filters::BoxedFilter,
+    Filter,
+    reply::Reply,
+    self,
+    path::Peek,
+    fs::File
+};
 use crate::routes::API_STRING;
-//use crate::error::Error;
-use warp::path::Peek;
-use warp::fs::File;
+
 
 const INDEX_PATH: &str = "../../frontend/app/static/index.html";
 const STATIC_DIR_PATH: &str = "../../frontend/app/static/";

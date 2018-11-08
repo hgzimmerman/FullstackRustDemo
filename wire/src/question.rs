@@ -1,7 +1,11 @@
-use crate::user::UserResponse;
-use crate::answer::AnswerResponse;
-use identifiers::question::QuestionUuid;
-use identifiers::bucket::BucketUuid;
+use crate::{
+    user::UserResponse,
+    answer::AnswerResponse
+};
+use identifiers::{
+    question::QuestionUuid,
+    bucket::BucketUuid
+};
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

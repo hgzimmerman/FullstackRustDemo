@@ -1,7 +1,9 @@
 use chrono::NaiveDateTime;
 use crate::user::UserResponse;
-use identifiers::article::ArticleUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    article::ArticleUuid,
+    user::UserUuid
+};
 
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

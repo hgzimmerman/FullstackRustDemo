@@ -1,6 +1,8 @@
 use crate::user::UserResponse;
-use identifiers::chat::ChatUuid;
-use identifiers::user::UserUuid;
+use identifiers::{
+    chat::ChatUuid,
+    user::UserUuid
+};
 
 
 /// Messages will be sent in a separate response.

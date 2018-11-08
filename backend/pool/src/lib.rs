@@ -1,17 +1,20 @@
 //! This crate contains basic wrappers around r2d2 and facilitates easy access to pooled connections.
 //!
-//!
-
 
 extern crate r2d2;
 extern crate diesel;
 #[cfg(feature = "rocket_support")]
 extern crate rocket;
 
-use diesel::Connection;
-use diesel::pg::PgConnection;
-use diesel::r2d2::ConnectionManager;
-use r2d2::{PooledConnection, Pool as R2D2Pool};
+use diesel::{
+    pg::PgConnection,
+    Connection,
+    r2d2::ConnectionManager
+};
+use r2d2::{
+    PooledConnection,
+    Pool as R2D2Pool
+};
 
 
 

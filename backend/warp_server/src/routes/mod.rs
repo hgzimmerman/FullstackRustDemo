@@ -13,19 +13,20 @@ mod question;
 mod thread;
 mod static_file;
 
-use self::user::user_api;
-use self::auth::auth_api;
-use self::article::article_api;
-use self::answer::answer_api;
-use self::bucket::bucket_api;
-use self::chat::chat_api;
-use self::forum::forum_api;
-use self::message::message_api;
-use self::post::post_api;
-use self::question::question_api;
-use self::thread::thread_api;
-
-pub use self::static_file::static_files_handler;
+use self::{
+    user::user_api,
+    auth::auth_api,
+    article::article_api,
+    answer::answer_api,
+    bucket::bucket_api,
+    chat::chat_api,
+    forum::forum_api,
+    message::message_api,
+    post::post_api,
+    question::question_api,
+    thread::thread_api,
+    static_file::static_files_handler
+};
 
 
 use warp;

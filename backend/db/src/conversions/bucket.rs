@@ -1,6 +1,8 @@
 use crate::bucket::*;
-use wire::bucket::*;
-use wire::user::*;
+use wire::{
+    bucket::*,
+    user::*
+};
 use identifiers::bucket::BucketUuid;
 
 use chrono::{NaiveDateTime, Utc, Duration};

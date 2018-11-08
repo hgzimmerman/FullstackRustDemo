@@ -1,5 +1,7 @@
-use std::collections::HashSet;
-use std::sync::RwLock;
+use std::{
+    collections::HashSet,
+    sync::RwLock
+};
 
 use identifiers::user::UserUuid;
 

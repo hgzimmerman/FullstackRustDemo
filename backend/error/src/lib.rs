@@ -93,9 +93,11 @@ pub trait ErrorFormatter {
 #[cfg(feature = "rocket_support")]
 mod rocket_support {
     use super::*;
-    use rocket::response::{Responder, Response};
-    use rocket::http::Status;
-    use rocket::request::Request;
+    use rocket::{
+        response::{Responder, Response},
+        http::Status,
+        request::Request
+    };
 
     impl<'r> Responder<'r> for Error {
         fn respond_to(self, req: &Request) -> Result<Response<'r>, Status> {
