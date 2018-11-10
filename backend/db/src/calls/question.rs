@@ -8,6 +8,7 @@ use crate::{
     schema::{
         self,
         questions,
+        junction_favorite_questions_users
     },
     user::User,
 };
@@ -27,6 +28,7 @@ use identifiers::{
     user::UserUuid,
 };
 use uuid::Uuid;
+use diesel::pg::expression::array_comparison::any;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
@@ -58,6 +60,22 @@ pub struct QuestionData {
     pub answers: Vec<AnswerData>,
 }
 
+#[derive(Debug, Clone, Identifiable, Queryable)]
+#[table_name = "junction_favorite_questions_users"]
+#[primary_key(uuid)]
+pub struct FavoriteQuestionJunction {
+    pub uuid: Uuid,
+    pub question_uuid: Uuid,
+    pub user_uuid: Uuid,
+}
+
+#[derive(Insertable, Debug, Clone)]
+#[table_name = "junction_favorite_questions_users"]
+pub struct NewFavoriteQuestionJunction {
+    pub question_uuid: Uuid,
+    pub user_uuid: Uuid,
+}
+
 impl Question {
     pub fn get_question(uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<Question> {
         get_row::<Question, _>(schema::questions::table, uuid.0, conn)
@@ -72,16 +90,13 @@ impl Question {
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> BackendResult<QuestionData> {
         let question: Question = Question::create_question(new_question, conn)?;
-//        let author_uuid: Option<UserUuid> = ;
-        let user =  question.author_uuid
-            .map(UserUuid)
-            .map(|author_uuid| User::get_user(author_uuid, conn));
 
-        let user: Option<User> = if let Some(user) = user {
-            Some(user?)
-        } else {
-            None
-        };
+        let user: Option<User> =  question.author_uuid
+            .map(UserUuid)
+            .map(|author_uuid| {
+                User::get_user(author_uuid, conn)
+            })
+            .transpose()?;
 
         Ok(QuestionData {
             question,
@@ -160,30 +175,28 @@ impl Question {
         })
     }
 
-    /// Gets groupings of questions, users, and answers for a given bucket id.
-    pub fn get_questions_for_bucket(
-        owning_bucket_uuid: BucketUuid,
-        conn: &PgConnection,
-    ) -> BackendResult<Vec<QuestionData>> {
+    /// Helper function that gets answers for a set of questions and properly spaces them so that they may be joined together.
+    fn get_grouped_answers_for_questions(questions: &[Question], conn: &PgConnection) -> BackendResult<Vec<Vec<(Answer, Option<User>)>>> {
         use crate::schema::users::dsl::*;
-        let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
-
-        let questions_and_users: Vec<(Question, Option<User>)> = Question::belonging_to(&bucket)
-            .left_join(users)
-            .load::<(Question, Option<User>)>(conn)
-            .map_err(handle_err::<Question>)?;
-
-        let questions: Vec<Question> = questions_and_users.iter().map(|q_and_u| q_and_u.0.clone()).collect();
-
-        let answers: Vec<(Answer, Option<User>)> = Answer::belonging_to(&questions)
+        let answers: Vec<(Answer, Option<User>)> = Answer::belonging_to(questions)
             .left_join(users)
             .load::<(Answer, Option<User>)>(conn)
             .map_err(handle_err::<Answer>)?;
-        let grouped_answers: Vec<Vec<(Answer, Option<User>)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
+        let grouped_answers: Vec<Vec<(Answer, Option<User>)>> = answers.grouped_by(questions);
+
+        Ok(grouped_answers)
+
+    }
+
+    /// Helper function that gets answers and associates that data with the provided questions.
+    fn get_answers_for_questions_and_users(questions_and_users: Vec<(Question, Option<User>)>, conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
+        let questions: Vec<Question> = questions_and_users.iter().map(|q_and_u| q_and_u.0.clone()).collect();
+        let grouped_answers = Self::get_grouped_answers_for_questions(&questions, conn)?;
 
         let data_tuple: Vec<((Question, Option<User>), Vec<(Answer, Option<User>)>)> =
             questions_and_users.into_iter().zip(grouped_answers).collect();
 
+        // Convert to the question data
         let question_data = data_tuple
             .into_iter()
             .map(|x| {
@@ -198,6 +211,25 @@ impl Question {
             })
             .collect();
         Ok(question_data)
+    }
+
+
+    /// Gets groupings of questions, users, and answers for a given bucket id.
+    pub fn get_questions_for_bucket(
+        owning_bucket_uuid: BucketUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<QuestionData>> {
+        use crate::schema::users::dsl::*;
+        let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
+
+        let questions_and_users: Vec<(Question, Option<User>)> = Question::belonging_to(&bucket)
+            .left_join(users)
+            .load::<(Question, Option<User>)>(conn)
+            .map_err(handle_err::<Question>)?;
+
+
+        Self::get_answers_for_questions_and_users(questions_and_users, conn)
+
     }
 
     /// The number corresponds to the number of questions that are eligable for selection via the random mechanic.
@@ -254,6 +286,54 @@ impl Question {
     //        let question_uuid = question_uuid.0;
     //        Question::delete_by_id(question_uuid, conn)
     //    }
+
+    /// Marks a question as a favorite for a given user.
+    pub fn favorite_question(question_uuid: QuestionUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<()> {
+        use crate::schema::junction_favorite_questions_users as favorites;
+        let junction_record = NewFavoriteQuestionJunction {
+            question_uuid: question_uuid.0,
+            user_uuid: user_uuid.0
+        };
+
+        diesel::insert_into(favorites::table)
+            .values(junction_record)
+            .execute(conn)
+            .map_err(handle_err::<Question>)?;
+        Ok(())
+    }
+
+    /// Unmarks a question as a favorite for a given user.
+    pub fn unfavorite_question(question_uuid: QuestionUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<()> {
+        use crate::schema::junction_favorite_questions_users as favorites;
+
+        diesel::delete(favorites::table)
+            .filter(favorites::question_uuid.eq(question_uuid.0))
+            .filter(favorites::user_uuid.eq(user_uuid.0))
+            .execute(conn)
+            .map_err(handle_err::<Question>)?;
+        Ok(())
+    }
+
+    /// Gets all of the questions a user has favorited.
+    pub fn get_favorite_questions(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
+        use crate::schema::users::dsl::*;
+        use crate::schema::junction_favorite_questions_users as favorites;
+        use crate::schema::questions;
+
+        let question_uuids: Vec<Uuid> =
+           favorites::table
+                .filter(favorites::user_uuid.eq(user_uuid.0))
+                .select(favorites::question_uuid)
+                .load::<Uuid>(conn)
+                .map_err(handle_err::<User>)?;
+
+           let questions_and_users = questions::table
+                .filter(questions::uuid.eq(any(question_uuids)))
+                .left_join(users)
+                .load::<(Question, Option<User>)>(conn)
+                .map_err(handle_err::<User>)?;
+        Self::get_answers_for_questions_and_users(questions_and_users, conn)
+    }
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.

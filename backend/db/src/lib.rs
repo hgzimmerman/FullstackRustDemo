@@ -13,6 +13,7 @@
 // TODO remove this once the use of macros stops emitting a stupid quantity of warnings
 #![allow(proc_macro_derive_resolution_fallback)]
 #![feature(drain_filter)]
+#![feature(transpose_result)] // Option<Result> -> Result<Option>
 extern crate test;
 
 extern crate auth as auth_lib;
