@@ -37,7 +37,7 @@ pub struct Question {
     /// Primary Key.
     pub uuid: Uuid,
     pub bucket_uuid: Uuid,
-    pub author_uuid: Uuid,
+    pub author_uuid: Option<Uuid>,
     pub question_text: String,
     pub on_floor: bool,
 }
@@ -46,7 +46,7 @@ pub struct Question {
 #[table_name = "questions"]
 pub struct NewQuestion {
     pub bucket_uuid: Uuid,
-    pub author_uuid: Uuid,
+    pub author_uuid: Option<Uuid>,
     pub question_text: String,
     pub on_floor: bool, // Should be false by default
 }
@@ -54,7 +54,7 @@ pub struct NewQuestion {
 #[derive(Debug)]
 pub struct QuestionData {
     pub question: Question,
-    pub user: User,
+    pub user: Option<User>,
     pub answers: Vec<AnswerData>,
 }
 
@@ -72,8 +72,16 @@ impl Question {
     /// Creates a new bucket
     pub fn create_data(new_question: NewQuestion, conn: &PgConnection) -> BackendResult<QuestionData> {
         let question: Question = Question::create_question(new_question, conn)?;
-        let author_uuid = UserUuid(question.author_uuid);
-        let user = User::get_user(author_uuid, conn)?;
+//        let author_uuid: Option<UserUuid> = ;
+        let user =  question.author_uuid
+            .map(UserUuid)
+            .map(|author_uuid| User::get_user(author_uuid, conn));
+
+        let user: Option<User> = if let Some(user) = user {
+            Some(user?)
+        } else {
+            None
+        };
 
         Ok(QuestionData {
             question,
@@ -88,9 +96,9 @@ impl Question {
             questions::dsl::*,
             users::dsl::*,
         };
-        let questions_and_users = questions
-            .inner_join(users)
-            .load::<(Question, User)>(conn)
+        let questions_and_users: Vec<(Question, Option<User>)> = questions
+            .left_join(users) // TODO investigate this join
+            .load::<(Question, Option<User>)>(conn)
             .map_err(handle_err::<Question>)?;
 
         let question_data: Vec<QuestionData> = questions_and_users
@@ -124,15 +132,22 @@ impl Question {
             .first::<Question>(conn)
             .map_err(handle_err::<Question>)?;
         // Get the answers associated with the question.
-        let answers_and_users: Vec<(Answer, User)> = Answer::belonging_to(&question)
-            .inner_join(users)
-            .load::<(Answer, User)>(conn)
+        let answers_and_users: Vec<(Answer, Option<User>)> = Answer::belonging_to(&question)
+            .left_join(users)
+            .load::<(Answer, Option<User>)>(conn)
             .map_err(handle_err::<Answer>)?;
         // Get the author of the question.
-        let user: User = users
-            .find(question.author_uuid)
-            .first::<User>(conn)
-            .map_err(handle_err::<User>)?;
+        let user: Option<User> = if let Some(author_uuid) = question.author_uuid {
+            let author = users
+                .find(author_uuid)
+                .first::<User>(conn)
+                .map_err(handle_err::<User>)?;
+            Some(author)
+        } else {
+            None
+        };
+
+
         // Get them all together.
 
         Ok(QuestionData {
@@ -153,20 +168,20 @@ impl Question {
         use crate::schema::users::dsl::*;
         let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
 
-        let questions_and_users: Vec<(Question, User)> = Question::belonging_to(&bucket)
-            .inner_join(users)
-            .load::<(Question, User)>(conn)
+        let questions_and_users: Vec<(Question, Option<User>)> = Question::belonging_to(&bucket)
+            .left_join(users)
+            .load::<(Question, Option<User>)>(conn)
             .map_err(handle_err::<Question>)?;
 
         let questions: Vec<Question> = questions_and_users.iter().map(|q_and_u| q_and_u.0.clone()).collect();
 
-        let answers: Vec<(Answer, User)> = Answer::belonging_to(&questions)
-            .inner_join(users)
-            .load::<(Answer, User)>(conn)
+        let answers: Vec<(Answer, Option<User>)> = Answer::belonging_to(&questions)
+            .left_join(users)
+            .load::<(Answer, Option<User>)>(conn)
             .map_err(handle_err::<Answer>)?;
-        let grouped_answers: Vec<Vec<(Answer, User)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
+        let grouped_answers: Vec<Vec<(Answer, Option<User>)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
 
-        let data_tuple: Vec<((Question, User), Vec<(Answer, User)>)> =
+        let data_tuple: Vec<((Question, Option<User>), Vec<(Answer, Option<User>)>)> =
             questions_and_users.into_iter().zip(grouped_answers).collect();
 
         let question_data = data_tuple
@@ -206,22 +221,27 @@ impl Question {
         // Get the question
         let question: Question = Question::get_question(question_uuid, conn)?;
 
-        let to_answer_data = |x: (Answer, User)| AnswerData { answer: x.0, user: x.1 };
+        let to_answer_data = |x: (Answer, Option<User>)| AnswerData { answer: x.0, user: x.1 };
 
         // Get the answers and their associated users and format them into answer data.
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
-            .inner_join(users)
-            .load::<(Answer, User)>(conn)
+            .left_join(users)
+            .load::<(Answer, Option<User>)>(conn)
             .map_err(handle_err::<Answer>)?
             .into_iter()
             .map(to_answer_data)
             .collect();
 
         // Get the matching user
-        let user: User = users
-            .find(question.author_uuid)
-            .first::<User>(conn)
-            .map_err(handle_err::<User>)?;
+        let user: Option<User> = if let Some(author_uuid) = question.author_uuid {
+            let user = users
+                .find(author_uuid)
+                .first::<User>(conn)
+                .map_err(handle_err::<User>)?;
+            Some(user)
+        } else {
+            None
+        };
 
         Ok(QuestionData {
             question,

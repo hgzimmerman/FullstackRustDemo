@@ -45,6 +45,7 @@ use wire::question::{
     NewQuestionRequest,
     QuestionResponse,
 };
+use crate::state::jwt::optional_normal_user_filter;
 
 pub fn question_api(s: &State) -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Question API");
@@ -111,14 +112,14 @@ fn create_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(12))
-        .and(normal_user_filter(s))
+        .and(optional_normal_user_filter(s))
         .and(s.db.clone())
-        .and_then(|request: NewQuestionRequest, user_uuid: UserUuid, conn: PooledConn| {
-            let bucket_uuid: BucketUuid = request.bucket_uuid;
-            let is_approved = Bucket::is_user_approved(user_uuid, bucket_uuid, &conn);
-            if !is_approved {
-                return Error::BadRequest.reject();
-            }
+        .and_then(|request: NewQuestionRequest, user_uuid: Option<UserUuid>, conn: PooledConn| {
+//            let bucket_uuid: BucketUuid = request.bucket_uuid;
+//            let is_approved = Bucket::is_user_approved(user_uuid, bucket_uuid, &conn);
+//            if !is_approved {
+//                return Error::BadRequest.reject();
+//            }
 
             let new_question: NewQuestion = NewQuestion::attach_user_id(request, user_uuid);
 

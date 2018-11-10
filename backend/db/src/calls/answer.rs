@@ -22,14 +22,14 @@ pub struct Answer {
     /// Primary Key.
     pub uuid: Uuid,
     pub question_uuid: Uuid,
-    pub author_uuid: Uuid,
+    pub author_uuid: Option<Uuid>,
     pub answer_text: Option<String>,
 }
 
 #[derive(Insertable, Debug)]
 #[table_name = "answers"]
 pub struct NewAnswer {
-    pub author_uuid: Uuid,
+    pub author_uuid: Option<Uuid>,
     pub question_uuid: Uuid,
     pub answer_text: Option<String>,
 }
@@ -37,7 +37,7 @@ pub struct NewAnswer {
 #[derive(Debug)]
 pub struct AnswerData {
     pub answer: Answer,
-    pub user: User,
+    pub user: Option<User>,
 }
 
 impl Answer {

@@ -2,7 +2,7 @@ table! {
     answers (uuid) {
         uuid -> Uuid,
         question_uuid -> Uuid,
-        author_uuid -> Uuid,
+        author_uuid -> Nullable<Uuid>,
         answer_text -> Nullable<Varchar>,
     }
 }
@@ -48,7 +48,6 @@ table! {
         bucket_uuid -> Uuid,
         user_uuid -> Uuid,
         owner -> Bool,
-        approved -> Bool,
     }
 }
 
@@ -56,6 +55,14 @@ table! {
     junction_chat_users (uuid) {
         uuid -> Uuid,
         chat_uuid -> Uuid,
+        user_uuid -> Uuid,
+    }
+}
+
+table! {
+    junction_favorite_questions_users (uuid) {
+        uuid -> Uuid,
+        question_uuid -> Uuid,
         user_uuid -> Uuid,
     }
 }
@@ -105,7 +112,7 @@ table! {
     questions (uuid) {
         uuid -> Uuid,
         bucket_uuid -> Uuid,
-        author_uuid -> Uuid,
+        author_uuid -> Nullable<Uuid>,
         question_text -> Varchar,
         on_floor -> Bool,
     }
@@ -144,6 +151,8 @@ joinable!(junction_bucket_users -> buckets (bucket_uuid));
 joinable!(junction_bucket_users -> users (user_uuid));
 joinable!(junction_chat_users -> chats (chat_uuid));
 joinable!(junction_chat_users -> users (user_uuid));
+joinable!(junction_favorite_questions_users -> questions (question_uuid));
+joinable!(junction_favorite_questions_users -> users (user_uuid));
 joinable!(messages -> chats (chat_uuid));
 joinable!(messages -> users (author_uuid));
 joinable!(post_downvotes -> posts (post_uuid));
@@ -165,6 +174,7 @@ allow_tables_to_appear_in_same_query!(
     forums,
     junction_bucket_users,
     junction_chat_users,
+    junction_favorite_questions_users,
     messages,
     post_downvotes,
     posts,

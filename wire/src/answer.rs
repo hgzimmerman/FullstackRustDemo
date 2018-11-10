@@ -9,7 +9,7 @@ use identifiers::{
 pub struct AnswerResponse {
     pub uuid: AnswerUuid,
     pub answer_text: Option<String>,
-    pub author: UserResponse,
+    pub author: Option<UserResponse>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

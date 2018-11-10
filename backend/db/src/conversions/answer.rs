@@ -4,13 +4,14 @@ use identifiers::{
     user::UserUuid,
 };
 use wire::answer::*;
+use crate::User;
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {
         AnswerResponse {
             uuid: AnswerUuid(data.answer.uuid),
             answer_text: data.answer.answer_text,
-            author: data.user.into(),
+            author: data.user.map(User::into),
         }
     }
 }
@@ -25,10 +26,10 @@ impl From<AnswerData> for AnswerResponse {
 //    }
 //}
 impl NewAnswer {
-    pub fn attach_user_id(request: NewAnswerRequest, user_uuid: UserUuid) -> NewAnswer {
+    pub fn attach_user_id(request: NewAnswerRequest, user_uuid: Option<UserUuid>) -> NewAnswer {
         NewAnswer {
             answer_text: request.answer_text,
-            author_uuid: user_uuid.0,
+            author_uuid: user_uuid.map(|u|u.0),
             question_uuid: request.question_uuid.0,
         }
     }
