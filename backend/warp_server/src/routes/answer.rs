@@ -4,8 +4,8 @@ use crate::{
         HttpMethod,
     },
     state::{
-        jwt::normal_user_filter,
         State,
+        jwt::optional_normal_user_filter
     },
     util::{
         convert_and_json,
@@ -51,22 +51,26 @@ fn answer_question(s: &State) -> BoxedFilter<(impl Reply,)> {
 
     warp::post2()
         .and(json_body_filter(16))
-        .and(normal_user_filter(s))
+        .and(optional_normal_user_filter(s))
         .and(s.db.clone())
-        .and_then(|request: NewAnswerRequest, user_uuid: UserUuid, conn: PooledConn| {
+        .and_then(|request: NewAnswerRequest, user_uuid: Option<UserUuid>, conn: PooledConn| {
             let new_answer: NewAnswerRequest = request;
             let question_uuid: QuestionUuid = new_answer.question_uuid.clone(); // spurious clone
 
             let new_answer: NewAnswer = NewAnswer::attach_user_id(new_answer, user_uuid);
-            let author_uuid = UserUuid(new_answer.author_uuid);
-            let answer_user: User = User::get_user(author_uuid, &conn).map_err(Error::simple_reject)?;
+
+            let answer_author: Option<User> = new_answer.author_uuid
+                .map(UserUuid)
+                .map(|author_uuid| User::get_user(author_uuid, &conn).map_err(Error::simple_reject))
+                .transpose()?;
+//            let answer_user: Option<User> = User::get_user(author_uuid, &conn).map_err(Error::simple_reject)?;
 
             Question::put_question_on_floor(question_uuid, &conn).map_err(Error::simple_reject)?;
 
             Answer::create_answer(new_answer, &conn)
                 .map(|answer| AnswerData {
                     answer,
-                    user: answer_user,
+                    user: answer_author,
                 })
                 .map(convert_and_json::<AnswerData, AnswerResponse>)
                 .map_err(Error::simple_reject)

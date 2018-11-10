@@ -31,7 +31,6 @@ use db::{
         NewQuestion,
         QuestionData,
     },
-    Bucket,
     Question,
 };
 use identifiers::{
@@ -56,7 +55,11 @@ pub fn question_api(s: &State) -> BoxedFilter<(impl Reply,)> {
         .or(get_questions_for_bucket(s))
         .or(delete_question(s))
         .or(put_question_back_in_bucket(s))
-        .or(questions_in_bucket(s));
+        .or(questions_in_bucket(s))
+        .or(favorite_question(s))
+        .or(unfavorite_question(s))
+        .or(get_favorite_questions(s))
+    ;
 
     warp::path("question").and(api).with(warp::log("question")).boxed()
 }
@@ -174,6 +177,53 @@ fn questions_in_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
             let bucket_uuid = BucketUuid(bucket_uuid);
             Question::get_number_of_questions_in_bucket(bucket_uuid, &conn)
                 .map(convert_and_json::<i64, i64>)
+                .map_err(Error::simple_reject)
+        })
+        .boxed()
+}
+
+
+fn favorite_question(s: &State) -> BoxedFilter<(impl Reply,)> {
+
+    const FAVORITE: &str = "favorite";
+    log_attach(HttpMethod::Put, &format!("question/{}/<question_uuid>", FAVORITE));
+    warp::put2()
+        .and(warp::path("favorite"))
+        .and(uuid_wrap_filter())
+        .and(normal_user_filter(s))
+        .and(s.db.clone())
+        .and_then(|question_uuid: QuestionUuid, user_uuid: UserUuid, conn: PooledConn| {
+            Question::favorite_question(question_uuid, user_uuid, &conn)
+                .map(convert_and_json::<(), ()>)
+                .map_err(Error::simple_reject)
+        })
+        .boxed()
+}
+fn unfavorite_question(s: &State) -> BoxedFilter<(impl Reply,)> {
+    const UNFAVORITE: &str = "unfavorite";
+    log_attach(HttpMethod::Put, "question/unfavorite/<question_uuid>");
+    warp::put2()
+        .and(warp::path(UNFAVORITE))
+        .and(uuid_wrap_filter())
+        .and(normal_user_filter(s))
+        .and(s.db.clone())
+        .and_then(|question_uuid: QuestionUuid, user_uuid: UserUuid, conn: PooledConn| {
+            Question::unfavorite_question(question_uuid, user_uuid, &conn)
+                .map(convert_and_json::<(), ()>)
+                .map_err(Error::simple_reject)
+        })
+        .boxed()
+}
+
+fn get_favorite_questions(s: &State) -> BoxedFilter<(impl Reply,)> {
+    log_attach(HttpMethod::Put, "question/favorites");
+    warp::get2()
+        .and(warp::path("favorites"))
+        .and(normal_user_filter(s))
+        .and(s.db.clone())
+        .and_then(|user_uuid: UserUuid, conn: PooledConn|{
+            Question::get_favorite_questions(user_uuid, &conn)
+                .map(convert_vector_and_json::<QuestionData, QuestionResponse>)
                 .map_err(Error::simple_reject)
         })
         .boxed()

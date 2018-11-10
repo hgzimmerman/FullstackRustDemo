@@ -68,6 +68,7 @@ pub fn create_bucket(s: &State) -> BoxedFilter<(impl Reply,)> {
             Bucket::create_bucket(request.into(), &conn)
                 .map(convert_and_json::<Bucket, BucketResponse>)
                 .map_err(Error::simple_reject)
+            // TODO set the owner of the bucket
         })
         .boxed()
 }

@@ -1,3 +1,4 @@
+#![feature(transpose_result)]
 /// The Warp Server is a reimplementation of the Rocket-based Server.
 /// It is more verbose, yet contains far more control over the api composition, as well as providing nice features like Async that Rocket lacks.
 /// Instead of using macros and function signatures to define what requests will be serviced, Warp uses function combinators to filter needed data from http requests and server state.
