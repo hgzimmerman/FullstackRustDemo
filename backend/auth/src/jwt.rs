@@ -153,11 +153,12 @@ pub mod rocket_support {
 
         impl FromJwt for NormalUser {
             fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
-                if jwt.user_roles.contains(&UserRole::Unprivileged) {
-                    Ok(NormalUser { user_uuid: jwt.sub })
-                } else {
-                    Err(RoleError::InsufficientRights)
-                }
+                Ok(NormalUser { user_uuid: jwt.sub })
+//                if jwt.user_roles.contains(&UserRole::Unprivileged) {
+//                    Ok(NormalUser { user_uuid: jwt.sub })
+//                } else {
+//                    Err(RoleError::InsufficientRights)
+//                }
             }
             fn get_uuid(&self) -> UserUuid {
                 self.user_uuid

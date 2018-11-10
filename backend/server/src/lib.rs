@@ -272,7 +272,7 @@ mod configuration {
             UserRole::Admin.into(),
             UserRole::Moderator.into(),
             UserRole::Publisher.into(),
-            UserRole::Unprivileged.into(),
+//            UserRole::Unprivileged.into(),
         ];
         User::create_user(user, conn)
     }

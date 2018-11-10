@@ -51,8 +51,14 @@ pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
         .boxed()
 }
 
+/// Brings the secret into scope.
 pub fn secret_filter(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
     warp::any().map(move || locked_secret.clone()).boxed()
+}
+
+/// Extract the uuid from the JWT.
+fn get_user_uuid_from_jwt(server_jwt: ServerJwt) -> Result<UserUuid, Rejection> {
+    return Ok(server_jwt.0.sub);
 }
 
 #[allow(dead_code)]
@@ -61,7 +67,7 @@ pub fn admin_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Admin) {
-                return Ok(server_jwt.0.sub);
+                return get_user_uuid_from_jwt(server_jwt)
             } else {
                 Error::NotAuthorized {
                     reason: "JWT does not contain Admin privilege",
@@ -72,39 +78,27 @@ pub fn admin_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .boxed()
 }
 
+/// If the user has a JWT, then the user has basic user privileges.
 #[allow(dead_code)]
-pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
+pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,), > {
     warp::any()
         .and(jwt_filter(s))
-        .and_then(|server_jwt: ServerJwt| {
-            if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
-                return Ok(server_jwt.0.sub);
-            } else {
-                Error::NotAuthorized {
-                    reason: "JWT does not contain Basic User privilege",
-                }
-                .reject()
-            }
-        })
+        .and_then( get_user_uuid_from_jwt)
         .boxed()
 }
 
+
+
 /// Gets an Option<UserUuid> from the request.
+/// Returns Some(user_uuid) if the user has a valid JWT, and None otherwise.
 pub fn optional_normal_user_filter(s: &State) -> BoxedFilter<(Option<UserUuid>,)> {
-    fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection> {
-        if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
-            return Ok(Some(server_jwt.0.sub));
-        } else {
-            return Ok(None);
-        }
-    }
-    warp::any()
-        .and(jwt_filter(s))
-        .and_then(handle_jwt)
+    normal_user_filter(s)
+        .map(Some)
         .or(warp::any().map(|| None))
         .unify::<(Option<UserUuid>,)>()
         .boxed()
 }
+
 
 #[allow(dead_code)]
 pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
@@ -112,7 +106,7 @@ pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Publisher) {
-                return Ok(server_jwt.0.sub);
+                return get_user_uuid_from_jwt(server_jwt)
             } else {
                 Error::NotAuthorized {
                     reason: "JWT does not contain Publisher privilege",
@@ -128,7 +122,7 @@ pub fn moderator_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Moderator) {
-                return Ok(server_jwt.0.sub);
+                return get_user_uuid_from_jwt(server_jwt)
             } else {
                 Error::NotAuthorized {
                     reason: "JWT does not contain Moderator privilege",

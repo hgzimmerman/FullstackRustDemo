@@ -135,7 +135,7 @@ mod configuration {
             UserRole::Admin.into(),
             UserRole::Moderator.into(),
             UserRole::Publisher.into(),
-            UserRole::Unprivileged.into(),
+//            UserRole::Unprivileged.into(),
         ];
         User::create_user(user, &conn)
             .map_err(|_| Error::DatabaseError(Some(String::from("Admin User already exists"))))
