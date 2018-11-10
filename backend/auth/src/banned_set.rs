@@ -1,6 +1,6 @@
 use std::{
     collections::HashSet,
-    sync::RwLock
+    sync::RwLock,
 };
 
 use identifiers::user::UserUuid;
@@ -22,21 +22,15 @@ impl BannedSet {
     }
 
     pub fn ban_user(&self, user_uuid: UserUuid) {
-        self.0.write().unwrap().insert(
-            user_uuid,
-        );
+        self.0.write().unwrap().insert(user_uuid);
     }
     /// True indicates that the user was unbanned.
     /// False indicates that the user was not in the banned set to begin with.
     pub fn unban_user(&self, user_uuid: &UserUuid) -> bool {
-        self.0.write().unwrap().remove(
-            user_uuid,
-        )
+        self.0.write().unwrap().remove(user_uuid)
     }
 
     pub fn is_user_banned(&self, user_uuid: &UserUuid) -> bool {
-        self.0.read().unwrap().contains(
-            user_uuid,
-        )
+        self.0.read().unwrap().contains(user_uuid)
     }
 }

@@ -4,7 +4,7 @@ use std::{
     convert::From,
     error::Error,
     fmt,
-    io
+    io,
 };
 
 use self::DatabaseError::*;
@@ -43,9 +43,7 @@ impl From<result::ConnectionError> for DatabaseError {
 impl Error for DatabaseError {
     fn description(&self) -> &str {
         match *self {
-            CargoTomlNotFound => {
-                "Unable to find Cargo.toml in this directory or any parent directories."
-            }
+            CargoTomlNotFound => "Unable to find Cargo.toml in this directory or any parent directories.",
             DatabaseUrlMissing => {
                 "The --database-url argument must be passed, or the DATABASE_URL environment variable must be set."
             }

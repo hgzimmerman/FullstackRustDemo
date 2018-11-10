@@ -1,12 +1,14 @@
-use uuid::Uuid;
-use diesel::pg::PgConnection;
-use identifiers::forum::ForumUuid;
-use error::BackendResult;
 use crate::{
     calls::prelude::*,
-    schema::forums,
-    schema
+    schema::{
+        self,
+        forums,
+    },
 };
+use diesel::pg::PgConnection;
+use error::BackendResult;
+use identifiers::forum::ForumUuid;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
@@ -28,16 +30,16 @@ pub struct NewForum {
 }
 
 impl Forum {
-    pub fn get_forum(uuid: ForumUuid,conn: &PgConnection) -> BackendResult<Forum> {
-        get_row::<Forum,_>(schema::forums::table, uuid.0, conn)
+    pub fn get_forum(uuid: ForumUuid, conn: &PgConnection) -> BackendResult<Forum> {
+        get_row::<Forum, _>(schema::forums::table, uuid.0, conn)
     }
     pub fn get_forums(conn: &PgConnection) -> BackendResult<Vec<Forum>> {
-        get_rows::<Forum,_>(schema::forums::table, conn)
+        get_rows::<Forum, _>(schema::forums::table, conn)
     }
     pub fn delete_forum(uuid: ForumUuid, conn: &PgConnection) -> BackendResult<Forum> {
-        delete_row::<Forum,_>(schema::forums::table, uuid.0, conn)
+        delete_row::<Forum, _>(schema::forums::table, uuid.0, conn)
     }
     pub fn create_forum(new: NewForum, conn: &PgConnection) -> BackendResult<Forum> {
-        create_row::<Forum, NewForum,_>(schema::forums::table, new, conn)
+        create_row::<Forum, NewForum, _>(schema::forums::table, new, conn)
     }
 }

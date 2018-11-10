@@ -1,22 +1,25 @@
+use auth::{
+    Secret,
+    ServerJwt,
+};
+use identifiers::user::UserUuid;
+use std::result::Result::Err;
 use warp::{
     self,
     filters::BoxedFilter,
+    reject::Rejection,
     Filter,
-    reject::Rejection
 };
-use wire::user::BEARER;
-use auth::{
-    ServerJwt,
-    Secret
+use wire::user::{
+    UserRole,
+    BEARER,
 };
-use std::result::Result::Err;
-use wire::user::UserRole;
-use identifiers::user::UserUuid;
-
 
 //use crate::error::Error;
-use crate::state::State;
-use crate::state::banned_list::BannedList;
+use crate::state::{
+    banned_list::BannedList,
+    State,
+};
 use error::Error;
 
 pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
@@ -24,18 +27,20 @@ pub const AUTHORIZATION_HEADER_KEY: &str = "Authorization";
 /// Gets a JWT from the headers, decodes it to determine its authenticity, and then checks if its associated user is banned.
 pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
     /// Helper fn
-    fn handle_jwt_extraction_and_verification(bearer_string: String, secret: Secret, banned_list: BannedList) -> Result<ServerJwt, Rejection> {
-        let jwt = extract_jwt(bearer_string, &secret)
-            .map_err(Error::simple_reject);
+    fn handle_jwt_extraction_and_verification(
+        bearer_string: String,
+        secret: Secret,
+        banned_list: BannedList,
+    ) -> Result<ServerJwt, Rejection> {
+        let jwt = extract_jwt(bearer_string, &secret).map_err(Error::simple_reject);
 
         // Check if the user is banned, and therefore their jwt should be rejected.
         if let Ok(ref jwt) = &jwt {
             if banned_list.is_banned(&jwt.0.sub) {
-                return Error::UserBanned.reject()
+                return Error::UserBanned.reject();
             }
         }
         jwt
-
     }
 
     warp::header::header::<String>(AUTHORIZATION_HEADER_KEY)
@@ -47,9 +52,7 @@ pub fn jwt_filter(s: &State) -> BoxedFilter<(ServerJwt,)> {
 }
 
 pub fn secret_filter(locked_secret: Secret) -> BoxedFilter<(Secret,)> {
-    warp::any()
-        .map(move || locked_secret.clone())
-        .boxed()
+    warp::any().map(move || locked_secret.clone()).boxed()
 }
 
 #[allow(dead_code)]
@@ -58,9 +61,12 @@ pub fn admin_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Admin) {
-                return Ok(server_jwt.0.sub)
+                return Ok(server_jwt.0.sub);
             } else {
-                Error::NotAuthorized{reason: "JWT does not contain Admin privilege"}.reject()
+                Error::NotAuthorized {
+                    reason: "JWT does not contain Admin privilege",
+                }
+                .reject()
             }
         })
         .boxed()
@@ -72,10 +78,12 @@ pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
-                return Ok(server_jwt.0.sub)
+                return Ok(server_jwt.0.sub);
             } else {
-
-                Error::NotAuthorized{reason: "JWT does not contain Basic User privilege"}.reject()
+                Error::NotAuthorized {
+                    reason: "JWT does not contain Basic User privilege",
+                }
+                .reject()
             }
         })
         .boxed()
@@ -83,22 +91,20 @@ pub fn normal_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
 
 /// Gets an Option<UserUuid> from the request.
 pub fn optional_normal_user_filter(s: &State) -> BoxedFilter<(Option<UserUuid>,)> {
-
-    fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection>{
-         if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
-            return Ok(Some(server_jwt.0.sub))
+    fn handle_jwt(server_jwt: ServerJwt) -> Result<Option<UserUuid>, Rejection> {
+        if server_jwt.0.user_roles.contains(&UserRole::Unprivileged) {
+            return Ok(Some(server_jwt.0.sub));
         } else {
-             return Ok(None)
+            return Ok(None);
         }
     }
     warp::any()
         .and(jwt_filter(s))
         .and_then(handle_jwt)
-        .or(warp::any().map(||None))
+        .or(warp::any().map(|| None))
         .unify::<(Option<UserUuid>,)>()
         .boxed()
 }
-
 
 #[allow(dead_code)]
 pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
@@ -106,9 +112,12 @@ pub fn publisher_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Publisher) {
-                return Ok(server_jwt.0.sub)
+                return Ok(server_jwt.0.sub);
             } else {
-                Error::NotAuthorized{reason: "JWT does not contain Publisher privilege"}.reject()
+                Error::NotAuthorized {
+                    reason: "JWT does not contain Publisher privilege",
+                }
+                .reject()
             }
         })
         .boxed()
@@ -119,31 +128,30 @@ pub fn moderator_user_filter(s: &State) -> BoxedFilter<(UserUuid,)> {
         .and(jwt_filter(s))
         .and_then(|server_jwt: ServerJwt| {
             if server_jwt.0.user_roles.contains(&UserRole::Moderator) {
-                return Ok(server_jwt.0.sub)
+                return Ok(server_jwt.0.sub);
             } else {
-                Error::NotAuthorized{reason: "JWT does not contain Moderator privilege"}.reject()
+                Error::NotAuthorized {
+                    reason: "JWT does not contain Moderator privilege",
+                }
+                .reject()
             }
         })
         .boxed()
 }
 
 /// Removes the jwt from the bearer string, and decodes it to determine if it was signed properly.
-fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<ServerJwt, Error>{
-    let authorization_words: Vec<String> = bearer_string
-        .split_whitespace()
-        .map(String::from)
-        .collect();
+fn extract_jwt(bearer_string: String, secret: &Secret) -> Result<ServerJwt, Error> {
+    let authorization_words: Vec<String> = bearer_string.split_whitespace().map(String::from).collect();
 
     if authorization_words.len() != 2 {
-        return Err(Error::MalformedToken)
+        return Err(Error::MalformedToken);
     }
     if authorization_words[0] != BEARER {
-        return Err(Error::MalformedToken)
+        return Err(Error::MalformedToken);
     }
     let jwt_str: &str = &authorization_words[1];
 
     ServerJwt::decode_jwt_string(jwt_str, secret).map_err(|_| Error::IllegalToken)
-
 }
 
 //

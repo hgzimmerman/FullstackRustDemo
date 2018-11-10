@@ -1,24 +1,25 @@
 use crate::{
-    user::User,
-    schema::junction_chat_users,
-    schema::chats,
     calls::prelude::*,
-    schema
+    schema::{
+        self,
+        chats,
+        junction_chat_users,
+    },
+    user::User,
 };
 use diesel::{
-    QueryDsl,
-    RunQueryDsl,
     self,
     ExpressionMethods,
-    PgConnection
+    PgConnection,
+    QueryDsl,
+    RunQueryDsl,
 };
 use error::BackendResult;
-use uuid::Uuid;
 use identifiers::{
     chat::ChatUuid,
-    user::UserUuid
+    user::UserUuid,
 };
-
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
@@ -30,7 +31,6 @@ pub struct Chat {
     pub chat_name: String,
     pub leader_uuid: Uuid,
 }
-
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "chats"]
@@ -60,20 +60,15 @@ pub struct ChatData {
     pub members: Vec<User>,
 }
 
-
-
-
-
 impl Chat {
-
-    pub fn get_chat(uuid: ChatUuid,conn: &PgConnection) -> BackendResult<Chat> {
-        get_row::<Chat,_>(schema::chats::table, uuid.0, conn)
+    pub fn get_chat(uuid: ChatUuid, conn: &PgConnection) -> BackendResult<Chat> {
+        get_row::<Chat, _>(schema::chats::table, uuid.0, conn)
     }
     pub fn delete_chat(uuid: ChatUuid, conn: &PgConnection) -> BackendResult<Chat> {
-        delete_row::<Chat,_>(schema::chats::table, uuid.0, conn)
+        delete_row::<Chat, _>(schema::chats::table, uuid.0, conn)
     }
     pub fn create_chat(new: NewChat, conn: &PgConnection) -> BackendResult<Chat> {
-        create_row::<Chat, NewChat,_>(schema::chats::table, new, conn)
+        create_row::<Chat, NewChat, _>(schema::chats::table, new, conn)
     }
 
     pub fn add_user_to_chat(association: ChatUserAssociation, conn: &PgConnection) -> BackendResult<()> {
@@ -88,8 +83,10 @@ impl Chat {
     }
 
     pub fn remove_user_from_chat(association: ChatUserAssociation, conn: &PgConnection) -> BackendResult<()> {
-        use crate::schema::junction_chat_users::dsl::*;
-        use crate::schema::junction_chat_users;
+        use crate::schema::junction_chat_users::{
+            self,
+            dsl::*,
+        };
 
         diesel::delete(junction_chat_users::table)
             .filter(chat_uuid.eq(association.chat_uuid))
@@ -102,8 +99,10 @@ impl Chat {
     fn get_users_in_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
         use crate::schema::junction_chat_users::dsl::junction_chat_users;
         // use schema::users::dsl::*;
-        use crate::schema::users;
-        use crate::schema::junction_chat_users as junctions;
+        use crate::schema::{
+            junction_chat_users as junctions,
+            users,
+        };
 
         junction_chat_users
             .filter(junctions::chat_uuid.eq(chat_uuid.0))
@@ -114,9 +113,10 @@ impl Chat {
     }
 
     pub fn is_user_in_chat(chat_uuid: &ChatUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<bool> {
-        use crate::schema::junction_chat_users::dsl::junction_chat_users;
-        use crate::schema::junction_chat_users as junctions;
-
+        use crate::schema::{
+            junction_chat_users as junctions,
+            junction_chat_users::dsl::junction_chat_users,
+        };
 
         let junction = junction_chat_users
             .filter(junctions::user_uuid.eq(user_uuid.0))
@@ -125,7 +125,6 @@ impl Chat {
             .map_err(handle_err::<Chat>)?;
         Ok(junction.get(0).is_some())
     }
-
 
     pub fn get_full_chat(chat_uuid: ChatUuid, conn: &PgConnection) -> BackendResult<ChatData> {
         //        let chat_uuid: Uuid = chat_uuid.0;
@@ -142,8 +141,10 @@ impl Chat {
     }
 
     pub fn get_chats_user_is_in(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Chat>> {
-        use crate::schema::junction_chat_users::dsl::junction_chat_users;
-        use crate::schema::junction_chat_users as junction;
+        use crate::schema::{
+            junction_chat_users as junction,
+            junction_chat_users::dsl::junction_chat_users,
+        };
         // use schema::chats::dsl::*;
         use crate::schema::chats;
 

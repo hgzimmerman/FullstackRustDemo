@@ -1,9 +1,9 @@
 use diesel::{
-    query_dsl::methods::LoadQuery,
+    pg::Pg,
     prelude::*,
     query_builder::*,
-    pg::Pg,
-    sql_types::BigInt
+    query_dsl::methods::LoadQuery,
+    sql_types::BigInt,
 };
 
 pub trait Paginate: Sized {
@@ -22,7 +22,6 @@ impl<T> Paginate for T {
 
 /// By default, a page will contain 10 entries
 pub const PAGINATION_PER_PAGE_DEFAULT: i64 = 10;
-
 
 #[derive(Debug, Clone, Copy, QueryId)]
 pub struct Paginated<T> {
@@ -43,10 +42,7 @@ impl<T> Paginated<T> {
         let per_page = self.per_page;
         let results = self.load::<(U, i64)>(conn)?;
         let total = results.get(0).map(|x| x.1).unwrap_or(0);
-        let records = results
-            .into_iter()
-            .map(|x| x.0)
-            .collect();
+        let records = results.into_iter().map(|x| x.0).collect();
         let total_pages = (total as f64 / per_page as f64).ceil() as i64;
         Ok((records, total_pages))
     }
@@ -55,7 +51,7 @@ impl<T> Paginated<T> {
     #[allow(dead_code)]
     pub fn load_values<U>(self, conn: &PgConnection) -> QueryResult<Vec<U>>
     where
-        Self: LoadQuery<PgConnection, U>
+        Self: LoadQuery<PgConnection, U>,
     {
         let results = self.load::<U>(conn)?;
         Ok(results)
@@ -73,19 +69,13 @@ where
     T: QueryFragment<Pg>,
 {
     fn walk_ast(&self, mut out: AstPass<Pg>) -> QueryResult<()> {
-        out.push_sql(
-            "SELECT *, COUNT(*) OVER () FROM (",
-        );
+        out.push_sql("SELECT *, COUNT(*) OVER () FROM (");
         self.query.walk_ast(out.reborrow())?;
         out.push_sql(") t LIMIT ");
-        out.push_bind_param::<BigInt, _>(
-            &self.per_page,
-        )?;
+        out.push_bind_param::<BigInt, _>(&self.per_page)?;
         out.push_sql(" OFFSET ");
         let offset = (self.page - 1) * self.per_page;
-        out.push_bind_param::<BigInt, _>(
-            &offset,
-        )?;
+        out.push_bind_param::<BigInt, _>(&offset)?;
         Ok(())
     }
 }

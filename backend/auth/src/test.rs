@@ -1,15 +1,12 @@
 use super::*;
-use wire::{
-    user::{
-        UserRole,
-        Jwt
-    }
-};
 use chrono::Utc;
+use wire::user::{
+    Jwt,
+    UserRole,
+};
 
 //use log::{info, warn};
 use identifiers::user::UserUuid;
-
 
 #[test]
 fn password_hash_and_verify() {
@@ -32,7 +29,8 @@ fn jwt() {
     let jwt = ServerJwt(jwt);
 
     let jwt_string: String = jwt.encode_jwt_string(&secret).unwrap();
-    let decoded_jwt: ServerJwt = ServerJwt::decode_jwt_string(&jwt_string, &secret).expect("JWT should be decoded from the provided string");
+    let decoded_jwt: ServerJwt =
+        ServerJwt::decode_jwt_string(&jwt_string, &secret).expect("JWT should be decoded from the provided string");
     assert_eq!(jwt, decoded_jwt);
 }
 
@@ -53,9 +51,7 @@ fn jwt_tampering_detected() {
     // alter the username of a copy of the accepted jwt
     let mut altered_jwt: ServerJwt = jwt.clone();
     altered_jwt.0.user_roles = vec![UserRole::Admin];
-    let altered_jwt_string = altered_jwt
-        .encode_jwt_string(&secret)
-        .unwrap();
+    let altered_jwt_string = altered_jwt.encode_jwt_string(&secret).unwrap();
     // split the JWTs
     let split_jwt: Vec<&str> = jwt_string.split(".").collect();
     let split_altered_jwt: Vec<&str> = altered_jwt_string.split(".").collect();
@@ -69,4 +65,3 @@ fn jwt_tampering_detected() {
         panic!("Should not be able to decode this modified jwt.");
     }
 }
-

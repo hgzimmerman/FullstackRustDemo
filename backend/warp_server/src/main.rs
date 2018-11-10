@@ -4,43 +4,44 @@
 
 #[macro_use]
 extern crate warp;
-extern crate db;
-extern crate wire;
 extern crate auth;
-extern crate uuid;
-extern crate identifiers;
+extern crate db;
 extern crate error;
+extern crate identifiers;
+extern crate uuid;
+extern crate wire;
 
+extern crate clap;
 extern crate serde;
 extern crate serde_json;
 extern crate simplelog;
-extern crate clap;
 
 //extern crate diesel;
 extern crate pool;
 
-#[macro_use] extern crate log;
+#[macro_use]
+extern crate log;
 //extern crate pretty_env_logger;
 
 #[cfg(test)]
-extern crate testing_fixtures;
-#[cfg(test)]
 extern crate testing_common;
+#[cfg(test)]
+extern crate testing_fixtures;
 
 mod routes;
 //mod error;
-mod uuid_integration;
 mod logging;
-mod util;
 mod state;
+mod util;
+mod uuid_integration;
 
 use self::logging::setup_logging;
 use crate::{
+    configuration::Config,
     state::{
+        State,
         StateConfig,
-        State
     },
-    configuration::Config
 };
 
 const PORT: u16 = 8001;
@@ -50,38 +51,36 @@ fn main() {
     let (config, state_config): (Config, StateConfig) = configuration::parse_arguments();
 
     if config.create_admin {
-        let _user = configuration::create_admin(&state_config.database_url)
-            .expect("Could not create admin user");
+        let _user = configuration::create_admin(&state_config.database_url).expect("Could not create admin user");
         println!("Created Admin user with UserName: Admin, Password: Admin. Please change the password immediately");
     }
     let state = State::init(state_config);
 
-    warp::serve(self::routes::routes(&state))
-        .run(([127, 0, 0, 1], PORT))
+    warp::serve(self::routes::routes(&state)).run(([127, 0, 0, 1], PORT))
 }
 
 mod configuration {
-    use wire::{
-        user::NewUserRequest,
-        user::UserRole
+    use db::{
+        user::NewUser,
+        User,
     };
-    use db::User;
-    use db::user::NewUser;
+    use wire::user::{
+        NewUserRequest,
+        UserRole,
+    };
 
-    use crate::{
-        error::Error,
-        state::StateConfig
-    };
     use clap::{
         App,
-        Arg
+        Arg,
+    };
+    use crate::{
+        error::Error,
+        state::StateConfig,
     };
 
-
     pub struct Config {
-        pub create_admin: bool
+        pub create_admin: bool,
     }
-
 
     /// Parses CLI arguments and provides a config for pre-launch setup and another config the server.
     pub fn parse_arguments() -> (Config, StateConfig) {
@@ -111,19 +110,15 @@ mod configuration {
             .get_matches();
 
         let create_admin: bool = matches.is_present(CREATE_ADMIN);
-        let secret_key: Option<String> = matches.value_of(SECRET_KEY).map(
-            String::from,
-        );
+        let secret_key: Option<String> = matches.value_of(SECRET_KEY).map(String::from);
 
         let database_url: String = pool::DATABASE_URL.to_string();
 
-        let config = Config {
-            create_admin,
-        };
+        let config = Config { create_admin };
 
         let state_config = StateConfig {
             specified_secret: secret_key,
-            database_url
+            database_url,
         };
         (config, state_config)
     }
@@ -134,7 +129,8 @@ mod configuration {
             user_name: "Admin".into(),
             display_name: "Admin".into(),
             plaintext_password: "Admin".into(),
-        }.into();
+        }
+        .into();
         user.roles = vec![
             UserRole::Admin.into(),
             UserRole::Moderator.into(),
@@ -146,5 +142,3 @@ mod configuration {
     }
 
 }
-
-

@@ -1,25 +1,29 @@
+use chrono::{
+    NaiveDateTime,
+    Utc,
+};
 use crate::{
-    schema::articles,
-    user::User,
     calls::prelude::*,
-    schema
+    schema::{
+        self,
+        articles,
+    },
+    user::User,
 };
 use diesel::{
-    RunQueryDsl,
     self,
-    QueryDsl,
-    ExpressionMethods,
     BelongingToDsl,
-    PgConnection
+    ExpressionMethods,
+    PgConnection,
+    QueryDsl,
+    RunQueryDsl,
 };
-use chrono::{NaiveDateTime, Utc};
 use error::BackendResult;
-use uuid::Uuid;
 use identifiers::{
     article::ArticleUuid,
-    user::UserUuid
+    user::UserUuid,
 };
-
+use uuid::Uuid;
 
 /// The database's representation of an article
 #[derive(Clone, Queryable, Identifiable, Associations, Debug, PartialEq, TypeName)]
@@ -52,8 +56,6 @@ pub struct ArticleChangeset {
     pub body: Option<String>,
 }
 
-
-
 /// Represents an article that will be inserted into the database.
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "articles"]
@@ -69,20 +71,18 @@ pub struct ArticleData {
     pub user: User,
 }
 
-
 impl Article {
-
-    pub fn get_article(uuid: ArticleUuid,conn: &PgConnection) -> BackendResult<Article> {
-        get_row::<Article,_>(schema::articles::table, uuid.0, conn)
+    pub fn get_article(uuid: ArticleUuid, conn: &PgConnection) -> BackendResult<Article> {
+        get_row::<Article, _>(schema::articles::table, uuid.0, conn)
     }
     pub fn delete_article(uuid: ArticleUuid, conn: &PgConnection) -> BackendResult<Article> {
-        delete_row::<Article,_>(schema::articles::table, uuid.0, conn)
+        delete_row::<Article, _>(schema::articles::table, uuid.0, conn)
     }
     pub fn create_article(new: NewArticle, conn: &PgConnection) -> BackendResult<Article> {
-        create_row::<Article, NewArticle,_>(schema::articles::table, new, conn)
+        create_row::<Article, NewArticle, _>(schema::articles::table, new, conn)
     }
     pub fn update_article_2(changeset: ArticleChangeset, conn: &PgConnection) -> BackendResult<Article> {
-        update_row::<Article, ArticleChangeset,_>(schema::articles::table, changeset, conn)
+        update_row::<Article, ArticleChangeset, _>(schema::articles::table, changeset, conn)
     }
 
     // /// Gets the n most recent articles, where n is specified by the number_of_articles parameter.
@@ -102,16 +102,19 @@ impl Article {
     // }
 
     pub fn get_article_data(article_uuid: ArticleUuid, conn: &PgConnection) -> BackendResult<ArticleData> {
-
         let article = Article::get_article(article_uuid, conn)?;
         let user = User::get_user(UserUuid(article.author_uuid), conn)?;
         Ok(ArticleData { article, user })
     }
 
     pub fn get_paginated(page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<Vec<ArticleData>> {
-        use crate::schema::articles::dsl::*;
-        use crate::diesel_extensions::pagination::*;
-        use crate::schema::users;
+        use crate::{
+            diesel_extensions::pagination::*,
+            schema::{
+                articles::dsl::*,
+                users,
+            },
+        };
 
         let (articles_and_users, _count) = articles
             .inner_join(users::table)
@@ -124,24 +127,21 @@ impl Article {
 
         let article_data = articles_and_users
             .into_iter()
-            .map(|x| {
-                ArticleData {
-                    article: x.0,
-                    user: x.1,
-                }
+            .map(|x| ArticleData {
+                article: x.0,
+                user: x.1,
             })
             .collect();
 
         Ok(article_data)
     }
 
-
-
-
     /// Gets the unpublished articles for a given user
     pub fn get_unpublished_articles_for_user(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Article>> {
-        use crate::schema::articles::dsl::*;
-        use crate::schema::users::dsl::*;
+        use crate::schema::{
+            articles::dsl::*,
+            users::dsl::*,
+        };
         //        use schema::users;
 
         let user: User = users
@@ -149,27 +149,23 @@ impl Article {
             .get_result::<User>(conn)
             .map_err(handle_err::<User>)?;
 
-
         Article::belonging_to(&user)
             .filter(publish_date.is_null())
             .order(publish_date)
             .load::<Article>(conn)
             .map_err(handle_err::<Article>)
-
     }
 
     /// Sets the date for the article's publish date.
     /// If true, it will set the publish datetime to the current time, indicating it is published.
     /// If false, it will set the publish column to Null, indicating that it has not been published.
     pub fn set_publish_status(article_uuid: ArticleUuid, publish: bool, conn: &PgConnection) -> BackendResult<Article> {
-        use crate::schema::articles::dsl::*;
-        use crate::schema::articles;
-
-        let publish_value: Option<NaiveDateTime> = if publish {
-            Some(Utc::now().naive_utc())
-        } else {
-            None
+        use crate::schema::articles::{
+            self,
+            dsl::*,
         };
+
+        let publish_value: Option<NaiveDateTime> = if publish { Some(Utc::now().naive_utc()) } else { None };
 
         diesel::update(articles::table)
             .filter(articles::uuid.eq(article_uuid.0))
@@ -177,7 +173,6 @@ impl Article {
             .get_result(conn)
             .map_err(handle_err::<Article>)
     }
-
 
     /// Applies the changeset to its corresponding article.
     pub fn update_article(changeset: ArticleChangeset, conn: &PgConnection) -> BackendResult<Article> {

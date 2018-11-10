@@ -1,27 +1,30 @@
 //! The routes module contains the routes that are used by Rocket.
 //! The methods in this module are responsible for deserializing and validating the incoming requests and sending them on to their respective `db` methods.
 
-pub mod static_file;
-pub mod article;
-pub mod user;
-pub mod auth;
-pub mod forum;
-pub mod post;
-pub mod thread;
-pub mod bucket;
-pub mod question;
 pub mod answer;
+pub mod article;
+pub mod auth;
+pub mod bucket;
 pub mod chat;
+pub mod forum;
 pub mod message;
+pub mod post;
+pub mod question;
+pub mod static_file;
+pub mod thread;
+pub mod user;
 
-pub use self::article::*;
-pub use self::static_file::*;
-pub use self::user::*;
-pub use self::auth::*;
+pub use self::{
+    article::*,
+    auth::*,
+    static_file::*,
+    user::*,
+};
 // these are mostly unused
-pub use self::forum::*;
-pub use self::bucket::*;
-
+pub use self::{
+    bucket::*,
+    forum::*,
+};
 
 use rocket::Route;
 

@@ -1,37 +1,37 @@
 use warp::{
-    filters::BoxedFilter,
-    Filter,
     self,
+    filters::BoxedFilter,
+    reject::Rejection,
     reply::Reply,
-    reject::Rejection
+    Filter,
 };
 
-use db::auth as auth_db;
-use crate::{
-    error::Error,
-    state::jwt::jwt_filter,
-    logging::log_attach,
-    logging::HttpMethod,
-    state::State
-};
 use auth::{
     Secret,
-    ServerJwt
+    ServerJwt,
 };
-use wire::login::LoginRequest;
+use crate::{
+    error::Error,
+    logging::{
+        log_attach,
+        HttpMethod,
+    },
+    state::{
+        jwt::jwt_filter,
+        State,
+    },
+};
+use db::auth as auth_db;
 use pool::PooledConn;
+use wire::login::LoginRequest;
 
 pub fn auth_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Auth API");
     warp::path("auth")
-        .and(
-            reauth(s)
-                .or(login(s))
-        )
+        .and(reauth(s).or(login(s)))
         .with(warp::log("auth"))
         .boxed()
 }
-
 
 fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "auth/reauth");
@@ -40,8 +40,12 @@ fn reauth(s: &State) -> BoxedFilter<(impl Reply,)> {
         .and(s.secret.clone())
         .and(jwt_filter(s))
         .and_then(|secret: Secret, jwt: ServerJwt| {
-            auth_db::reauth(jwt, &secret)
-                .map_err(|_| Error::NotAuthorized{reason: "Could not reauth"}.simple_reject())
+            auth_db::reauth(jwt, &secret).map_err(|_| {
+                Error::NotAuthorized {
+                    reason: "Could not reauth",
+                }
+                .simple_reject()
+            })
         })
         .boxed()
 }
@@ -50,31 +54,35 @@ fn login(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Post, "auth/login");
 
     fn handle_login(secret: Secret, conn: PooledConn, login_request: LoginRequest) -> Result<impl Reply, Rejection> {
-         auth_db::login(login_request, &secret, &conn)
-             .map_err(|_| Error::NotAuthorized{reason: "Invalid password or username"}.simple_reject()) // TODO I can do better than this error message.
+        auth_db::login(login_request, &secret, &conn).map_err(|_| {
+            Error::NotAuthorized {
+                reason: "Invalid password or username",
+            }
+            .simple_reject()
+        }) // TODO I can do better than this error message.
     }
 
     warp::post2()
         .and(warp::path("login"))
         .and(s.secret.clone())
-        .and( s.db.clone())
+        .and(s.db.clone())
         .and(warp::body::json())
         .and_then(handle_login)
         .boxed()
 }
 
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use testing_fixtures::fixtures::user::UserFixture;
-    use testing_common::setup::setup_warp;
+    use crate::{
+        state::jwt::AUTHORIZATION_HEADER_KEY,
+        util::test::deserialize_string,
+    };
     use pool::Pool;
-    use crate::util::test::deserialize_string;
     use serde_json::to_string as serde_ser;
-    use crate::state::jwt::AUTHORIZATION_HEADER_KEY;
+    use testing_common::setup::setup_warp;
+    use testing_fixtures::fixtures::user::UserFixture;
     use wire::user::BEARER;
-
 
     /// Utility for getting the jwt string.
     /// This should make
@@ -125,7 +133,7 @@ pub mod tests {
 
             let response = warp::test::request()
                 .method("GET")
-                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER ,jwt_string).as_str())
+                .header(AUTHORIZATION_HEADER_KEY, format!("{} {}", BEARER, jwt_string).as_str())
                 .path("/auth/reauth")
                 .reply(&auth_api(&s));
 
@@ -133,7 +141,6 @@ pub mod tests {
             let new_jwt_string: String = deserialize_string(response);
 
             assert_ne!(new_jwt_string, jwt_string);
-
         })
     }
 }

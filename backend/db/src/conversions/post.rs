@@ -1,9 +1,8 @@
+use chrono::Utc;
 use crate::post::*;
 use wire::post::*;
-use chrono::Utc;
 //use thread::Thread;
 use identifiers::post::PostUuid;
-
 
 impl From<NewPostRequest> for NewPost {
     fn from(request: NewPostRequest) -> NewPost {
@@ -18,9 +17,6 @@ impl From<NewPostRequest> for NewPost {
     }
 }
 
-
-
-
 impl From<EditPostRequest> for EditPostChangeset {
     fn from(request: EditPostRequest) -> EditPostChangeset {
         EditPostChangeset {
@@ -30,8 +26,6 @@ impl From<EditPostRequest> for EditPostChangeset {
         }
     }
 }
-
-
 
 impl From<ChildlessPostData> for PostResponse {
     fn from(data: ChildlessPostData) -> PostResponse {
@@ -47,8 +41,6 @@ impl From<ChildlessPostData> for PostResponse {
     }
 }
 
-
-
 impl From<PostData> for PostResponse {
     fn from(data: PostData) -> PostResponse {
         PostResponse {
@@ -58,12 +50,7 @@ impl From<PostData> for PostResponse {
             modified_date: data.post.modified_date,
             content: data.post.content,
             censored: data.post.censored,
-            children: data.children
-                .into_iter()
-                .map(PostResponse::from)
-                .collect(),
+            children: data.children.into_iter().map(PostResponse::from).collect(),
         }
     }
 }
-
-

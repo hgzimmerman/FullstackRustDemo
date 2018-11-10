@@ -1,51 +1,47 @@
-use warp::{
-    Filter,
-    filters::BoxedFilter,
-    reply::Reply
-};
 use error::Error;
+use warp::{
+    filters::BoxedFilter,
+    reply::Reply,
+    Filter,
+};
 //use crate::db_integration::s.db.clone();
 //use db::Conn;
-use db::bucket::Bucket;
 use crate::{
-    util::convert_and_json,
-    uuid_integration::uuid_wrap_filter,
-    state::State,
-    state::jwt::normal_user_filter,
-    util::convert_vector_and_json,
     logging::{
         log_attach,
-        HttpMethod
+        HttpMethod,
     },
-    util::json_body_filter
+    state::{
+        jwt::normal_user_filter,
+        State,
+    },
+    util::{
+        convert_and_json,
+        convert_vector_and_json,
+        json_body_filter,
+    },
+    uuid_integration::uuid_wrap_filter,
 };
-use wire::{
-    bucket::{
-        BucketResponse,
-        NewBucketRequest
-    }
-};
+use db::bucket::Bucket;
 use identifiers::{
     bucket::BucketUuid,
-    user::UserUuid
+    user::UserUuid,
 };
 use pool::PooledConn;
-
+use wire::bucket::{
+    BucketResponse,
+    NewBucketRequest,
+};
 
 pub fn bucket_api(s: &State) -> BoxedFilter<(impl warp::Reply,)> {
     info!("Attaching Bucket API");
     let api = get_bucket_by_uuid(s)
         .or(create_bucket(s))
         .or(get_bucket_by_name(s))
-        .or(get_buckets_belonging_to_user(s))
-    ;
+        .or(get_buckets_belonging_to_user(s));
 
-    warp::path("bucket")
-        .and(api)
-        .with(warp::log("bucket"))
-        .boxed()
+    warp::path("bucket").and(api).with(warp::log("bucket")).boxed()
 }
-
 
 pub fn get_bucket_by_uuid(s: &State) -> BoxedFilter<(impl Reply,)> {
     log_attach(HttpMethod::Get, "bucket/<uuid>");
@@ -91,7 +87,6 @@ pub fn get_bucket_by_name(s: &State) -> BoxedFilter<(impl Reply,)> {
 }
 
 pub fn get_buckets_belonging_to_user(s: &State) -> BoxedFilter<(impl Reply,)> {
-
     log_attach(HttpMethod::Get, "bucket/owned");
     warp::get2()
         .and(warp::path::path("owned"))

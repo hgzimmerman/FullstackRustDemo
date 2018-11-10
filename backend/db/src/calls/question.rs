@@ -1,30 +1,32 @@
-use diesel::{
-    RunQueryDsl,
-    QueryDsl,
-    BelongingToDsl,
-    GroupedBy,
-    self,
-    ExpressionMethods,
-    PgConnection
-};
 use crate::{
     answer::{
         Answer,
-        AnswerData
+        AnswerData,
     },
     bucket::Bucket,
-    user::User,
-    schema::questions,
     calls::prelude::*,
-    schema
+    schema::{
+        self,
+        questions,
+    },
+    user::User,
+};
+use diesel::{
+    self,
+    BelongingToDsl,
+    ExpressionMethods,
+    GroupedBy,
+    PgConnection,
+    QueryDsl,
+    RunQueryDsl,
 };
 use error::BackendResult;
-use uuid::Uuid;
 use identifiers::{
-    question::QuestionUuid,
     bucket::BucketUuid,
-    user::UserUuid
+    question::QuestionUuid,
+    user::UserUuid,
 };
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
@@ -57,15 +59,14 @@ pub struct QuestionData {
 }
 
 impl Question {
-
-    pub fn get_question(uuid: QuestionUuid,conn: &PgConnection) -> BackendResult<Question> {
-        get_row::<Question,_>(schema::questions::table, uuid.0, conn)
+    pub fn get_question(uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<Question> {
+        get_row::<Question, _>(schema::questions::table, uuid.0, conn)
     }
     pub fn delete_question(uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<Question> {
-        delete_row::<Question,_>(schema::questions::table, uuid.0, conn)
+        delete_row::<Question, _>(schema::questions::table, uuid.0, conn)
     }
     pub fn create_question(new: NewQuestion, conn: &PgConnection) -> BackendResult<Question> {
-        create_row::<Question, NewQuestion,_>(schema::questions::table, new, conn)
+        create_row::<Question, NewQuestion, _>(schema::questions::table, new, conn)
     }
 
     /// Creates a new bucket
@@ -79,13 +80,14 @@ impl Question {
             user,
             answers: vec![],
         })
-
     }
 
     /// Gets a list of all questions across all buckets.
     pub fn get_questions(conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
-        use crate::schema::questions::dsl::*;
-        use crate::schema::users::dsl::*;
+        use crate::schema::{
+            questions::dsl::*,
+            users::dsl::*,
+        };
         let questions_and_users = questions
             .inner_join(users)
             .load::<(Question, User)>(conn)
@@ -103,7 +105,6 @@ impl Question {
             .collect();
         Ok(question_data)
     }
-
 
     /// Gets a random question that may have already been answered
     pub fn get_random_question(bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<QuestionData> {
@@ -139,19 +140,16 @@ impl Question {
             user,
             answers: answers_and_users
                 .into_iter()
-                .map(|x| {
-                    AnswerData {
-                        answer: x.0,
-                        user: x.1,
-                    }
-                })
+                .map(|x| AnswerData { answer: x.0, user: x.1 })
                 .collect(),
         })
     }
 
-
     /// Gets groupings of questions, users, and answers for a given bucket id.
-    pub fn get_questions_for_bucket(owning_bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<Vec<QuestionData>> {
+    pub fn get_questions_for_bucket(
+        owning_bucket_uuid: BucketUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<QuestionData>> {
         use crate::schema::users::dsl::*;
         let bucket = Bucket::get_bucket(owning_bucket_uuid, &conn)?;
 
@@ -160,10 +158,7 @@ impl Question {
             .load::<(Question, User)>(conn)
             .map_err(handle_err::<Question>)?;
 
-        let questions: Vec<Question> = questions_and_users
-            .iter()
-            .map(|q_and_u| q_and_u.0.clone())
-            .collect();
+        let questions: Vec<Question> = questions_and_users.iter().map(|q_and_u| q_and_u.0.clone()).collect();
 
         let answers: Vec<(Answer, User)> = Answer::belonging_to(&questions)
             .inner_join(users)
@@ -171,10 +166,8 @@ impl Question {
             .map_err(handle_err::<Answer>)?;
         let grouped_answers: Vec<Vec<(Answer, User)>> = answers.grouped_by(&questions); // I'm not 100% shure that this works as intended here
 
-        let data_tuple: Vec<((Question, User), Vec<(Answer, User)>)> = questions_and_users
-            .into_iter()
-            .zip(grouped_answers)
-            .collect();
+        let data_tuple: Vec<((Question, User), Vec<(Answer, User)>)> =
+            questions_and_users.into_iter().zip(grouped_answers).collect();
 
         let question_data = data_tuple
             .into_iter()
@@ -185,14 +178,7 @@ impl Question {
                 QuestionData {
                     question,
                     user,
-                    answers: a_u.into_iter()
-                        .map(|y| {
-                            AnswerData {
-                                answer: y.0,
-                                user: y.1,
-                            }
-                        })
-                        .collect(),
+                    answers: a_u.into_iter().map(|y| AnswerData { answer: y.0, user: y.1 }).collect(),
                 }
             })
             .collect();
@@ -220,12 +206,7 @@ impl Question {
         // Get the question
         let question: Question = Question::get_question(question_uuid, conn)?;
 
-        let to_answer_data = |x: (Answer, User)| {
-            AnswerData {
-                answer: x.0,
-                user: x.1,
-            }
-        };
+        let to_answer_data = |x: (Answer, User)| AnswerData { answer: x.0, user: x.1 };
 
         // Get the answers and their associated users and format them into answer data.
         let answer_data: Vec<AnswerData> = Answer::belonging_to(&question)
@@ -249,23 +230,22 @@ impl Question {
         })
     }
 
-//    pub fn delete_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
-//        let question_uuid = question_uuid.0;
-//        Question::delete_by_id(question_uuid, conn)
-//    }
+    //    pub fn delete_question(question_uuid: QuestionUuid, conn: &PgConnection) -> JoeResult<Question> {
+    //        let question_uuid = question_uuid.0;
+    //        Question::delete_by_id(question_uuid, conn)
+    //    }
 
     /// Puts the question in the metaphorical bucket, not the DB table.
     /// All this does is set a boolean indicating if the question is avalable for random selection or not.
     pub fn put_question_in_bucket(question_uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<QuestionUuid> {
-        use crate::schema::questions::dsl::*;
-        use crate::schema::questions;
-
+        use crate::schema::questions::{
+            self,
+            dsl::*,
+        };
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(questions::uuid.eq(
-            m_question_uuid,
-        ));
+        let target = questions.filter(questions::uuid.eq(m_question_uuid));
         diesel::update(target)
             .set(on_floor.eq(false))
             .execute(conn)
@@ -274,14 +254,14 @@ impl Question {
     }
 
     pub fn put_question_on_floor(question_uuid: QuestionUuid, conn: &PgConnection) -> BackendResult<QuestionUuid> {
-        use crate::schema::questions::dsl::*;
-        use crate::schema::questions;
+        use crate::schema::questions::{
+            self,
+            dsl::*,
+        };
 
         let m_question_uuid: Uuid = question_uuid.0;
 
-        let target = questions.filter(questions::uuid.eq(
-            m_question_uuid,
-        ));
+        let target = questions.filter(questions::uuid.eq(m_question_uuid));
         diesel::update(target)
             .set(on_floor.eq(true))
             .execute(conn)

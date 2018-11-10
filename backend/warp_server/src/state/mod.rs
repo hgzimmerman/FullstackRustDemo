@@ -1,22 +1,21 @@
+pub mod banned_list;
 /// This module deals with anything in the server that requires some stateful interaction.
 /// This includes DB access, and secret management.
-
 pub mod db_integration;
 pub mod jwt;
-pub mod banned_list;
 
-use pool::PooledConn;
-use warp::filters::BoxedFilter;
-use auth::Secret;
 use self::{
-    jwt::secret_filter,
     banned_list::{
+        banned_list_filter,
         BannedList,
-        banned_list_filter
-    }
+    },
+    jwt::secret_filter,
 };
+use auth::Secret;
 #[cfg(test)]
 use pool::Pool;
+use pool::PooledConn;
+use warp::filters::BoxedFilter;
 
 /// State object that should be accessable to most routes.
 /// This object will hold references to functions that will allow the production
@@ -24,13 +23,13 @@ use pool::Pool;
 pub struct State {
     pub db: BoxedFilter<(PooledConn,)>,
     pub secret: BoxedFilter<(Secret,)>,
-    pub banned_list: BoxedFilter<(BannedList,)>
+    pub banned_list: BoxedFilter<(BannedList,)>,
 }
 
 /// Configuration struct used in constructing the State struct.
 pub struct StateConfig {
     pub specified_secret: Option<String>,
-    pub database_url: String
+    pub database_url: String,
 }
 
 /// By default:
@@ -45,14 +44,13 @@ impl Default for StateConfig {
     }
 }
 
-
 impl State {
     /// Set up the state.
     pub fn init(config: StateConfig) -> State {
         let pool = pool::init_pool(&config.database_url);
 
         // Either randomly generate the secret, or use the user specified text.
-        let secret: Secret = if let Some(secret_text) =config.specified_secret {
+        let secret: Secret = if let Some(secret_text) = config.specified_secret {
             Secret::from_user_supplied_string(&secret_text)
         } else {
             Secret::generate()
@@ -63,15 +61,13 @@ impl State {
         State {
             db: db_integration::db_filter(pool),
             secret: secret_filter(secret),
-            banned_list: banned_list_filter(banned_list)
+            banned_list: banned_list_filter(banned_list),
         }
     }
 }
 
-
 #[cfg(test)]
 impl State {
-
     /// An initialization of the State struct that should only be used for testing.
     /// It uses a parameterized Pool, which allows for the same connections used in testing to be provided,
     /// as well as the same secret used to authorize user sign ins.
@@ -79,7 +75,7 @@ impl State {
         State {
             db: db_integration::db_filter(pool),
             secret: secret_filter(secret),
-            banned_list: banned_list_filter(BannedList::default())
+            banned_list: banned_list_filter(BannedList::default()),
         }
     }
 }
@@ -90,5 +86,3 @@ impl Default for State {
         State::init(StateConfig::default())
     }
 }
-
-

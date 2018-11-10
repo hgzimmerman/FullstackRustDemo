@@ -1,33 +1,25 @@
-use warp::{
-    filters::BoxedFilter,
-    Filter,
-    reply::Reply,
-    self,
-    path::Peek,
-    fs::File
-};
 use crate::routes::API_STRING;
-
+use warp::{
+    self,
+    filters::BoxedFilter,
+    fs::File,
+    path::Peek,
+    reply::Reply,
+    Filter,
+};
 
 const INDEX_PATH: &str = "../../frontend/app/static/index.html";
 const STATIC_DIR_PATH: &str = "../../frontend/app/static/";
 const APP_WASM: &str = "../../frontend/target/wasm32-unknown-unknown/release/app.wasm";
-const APP_JS: &str =    "../../frontend/target/wasm32-unknown-unknown/release/app.js";
-
+const APP_JS: &str = "../../frontend/target/wasm32-unknown-unknown/release/app.js";
 
 /// Expose filters that work with static files
 pub fn static_files_handler() -> BoxedFilter<(impl Reply,)> {
     info!("Attaching Static Files handler");
 
-    let files = index()
-        .or(app_wasm())
-        .or(app_js())
-        .or(index_static_file_redirect());
+    let files = index().or(app_wasm()).or(app_js()).or(index_static_file_redirect());
 
-    warp::any()
-        .and(files)
-        .with(warp::log("static_files"))
-        .boxed()
+    warp::any().and(files).with(warp::log("static_files")).boxed()
 }
 
 /// If the path does not start with /api, return the index.html, so the app will bootstrap itself
@@ -40,8 +32,8 @@ fn index_static_file_redirect() -> BoxedFilter<(impl Reply,)> {
             // Reject the request if the path starts with /api/
             if let Some(first_segment) = segments.segments().next() {
                 if first_segment == API_STRING {
-//                    return Error::NotFound.reject()
-                    return Err(warp::reject::not_found()) // TODO maybe keep this in the Error Type
+                    //                    return Error::NotFound.reject()
+                    return Err(warp::reject::not_found()); // TODO maybe keep this in the Error Type
                 }
             }
             Ok(file)
@@ -50,7 +42,7 @@ fn index_static_file_redirect() -> BoxedFilter<(impl Reply,)> {
 }
 
 // TODO, not fully baked yet
-fn index() ->  BoxedFilter<(impl Reply,)> {
+fn index() -> BoxedFilter<(impl Reply,)> {
     warp::get2()
         .and(warp::fs::dir(STATIC_DIR_PATH))
         .and(warp::path::end())
@@ -75,38 +67,26 @@ fn app_js() -> BoxedFilter<(impl Reply,)> {
         .boxed()
 }
 
-
-
 #[test]
 fn index_test() {
-    assert!(
-        warp::test::request()
-            .path("/")
-            .filter(&index())
-            .is_ok()
-    )
+    assert!(warp::test::request().path("/").filter(&index()).is_ok())
 }
 
 #[test]
 fn static_files_404() {
-    assert!(
-        warp::test::request()
-            .path("/api")
-            .filter(&static_files_handler())
-            .is_err()
-    )
+    assert!(warp::test::request()
+        .path("/api")
+        .filter(&static_files_handler())
+        .is_err())
 }
 
 #[test]
 fn static_files_redirect_to_index() {
-    assert!(
-        warp::test::request()
-            .path("/yeet")
-            .filter(&static_files_handler())
-            .is_ok()
-    )
+    assert!(warp::test::request()
+        .path("/yeet")
+        .filter(&static_files_handler())
+        .is_ok())
 }
-
 
 #[test]
 fn static_invalid_api_path_still_404s() {
@@ -117,10 +97,9 @@ fn static_invalid_api_path_still_404s() {
 
     let err: warp::Rejection = match err {
         Ok(_) => panic!("Error was expected, found valid Reply"),
-        Err(e) => e
+        Err(e) => e,
     };
     assert!(err.is_not_found())
-//    let err = *err.into_cause::<Error>().expect("Should be a cause.");
-//    assert_eq!(err, Error::NotFound)
-
+    //    let err = *err.into_cause::<Error>().expect("Should be a cause.");
+    //    assert_eq!(err, Error::NotFound)
 }

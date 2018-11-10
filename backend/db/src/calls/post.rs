@@ -1,34 +1,38 @@
+use chrono::{
+    NaiveDateTime,
+    Utc,
+};
 use crate::{
+    calls::prelude::*,
     schema::{
+        self,
+        post_downvotes,
         post_upvotes,
         posts,
-        post_downvotes,
-        self
     },
-    user::User,
     thread::Thread,
-    calls::prelude::*,
+    user::User,
 };
-use chrono::NaiveDateTime;
-use error::*;
 use diesel::{
-    RunQueryDsl,
     self,
-    ExpressionMethods,
     BelongingToDsl,
+    ExpressionMethods,
+    PgConnection,
     QueryDsl,
+    RunQueryDsl,
     SaveChangesDsl,
-    PgConnection
 };
-use error::BackendResult;
+use error::{
+    BackendResult,
+    *,
+};
 use identifiers::{
     post::PostUuid,
     thread::ThreadUuid,
-    user::UserUuid
+    user::UserUuid,
 };
-use uuid::Uuid;
-use chrono::Utc;
 use log::info;
+use uuid::Uuid;
 
 use std::collections::HashMap;
 
@@ -56,8 +60,6 @@ pub struct Post {
     /// If the post has been censored, it will not be immediately viewable by people viewing the thread.
     pub censored: bool,
 }
-
-
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "posts"]
@@ -91,13 +93,8 @@ pub struct PostData {
 pub struct ChildlessPostData {
     pub post: Post,
     pub user: User,
-    pub votes: VoteCounts
+    pub votes: VoteCounts,
 }
-
-
-
-
-
 
 #[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable)]
 #[primary_key(uuid)]
@@ -110,14 +107,14 @@ struct PostUpvote {
     /// Foreign Key
     pub post_uuid: Uuid,
     /// Foreign Key
-    pub user_uuid: Uuid
+    pub user_uuid: Uuid,
 }
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "post_upvotes"]
 struct NewUpvote {
     pub post_uuid: Uuid,
-    pub user_uuid: Uuid
+    pub user_uuid: Uuid,
 }
 
 #[derive(Debug, Clone, PartialEq, Identifiable, Associations, Queryable)]
@@ -131,16 +128,15 @@ struct PostDownvote {
     /// Foreign Key
     pub post_uuid: Uuid,
     /// Foreign Key
-    pub user_uuid: Uuid
+    pub user_uuid: Uuid,
 }
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "post_downvotes"]
 struct NewDownvote {
     pub post_uuid: Uuid,
-    pub user_uuid: Uuid
+    pub user_uuid: Uuid,
 }
-
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vote {
@@ -150,7 +146,7 @@ pub struct Vote {
 
 pub enum PostVote {
     Up(Vote),
-    Down(Vote)
+    Down(Vote),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -158,14 +154,14 @@ pub struct VoteCounts {
     pub up: i64,
     pub down: i64,
     pub user_voted_up: bool,
-    pub user_voted_down: bool
+    pub user_voted_down: bool,
 }
 
 impl From<Vote> for NewDownvote {
     fn from(f: Vote) -> Self {
         NewDownvote {
             post_uuid: f.post_uuid.0,
-            user_uuid: f.user_uuid.0
+            user_uuid: f.user_uuid.0,
         }
     }
 }
@@ -173,11 +169,10 @@ impl From<Vote> for NewUpvote {
     fn from(f: Vote) -> Self {
         NewUpvote {
             post_uuid: f.post_uuid.0,
-            user_uuid: f.user_uuid.0
+            user_uuid: f.user_uuid.0,
         }
     }
 }
-
 
 impl From<(Thread, String)> for NewPost {
     fn from(content: (Thread, String)) -> NewPost {
@@ -203,23 +198,25 @@ impl From<ChildlessPostData> for PostData {
     }
 }
 
-
-
 impl Post {
-
-    pub fn get_post(uuid: PostUuid,conn: &PgConnection) -> BackendResult<Post> {
-        get_row::<Post,_>(schema::posts::table, uuid.0, conn)
+    pub fn get_post(uuid: PostUuid, conn: &PgConnection) -> BackendResult<Post> {
+        get_row::<Post, _>(schema::posts::table, uuid.0, conn)
     }
     pub fn delete_post(uuid: PostUuid, conn: &PgConnection) -> BackendResult<Post> {
-        delete_row::<Post,_>(schema::posts::table, uuid.0, conn)
+        delete_row::<Post, _>(schema::posts::table, uuid.0, conn)
     }
     pub fn create_post(new: NewPost, conn: &PgConnection) -> BackendResult<Post> {
-        create_row::<Post, NewPost,_>(schema::posts::table, new, conn)
+        create_row::<Post, NewPost, _>(schema::posts::table, new, conn)
     }
 
     /// Applies the EditPostChangeset to the post.
     /// If the thread is locked, the post cannot be modified
-    pub fn modify_post(edit_post_changeset: EditPostChangeset, thread_uuid: ThreadUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
+    pub fn modify_post(
+        edit_post_changeset: EditPostChangeset,
+        thread_uuid: ThreadUuid,
+        user_uuid: UserUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<ChildlessPostData> {
         //        use schema::posts;
 
         let target_thread: Thread = Thread::get_thread(thread_uuid, conn)?;
@@ -227,10 +224,7 @@ impl Post {
             return Err(Error::ThreadImmutable);
         }
 
-
-        let modified_post: Post = edit_post_changeset
-            .save_changes(conn)
-            .map_err(handle_err::<Post>)?;
+        let modified_post: Post = edit_post_changeset.save_changes(conn).map_err(handle_err::<Post>)?;
 
         let votes: VoteCounts = Post::get_vote_counts(&modified_post, user_uuid, conn)?;
 
@@ -239,10 +233,9 @@ impl Post {
         Ok(ChildlessPostData {
             post: modified_post,
             user,
-            votes
+            votes,
         })
     }
-
 
     /// Creates a post, and also gets the associated author for the post.
     pub fn create_and_get_user(new_post: NewPost, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
@@ -259,7 +252,7 @@ impl Post {
             if let Err(_) = Post::get_root_post(thread_uuid, conn) {
                 info!("New post created for new thread.");
             } else {
-                return Err(Error::BadRequest) // TODO need better error
+                return Err(Error::BadRequest); // TODO need better error
             }
         };
 
@@ -268,18 +261,16 @@ impl Post {
         let user: User = User::get_user(author_uuid, conn)?;
         let user_uuid = UserUuid(post.author_uuid);
         let votes: VoteCounts = Post::get_vote_counts(&post, user_uuid, conn)?;
-        let post_data = ChildlessPostData {
-            post,
-            user,
-            votes
-        };
+        let post_data = ChildlessPostData { post, user, votes };
         Ok(post_data)
     }
 
     /// Censors the post, preventing users from seeing it by default.
     pub fn censor_post(post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
-        use crate::schema::posts::dsl::*;
-        use crate::schema::posts;
+        use crate::schema::posts::{
+            self,
+            dsl::*,
+        };
 
         let m_post_uuid: Uuid = post_uuid.0;
 
@@ -291,14 +282,13 @@ impl Post {
         let author_uuid_a = UserUuid(censored_post.author_uuid);
         let user = User::get_user(author_uuid_a, conn)?;
         let user_uuid = UserUuid(user.uuid);
-        let votes = Post::get_vote_counts(&censored_post, user_uuid,conn)?;
+        let votes = Post::get_vote_counts(&censored_post, user_uuid, conn)?;
 
         Ok(ChildlessPostData {
             post: censored_post,
             user,
-            votes
+            votes,
         })
-
     }
 
     /// Gets all of the posts associated with a given user.
@@ -314,27 +304,28 @@ impl Post {
         let votes = Post::get_votes_for_posts(&user_posts, Some(user_uuid), conn)?;
         let posts_and_votes: Vec<(Post, VoteCounts)> = user_posts.into_iter().zip(votes.into_iter()).collect();
 
-        return Ok(
-            posts_and_votes
-                .into_iter()
-                .map(|p_and_c: (Post, VoteCounts)| {
-                    let (post, votes) = p_and_c;
-                    ChildlessPostData {
-                        post,
-                        user: user.clone(),
-                        votes
-                    }
-                })
-                .collect(),
-        );
+        return Ok(posts_and_votes
+            .into_iter()
+            .map(|p_and_c: (Post, VoteCounts)| {
+                let (post, votes) = p_and_c;
+                ChildlessPostData {
+                    post,
+                    user: user.clone(),
+                    votes,
+                }
+            })
+            .collect());
     }
-
 
     /// Gets the user associated with a given post
     pub fn get_user_by_post(post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<User> {
-        use crate::schema::posts::dsl::*;
-        use crate::schema::users::dsl::*;
-        use crate::schema::posts;
+        use crate::schema::{
+            posts::{
+                self,
+                dsl::*,
+            },
+            users::dsl::*,
+        };
 
         let authors_uuid: Uuid = posts
             .find(post_uuid.0)
@@ -342,18 +333,17 @@ impl Post {
             .first::<Uuid>(conn)
             .map_err(handle_err::<Post>)?;
 
-        users
-            .find(authors_uuid)
-            .first(conn)
-            .map_err(handle_err::<User>)
+        users.find(authors_uuid).first(conn).map_err(handle_err::<User>)
     }
 
     /// Gets the first post associated with a thread.
     /// This post is identifed by it not having a parent id.
     /// All posts in a given thread that aren't root posts will have non-null parent ids.
     pub fn get_root_post(requested_thread_uuid: ThreadUuid, conn: &PgConnection) -> BackendResult<Post> {
-        use crate::schema::posts::dsl::*;
-        use crate::thread::Thread;
+        use crate::{
+            schema::posts::dsl::*,
+            thread::Thread,
+        };
 
         let thread: Thread = Thread::get_thread(requested_thread_uuid, conn)?;
 
@@ -371,19 +361,28 @@ impl Post {
             .map_err(handle_err::<Post>)
     }
 
-    pub fn get_individual_post(post_uuid: PostUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<ChildlessPostData> {
+    pub fn get_individual_post(
+        post_uuid: PostUuid,
+        user_uuid: UserUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<ChildlessPostData> {
         let post = Post::get_post(post_uuid, conn)?;
         let author_uuid = UserUuid(post.author_uuid);
         let user = User::get_user(author_uuid, conn)?;
-        let votes = Post::get_vote_counts(&post, user_uuid,conn)?;
+        let votes = Post::get_vote_counts(&post, user_uuid, conn)?;
         Ok(ChildlessPostData { post, user, votes })
     }
 
-
     /// Given the thread uuid, return a tree of posts.
-    pub fn get_posts_in_thread(thread_uuid: ThreadUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<PostData> {
-        use crate::schema::posts;
-        use crate::schema::posts::dsl::posts as posts_dsl;
+    pub fn get_posts_in_thread(
+        thread_uuid: ThreadUuid,
+        user_uuid: Option<UserUuid>,
+        conn: &PgConnection,
+    ) -> BackendResult<PostData> {
+        use crate::schema::posts::{
+            self,
+            dsl::posts as posts_dsl,
+        };
         use std::collections::HashSet;
 
         let posts: Vec<Post> = posts_dsl
@@ -391,18 +390,17 @@ impl Post {
             .load::<Post>(conn)
             .map_err(handle_err::<Post>)?;
 
-
         if posts.len() == 0 {
-            return Err(Error::NotFound { type_name: "Post".to_string() })
+            return Err(Error::NotFound {
+                type_name: "Post".to_string(),
+            });
         }
         // We now know that there is at least one post.
 
         let votes = Post::get_votes_for_posts(&posts, user_uuid, conn)?;
         let mut posts_and_votes: Vec<(Post, VoteCounts)> = posts.into_iter().zip(votes.into_iter()).collect();
 
-        let mut user_uuids: Vec<Uuid> = posts_and_votes.iter()
-            .map(|post| post.0.author_uuid)
-            .collect();
+        let mut user_uuids: Vec<Uuid> = posts_and_votes.iter().map(|post| post.0.author_uuid).collect();
 
         // It isn't ideal to sort these, so this approach to deduplication works fine.
         let set: HashSet<_> = user_uuids.drain(..).collect(); // dedup
@@ -433,12 +431,14 @@ impl Post {
         // and modifications to enforce that.
         let root: (Post, VoteCounts) = root.into_iter().next().ok_or(Error::InternalServerError)?;
 
-
         /// Recursive function to assemble posts out of the list of post data.
         /// It has a time complexity of O: n * log_n, but that is still better than talking to the database,
         /// as the constant time is too great there.
-        fn assemble_posts (post_and_votes: (Post, VoteCounts), posts_and_votes: &mut Vec<(Post, VoteCounts)>, users: &HashMap<Uuid, User>) -> PostData {
-
+        fn assemble_posts(
+            post_and_votes: (Post, VoteCounts),
+            posts_and_votes: &mut Vec<(Post, VoteCounts)>,
+            users: &HashMap<Uuid, User>,
+        ) -> PostData {
             let children: Vec<(Post, VoteCounts)> = posts_and_votes
                 .drain_filter(|child_post_and_votes: &mut (Post, VoteCounts)| {
                     let child_post: &Post = &child_post_and_votes.0;
@@ -451,9 +451,10 @@ impl Post {
                 .collect();
 
             // Recurse
-            let children: Vec<PostData> = children.into_iter().map(|child_post: (Post, VoteCounts)| {
-                assemble_posts(child_post, posts_and_votes, users)
-            }).collect();
+            let children: Vec<PostData> = children
+                .into_iter()
+                .map(|child_post: (Post, VoteCounts)| assemble_posts(child_post, posts_and_votes, users))
+                .collect();
 
             let user: User = users
                 .get(&post_and_votes.0.author_uuid)
@@ -477,12 +478,15 @@ impl Post {
     ///
     /// The current implementation has overhead as it requires getting all the posts in a thread
     /// and then pruning it down to the desired subsection of the tree.
-    pub fn get_post_and_children(post_uuid: PostUuid, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<PostData> {
+    pub fn get_post_and_children(
+        post_uuid: PostUuid,
+        user_uuid: Option<UserUuid>,
+        conn: &PgConnection,
+    ) -> BackendResult<PostData> {
         // Get the post so we can get the thread
         let post = Post::get_post(post_uuid, conn)?;
         let thread_uuid: ThreadUuid = ThreadUuid(post.thread_uuid);
         let post_tree: PostData = Post::get_posts_in_thread(thread_uuid, user_uuid, conn)?;
-
 
         /// Recursive inner function to prune the tree to find the desired node among the larger post_tree.
         fn find_post_node(post_uuid: Uuid, post_tree: PostData) -> Option<PostData> {
@@ -501,41 +505,39 @@ impl Post {
         let desired_post_node = find_post_node(post_uuid.0, post_tree)
             .expect("The post should be inside the tree, because it is known to exist at the start of this function.");
         Ok(desired_post_node)
-
     }
 
     /// Add a vote record to a post.
     pub fn vote(vote: PostVote, conn: &PgConnection) -> BackendResult<()> {
-        use crate::schema::post_upvotes;
-        use crate::schema::post_downvotes;
-        use diesel::dsl::exists;
-        use diesel::select;
+        use crate::schema::{
+            post_downvotes,
+            post_upvotes,
+        };
+        use diesel::{
+            dsl::exists,
+            select,
+        };
 
         let v: &Vote = match vote {
             PostVote::Up(ref vote) => vote,
-            PostVote::Down(ref vote) => vote
+            PostVote::Down(ref vote) => vote,
         };
 
-        let upvote_exists: bool = select(
-            exists(
-                post_upvotes::table
-                    .filter(post_upvotes::user_uuid.eq(v.user_uuid.0))
-                    .filter(post_upvotes::post_uuid.eq(v.post_uuid.0))
-                )
-            )
-            .get_result(conn)
-            .map_err(handle_err::<Post>)?;
+        let upvote_exists: bool = select(exists(
+            post_upvotes::table
+                .filter(post_upvotes::user_uuid.eq(v.user_uuid.0))
+                .filter(post_upvotes::post_uuid.eq(v.post_uuid.0)),
+        ))
+        .get_result(conn)
+        .map_err(handle_err::<Post>)?;
 
-
-        let downvote_exists: bool = select(
-            exists(
-                post_downvotes::table
-                    .filter(post_downvotes::user_uuid.eq(v.user_uuid.0))
-                    .filter(post_downvotes::post_uuid.eq(v.post_uuid.0))
-                )
-            )
-            .get_result(conn)
-            .map_err(handle_err::<Post>)?;
+        let downvote_exists: bool = select(exists(
+            post_downvotes::table
+                .filter(post_downvotes::user_uuid.eq(v.user_uuid.0))
+                .filter(post_downvotes::post_uuid.eq(v.post_uuid.0)),
+        ))
+        .get_result(conn)
+        .map_err(handle_err::<Post>)?;
 
         match vote {
             PostVote::Up(vote) => {
@@ -549,11 +551,11 @@ impl Post {
                         .values(upvote)
                         .execute(conn)
                         .map_err(handle_err::<Post>)
-                        .map(|_| ())
+                        .map(|_| ());
                 } else {
-                    return Err(Error::BadRequest)
+                    return Err(Error::BadRequest);
                 }
-            },
+            }
             PostVote::Down(vote) => {
                 if upvote_exists {
                     Post::remove_upvote(vote.user_uuid, vote.post_uuid, conn)?
@@ -567,11 +569,10 @@ impl Post {
                         .map_err(handle_err::<Post>)
                         .map(|_| ());
                 } else {
-                    return  Err(Error::BadRequest)
+                    return Err(Error::BadRequest);
                 }
             }
         };
-
     }
 
     /// Removes an upvote from a post.
@@ -599,7 +600,6 @@ impl Post {
             .map(|_| ())
     }
 
-
     /// Remove any vote for the post
     pub fn revoke_vote(user_uuid: UserUuid, post_uuid: PostUuid, conn: &PgConnection) -> BackendResult<()> {
         let x = Post::remove_upvote(user_uuid, post_uuid, conn);
@@ -611,10 +611,14 @@ impl Post {
 
     /// Gets the vote counts for a single post.
     pub fn get_vote_counts(post: &Post, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<VoteCounts> {
-        use crate::schema::post_upvotes;
-        use crate::schema::post_downvotes;
-        use diesel::dsl::exists;
-        use diesel::select;
+        use crate::schema::{
+            post_downvotes,
+            post_upvotes,
+        };
+        use diesel::{
+            dsl::exists,
+            select,
+        };
 
         let up: i64 = PostUpvote::belonging_to(post)
             .count()
@@ -625,39 +629,38 @@ impl Post {
             .get_result(conn)
             .map_err(handle_err::<Post>)?;
 
+        let user_voted_up: bool = select(exists(
+            post_upvotes::table
+                .filter(post_upvotes::user_uuid.eq(user_uuid.0))
+                .filter(post_upvotes::post_uuid.eq(post.uuid)),
+        ))
+        .get_result(conn)
+        .map_err(handle_err::<Post>)?;
 
-        let user_voted_up: bool = select(
-            exists(
-                post_upvotes::table
-                    .filter(post_upvotes::user_uuid.eq(user_uuid.0))
-                    .filter(post_upvotes::post_uuid.eq(post.uuid))
-                )
-            )
-            .get_result(conn)
-            .map_err(handle_err::<Post>)?;
-
-        let user_voted_down: bool = select(
-            exists(
-                post_downvotes::table
-                    .filter(post_downvotes::user_uuid.eq(user_uuid.0))
-                    .filter(post_downvotes::post_uuid.eq(post.uuid))
-                )
-            )
-            .get_result(conn)
-            .map_err(handle_err::<Post>)?;
+        let user_voted_down: bool = select(exists(
+            post_downvotes::table
+                .filter(post_downvotes::user_uuid.eq(user_uuid.0))
+                .filter(post_downvotes::post_uuid.eq(post.uuid)),
+        ))
+        .get_result(conn)
+        .map_err(handle_err::<Post>)?;
 
         let counts: VoteCounts = VoteCounts {
             up,
             down,
             user_voted_up,
-            user_voted_down
+            user_voted_down,
         };
         Ok(counts)
     }
 
     // TODO make this take a reference to a vector of posts, then only return the votes, not a tuple.
     /// Given a vector of posts, make a request to get the vote counts for each and associate the counts with the posts.
-    pub fn get_votes_for_posts(posts: &Vec<Post>, user_uuid: Option<UserUuid>, conn: &PgConnection) -> BackendResult<Vec<VoteCounts>> {
+    pub fn get_votes_for_posts(
+        posts: &Vec<Post>,
+        user_uuid: Option<UserUuid>,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<VoteCounts>> {
         use diesel::GroupedBy;
 
         match user_uuid {
@@ -668,7 +671,7 @@ impl Post {
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostUpvote>| {
-                        let user_voted_up: bool = l.iter().any(|x| x.user_uuid == user_uuid.0 );
+                        let user_voted_up: bool = l.iter().any(|x| x.user_uuid == user_uuid.0);
                         let count = l.len() as i64;
                         (count, user_voted_up)
                     })
@@ -679,7 +682,7 @@ impl Post {
                     .grouped_by(&posts)
                     .into_iter()
                     .map(|l: Vec<PostDownvote>| {
-                        let user_voted_up: bool = l.iter().any(|x| x.user_uuid == user_uuid.0 );
+                        let user_voted_up: bool = l.iter().any(|x| x.user_uuid == user_uuid.0);
                         let count = l.len() as i64;
                         (count, user_voted_up)
                     })
@@ -692,7 +695,7 @@ impl Post {
                         up: (x.0).0,
                         down: (x.1).0,
                         user_voted_up: (x.0).1,
-                        user_voted_down: (x.1).1
+                        user_voted_down: (x.1).1,
                     })
                     .collect();
                 Ok(counts)
@@ -719,16 +722,13 @@ impl Post {
                         up: x.0,
                         down: x.1,
                         user_voted_up: false,
-                        user_voted_down: false
+                        user_voted_down: false,
                     })
                     .collect();
                 Ok(counts)
             }
         }
 
-
-//        let posts_and_vote_counts: Vec<(Post, VoteCounts)> = posts.into_iter().zip(counts.into_iter()).collect();
+        //        let posts_and_vote_counts: Vec<(Post, VoteCounts)> = posts.into_iter().zip(counts.into_iter()).collect();
     }
-
-
 }

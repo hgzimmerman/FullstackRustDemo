@@ -1,20 +1,22 @@
 use chrono::NaiveDateTime;
 use crate::{
-    user::User,
-    schema::messages,
+    calls::prelude::*,
     chat::Chat,
     diesel_extensions::pagination::*,
-    calls::prelude::*,
-    schema
+    schema::{
+        self,
+        messages,
+    },
+    user::User,
 };
-use error::BackendResult;
 use diesel::PgConnection;
-use uuid::Uuid;
+use error::BackendResult;
 use identifiers::{
-    message::MessageUuid,
     chat::ChatUuid,
-    user::UserUuid
+    message::MessageUuid,
+    user::UserUuid,
 };
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
@@ -32,7 +34,6 @@ pub struct Message {
     pub read_flag: bool,
     pub create_date: NaiveDateTime,
 }
-
 
 #[derive(Insertable, Debug, Clone)]
 #[table_name = "messages"]
@@ -53,14 +54,14 @@ pub struct MessageData {
 }
 
 impl Message {
-    pub fn get_message_simple(uuid: MessageUuid,conn: &PgConnection) -> BackendResult<Message> {
-        get_row::<Message,_>(schema::messages::table, uuid.0, conn)
+    pub fn get_message_simple(uuid: MessageUuid, conn: &PgConnection) -> BackendResult<Message> {
+        get_row::<Message, _>(schema::messages::table, uuid.0, conn)
     }
     pub fn delete_message(uuid: MessageUuid, conn: &PgConnection) -> BackendResult<Message> {
-        delete_row::<Message,_>(schema::messages::table, uuid.0, conn)
+        delete_row::<Message, _>(schema::messages::table, uuid.0, conn)
     }
     pub fn create_message_simple(new: NewMessage, conn: &PgConnection) -> BackendResult<Message> {
-        create_row::<Message, NewMessage,_>(schema::messages::table, new, conn)
+        create_row::<Message, NewMessage, _>(schema::messages::table, new, conn)
     }
     // pub fn get_paginated(m_chat_id: i32, page_index: i32, page_size: i32, conn: &Conn) -> JoeResult<Vec<Message>> {
     //     use schema::messages::dsl::*;
@@ -140,10 +141,17 @@ impl Message {
         }
     }
 
-    pub fn get_messages_for_chat(chat_uuid: ChatUuid, page_index: i32, page_size: i32, conn: &PgConnection) -> BackendResult<Vec<MessageData>> {
+    pub fn get_messages_for_chat(
+        chat_uuid: ChatUuid,
+        page_index: i32,
+        page_size: i32,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<MessageData>> {
         //        use schema::messages::dsl::*;
-        use crate::schema::messages;
-        use crate::schema::users;
+        use crate::schema::{
+            messages,
+            users,
+        };
         use diesel::prelude::*;
 
         //        let m_chat_id: Uuid = m_chat_id.0;
@@ -158,10 +166,7 @@ impl Message {
             .load_and_count_pages::<(Message, User)>(conn) // Apparently just `load` doesn't work, so we use this instead and throw away the count.
             .map_err(handle_err::<Message>)?;
 
-        let collected_messages: Vec<Message> = messages_and_users
-            .iter()
-            .map(|x| x.0.clone())
-            .collect();
+        let collected_messages: Vec<Message> = messages_and_users.iter().map(|x| x.0.clone()).collect();
 
         // not every message will have a corresponding reply, so this vec should be sparce
         let replied = Message::belonging_to(&collected_messages) // I'm not 100% sure that this gets the intended messages. Write a test to check.
@@ -173,27 +178,21 @@ impl Message {
         let message_data = messages_and_users
             .into_iter()
             .zip(replied)
-            .map(|x: ((Message, User), Vec<(Message, User)>)| {
-                MessageData {
-                    message: (x.0).0,
-                    author: (x.0).1,
-                    reply: (x.1)
-                        .get(0)
-                        .cloned()
-                        .map(|y| {
-                            MessageData {
-                                message: y.0,
-                                author: y.1,
-                                reply: None,
-                            }
-                        })
-                        .map(Box::new),
-                }
+            .map(|x: ((Message, User), Vec<(Message, User)>)| MessageData {
+                message: (x.0).0,
+                author: (x.0).1,
+                reply: (x.1)
+                    .get(0)
+                    .cloned()
+                    .map(|y| MessageData {
+                        message: y.0,
+                        author: y.1,
+                        reply: None,
+                    })
+                    .map(Box::new),
             })
             .collect::<Vec<MessageData>>();
 
         Ok(message_data)
-
-
     }
 }

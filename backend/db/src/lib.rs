@@ -12,47 +12,51 @@
 #![feature(test)]
 // TODO remove this once the use of macros stops emitting a stupid quantity of warnings
 #![allow(proc_macro_derive_resolution_fallback)]
-
 #![feature(drain_filter)]
 extern crate test;
 
+extern crate auth as auth_lib;
 extern crate error;
 extern crate wire;
-extern crate auth as auth_lib;
 
 #[macro_use]
 extern crate diesel;
-extern crate uuid;
-extern crate slug;
-extern crate rand;
 extern crate chrono;
-extern crate r2d2_diesel;
-extern crate r2d2;
-extern crate pool;
 extern crate identifiers;
+extern crate pool;
+extern crate r2d2;
+extern crate r2d2_diesel;
+extern crate rand;
+extern crate slug;
 extern crate typename;
+extern crate uuid;
 #[macro_use]
 extern crate typename_derive;
 #[macro_use(log)]
 extern crate log;
 extern crate simplelog;
 
-
-
-mod diesel_extensions;
 mod calls;
+mod diesel_extensions;
 pub use crate::calls::*;
-pub mod schema;
 mod conversions;
+pub mod schema;
 
-
-pub use crate::user::User;
-pub use crate::article::Article;
-pub use crate::forum::{Forum, NewForum};
-pub use crate::thread::{Thread, NewThread};
-pub use crate::post::Post;
-pub use crate::bucket::Bucket;
-pub use crate::question::Question;
-pub use crate::answer::Answer;
-pub use crate::chat::Chat;
-pub use crate::message::Message;
+pub use crate::{
+    answer::Answer,
+    article::Article,
+    bucket::Bucket,
+    chat::Chat,
+    forum::{
+        Forum,
+        NewForum,
+    },
+    message::Message,
+    post::Post,
+    question::Question,
+    thread::{
+        NewThread,
+        Thread,
+    },
+    user::User,
+};

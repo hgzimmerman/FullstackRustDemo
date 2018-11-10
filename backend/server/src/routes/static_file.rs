@@ -1,11 +1,13 @@
 use rocket::response::NamedFile;
-use std::path::{Path, PathBuf};
+use std::path::{
+    Path,
+    PathBuf,
+};
 
-use rocket::Request;
 use log::info;
+use rocket::Request;
 //use rocket::response::status;
 //use rocket::http::Status;
-
 
 use rocket_contrib::Json;
 
@@ -13,17 +15,11 @@ use rocket_contrib::Json;
 /// Json 404 override
 #[error(404)]
 pub fn json_404(_req: &Request) -> Json<String> {
-    Json(
-        "Could not find the requested resource"
-            .to_string(),
-    )
+    Json("Could not find the requested resource".to_string())
 }
 #[error(500)]
 pub fn json_500(_req: &Request) -> Json<String> {
-    Json(
-        "Server encountered an internal error"
-            .to_string(),
-    )
+    Json("Server encountered an internal error".to_string())
 }
 #[error(401)]
 pub fn json_401(_req: &Request) -> Json<String> {
@@ -35,10 +31,7 @@ pub fn json_401(_req: &Request) -> Json<String> {
 }
 #[error(403)]
 pub fn json_403(_req: &Request) -> Json<String> {
-    Json(
-        "The server understood the request, but is refusing to fulfill it. Authorization will not help."
-            .to_string(),
-    )
+    Json("The server understood the request, but is refusing to fulfill it. Authorization will not help.".to_string())
 }
 
 /// Permit access to files that live in the frontend's build directory
@@ -55,10 +48,7 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "../frontend/app/static";
     info!("Getting file: {}", file.to_str().unwrap());
 
-
-    match NamedFile::open(Path::new(WEB_DIRECTORY).join(
-        file.clone(),
-    )) {
+    match NamedFile::open(Path::new(WEB_DIRECTORY).join(file.clone())) {
         Ok(file) => Some(file),
         Err(_) => {
             if file.starts_with("api") {
@@ -75,20 +65,17 @@ pub fn files(file: PathBuf) -> Option<NamedFile> {
 pub fn index() -> NamedFile {
     info!("Getting index.html");
     const WEB_DIRECTORY: &'static str = "../../frontend/app/static/index.html";
-    NamedFile::open(Path::new(WEB_DIRECTORY))
-        .unwrap()
+    NamedFile::open(Path::new(WEB_DIRECTORY)).unwrap()
 }
 
 #[get("/js/app.js", rank = 8)]
 pub fn js() -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "../../frontend/target/wasm32-unknown-unknown/release/app.js";
-    NamedFile::open(Path::new(WEB_DIRECTORY))
-        .ok()
+    NamedFile::open(Path::new(WEB_DIRECTORY)).ok()
 }
 
 #[get("/app.wasm", rank = 8)]
 pub fn wasm() -> Option<NamedFile> {
     const WEB_DIRECTORY: &'static str = "../../frontend/target/wasm32-unknown-unknown/release/app.wasm";
-    NamedFile::open(Path::new(WEB_DIRECTORY))
-        .ok()
+    NamedFile::open(Path::new(WEB_DIRECTORY)).ok()
 }

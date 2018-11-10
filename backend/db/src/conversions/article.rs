@@ -1,15 +1,15 @@
 use crate::article::*;
 use wire::article::*;
 
-use slug;
-use rand::{
-    self,
-    Rng
-};
 use identifiers::{
     article::ArticleUuid,
-    user::UserUuid
+    user::UserUuid,
 };
+use rand::{
+    self,
+    Rng,
+};
+use slug;
 
 impl From<Article> for MinimalArticleResponse {
     fn from(article: Article) -> MinimalArticleResponse {
@@ -67,7 +67,6 @@ impl From<NewArticleRequest> for NewArticle {
     }
 }
 
-
 const SUFFIX_LEN: usize = 6;
 
 fn slugify(title: &str) -> String {
@@ -79,8 +78,5 @@ fn slugify(title: &str) -> String {
 }
 
 fn generate_suffix(len: usize) -> String {
-    rand::thread_rng()
-        .gen_ascii_chars()
-        .take(len)
-        .collect::<String>()
+    rand::thread_rng().gen_ascii_chars().take(len).collect::<String>()
 }

@@ -3,7 +3,7 @@ use diesel::PgConnection;
 
 use db::user::{
     NewUser,
-    User
+    User,
 };
 use Fixture;
 
@@ -21,9 +21,8 @@ lazy_static! {
 pub struct UserFixture {
     pub admin_user: User,
     pub normal_user: User,
-    pub secret: Secret
+    pub secret: Secret,
 }
-
 
 pub const ADMIN_USER_NAME: &'static str = "Admin";
 pub const ADMIN_DISPLAY_NAME: &'static str = "Admin";
@@ -31,10 +30,8 @@ pub const ADMIN_DISPLAY_NAME: &'static str = "Admin";
 pub const NORMAL_USER_NAME: &'static str = "Normal User";
 pub const NORMAL_DISPLAY_NAME: &'static str = "Normal User";
 
-
 impl Fixture for UserFixture {
     fn generate(conn: &PgConnection) -> Self {
-
         let secret: Secret = Secret::generate();
 
         let new_admin_user = NewUser {
@@ -43,7 +40,7 @@ impl Fixture for UserFixture {
             password_hash: PASSWORD_HASH.to_string(),
             failed_login_count: 0,
             banned: false,
-            roles: vec![1,2,3,4] // Has all privileges
+            roles: vec![1, 2, 3, 4], // Has all privileges
         };
         let admin_user: User = User::create_user(new_admin_user, conn).expect("Couldn't create new admin user");
 
@@ -53,15 +50,14 @@ impl Fixture for UserFixture {
             password_hash: PASSWORD_HASH.to_string(),
             failed_login_count: 0,
             banned: false,
-            roles: vec![1] // Has only basic privileges
+            roles: vec![1], // Has only basic privileges
         };
         let normal_user: User = User::create_user(new_normal_user, conn).expect("Couldn't create new normal user");
-
 
         UserFixture {
             admin_user,
             normal_user,
-            secret
+            secret,
         }
     }
 }

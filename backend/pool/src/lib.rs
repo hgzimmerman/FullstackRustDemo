@@ -1,22 +1,20 @@
 //! This crate contains basic wrappers around r2d2 and facilitates easy access to pooled connections.
 //!
 
-extern crate r2d2;
 extern crate diesel;
+extern crate r2d2;
 #[cfg(feature = "rocket_support")]
 extern crate rocket;
 
 use diesel::{
     pg::PgConnection,
+    r2d2::ConnectionManager,
     Connection,
-    r2d2::ConnectionManager
 };
 use r2d2::{
+    Pool as R2D2Pool,
     PooledConnection,
-    Pool as R2D2Pool
 };
-
-
 
 pub const DATABASE_URL: &'static str = env!("DATABASE_URL");
 
@@ -27,9 +25,7 @@ pub type PooledConn = PooledConnection<ConnectionManager<PgConnection>>;
 /// Initializes the pool.
 pub fn init_pool(db_url: &str) -> Pool {
     let manager = ConnectionManager::<PgConnection>::new(db_url);
-    r2d2::Pool::new(manager).expect(
-        "db pool",
-    )
+    r2d2::Pool::new(manager).expect("db pool")
 }
 
 pub fn create_single_connection(db_url: &str) -> PgConnection {
@@ -42,10 +38,17 @@ pub use self::rocket_support::*;
 pub mod rocket_support {
     use super::*;
 
+    use rocket::{
+        http::Status,
+        request::{
+            self,
+            FromRequest,
+        },
+        Outcome,
+        Request,
+        State,
+    };
     use std::ops::Deref;
-    use rocket::http::Status;
-    use rocket::request::{self, FromRequest};
-    use rocket::{Request, State, Outcome};
 
     /// Wrapper for PgConnection.
     /// This type can be used in route methods to grab a DB connection from the managed pool.
@@ -58,7 +61,6 @@ pub mod rocket_support {
         }
     }
 
-
     impl Deref for Conn {
         type Target = PgConnection;
 
@@ -66,7 +68,6 @@ pub mod rocket_support {
             &self.0
         }
     }
-
 
     impl<'a, 'r> FromRequest<'a, 'r> for Conn {
         type Error = ();

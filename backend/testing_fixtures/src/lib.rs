@@ -1,8 +1,8 @@
 //! This crate is where fixtures used by the DB and server test suites should be defined.
 
+extern crate auth;
 extern crate db;
 extern crate diesel;
-extern crate auth;
 #[macro_use]
 extern crate lazy_static;
 

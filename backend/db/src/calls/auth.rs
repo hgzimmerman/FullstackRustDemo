@@ -1,43 +1,41 @@
 use chrono::{
+    Duration,
     NaiveDateTime,
     Utc,
-    Duration
 };
 use crate::{
-    auth_lib::ServerJwt,
-    auth_lib::Secret,
-    auth_lib::verify_hash,
-    user::User
+    auth_lib::{
+        verify_hash,
+        Secret,
+        ServerJwt,
+    },
+    user::User,
+};
+use diesel::PgConnection;
+use error::{
+    LoginError,
+    LoginResult,
 };
 use identifiers::user::UserUuid;
 use wire::{
+    login::LoginRequest,
     user::Jwt,
-    login::LoginRequest
 };
-use error::{
-    LoginError,
-    LoginResult
-};
-use diesel::PgConnection;
 
 use log::info;
-
 
 pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) -> LoginResult {
     info!("Logging in for user: {}", &login_request.user_name);
 
-    let user: User = User::get_user_by_user_name(&login_request.user_name, &conn)
-        .map_err(|_| LoginError::UsernameDoesNotExist)?;
+    let user: User =
+        User::get_user_by_user_name(&login_request.user_name, &conn).map_err(|_| LoginError::UsernameDoesNotExist)?;
 
     // Check if the user is locked.
     // This will clean up any locked status if the lock has already expired.
-    if user.check_if_locked(conn).map_err(
-        |_| {
-            info!("Db error while checking for locks.");
-            LoginError::OtherError("DB error")
-        },
-    )?
-    {
+    if user.check_if_locked(conn).map_err(|_| {
+        info!("Db error while checking for locks.");
+        LoginError::OtherError("DB error")
+    })? {
         info!("Account locked.");
         return Err(LoginError::AccountLocked);
     }
@@ -63,7 +61,6 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) 
         Err(e) => return Err(LoginError::PasswordHashingError(e)),
     }
 
-
     // generate token
     info!("Generating JWT Expiry Date");
     let duration: Duration = Duration::days(7); // Expire after a week
@@ -72,15 +69,11 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) 
         None => return Err(LoginError::OtherError("Could not calculate offset for token expiry")),
     };
 
-
     info!("Creating JWT");
     let jwt = Jwt {
         //        user_name: user.user_name.clone(),
         sub: UserUuid(user.uuid),
-        user_roles: user.roles
-            .iter()
-            .map(|role_id| (*role_id).into())
-            .collect(),
+        user_roles: user.roles.iter().map(|role_id| (*role_id).into()).collect(),
         exp: new_expire_date,
         iat: Utc::now().naive_utc(),
     };
@@ -92,7 +85,6 @@ pub fn login(login_request: LoginRequest, secret: &Secret, conn: &PgConnection) 
 
     Ok(jwt_string)
 }
-
 
 pub fn reauth(jwt: ServerJwt, secret: &Secret) -> LoginResult {
     let mut jwt = jwt.0;

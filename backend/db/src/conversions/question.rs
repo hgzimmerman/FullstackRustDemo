@@ -1,24 +1,22 @@
 use crate::question::*;
-use wire::question::*;
-use wire::answer::AnswerResponse;
 use identifiers::{
     bucket::BucketUuid,
     question::QuestionUuid,
-    user::UserUuid
+    user::UserUuid,
+};
+use wire::{
+    answer::AnswerResponse,
+    question::*,
 };
 
 impl From<QuestionData> for QuestionResponse {
     fn from(data: QuestionData) -> QuestionResponse {
-
         QuestionResponse {
             uuid: QuestionUuid(data.question.uuid),
             bucket_uuid: BucketUuid(data.question.bucket_uuid),
             question_text: data.question.question_text,
             author: data.user.clone().into(),
-            answers: data.answers
-                .into_iter()
-                .map(AnswerResponse::from)
-                .collect(),
+            answers: data.answers.into_iter().map(AnswerResponse::from).collect(),
             on_floor: data.question.on_floor,
         }
     }

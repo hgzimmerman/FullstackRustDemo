@@ -8,7 +8,6 @@ extern crate rocket;
 #[cfg(feature = "warp_support")]
 extern crate warp;
 
-
 pub type BackendResult<T> = Result<T, Error>;
 
 /// A hack that allows the conversion of Result<Vec<T>,E> to Result<Vec<W>,E> as a one liner
@@ -23,11 +22,7 @@ impl<T> VectorMappable<T> for BackendResult<Vec<T>> {
     where
         W: From<T>,
     {
-        self.map(|vec| {
-            vec.into_iter()
-                .map(W::from)
-                .collect::<Vec<W>>()
-        })
+        self.map(|vec| vec.into_iter().map(W::from).collect::<Vec<W>>())
     }
 }
 
@@ -36,10 +31,14 @@ pub enum Error {
     DatabaseUnavailable,
     DatabaseError(Option<String>),
     InternalServerError,
-    NotFound { type_name: String },
+    NotFound {
+        type_name: String,
+    },
     BadRequest,
     /// The used did not have privileges to access the given method.
-    NotAuthorized { reason: &'static str },
+    NotAuthorized {
+        reason: &'static str,
+    },
     /// The thread being posted to or edited was locked by an admin.
     ThreadImmutable,
     /// Used to indicate that the signature does not match the hashed contents + secret
@@ -51,13 +50,12 @@ pub enum Error {
     /// The JWT 'bearer schema' was not followed.
     MalformedToken,
     /// The user has been banned and therefore can't perform their desired action.
-    UserBanned
+    UserBanned,
 }
 
 pub type LoginResult = Result<String, LoginError>;
 
 /// Logs the user in by validating their password and returning a jwt.
-
 
 #[derive(Debug)]
 pub enum LoginError {
@@ -68,7 +66,6 @@ pub enum LoginError {
     JwtError(JwtError),
     OtherError(&'static str),
 }
-
 
 /// An error that can occur in the course of handling JWTs.
 #[derive(Debug, Clone)]
@@ -81,7 +78,9 @@ pub enum JwtError {
 
 pub fn handle_diesel_error(diesel_error: DieselError, type_name: &'static str) -> Error {
     match diesel_error {
-        DieselError::NotFound => Error::NotFound { type_name: type_name.to_string() },
+        DieselError::NotFound => Error::NotFound {
+            type_name: type_name.to_string(),
+        },
         _ => Error::DatabaseError(Some(format!("{:?}", diesel_error))), // This gives some insight into what the internal state of the app is. Set this to none when this enters production.
     }
 }
@@ -94,9 +93,12 @@ pub trait ErrorFormatter {
 mod rocket_support {
     use super::*;
     use rocket::{
-        response::{Responder, Response},
         http::Status,
-        request::Request
+        request::Request,
+        response::{
+            Responder,
+            Response,
+        },
     };
 
     impl<'r> Responder<'r> for Error {
@@ -106,105 +108,61 @@ mod rocket_support {
             use Error::*;
             match self {
                 DatabaseUnavailable => {
-                    build
-                        .merge(
-                        "Database Could Not be Reached"
-                            .to_string()
-                            .respond_to(req)?);
-                    build
-                        .status(Status::InternalServerError)
-                        .ok()
+                    build.merge("Database Could Not be Reached".to_string().respond_to(req)?);
+                    build.status(Status::InternalServerError).ok()
                 }
                 DatabaseError(db_error) => {
                     if let Some(error_message) = db_error {
-                        build.merge(
-                            error_message.respond_to(req)?,
-                        );
+                        build.merge(error_message.respond_to(req)?);
                     } else {
-                        build.merge("Database Error"
-                            .to_string()
-                            .respond_to(req)?);
+                        build.merge("Database Error".to_string().respond_to(req)?);
                     }
-                    build
-                        .status(Status::InternalServerError)
-                        .ok()
+                    build.status(Status::InternalServerError).ok()
                 }
-                InternalServerError => {
-                    build
-                        .status(Status::InternalServerError)
-                        .ok()
-                }
+                InternalServerError => build.status(Status::InternalServerError).ok(),
                 NotFound { type_name } => {
                     let err_message = format!("Could not find requested {}", type_name);
                     Response::build_from(err_message.respond_to(req)?)
                         .status(Status::NotFound)
                         .ok()
                 }
-                NotAuthorized { reason } => {
-                    build
-                        .merge(reason.respond_to(req)?)
-                        .status(Status::Forbidden)
-                        .ok()
-                }
-                BadRequest => {
-                    build
-                        .merge("Malformed request".respond_to(req)?)
-                        .status(Status::BadRequest)
-                        .ok()
-                }
-                ThreadImmutable => {
-                    build
-                        .merge("Thread being operated upon is locked and therefore cant be changed"
-                            .respond_to(req)?)
-                        .status(Status::MethodNotAllowed)
-                        .ok()
-                }
-                IllegalToken => {
-                    build
-                        .merge("Login token's contents do not match its signature."
-                            .respond_to(req)?)
-                        .status(Status::Unauthorized)
-                        .ok()
-                }
-                ExpiredToken => {
-                    build
-                        .merge("Login token has expired.".respond_to(
-                            req,
-                        )?)
-                        .status(Status::Unauthorized)
-                        .ok()
-                }
-                MissingToken => {
-                    build
-                        .merge("Login token not supplied.".respond_to(
-                            req,
-                        )?)
-                        .status(Status::Unauthorized)
-                        .ok()
-                }
-                MalformedToken => {
-                    build
-                        .merge("Login token was not specified correctly."
-                            .respond_to(req)?)
-                        .status(Status::Unauthorized)
-                        .ok()
-                }
-                UserBanned => {
-                    build
-                        .merge("Your account has been banned."
-                            .respond_to(req)?)
-                        .status(Status::Forbidden)
-                        .ok()
-                }
+                NotAuthorized { reason } => build.merge(reason.respond_to(req)?).status(Status::Forbidden).ok(),
+                BadRequest => build
+                    .merge("Malformed request".respond_to(req)?)
+                    .status(Status::BadRequest)
+                    .ok(),
+                ThreadImmutable => build
+                    .merge("Thread being operated upon is locked and therefore cant be changed".respond_to(req)?)
+                    .status(Status::MethodNotAllowed)
+                    .ok(),
+                IllegalToken => build
+                    .merge("Login token's contents do not match its signature.".respond_to(req)?)
+                    .status(Status::Unauthorized)
+                    .ok(),
+                ExpiredToken => build
+                    .merge("Login token has expired.".respond_to(req)?)
+                    .status(Status::Unauthorized)
+                    .ok(),
+                MissingToken => build
+                    .merge("Login token not supplied.".respond_to(req)?)
+                    .status(Status::Unauthorized)
+                    .ok(),
+                MalformedToken => build
+                    .merge("Login token was not specified correctly.".respond_to(req)?)
+                    .status(Status::Unauthorized)
+                    .ok(),
+                UserBanned => build
+                    .merge("Your account has been banned.".respond_to(req)?)
+                    .status(Status::Forbidden)
+                    .ok(),
             }
         }
     }
 
-
     impl<'a> Responder<'a> for LoginError {
         fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
             // TODO: use the string in a custom Status for internal server error
-        //        info!("User login failed with error: {:?}", &self);
+            //        info!("User login failed with error: {:?}", &self);
             match self {
                 LoginError::IncorrectPassword => Err(Status::Unauthorized),
                 LoginError::AccountLocked => Err(Status::Unauthorized),
@@ -217,38 +175,52 @@ mod rocket_support {
     }
 }
 
-
 #[cfg(feature = "warp_support")]
 pub mod warp_support {
     use super::*;
-    use std::fmt::Display;
-    use std::fmt;
-    use std::error::Error as StdError;
-    use warp::reject::Rejection;
-    use warp::reply::Reply;
-    use warp::http::StatusCode;
+    use std::{
+        error::Error as StdError,
+        fmt::{
+            self,
+            Display,
+        },
+    };
+    use warp::{
+        http::StatusCode,
+        reject::Rejection,
+        reply::Reply,
+    };
 
     impl Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-
             let description: String = match self {
-                Error::DatabaseUnavailable => "Could not acquire a connection to the database, the connection pool may be occupied".to_string(),
-                Error::DatabaseError(e) => {
-                    match e {
-                        Some(s) => s.clone(),
-                        None => "A problem occurred with the database".to_string()
-                    }
+                Error::DatabaseUnavailable => {
+                    "Could not acquire a connection to the database, the connection pool may be occupied".to_string()
                 }
+                Error::DatabaseError(e) => match e {
+                    Some(s) => s.clone(),
+                    None => "A problem occurred with the database".to_string(),
+                },
                 Error::IllegalToken => "The provided token is invalid".to_string(),
-                Error::ExpiredToken => "The provided token has expired, please reauthenticate to acquire a new one".to_string(),
+                Error::ExpiredToken => {
+                    "The provided token has expired, please reauthenticate to acquire a new one".to_string()
+                }
                 Error::MalformedToken => "The token was not formatted correctly".to_string(),
-                Error::ThreadImmutable => "The Thread you are trying to interact with has been locked, preventing modification".to_string(),
-                Error::MissingToken => "The Api route was expecting a JWT token and none was provided. Try logging in.".to_string(),
-                Error::NotAuthorized {reason} => format!("You are forbidden from accessing this resource. ({})", reason),
+                Error::ThreadImmutable => {
+                    "The Thread you are trying to interact with has been locked, preventing modification".to_string()
+                }
+                Error::MissingToken => {
+                    "The Api route was expecting a JWT token and none was provided. Try logging in.".to_string()
+                }
+                Error::NotAuthorized { reason } => {
+                    format!("You are forbidden from accessing this resource. ({})", reason)
+                }
                 Error::UserBanned => "Your account has been banned".to_string(),
                 Error::BadRequest => "Your request is malformed".to_string(),
                 Error::InternalServerError => "Internal server error encountered".to_string(),
-                Error::NotFound {type_name}=> format!("The resource ({})you requested could not be found", type_name),
+                Error::NotFound { type_name } => {
+                    format!("The resource ({})you requested could not be found", type_name)
+                }
             };
             write!(f, "{}", description)
         }
@@ -270,12 +242,12 @@ pub mod warp_support {
         let mut resp = err.json();
         if err.is_not_found() {
             *resp.status_mut() = StatusCode::NOT_FOUND;
-            return Ok(resp)
+            return Ok(resp);
         }
 
         let cause = match err.find_cause::<Error>() {
             Some(ok) => ok,
-            None => return Ok(resp)
+            None => return Ok(resp),
         };
         match *cause {
             Error::DatabaseUnavailable => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
@@ -283,28 +255,28 @@ pub mod warp_support {
             Error::IllegalToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
             Error::ExpiredToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
             Error::MalformedToken => *resp.status_mut() = StatusCode::UNAUTHORIZED, // Unauthorized is for requests that require authentication and the authentication is out of date or not present
-            Error::NotAuthorized {..} => *resp.status_mut() = StatusCode::FORBIDDEN, // Forbidden is for requests that will not served due to a lack of privileges
+            Error::NotAuthorized { .. } => *resp.status_mut() = StatusCode::FORBIDDEN, // Forbidden is for requests that will not served due to a lack of privileges
             Error::UserBanned => *resp.status_mut() = StatusCode::FORBIDDEN,
             Error::BadRequest => *resp.status_mut() = StatusCode::BAD_REQUEST,
-            Error::NotFound {..}=> *resp.status_mut() = StatusCode::NOT_FOUND,
+            Error::NotFound { .. } => *resp.status_mut() = StatusCode::NOT_FOUND,
             Error::InternalServerError => *resp.status_mut() = StatusCode::INTERNAL_SERVER_ERROR,
             Error::ThreadImmutable => *resp.status_mut() = StatusCode::BAD_REQUEST,
             Error::MissingToken => *resp.status_mut() = StatusCode::UNAUTHORIZED,
         }
 
-//        warn!("rewrote error response: {:?}", resp);
+        //        warn!("rewrote error response: {:?}", resp);
         Ok(resp)
     }
 
     impl Error {
         pub fn reject<T>(self) -> Result<T, Rejection> {
-//        Err(warp::reject::reject().with(self))
+            //        Err(warp::reject::reject().with(self))
             Err(warp::reject::custom(self))
         }
 
         pub fn simple_reject(self) -> Rejection {
             warp::reject::reject().with(self)
-//        warp::reject::custom(self)
+            //        warp::reject::custom(self)
         }
     }
 

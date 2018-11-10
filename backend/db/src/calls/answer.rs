@@ -1,15 +1,17 @@
 use crate::{
-    schema::answers,
-    user::User,
-    question::Question,
     calls::prelude::*,
-    schema
+    question::Question,
+    schema::{
+        self,
+        answers,
+    },
+    user::User,
 };
 //use error::JoeResult;
-use uuid::Uuid;
 use diesel::pg::PgConnection;
 use error::BackendResult;
 use identifiers::answer::AnswerUuid;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, Associations, TypeName)]
 #[primary_key(uuid)]
@@ -39,13 +41,13 @@ pub struct AnswerData {
 }
 
 impl Answer {
-    pub fn get_answer(uuid: AnswerUuid,conn: &PgConnection) -> BackendResult<Answer> {
-        get_row::<Answer,_>(schema::answers::table, uuid.0, conn)
+    pub fn get_answer(uuid: AnswerUuid, conn: &PgConnection) -> BackendResult<Answer> {
+        get_row::<Answer, _>(schema::answers::table, uuid.0, conn)
     }
     pub fn delete_answer(uuid: AnswerUuid, conn: &PgConnection) -> BackendResult<Answer> {
-        delete_row::<Answer,_>(schema::answers::table, uuid.0, conn)
+        delete_row::<Answer, _>(schema::answers::table, uuid.0, conn)
     }
     pub fn create_answer(new: NewAnswer, conn: &PgConnection) -> BackendResult<Answer> {
-        create_row::<Answer, NewAnswer,_>(schema::answers::table, new, conn)
+        create_row::<Answer, NewAnswer, _>(schema::answers::table, new, conn)
     }
 }

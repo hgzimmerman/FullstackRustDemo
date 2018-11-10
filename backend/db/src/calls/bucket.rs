@@ -1,25 +1,27 @@
-use crate::{
-    schema::buckets,
-    schema::junction_bucket_users,
-    user::User,
-    calls::prelude::*,
-    schema
-};
-use error::BackendResult;
-use diesel::{
-    prelude::*,
-    self
-};
 use chrono::{
+    Duration,
     NaiveDateTime,
     Utc,
-    Duration
 };
-use uuid::Uuid;
+use crate::{
+    calls::prelude::*,
+    schema::{
+        self,
+        buckets,
+        junction_bucket_users,
+    },
+    user::User,
+};
+use diesel::{
+    self,
+    prelude::*,
+};
+use error::BackendResult;
 use identifiers::{
     bucket::BucketUuid,
-    user::UserUuid
+    user::UserUuid,
 };
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Identifiable, Queryable, TypeName)]
 #[primary_key(uuid)]
@@ -79,23 +81,21 @@ pub struct UsersInBucketData {
     pub users: Vec<User>,
 }
 
-
 impl Bucket {
-
-    pub fn get_bucket(uuid: BucketUuid,conn: &PgConnection) -> BackendResult<Bucket> {
-        get_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
+    pub fn get_bucket(uuid: BucketUuid, conn: &PgConnection) -> BackendResult<Bucket> {
+        get_row::<Bucket, _>(schema::buckets::table, uuid.0, conn)
     }
     pub fn delete_bucket(uuid: BucketUuid, conn: &PgConnection) -> BackendResult<Bucket> {
-        delete_row::<Bucket,_>(schema::buckets::table, uuid.0, conn)
+        delete_row::<Bucket, _>(schema::buckets::table, uuid.0, conn)
     }
     pub fn create_bucket(new: NewBucket, conn: &PgConnection) -> BackendResult<Bucket> {
-        create_row::<Bucket, NewBucket,_>(schema::buckets::table, new, conn)
+        create_row::<Bucket, NewBucket, _>(schema::buckets::table, new, conn)
     }
 
     pub fn get_bucket_by_name(bucket_name: String, conn: &PgConnection) -> BackendResult<Bucket> {
         use crate::schema::buckets::dsl::{
             bucket_name as table_bucket_name,
-            buckets
+            buckets,
         };
 
         buckets
@@ -105,16 +105,18 @@ impl Bucket {
     }
 
     pub fn get_buckets_user_owns(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
-        use crate::schema::buckets::dsl::{
-            bucket_name as table_bucket_name,
-            buckets,
-            uuid as table_bucket_uuid
-        };
-        use crate::schema::junction_bucket_users::dsl::{
-            junction_bucket_users,
-            user_uuid as junction_user_uuid,
-            owner as junction_owner,
-            bucket_uuid as junction_bucket_uuid
+        use crate::schema::{
+            buckets::dsl::{
+                bucket_name as table_bucket_name,
+                buckets,
+                uuid as table_bucket_uuid,
+            },
+            junction_bucket_users::dsl::{
+                bucket_uuid as junction_bucket_uuid,
+                junction_bucket_users,
+                owner as junction_owner,
+                user_uuid as junction_user_uuid,
+            },
         };
         let bucket_uuids: Vec<Uuid> = junction_bucket_users
             .filter(junction_user_uuid.eq(user_uuid.0))
@@ -132,18 +134,22 @@ impl Bucket {
     /// Get buckets that are public, but the user is not a member of
     #[deprecated]
     pub fn get_public_buckets(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
-        use crate::schema::buckets::dsl::*;
-        use crate::schema::buckets;
-        use crate::schema::junction_bucket_users as junctions;
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
+        use crate::schema::{
+            buckets::{
+                self,
+                dsl::*,
+            },
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+        };
 
         // Don't return any buckets with these ids
-        let bucket_uuids_in_which_the_user_is_already_a_member_or_has_requested_to_join: Vec<Uuid> = junction_bucket_users
-            .filter(junctions::user_uuid.eq(user_uuid.0))
-            .select(junctions::bucket_uuid)
-            .load::<Uuid>(conn)
-            .map_err(handle_err::<User>)?;
-
+        let bucket_uuids_in_which_the_user_is_already_a_member_or_has_requested_to_join: Vec<Uuid> =
+            junction_bucket_users
+                .filter(junctions::user_uuid.eq(user_uuid.0))
+                .select(junctions::bucket_uuid)
+                .load::<Uuid>(conn)
+                .map_err(handle_err::<User>)?;
 
         buckets
             .filter(is_public_until.gt(Utc::now().naive_utc())) // Get buckets with an expiry date in the future.
@@ -166,8 +172,10 @@ impl Bucket {
 
     #[deprecated]
     pub fn get_buckets_user_belongs_to(user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<Bucket>> {
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
-        use crate::schema::junction_bucket_users as junctions;
+        use crate::schema::{
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+        };
 
         junction_bucket_users
             .filter(junctions::user_uuid.eq(user_uuid.0))
@@ -182,10 +190,17 @@ impl Bucket {
     /// Gets users depending on the approval column.
     /// It will exclude the user making the request.
     #[deprecated]
-    fn get_users_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, approval: bool, conn: &PgConnection) -> BackendResult<Vec<User>> {
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
-        use crate::schema::junction_bucket_users as junctions;
-        use crate::schema::users;
+    fn get_users_approval(
+        bucket_uuid: BucketUuid,
+        user_uuid: UserUuid,
+        approval: bool,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<User>> {
+        use crate::schema::{
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+            users,
+        };
 
         junction_bucket_users
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))
@@ -197,29 +212,39 @@ impl Bucket {
             .map_err(handle_err::<Bucket>)
     }
 
-
     /// This function gets all players that are part of the bucket,
     /// excluding the active user
     #[deprecated]
-    pub fn get_users_with_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
+    pub fn get_users_with_approval(
+        bucket_uuid: BucketUuid,
+        user_uuid: UserUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<User>> {
         Self::get_users_approval(bucket_uuid, user_uuid, true, conn)
     }
 
     #[deprecated]
-    fn get_users_requiring_approval(bucket_uuid: BucketUuid, user_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<User>> {
-        Self::get_users_approval(bucket_uuid, user_uuid,false, conn)
+    fn get_users_requiring_approval(
+        bucket_uuid: BucketUuid,
+        user_uuid: UserUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<User>> {
+        Self::get_users_approval(bucket_uuid, user_uuid, false, conn)
     }
 
     #[deprecated]
-    pub fn get_users_requiring_approval_for_owned_buckets(bucket_owner_uuid: UserUuid, conn: &PgConnection) -> BackendResult<Vec<UsersInBucketData>> {
-        use crate::schema::junction_bucket_users::dsl::*;
-        use crate::schema::junction_bucket_users as junctions;
-        use crate::schema::buckets;
+    pub fn get_users_requiring_approval_for_owned_buckets(
+        bucket_owner_uuid: UserUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<Vec<UsersInBucketData>> {
+        use crate::schema::{
+            buckets,
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::*,
+        };
 
         let buckets: Vec<Bucket> = junction_bucket_users
-            .filter(junctions::user_uuid.eq(
-                bucket_owner_uuid.0,
-            ))
+            .filter(junctions::user_uuid.eq(bucket_owner_uuid.0))
             .filter(owner.eq(true))
             .inner_join(buckets::table)
             .select(buckets::all_columns)
@@ -229,21 +254,24 @@ impl Bucket {
         // This is an ineffecient query. Its time will scale linearly (with a high constant) with the number of buckets the user owns.
         let bucket_users = buckets
             .into_iter()
-            .filter_map(|bucket| if let Ok(users) = Self::get_users_requiring_approval(BucketUuid(bucket.uuid), bucket_owner_uuid, conn) {
-                Some(UsersInBucketData { bucket, users })
-            } else {
-                None
+            .filter_map(|bucket| {
+                if let Ok(users) = Self::get_users_requiring_approval(BucketUuid(bucket.uuid), bucket_owner_uuid, conn)
+                {
+                    Some(UsersInBucketData { bucket, users })
+                } else {
+                    None
+                }
             })
             .collect();
         Ok(bucket_users)
-
     }
 
     /// Is the user the owner of the bucket
     pub fn is_user_owner(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
-        use crate::schema::junction_bucket_users as junctions;
-
+        use crate::schema::{
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+        };
 
         junction_bucket_users
             .filter(junctions::user_uuid.eq(user_uuid.0))
@@ -251,16 +279,17 @@ impl Bucket {
             .select(junctions::owner)
             .first::<bool>(conn)
             .unwrap_or(false)
-//            .map_err(Bucket::handle_error)
+        //            .map_err(Bucket::handle_error)
     }
 
     /// Is the user in the bucket, and approved by a bucket owner?
 
     #[deprecated]
     pub fn is_user_approved(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> bool {
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
-        use crate::schema::junction_bucket_users as junctions;
-
+        use crate::schema::{
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+        };
 
         junction_bucket_users
             .filter(junctions::user_uuid.eq(user_uuid.0))
@@ -282,13 +311,12 @@ impl Bucket {
 
     #[deprecated]
     pub fn set_bucket_publicity(bucket_uuid: BucketUuid, publicity: bool, conn: &PgConnection) -> BackendResult<()> {
-        use crate::schema::buckets::dsl::*;
-        use crate::schema::buckets;
+        use crate::schema::buckets::{
+            self,
+            dsl::*,
+        };
 
-
-        let target = buckets.filter(
-            buckets::uuid.eq(bucket_uuid.0),
-        );
+        let target = buckets.filter(buckets::uuid.eq(bucket_uuid.0));
 
         let expire_time: Option<NaiveDateTime> = if publicity {
             Some(Utc::now().naive_utc() + Duration::days(1))
@@ -305,10 +333,16 @@ impl Bucket {
     }
 
     #[deprecated]
-    pub fn set_user_approval(user_uuid: UserUuid, bucket_uuid: BucketUuid, approval: bool, conn: &PgConnection) -> BackendResult<()> {
-        use crate::schema::junction_bucket_users::dsl::junction_bucket_users;
-        use crate::schema::junction_bucket_users as junctions;
-
+    pub fn set_user_approval(
+        user_uuid: UserUuid,
+        bucket_uuid: BucketUuid,
+        approval: bool,
+        conn: &PgConnection,
+    ) -> BackendResult<()> {
+        use crate::schema::{
+            junction_bucket_users as junctions,
+            junction_bucket_users::dsl::junction_bucket_users,
+        };
 
         let target = junction_bucket_users
             .filter(junctions::user_uuid.eq(user_uuid.0))
@@ -326,9 +360,12 @@ impl Bucket {
     /// This has the effect of denying any request to join the bucket, as well as kicking a user out of the bucket.
 
     #[deprecated]
-    pub fn remove_user_from_bucket(user_uuid: UserUuid, bucket_uuid: BucketUuid, conn: &PgConnection) -> BackendResult<()> {
+    pub fn remove_user_from_bucket(
+        user_uuid: UserUuid,
+        bucket_uuid: BucketUuid,
+        conn: &PgConnection,
+    ) -> BackendResult<()> {
         use crate::schema::junction_bucket_users as junctions;
-
 
         diesel::delete(junctions::table)
             .filter(junctions::bucket_uuid.eq(bucket_uuid.0))

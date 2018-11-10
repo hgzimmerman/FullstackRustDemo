@@ -13,10 +13,10 @@ extern crate lazy_static;
 extern crate diesel;
 extern crate migrations_internals;
 
-extern crate server;
-extern crate rocket;
 extern crate pool;
+extern crate rocket;
+extern crate server;
 
-mod query_helper;
 mod database_error;
+mod query_helper;
 pub mod setup;

@@ -2,17 +2,18 @@ use rocket::Route;
 
 use super::Routable;
 
-use rocket_contrib::Json;
 use pool::Conn;
 use rocket::State;
+use rocket_contrib::Json;
 
 //use auth;
-use wire::login::LoginRequest;
-use error::LoginResult;
-use auth_lib::Secret;
-use auth_lib::ServerJwt;
+use auth_lib::{
+    Secret,
+    ServerJwt,
+};
 use db::auth as auth_db;
-
+use error::LoginResult;
+use wire::login::LoginRequest;
 
 /// Logs the user in.
 /// If successful, it generates a JWT which is used to verify other actions.

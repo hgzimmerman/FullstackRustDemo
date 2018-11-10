@@ -10,9 +10,7 @@ impl From<MessageData> for MessageResponse {
         MessageResponse {
             uuid: MessageUuid(data.message.uuid),
             author: data.author.into(),
-            reply: data.reply
-                .map(|x| MessageResponse::from(*x))
-                .map(Box::new),
+            reply: data.reply.map(|x| MessageResponse::from(*x)).map(Box::new),
             content: data.message.message_content,
             date: data.message.create_date,
         }

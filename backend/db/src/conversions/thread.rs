@@ -1,10 +1,10 @@
-use crate::thread::*;
-use wire::thread::*;
 use chrono::Utc;
+use crate::thread::*;
 use identifiers::{
+    forum::ForumUuid,
     thread::ThreadUuid,
-    forum::ForumUuid
 };
+use wire::thread::*;
 
 impl From<NewThreadRequest> for NewThread {
     fn from(request: NewThreadRequest) -> NewThread {
@@ -19,8 +19,6 @@ impl From<NewThreadRequest> for NewThread {
     }
 }
 
-
-
 impl From<ThreadData> for ThreadResponse {
     fn from(data: ThreadData) -> ThreadResponse {
         ThreadResponse {
@@ -34,8 +32,6 @@ impl From<ThreadData> for ThreadResponse {
         }
     }
 }
-
-
 
 impl From<MinimalThreadData> for MinimalThreadResponse {
     fn from(data: MinimalThreadData) -> MinimalThreadResponse {

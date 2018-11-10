@@ -1,29 +1,27 @@
-use fixtures::user::UserFixture;
 use db::{
     bucket::{
         Bucket,
         NewBucket,
-        NewBucketUser
+        NewBucketUser,
     },
     question::{
+        NewQuestion,
         Question,
-        NewQuestion
-    }
+    },
 };
+use fixtures::user::UserFixture;
 
-
-use diesel::PgConnection;
 use chrono::{
+    Duration,
     Utc,
-    Duration
 };
+use diesel::PgConnection;
 use Fixture;
 
 const BUCKET_NAME_1: &'static str = "Private Bucket";
 const BUCKET_NAME_2: &'static str = "Joinable Bucket";
 const QUESTION_TEXT_1: &'static str = "Is this a question?";
 const QUESTION_TEXT_2: &'static str = "Would your rather fight 100 horse sized horses or 1 duck sized duck?";
-
 
 pub struct BucketFixture {
     pub user_fixture: UserFixture,
@@ -32,7 +30,6 @@ pub struct BucketFixture {
     pub question_1: Question,
     pub question_2: Question,
 }
-
 
 impl Fixture for BucketFixture {
     fn generate(conn: &PgConnection) -> Self {
@@ -50,7 +47,7 @@ impl Fixture for BucketFixture {
             owner: true,
             approved: true,
         };
-        Bucket::add_user_to_bucket(owner,conn).expect("should add user to bucket");
+        Bucket::add_user_to_bucket(owner, conn).expect("should add user to bucket");
 
         // Joinable bucket
         let new_bucket = NewBucket {
@@ -65,7 +62,7 @@ impl Fixture for BucketFixture {
             owner: true,
             approved: true,
         };
-        Bucket::add_user_to_bucket(owner,conn).expect("should add user to bucket");
+        Bucket::add_user_to_bucket(owner, conn).expect("should add user to bucket");
 
         let new_question = NewQuestion {
             bucket_uuid: private_bucket.uuid,
@@ -74,7 +71,6 @@ impl Fixture for BucketFixture {
             on_floor: false, // In the bucket
         };
         let question_1 = Question::create_question(new_question, conn).expect("Create question");
-
 
         let new_question = NewQuestion {
             bucket_uuid: private_bucket.uuid,

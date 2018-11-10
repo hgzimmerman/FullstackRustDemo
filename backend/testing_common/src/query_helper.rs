@@ -1,8 +1,8 @@
 use diesel::{
-    query_builder::*,
     backend::Backend,
+    query_builder::*,
     result::QueryResult,
-    RunQueryDsl
+    RunQueryDsl,
 };
 
 #[derive(Debug, Clone)]

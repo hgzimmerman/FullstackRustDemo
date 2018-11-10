@@ -1,11 +1,15 @@
 use crate::bucket::*;
+use identifiers::bucket::BucketUuid;
 use wire::{
     bucket::*,
-    user::*
+    user::*,
 };
-use identifiers::bucket::BucketUuid;
 
-use chrono::{NaiveDateTime, Utc, Duration};
+use chrono::{
+    Duration,
+    NaiveDateTime,
+    Utc,
+};
 
 impl From<Bucket> for BucketResponse {
     fn from(bucket: Bucket) -> BucketResponse {
@@ -42,10 +46,7 @@ impl From<UsersInBucketData> for BucketUsersResponse {
     fn from(data: UsersInBucketData) -> BucketUsersResponse {
         BucketUsersResponse {
             bucket: BucketResponse::from(data.bucket),
-            users: data.users
-                .into_iter()
-                .map(UserResponse::from)
-                .collect(),
+            users: data.users.into_iter().map(UserResponse::from).collect(),
         }
     }
 }

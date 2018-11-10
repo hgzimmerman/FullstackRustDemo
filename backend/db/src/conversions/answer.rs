@@ -1,9 +1,9 @@
 use crate::answer::*;
-use wire::answer::*;
 use identifiers::{
     answer::AnswerUuid,
-    user::UserUuid
+    user::UserUuid,
 };
+use wire::answer::*;
 
 impl From<AnswerData> for AnswerResponse {
     fn from(data: AnswerData) -> AnswerResponse {

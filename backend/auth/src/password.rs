@@ -1,5 +1,5 @@
-use std::io;
 use crypto::scrypt;
+use std::io;
 
 /// Hashes the password to a String that should be stored in the database.
 pub fn hash_password(password: &str) -> io::Result<String> {

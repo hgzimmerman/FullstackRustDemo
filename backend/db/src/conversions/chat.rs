@@ -1,10 +1,9 @@
 use crate::chat::*;
+use identifiers::chat::ChatUuid;
 use wire::{
     chat::*,
-    user::UserResponse
+    user::UserResponse,
 };
-use identifiers::chat::ChatUuid;
-
 
 impl From<ChatUserAssociationRequest> for ChatUserAssociation {
     fn from(request: ChatUserAssociationRequest) -> ChatUserAssociation {
@@ -21,10 +20,7 @@ impl From<ChatData> for ChatResponse {
             uuid: ChatUuid(data.chat.uuid),
             name: data.chat.chat_name,
             leader: data.leader.into(),
-            members: data.members
-                .into_iter()
-                .map(UserResponse::from)
-                .collect(),
+            members: data.members.into_iter().map(UserResponse::from).collect(),
         }
     }
 }

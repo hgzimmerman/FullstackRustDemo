@@ -1,12 +1,12 @@
+use error::JwtError;
 use frank_jwt::{
-    Algorithm,
+    decode,
     encode,
-    decode
+    Algorithm,
 };
 use serde_json;
-use Secret;
-use error::JwtError;
 use wire::user::Jwt;
+use Secret;
 
 #[cfg(feature = "rocket_support")]
 pub use self::rocket_support::user_authorization;
@@ -49,18 +49,26 @@ impl ServerJwt {
     }
 }
 
-
 #[cfg(feature = "rocket_support")]
 pub mod rocket_support {
     use super::*;
-    use rocket::State;
-    use rocket::http::Status;
-    use rocket::request::{self, Request, FromRequest};
-    use rocket::Outcome;
+    use rocket::{
+        http::Status,
+        request::{
+            self,
+            FromRequest,
+            Request,
+        },
+        Outcome,
+        State,
+    };
 
-    use identifiers::user::UserUuid;
-    use wire::user::{UserRole, BEARER};
     use error::Error;
+    use identifiers::user::UserUuid;
+    use wire::user::{
+        UserRole,
+        BEARER,
+    };
 
     use chrono::Utc;
 
@@ -79,13 +87,9 @@ pub mod rocket_support {
         }
     }
 
-
     /// Given a request, extract the JWT struct from the headers in the request.
     fn extract_jwt_from_request(request: &Request) -> request::Outcome<ServerJwt, Error> {
-        let keys: Vec<_> = request
-            .headers()
-            .get("Authorization")
-            .collect();
+        let keys: Vec<_> = request.headers().get("Authorization").collect();
         if keys.len() != 1 {
             return Outcome::Failure((Status::Unauthorized, Error::MissingToken));
         };
@@ -101,10 +105,7 @@ pub mod rocket_support {
             }
         };
 
-        let authorization_words: Vec<String> = key.to_string()
-            .split_whitespace()
-            .map(String::from)
-            .collect();
+        let authorization_words: Vec<String> = key.to_string().split_whitespace().map(String::from).collect();
 
         if authorization_words.len() != 2 {
             return Outcome::Failure((Status::Unauthorized, Error::MalformedToken));
@@ -132,15 +133,13 @@ pub mod rocket_support {
         Outcome::Success(jwt)
     }
 
-
-
     pub mod user_authorization {
         use super::*;
 
         trait FromJwt {
             fn from_jwt(jwt: &Jwt) -> Result<Self, RoleError>
-                where
-                    Self: Sized;
+            where
+                Self: Sized;
             fn get_uuid(&self) -> UserUuid;
         }
 
@@ -154,12 +153,9 @@ pub mod rocket_support {
 
         impl FromJwt for NormalUser {
             fn from_jwt(jwt: &Jwt) -> Result<NormalUser, RoleError> {
-                if jwt.user_roles.contains(
-                    &UserRole::Unprivileged,
-                )
-                    {
-                        Ok(NormalUser { user_uuid: jwt.sub })
-                    } else {
+                if jwt.user_roles.contains(&UserRole::Unprivileged) {
+                    Ok(NormalUser { user_uuid: jwt.sub })
+                } else {
                     Err(RoleError::InsufficientRights)
                 }
             }
@@ -182,12 +178,9 @@ pub mod rocket_support {
 
         impl FromJwt for AdminUser {
             fn from_jwt(jwt: &Jwt) -> Result<AdminUser, RoleError> {
-                if jwt.user_roles.contains(
-                    &UserRole::Admin,
-                )
-                    {
-                        Ok(AdminUser { user_uuid: jwt.sub })
-                    } else {
+                if jwt.user_roles.contains(&UserRole::Admin) {
+                    Ok(AdminUser { user_uuid: jwt.sub })
+                } else {
                     Err(RoleError::InsufficientRights)
                 }
             }
@@ -210,12 +203,9 @@ pub mod rocket_support {
 
         impl FromJwt for ModeratorUser {
             fn from_jwt(jwt: &Jwt) -> Result<ModeratorUser, RoleError> {
-                if jwt.user_roles.contains(
-                    &UserRole::Moderator,
-                )
-                    {
-                        Ok(ModeratorUser { user_uuid: jwt.sub })
-                    } else {
+                if jwt.user_roles.contains(&UserRole::Moderator) {
+                    Ok(ModeratorUser { user_uuid: jwt.sub })
+                } else {
                     Err(RoleError::InsufficientRights)
                 }
             }
@@ -225,7 +215,6 @@ pub mod rocket_support {
             }
         }
 
-
         impl<'a, 'r> FromRequest<'a, 'r> for ModeratorUser {
             type Error = Error;
 
@@ -234,10 +223,9 @@ pub mod rocket_support {
             }
         }
 
-
         fn extract_role_from_request<T>(request: &Request) -> request::Outcome<T, Error>
-            where
-                T: FromJwt,
+        where
+            T: FromJwt,
         {
             // Get the jwt from the request's header
             let jwt: ServerJwt = extract_jwt_from_request(request)?;
@@ -246,7 +234,14 @@ pub mod rocket_support {
 
             let user = match T::from_jwt(&jwt.0) {
                 Ok(user) => user,
-                Err(_) => return Outcome::Failure((Status::Forbidden, Error::NotAuthorized { reason: "User does not have that role." })),
+                Err(_) => {
+                    return Outcome::Failure((
+                        Status::Forbidden,
+                        Error::NotAuthorized {
+                            reason: "User does not have that role.",
+                        },
+                    ))
+                }
             };
 
             // Check for stateful banned status

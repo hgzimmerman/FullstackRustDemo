@@ -1,11 +1,11 @@
-use warp::{
-    Filter,
-    filters::BoxedFilter
-};
 use crate::error::Error;
 use pool::{
     Pool,
-    PooledConn
+    PooledConn,
+};
+use warp::{
+    filters::BoxedFilter,
+    Filter,
 };
 
 /// With access to a pool, the filter will be able to get a pooled connection that is then used to make calls to the db.
@@ -14,9 +14,6 @@ use pool::{
 pub fn db_filter(pool: Pool) -> BoxedFilter<(PooledConn,)> {
     warp::any()
         .map(move || pool.clone())
-        .and_then(|pool_2: Pool| pool_2.get().map_err(|_| Error::DatabaseUnavailable.simple_reject()) )
+        .and_then(|pool_2: Pool| pool_2.get().map_err(|_| Error::DatabaseUnavailable.simple_reject()))
         .boxed()
 }
-
-
-

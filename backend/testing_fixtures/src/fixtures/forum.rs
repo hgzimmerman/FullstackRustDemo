@@ -1,26 +1,23 @@
-use diesel::PgConnection;
 use chrono::Utc;
+use diesel::PgConnection;
 use Fixture;
 
 use db::{
     forum::{
         Forum,
-        NewForum
-    },
-    thread::{
-        Thread,
-        NewThread
+        NewForum,
     },
     post::{
+        NewPost,
         Post,
-        NewPost
-    }
+    },
+    thread::{
+        NewThread,
+        Thread,
+    },
 };
 
 use fixtures::user::UserFixture;
-
-
-
 
 const FORUM_TITLE: &'static str = "Forum Title";
 const FORUM_DESCRIPTION: &'static str = "Forum Description";
@@ -28,12 +25,9 @@ const FORUM_DESCRIPTION: &'static str = "Forum Description";
 const THREAD_1_TITLE: &'static str = "Thread 1 Title";
 const THREAD_2_TITLE: &'static str = "Thread 2 Title";
 
-
 const POST_1_CONTENT: &'static str = "Post 1 content";
 const POST_2_CONTENT: &'static str = "Post 2 content";
 const POST_3_CONTENT: &'static str = "Post 3 content";
-
-
 
 pub struct ForumFixture {
     pub user_fixture: UserFixture,
@@ -55,7 +49,6 @@ impl Fixture for ForumFixture {
         };
         let forum = Forum::create_forum(new_forum, conn).expect("create forum");
 
-
         let new_thread_1: NewThread = NewThread {
             forum_uuid: forum.uuid,
             author_uuid: user_fixture.normal_user.uuid,
@@ -69,7 +62,6 @@ impl Fixture for ForumFixture {
 
         let thread_1 = Thread::create_thread(new_thread_1, conn).expect("create thread");
         let thread_2 = Thread::create_thread(new_thread_2, conn).expect("create thread");
-
 
         let new_post_1: NewPost = NewPost {
             thread_uuid: thread_1.uuid,
@@ -89,7 +81,6 @@ impl Fixture for ForumFixture {
         new_post_3.content = POST_3_CONTENT.to_string();
         new_post_2.parent_uuid = Some(post_1.uuid);
         new_post_3.parent_uuid = Some(post_1.uuid);
-
 
         let post_2: Post = Post::create_post(new_post_2, conn).expect("create post");
         let post_3: Post = Post::create_post(new_post_3, conn).expect("create post");

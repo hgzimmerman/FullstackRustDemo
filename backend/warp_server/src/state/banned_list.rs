@@ -1,16 +1,15 @@
+use identifiers::user::UserUuid;
 use std::{
+    collections::BTreeSet,
     sync::{
         Arc,
-        RwLock
+        RwLock,
     },
-    collections::BTreeSet,
 };
-use identifiers::user::UserUuid;
 use warp::{
     filters::BoxedFilter,
-    Filter
+    Filter,
 };
-
 
 /// The BannedList contains a list of users that should not have access to the system.
 /// This is an ephemeral protection mechanism, that will prevent users from using outstanding JWTs if their UUID is in this structure.
@@ -37,7 +36,5 @@ impl BannedList {
 }
 
 pub fn banned_list_filter(banned_list: BannedList) -> BoxedFilter<(BannedList,)> {
-    warp::any()
-        .map(move || banned_list.clone())
-        .boxed()
+    warp::any().map(move || banned_list.clone()).boxed()
 }
