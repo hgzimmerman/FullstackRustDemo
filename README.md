@@ -1,6 +1,6 @@
 A novelty website/demo written entirely in Rust.
 
-The backend uses Rocket (WebServer) + Diesel (ORM).
+The backend uses ~Rocket~ Warp (WebServer) + Diesel (ORM).
 The frontend uses Yew (React/Elm-like framework).
 
 External dependency management is handled with Nix/Nixos.
