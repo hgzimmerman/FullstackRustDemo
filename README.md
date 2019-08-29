@@ -20,7 +20,7 @@ External dependency management is handled with Nix/Nixos.
 * BucketQuestions, Forums, Auth, and Some user features are implemented in the frontend.
   * The chat system, articles, user management, and password resets are not yet implemented in the frontend.
   
-* Development is mostly suspended at the moment. This project currently serves as an example on how to use Rust to create an integrated webserver + webapp. Development has slowed due to a lack of interest, time, and the fact that this stack suffers greatly from excessively long compiletimes, which makes it hard to work on.
+* **Development is suspended at the moment. This project currently serves as an example on how to use Rust to create an integrated webserver + webapp. Development has slowed due to a lack of interest, time, and the fact that the frontend stack suffers greatly from excessively long compiletimes, which makes it hard to work on.** Note: Yew has improved greatly since this was last worked upon. Compile times are down significantly (compiling in debug is now possible). The dominating factors are now a lack of time and interest.
 
 # Build Instructions
 * Initial setup : https://github.com/hgzimmerman/FullstackRustDemo/wiki/Initial-setup
