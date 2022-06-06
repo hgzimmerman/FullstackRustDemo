@@ -10,7 +10,7 @@ testing_fixtures = {path = "../testing_fixtures"}
 
 server = { path = "../server"}
 pool = {path = "../pool"}
-rocket = "0.3.13"
+rocket = "0.4.7"
 
 
 chrono = { version = "0.4", features = ["serde"] }
