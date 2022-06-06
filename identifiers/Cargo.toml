@@ -10,7 +10,7 @@ serde_json = "1.0.3"
 serde_derive = "1.0.14"
 
 [dependencies.rocket]
-version = "0.3.11"
+version = "0.4.7"
 optional = true
 
 [dependencies.uuid]
