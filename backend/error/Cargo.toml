@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Henry Zimmerman <zimhen7@gmail.com>"]
 
 [dependencies]
-rocket = {version = "0.3.13", optional = true }
+rocket = {version = "0.4.7", optional = true }
 warp = {version = "0.1.9", optional = true }
 
 [dependencies.diesel]

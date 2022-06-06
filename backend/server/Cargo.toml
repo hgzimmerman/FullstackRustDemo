@@ -13,7 +13,7 @@ auth = {path = "../auth", features = ["rocket_support"]}
 error = {path = "../error", features = ["rocket_support"]}
 pool = {path = "../pool", features = ["rocket_support"]}
 
-rocket = "0.3.17"
+rocket = "0.4.7"
 rocket_codegen = "0.3.17"
 rocket_contrib = "0.3.17"
 

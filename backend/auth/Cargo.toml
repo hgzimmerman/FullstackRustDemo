@@ -23,7 +23,7 @@ rand = "0.4.1"
 log = "0.3.8"
 simplelog = "^0.5.0"
 
-rocket = {version = "0.3.17", optional = true}
+rocket = {version = "0.4.7", optional = true}
 rocket_contrib = {version = "0.3.17", optional = true }
 
 
